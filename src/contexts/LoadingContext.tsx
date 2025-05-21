@@ -6,7 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
-import { PageLoading } from "../components/ui/loaders";
+import { PageLoading } from "@/components/ui/loaders";
 
 // Loading component - using the PageLoading component
 export const Loading = PageLoading;

@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import { UserRole } from "../contexts/AuthContext";
+import { UserRole } from "@/contexts/AuthContext";
 
 // Mock JWT token generator
 export const generateMockToken = (role: UserRole = UserRole.MEMBER) => {

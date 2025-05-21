@@ -1,17 +1,17 @@
 import { useState } from "react";
-import { cn } from "../../lib/utils";
-import { Button } from "../../components/ui/button";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "../../components/ui/card";
+} from "@/components/ui/card";
 import { GoogleLogin } from "@react-oauth/google";
-import { useAuth, UserRole } from "../../contexts/AuthContext";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { mockGoogleOAuthResponse } from "../../mocks/authMock";
+import { mockGoogleOAuthResponse } from "@/mocks/authMock";
 
 export function LoginForm({
   className,
