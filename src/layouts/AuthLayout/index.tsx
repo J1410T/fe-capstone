@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom";
-import { LoadingProvider } from "../../contexts/LoadingContext";
+import { LoadingProvider } from "@/contexts/LoadingContext";
 
 /**
  * Layout dành cho các trang xác thực như đăng nhập, đăng ký, quên mật khẩu

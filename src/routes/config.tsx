@@ -1,16 +1,17 @@
-import AuthGuard from "../components/auth/AuthGuard";
-import AuthLayout from "../layouts/AuthLayout";
-import MainLayout from "../layouts/MainLayout";
-import DashboardLayout from "../layouts/DashboardLayout";
+import AuthGuard from "@/components/auth/AuthGuard";
+import AuthLayout from "@/layouts/AuthLayout";
+import MainLayout from "@/layouts/StaffLayout";
+import DashboardLayout from "@/layouts/UsersLayout";
 import { Unauthorized } from "./Unauthorized";
 import { Navigate, RouteObject, Outlet } from "react-router-dom";
-import Dashboard from "../pages/Dashboard";
-import ErrorBoundaryPage from "../pages/ErrorBoundaryPage";
+import Dashboard from "@/pages/Dashboard";
+import ErrorBoundaryPage from "@/pages/ErrorBoundaryPage";
 import { authRoutes } from "./auth";
 import { UserRole } from "../contexts/AuthContext";
 import { AuthProvider } from "../contexts/AuthContext";
 import UserLayout from "../layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
+
 
 /**
  * Main application routes configuration

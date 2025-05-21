@@ -1,5 +1,5 @@
-import { Navigate, RouteObject } from 'react-router-dom';
-import Login from '../pages/Login';
+import { Navigate, RouteObject } from "react-router-dom";
+import Login from "@/pages/Login";
 
 export const authRoutes: RouteObject[] = [
   {
@@ -7,7 +7,7 @@ export const authRoutes: RouteObject[] = [
     element: <Navigate to="login" replace />,
   },
   {
-    path: 'login',
+    path: "login",
     element: <Login />,
   },
 ];

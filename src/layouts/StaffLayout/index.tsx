@@ -1,13 +1,13 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import { LoadingProvider } from "../../contexts/LoadingContext";
-import { AppSidebar } from "../../components/layout/app-sidebar";
+import { LoadingProvider } from "@/contexts/LoadingContext";
+import { AppSidebar } from "@/components/layout/app-sidebar";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
-} from "../../components/ui/sidebar";
-import { Separator } from "../../components/ui/separator";
+} from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -15,8 +15,8 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "../../components/ui/breadcrumb";
-// import { useAuth } from "../../contexts/AuthContext";
+} from "@/components/ui/breadcrumb";
+// import { useAuth } from "@/contexts/AuthContext";
 
 /**
  * Main layout with sidebar for staff users
