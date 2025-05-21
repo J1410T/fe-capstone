@@ -6,19 +6,22 @@ import React, {
   ReactNode,
 } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
-import { Loading } from "@/components/common/loading";
+import { PageLoading } from "../components/ui/loaders";
 
+// Loading component - using the PageLoading component
+export const Loading = PageLoading;
+
+// Loading context type
 interface LoadingContextType {
   isLoading: boolean;
   setIsLoading: (value: boolean) => void;
   startLoading: () => void;
 }
 
+// Create loading context
 const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
 
-/**
- * Hook để truy cập LoadingContext từ bất kỳ component nào
- */
+// Hook to use loading context
 export const useLoading = () => {
   const context = useContext(LoadingContext);
   if (!context) {
@@ -27,42 +30,38 @@ export const useLoading = () => {
   return context;
 };
 
+// Loading provider props
 type LoadingProviderProps = {
   children: ReactNode;
 };
 
-/**
- * Provider quản lý trạng thái loading của ứng dụng
- * Hiển thị màn hình loading khi:
- * 1. Reload trang - ngay lập tức
- * 2. Chuyển trang - đảm bảo hiển thị ít nhất 2.5s
- */
+// Loading provider component
 export const LoadingProvider: React.FC<LoadingProviderProps> = ({
   children,
 }) => {
-  // Khởi tạo isLoading = true để hiển thị loading ngay khi reload trang
+  // Initialize isLoading = true to show loading on page reload
   const [isLoading, setIsLoading] = useState(true);
   const [content, setContent] = useState<React.ReactNode | null>(null);
   const location = useLocation();
   const navigationType = useNavigationType();
 
-  // Hàm này có thể được gọi từ bất kỳ component con nào để kích hoạt loading
+  // Function to start loading
   const startLoading = () => {
     setIsLoading(true);
     setContent(null);
   };
 
-  // Phản ứng với thay đổi đường dẫn hoặc kiểu điều hướng
+  // React to path or navigation type changes
   useEffect(() => {
-    // 1. Bắt đầu loading khi URL hoặc navigationType thay đổi
+    // 1. Start loading when URL or navigationType changes
     startLoading();
 
-    // 2. Chuẩn bị nội dung trong memory nhưng chưa hiển thị
+    // 2. Prepare content in memory but don't display yet
     const prepareContentTimer = setTimeout(() => {
       setContent(children);
     }, 100);
 
-    // 3. Chờ 1.5s rồi mới tắt loading và hiển thị nội dung trang
+    // 3. Wait 1.5s before hiding loading and showing content
     const hideLoadingTimer = setTimeout(() => {
       setIsLoading(false);
     }, 1500);
@@ -73,17 +72,17 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({
     };
   }, [location.pathname, navigationType, children]);
 
-  // Kiểm tra trạng thái loading khi component này được mount để đảm bảo loading hiển thị ngay lập tức
+  // Check loading state when component mounts
   useEffect(() => {
-    // Đảm bảo loading hiển thị ngay khi component này mount (reload trang)
+    // Ensure loading shows immediately when component mounts (page reload)
     startLoading();
 
-    // Giả lập việc chuẩn bị nội dung để có thể hiển thị sau khi loading
+    // Simulate content preparation to display after loading
     const initialContentTimer = setTimeout(() => {
       setContent(children);
     }, 100);
 
-    // Giữ loading trong 1.5s để đảm bảo hiển thị đủ hiệu ứng
+    // Keep loading for 1.5s to ensure effect is visible
     const initialLoadingTimer = setTimeout(() => {
       setIsLoading(false);
     }, 1500);
@@ -92,14 +91,14 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({
       clearTimeout(initialContentTimer);
       clearTimeout(initialLoadingTimer);
     };
-  }, []); // Chỉ chạy khi component mount lần đầu tiên
+  }, []); // Only run when component mounts for the first time
 
   return (
     <LoadingContext.Provider value={{ isLoading, setIsLoading, startLoading }}>
-      {/* Hiển thị loading khi isLoading = true */}
-      {isLoading && <Loading minDisplayTime={1500} />}
+      {/* Show loading when isLoading = true */}
+      {isLoading && <Loading />}
 
-      {/* Chỉ hiển thị nội dung khi loading đã hoàn tất */}
+      {/* Only show content when loading is complete */}
       {!isLoading && content ? content : null}
     </LoadingContext.Provider>
   );

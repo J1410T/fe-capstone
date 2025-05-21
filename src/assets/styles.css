@@ -43,71 +43,101 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --background: oklch(1 0 0); /* white */
+  --foreground: oklch(0.145 0 0); /* black */
+  --card: oklch(1 0 0); /* white */
+  --card-foreground: oklch(0.145 0 0); /* black */
+  --popover: oklch(1 0 0); /* white */
+  --popover-foreground: oklch(0.145 0 0); /* black */
+
+  /* Primary: emerald-700 #047857 - Use strategically for buttons, links, and important UI elements */
+  --primary: oklch(0.51 0.158 160);
+  --primary-foreground: oklch(1 0 0); /* white */
+
+  /* Secondary: slate-700 #334155 - Neutral dark color for secondary elements */
+  --secondary: oklch(0.4 0.02 240);
+  --secondary-foreground: oklch(0.95 0 0); /* light gray */
+
+  /* Muted: slate-100 #f1f5f9 - Light neutral background */
+  --muted: oklch(0.97 0.01 240);
+  --muted-foreground: oklch(0.5 0.02 240); /* slate-500 */
+
+  /* Accent: slate-200 #e2e8f0 - Subtle accent for hover states */
+  --accent: oklch(0.93 0.01 240);
+  --accent-foreground: oklch(0.3 0.02 240); /* slate-800 */
+
+  --destructive: oklch(0.577 0.245 27.325); /* red */
+
+  /* Border/Focus ring: emerald-300 #6ee7b7 - Keep emerald for focus states */
+  --border: oklch(0.9 0.01 240); /* slate-200 */
+  --input: oklch(0.93 0.01 240); /* slate-200 */
+  --ring: oklch(0.85 0.12 160); /* emerald-300 */
+
+  /* Chart colors - keep diverse */
+  --chart-1: oklch(0.51 0.158 160); /* emerald-700 */
+  --chart-2: oklch(0.6 0.118 184.704); /* blue */
+  --chart-3: oklch(0.398 0.07 227.392); /* purple */
+  --chart-4: oklch(0.828 0.189 84.429); /* orange */
+  --chart-5: oklch(0.769 0.188 70.08); /* yellow */
+
+  /* Sidebar - use emerald as an accent, but keep it mostly neutral */
+  --sidebar: oklch(0.985 0 0); /* white */
+  --sidebar-foreground: oklch(0.145 0 0); /* black */
+  --sidebar-primary: oklch(0.51 0.158 160); /* emerald-700 */
+  --sidebar-primary-foreground: oklch(1 0 0); /* white */
+  --sidebar-accent: oklch(0.93 0.01 240); /* slate-200 */
+  --sidebar-accent-foreground: oklch(0.3 0.02 240); /* slate-800 */
+  --sidebar-border: oklch(0.9 0.01 240); /* slate-200 */
+  --sidebar-ring: oklch(0.85 0.12 160); /* emerald-300 */
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --background: oklch(0.145 0 0); /* dark gray/black */
+  --foreground: oklch(0.985 0 0); /* white */
+  --card: oklch(0.18 0 0); /* slightly lighter than background */
+  --card-foreground: oklch(0.985 0 0); /* white */
+  --popover: oklch(0.18 0 0); /* slightly lighter than background */
+  --popover-foreground: oklch(0.985 0 0); /* white */
+
+  /* Primary: emerald-500 #10b981 in dark mode - brighter for dark backgrounds */
+  --primary: oklch(0.72 0.17 160);
+  --primary-foreground: oklch(0.145 0 0); /* black */
+
+  /* Secondary: slate-600 #475569 - Neutral color for secondary elements */
+  --secondary: oklch(0.45 0.02 240);
+  --secondary-foreground: oklch(0.95 0 0); /* light gray */
+
+  /* Muted: slate-800 #1e293b - Dark neutral background */
+  --muted: oklch(0.25 0.02 240);
+  --muted-foreground: oklch(0.7 0.02 240); /* slate-400 */
+
+  /* Accent: slate-700 #334155 - Subtle accent for hover states */
+  --accent: oklch(0.3 0.02 240);
+  --accent-foreground: oklch(0.9 0.01 240); /* slate-200 */
+
+  --destructive: oklch(0.704 0.191 22.216); /* red */
+
+  /* Border/Focus ring: emerald-400 #34d399 with reduced opacity - Keep emerald for focus states */
+  --border: oklch(0.3 0.02 240 / 30%); /* slate-700 with opacity */
+  --input: oklch(0.25 0.02 240 / 30%); /* slate-800 with opacity */
+  --ring: oklch(0.72 0.17 160 / 30%); /* emerald-500 with opacity */
+
+  /* Chart colors - keep diverse */
+  --chart-1: oklch(0.72 0.17 160); /* emerald-500 */
+  --chart-2: oklch(0.696 0.17 162.48); /* blue */
+  --chart-3: oklch(0.769 0.188 70.08); /* yellow */
+  --chart-4: oklch(0.627 0.265 303.9); /* purple */
+  --chart-5: oklch(0.645 0.246 16.439); /* red */
+
+  /* Sidebar - use emerald as an accent, but keep it mostly neutral */
+  --sidebar: oklch(0.18 0 0); /* slightly lighter than background */
+  --sidebar-foreground: oklch(0.985 0 0); /* white */
+  --sidebar-primary: oklch(0.72 0.17 160); /* emerald-500 */
+  --sidebar-primary-foreground: oklch(0.145 0 0); /* black */
+  --sidebar-accent: oklch(0.3 0.02 240); /* slate-700 */
+  --sidebar-accent-foreground: oklch(0.9 0.01 240); /* slate-200 */
+  --sidebar-border: oklch(0.3 0.02 240 / 30%); /* slate-700 with opacity */
+  --sidebar-ring: oklch(0.72 0.17 160 / 30%); /* emerald-500 with opacity */
 }
 
 @layer base {
