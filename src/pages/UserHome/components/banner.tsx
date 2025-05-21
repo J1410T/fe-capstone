@@ -46,74 +46,103 @@ const fadeInUp = {
 function HomeBanner() {
   return (
     <motion.div
-      className="relative min-h-screen w-full overflow-hidden bg-white"
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
+      className="relative w-full overflow-hidden bg-white"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       transition={{ duration: 0.8, ease: "easeOut" }}
     >
-      {/* Background gradients */}
-      <div className="absolute left-[-150px] top-[-150px] z-0 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-green-300 to-teal-300 opacity-40 blur-[150px]"></div>
-      <div className="absolute bottom-[-150px] right-[-150px] z-0 h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-teal-300 to-sky-300 opacity-40 blur-[150px]"></div>
+      {/* Hero Section - Full Screen */}
+      <section className="relative min-h-[calc(100vh-65px)] flex flex-col items-center justify-center">
+        {/* Background gradients */}
+        <div className="absolute left-[-150px] top-[-150px] z-0 h-[500px] w-[500px] rounded-full bg-gradient-to-br from-green-300 to-teal-300 opacity-40 blur-[150px]"></div>
+        <div className="absolute bottom-[-150px] right-[-150px] z-0 h-[500px] w-[500px] rounded-full bg-gradient-to-tr from-teal-300 to-sky-300 opacity-40 blur-[150px]"></div>
 
-      {/* Main content */}
-      <div className="relative z-10 flex mt-4 justify-center px-4 pt-24">
-        <div className="text-center w-full md:w-[49%]">
-          <motion.h1
-            className="text-4xl md:text-5xl font-bold text-gray-900 mb-6"
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            custom={0}
-          >
-            Manage Your Scientific Research Projects Efficiently
-          </motion.h1>
-          <motion.p
-            className="mt-4 max-w-xl text-gray-600 mx-auto"
-            variants={fadeInUp}
-            initial="hidden"
-            animate="visible"
-            custom={1}
-          >
-            A comprehensive platform for researchers to collaborate, track
-            progress, and manage scientific projects from inception to
-            completion.
-          </motion.p>
+        {/* Main content */}
+        <div className="container max-w-screen-2xl flex flex-col items-center justify-center space-y-8 py-12 text-center z-10 px-4">
+          <div className="space-y-6">
+            <motion.h1
+              className="bg-gradient-to-br from-emerald-800 from-30% via-emerald-700 to-emerald-600 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl md:text-6xl lg:text-7xl"
+              variants={fadeInUp}
+              initial="hidden"
+              animate="visible"
+              custom={0}
+            >
+              Manage Your Scientific Research
+              <br />
+              Projects Efficiently
+            </motion.h1>
+            <motion.p
+              className="mx-auto max-w-[42rem] text-base sm:text-xl leading-normal text-gray-600"
+              variants={fadeInUp}
+              initial="hidden"
+              animate="visible"
+              custom={1}
+            >
+              A comprehensive platform for researchers to collaborate, track
+              progress, and manage scientific projects from inception to
+              completion.
+            </motion.p>
+          </div>
           <motion.div
-            className="mt-6 flex w-full flex-col md:flex-row md:justify-center gap-4"
+            className="flex flex-col sm:flex-row gap-4"
             variants={fadeInUp}
             initial="hidden"
             animate="visible"
             custom={2}
           >
-            <button className="w-full md:w-auto rounded-md bg-emerald-700 px-5 py-2 font-semibold cursor-pointer text-white transition duration-300 ease-in-out hover:bg-emerald-500 active:scale-95">
-              Browse Projects
+            <button className="rounded-md bg-emerald-700 px-6 py-3 font-semibold cursor-pointer text-white transition duration-300 ease-in-out hover:bg-emerald-600 active:scale-95">
+              Explore Projects
             </button>
           </motion.div>
         </div>
-      </div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.8, ease: "easeOut" }}
+        >
+          <p className="text-sm text-gray-500 mb-2">Scroll to explore</p>
+          <div className="w-6 h-10 border-2 border-emerald-700 rounded-full flex justify-center">
+            <motion.div
+              className="w-1.5 h-3 bg-emerald-700 rounded-full mt-2"
+              animate={{
+                y: [0, 12, 0],
+              }}
+              transition={{
+                duration: 1.5,
+                repeat: Infinity,
+                repeatType: "loop",
+              }}
+            />
+          </div>
+        </motion.div>
+      </section>
 
       {/* Features section */}
-      <section className="py-4 pt-16 px-4 bg-white">
+      <section className="py-16 px-4 bg-white">
         <div
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-7xl mx-auto"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto"
           style={{ perspective: "1000px" }} // for 3D effect
         >
           {features.map((feature, index) => (
             <motion.div
               key={index}
-              className="bg-white p-6 rounded-lg shadow-md text-center"
+              className="bg-white p-8 rounded-lg shadow-md text-center h-full"
               variants={fadeInUp}
               initial="hidden"
-              animate="visible"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
               custom={index}
             >
-              <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-4">
                 {feature.icon}
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
                 {feature.title}
               </h3>
-              <p className="text-gray-600 text-sm">{feature.description}</p>
+              <p className="text-gray-600">{feature.description}</p>
             </motion.div>
           ))}
         </div>

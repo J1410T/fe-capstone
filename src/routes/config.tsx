@@ -25,10 +25,10 @@ export const routes: RouteObject[] = [
     ),
     errorElement: <ErrorBoundaryPage />,
     children: [
-      // Redirect from home to dashboard if logged in
+      // Redirect from home to member home if logged in
       {
         index: true,
-        element: <Navigate to="/dashboard" replace />,
+        element: <Navigate to="/member/home" replace />,
       },
       // Staff routes with sidebar
       {

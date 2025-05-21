@@ -70,10 +70,10 @@ const projects = [
 
 const FeaturedProjects: React.FC = () => {
   return (
-    <section className=" pt-4 px-4 bg-white">
+    <section className="py-16 px-4 bg-gray-50">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2 sm:mb-0">
             Featured Projects
           </h2>
           <a
@@ -83,8 +83,8 @@ const FeaturedProjects: React.FC = () => {
             View all projects →
           </a>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project, index) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          {projects.slice(0, 6).map((project, index) => (
             <ProjectCard key={index} {...project} />
           ))}
         </div>
