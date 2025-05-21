@@ -9,6 +9,8 @@ import ErrorBoundaryPage from "../pages/ErrorBoundaryPage";
 import { authRoutes } from "./auth";
 import { UserRole } from "../contexts/AuthContext";
 import { AuthProvider } from "../contexts/AuthContext";
+import UserLayout from "../layouts/UserLayout";
+import UserHome from "@/pages/UserHome";
 
 /**
  * Main application routes configuration
@@ -40,6 +42,21 @@ export const routes: RouteObject[] = [
           {
             path: "dashboard",
             element: <Dashboard />,
+          },
+          // Add more staff routes here
+        ],
+      },
+      {
+        path: "member",
+        element: (
+          <AuthGuard requiredRoles={[UserRole.MEMBER]}>
+            <UserLayout />
+          </AuthGuard>
+        ),
+        children: [
+          {
+            path: "home",
+            element: <UserHome />,
           },
           // Add more staff routes here
         ],
