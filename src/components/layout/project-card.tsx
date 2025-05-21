@@ -1,0 +1,78 @@
+import { FaClock, FaUsers } from "react-icons/fa";
+
+interface ProjectCardProps {
+  category: string;
+  title: string;
+  description: string;
+  updatedAt: string;
+  teamMembers: number;
+  manager: string;
+  progress: number;
+  status: string;
+}
+
+const ProjectCard: React.FC<ProjectCardProps> = ({
+  category,
+  title,
+  description,
+  updatedAt,
+  teamMembers,
+  manager,
+  progress,
+  status,
+}) => {
+  return (
+    <div className="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition duration-300 h-full flex flex-col">
+      <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
+        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
+          {category}
+        </span>
+        <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-medium">
+          {progress}% Complete
+        </span>
+      </div>
+
+      <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
+      <p className="text-sm text-gray-600 mb-4 flex-grow">{description}</p>
+
+      <div className="mt-auto space-y-3">
+        <div className="flex items-center text-sm text-gray-500 gap-2">
+          <FaClock className="text-gray-400 flex-shrink-0" />
+          <span>Updated {updatedAt}</span>
+        </div>
+        <div className="flex items-center text-sm text-gray-500 gap-2">
+          <FaUsers className="text-gray-400 flex-shrink-0" />
+          <span>{teamMembers} team members</span>
+        </div>
+
+        {/* Status section */}
+        <div className="inline-flex items-center px-3 py-1 rounded-md bg-gray-100 text-sm gap-1 my-2">
+          <span className="text-gray-700">Status:</span>
+          <span
+            className={`font-semibold ${
+              status === "Active"
+                ? "text-emerald-700"
+                : status === "Completed"
+                ? "text-indigo-700"
+                : "text-yellow-700"
+            }`}
+          >
+            {status}
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+          <p className="text-sm text-gray-600">Manager: {manager}</p>
+          <a
+            href="#"
+            className="text-sm font-semibold text-emerald-600 hover:underline"
+          >
+            View Details
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ProjectCard;
