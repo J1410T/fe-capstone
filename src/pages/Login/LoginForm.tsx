@@ -94,8 +94,8 @@ export function LoginForm({
                     Login as Appraisal Council
                   </Button>
                   <Button
-                    variant="outline"
-                    className="w-full"
+                    variant="default"
+                    className="w-full bg-emerald-700 hover:bg-emerald-600 text-white"
                     onClick={() =>
                       handleGoogleSuccess(
                         mockGoogleOAuthResponse(UserRole.HOST_INSTITUTION)
