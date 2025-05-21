@@ -40,9 +40,25 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     return <Navigate to="/staff/dashboard" replace />;
   }
 
+  // Redirect Host Institution users to host dashboard if they try to access regular dashboard
+  if (
+    user?.role === UserRole.HOST_INSTITUTION &&
+    location.pathname === "/dashboard"
+  ) {
+    return <Navigate to="/host/dashboard" replace />;
+  }
+
   // Redirect non-staff users to member home if they try to access staff dashboard
   if (user?.role !== UserRole.STAFF && location.pathname.startsWith("/staff")) {
     return <Navigate to="/member/home" replace />;
+  }
+
+  // Redirect non-host users to regular dashboard if they try to access host dashboard
+  if (
+    user?.role !== UserRole.HOST_INSTITUTION &&
+    location.pathname.startsWith("/host")
+  ) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   // Render children if authenticated and has required role
