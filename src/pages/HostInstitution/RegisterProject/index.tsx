@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Loading } from "@/components/ui/loaders";
 import {
   Brain,
@@ -15,14 +14,11 @@ import {
   Microscope,
 } from "lucide-react";
 import {
-  RegisterHeader,
   ProgressSteps,
   ProjectInfoForm,
   ResearchDetailsForm,
   ReviewForm,
-  ProjectsListTab,
 } from "./components";
-import { getStatusColor, getStatusIcon } from "./utils/statusHelpers";
 
 // Research fields with icons
 const researchFields = [
@@ -38,55 +34,12 @@ const researchFields = [
   { id: "other", name: "Other", icon: Microscope },
 ];
 
-// Mock data for registered projects
-const registeredProjects = [
-  {
-    id: 1,
-    title: "Machine Learning for Medical Diagnosis",
-    field: "Computer Science",
-    status: "Pending Approval",
-    createdAt: "2023-05-15",
-    manager: "Dr. Jane Smith",
-    budget: "$120,000",
-    duration: "18 months",
-  },
-  {
-    id: 2,
-    title: "Renewable Energy Storage Solutions",
-    field: "Engineering",
-    status: "Approved",
-    createdAt: "2023-06-02",
-    manager: "Dr. Michael Johnson",
-    budget: "$85,000",
-    duration: "12 months",
-  },
-  {
-    id: 3,
-    title: "Blockchain in Supply Chain Management",
-    field: "Business & Economics",
-    status: "Pending Approval",
-    createdAt: "2023-06-10",
-    manager: "Dr. Sarah Williams",
-    budget: "$75,000",
-    duration: "24 months",
-  },
-  {
-    id: 4,
-    title: "Sustainable Urban Planning",
-    field: "Social Sciences",
-    status: "Pending Approval",
-    createdAt: "2023-06-15",
-    manager: "Dr. Robert Chen",
-    budget: "$90,000",
-    duration: "36 months",
-  },
-];
+// No mock data needed for projects list
 
 const RegisterProject: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("register");
-  const [searchTerm, setSearchTerm] = useState("");
   const [currentStep, setCurrentStep] = useState(1);
+  const navigate = useNavigate();
 
   // Form state
   const [formData, setFormData] = useState({
@@ -131,24 +84,11 @@ const RegisterProject: React.FC = () => {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      setActiveTab("projects");
+      // Navigate to my projects page after successful registration
+      navigate("/host/my-projects");
       // Show success message
     }, 1500);
   };
-
-  const navigate = useNavigate();
-
-  const handleViewProjectDetails = (projectId: number) => {
-    // Navigate to project details page
-    navigate(`/host/project/${projectId}`);
-  };
-
-  const filteredProjects = registeredProjects.filter(
-    (project) =>
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.field.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.manager.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   if (isLoading) {
     return <Loading />;
@@ -156,73 +96,53 @@ const RegisterProject: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <RegisterHeader
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        projectsCount={registeredProjects.length}
-      />
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Register New Research Project
+          </h1>
+          <p className="text-muted-foreground">
+            Fill out the form below to register your scientific research project
+          </p>
+        </div>
+      </div>
 
-      <Tabs value={activeTab}>
-        {/* Register Project Tab */}
-        <TabsContent value="register" className="space-y-6">
-          <div className="text-center max-w-3xl mx-auto mb-8">
-            <h2 className="text-2xl font-bold tracking-tight mb-2">
-              Register New Research Project
-            </h2>
-            <p className="text-muted-foreground">
-              Fill out the form below to register your scientific research
-              project
-            </p>
-          </div>
+      <div className="space-y-6">
+        <ProgressSteps currentStep={currentStep} />
 
-          <ProgressSteps currentStep={currentStep} />
+        <form onSubmit={handleRegisterProject}>
+          {/* Step 1: Project Information */}
+          {currentStep === 1 && (
+            <ProjectInfoForm
+              formData={formData}
+              researchFields={researchFields}
+              onInputChange={handleInputChange}
+              onSelectChange={handleSelectChange}
+              onNextStep={handleNextStep}
+            />
+          )}
 
-          <form onSubmit={handleRegisterProject}>
-            {/* Step 1: Project Information */}
-            {currentStep === 1 && (
-              <ProjectInfoForm
-                formData={formData}
-                researchFields={researchFields}
-                onInputChange={handleInputChange}
-                onSelectChange={handleSelectChange}
-                onNextStep={handleNextStep}
-              />
-            )}
+          {/* Step 2: Research Details */}
+          {currentStep === 2 && (
+            <ResearchDetailsForm
+              formData={formData}
+              onInputChange={handleInputChange}
+              onNextStep={handleNextStep}
+              onPrevStep={handlePrevStep}
+            />
+          )}
 
-            {/* Step 2: Research Details */}
-            {currentStep === 2 && (
-              <ResearchDetailsForm
-                formData={formData}
-                onInputChange={handleInputChange}
-                onNextStep={handleNextStep}
-                onPrevStep={handlePrevStep}
-              />
-            )}
-
-            {/* Step 3: Review & Submit */}
-            {currentStep === 3 && (
-              <ReviewForm
-                formData={formData}
-                researchFields={researchFields}
-                onPrevStep={handlePrevStep}
-                onSubmit={handleRegisterProject}
-              />
-            )}
-          </form>
-        </TabsContent>
-
-        {/* My Projects Tab */}
-        <TabsContent value="projects" className="space-y-4">
-          <ProjectsListTab
-            projects={filteredProjects}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            onViewDetails={handleViewProjectDetails}
-            getStatusColor={getStatusColor}
-            getStatusIcon={getStatusIcon}
-          />
-        </TabsContent>
-      </Tabs>
+          {/* Step 3: Review & Submit */}
+          {currentStep === 3 && (
+            <ReviewForm
+              formData={formData}
+              researchFields={researchFields}
+              onPrevStep={handlePrevStep}
+              onSubmit={handleRegisterProject}
+            />
+          )}
+        </form>
+      </div>
     </div>
   );
 };

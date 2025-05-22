@@ -15,8 +15,8 @@ export const ManagementHeader: React.FC = () => {
           Collaborate with Principal Investigators on research projects
         </p>
       </div>
-      <Button variant="outline" onClick={() => navigate("/host/projects")}>
-        Back to Projects
+      <Button variant="outline" onClick={() => navigate("/host/my-projects")}>
+        Back to My Projects
       </Button>
     </div>
   );

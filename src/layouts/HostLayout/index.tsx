@@ -32,9 +32,7 @@ import {
   Bell,
   Search,
   ClipboardList,
-  CheckCircle,
   AlertCircle,
-  BarChart,
   ChevronDown,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -54,16 +52,10 @@ export const HostLayout: React.FC = () => {
       name: "Project Management",
       icon: ClipboardList,
       children: [
-        { name: "Dashboard", href: "/host/dashboard", icon: BarChart },
         {
           name: "Register Research Project",
           href: "/host/register-project",
           icon: FileText,
-        },
-        {
-          name: "Approve Principal Investigators",
-          href: "/host/pi-approval",
-          icon: CheckCircle,
         },
       ],
     },
@@ -72,7 +64,12 @@ export const HostLayout: React.FC = () => {
       icon: Briefcase,
       children: [
         {
-          name: "Project List",
+          name: "My Projects",
+          href: "/host/my-projects",
+          icon: Briefcase,
+        },
+        {
+          name: "All Projects",
           href: "/host/projects",
           icon: ClipboardList,
         },
@@ -387,10 +384,10 @@ export const HostLayout: React.FC = () => {
                   <div className="mt-4 flex md:mt-0">
                     <Button
                       variant="outline"
-                      onClick={() => navigate("/host/projects")}
+                      onClick={() => navigate("/host/my-projects")}
                       className="ml-3"
                     >
-                      Back to Projects
+                      Back to My Projects
                     </Button>
                   </div>
                 )}
