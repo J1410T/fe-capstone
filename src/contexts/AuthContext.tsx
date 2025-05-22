@@ -146,12 +146,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (userRole === UserRole.STAFF) {
           // Staff users go to staff dashboard with sidebar
           navigate("/staff/dashboard");
-        } else if (userRole === UserRole.HOST_INSTITUTION) {
-          // Host Institution users go to host dashboard
-          navigate("/host/dashboard");
-        } else if (userRole === UserRole.MEMBER) {
-          // Member users go to member home page
-          navigate("/member/home");
         } else {
           // Other users go to regular dashboard without sidebar
           navigate("/dashboard");
