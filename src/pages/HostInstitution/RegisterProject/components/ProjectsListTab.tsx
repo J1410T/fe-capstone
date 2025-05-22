@@ -17,7 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface Project {
   id: number;
@@ -95,9 +95,7 @@ export const ProjectsListTab: React.FC<ProjectsListTabProps> = ({
             ) : (
               projects.map((project) => (
                 <TableRow key={project.id}>
-                  <TableCell className="font-medium">
-                    {project.title}
-                  </TableCell>
+                  <TableCell className="font-medium">{project.title}</TableCell>
                   <TableCell>{project.field}</TableCell>
                   <TableCell>{project.manager}</TableCell>
                   <TableCell>{project.budget}</TableCell>

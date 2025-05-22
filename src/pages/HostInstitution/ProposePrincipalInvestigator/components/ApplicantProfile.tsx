@@ -78,6 +78,7 @@ const ApplicantProfile: React.FC<ApplicantProfileProps> = ({
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
             </CardHeader>
+            <CardDescription />
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-center">
@@ -158,10 +159,7 @@ const ApplicantProfile: React.FC<ApplicantProfileProps> = ({
             <AlertCircle className="mr-2 h-4 w-4" />
             Request More Info
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => onReject(applicant.id)}
-          >
+          <Button variant="outline" onClick={() => onReject(applicant.id)}>
             <XCircle className="mr-2 h-4 w-4" />
             Reject
           </Button>

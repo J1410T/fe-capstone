@@ -110,9 +110,7 @@ export const PageLoading: React.FC = () => {
 /**
  * Button loading state using Trefoil
  */
-export const ButtonLoading: React.FC<{ className?: string }> = ({
-  className,
-}) => {
+export const ButtonLoading: React.FC = () => {
   return (
     <Trefoil
       size="24"
@@ -121,7 +119,6 @@ export const ButtonLoading: React.FC<{ className?: string }> = ({
       bgOpacity="0.1"
       speed="1.4"
       color="currentColor"
-      className={className}
     />
   );
 };

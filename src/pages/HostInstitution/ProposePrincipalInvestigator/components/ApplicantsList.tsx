@@ -25,7 +25,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Clock, CheckCircle } from "lucide-react";
 
 interface Applicant {
   id: number;
@@ -81,11 +81,7 @@ export const ApplicantsList: React.FC<ApplicantsListProps> = ({
               <h3 className="text-lg font-medium">
                 Applicants for: {selectedTopicTitle}
               </h3>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onBackToTopics}
-              >
+              <Button variant="outline" size="sm" onClick={onBackToTopics}>
                 Back to Topics
               </Button>
             </div>
@@ -153,15 +149,12 @@ export const ApplicantsList: React.FC<ApplicantsListProps> = ({
                                 <DialogDescription>
                                   Are you sure you want to approve{" "}
                                   {applicant.name} as the Principal
-                                  Investigator? This action cannot be
-                                  undone.
+                                  Investigator? This action cannot be undone.
                                 </DialogDescription>
                               </DialogHeader>
                               <DialogFooter>
                                 <Button variant="outline">Cancel</Button>
-                                <Button
-                                  onClick={() => onApprove(applicant.id)}
-                                >
+                                <Button onClick={() => onApprove(applicant.id)}>
                                   Confirm Approval
                                 </Button>
                               </DialogFooter>

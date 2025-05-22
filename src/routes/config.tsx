@@ -1,8 +1,6 @@
 import AuthGuard from "../components/auth/AuthGuard";
 import AuthLayout from "../layouts/AuthLayout";
 import MainLayout from "../layouts/StaffLayout";
-import DashboardLayout from "../layouts/UsersLayout";
-import HostLayout from "../layouts/HostLayout";
 import { Unauthorized } from "./Unauthorized";
 import { Navigate, RouteObject, Outlet } from "react-router-dom";
 import Dashboard from "../pages/Dashboard";
@@ -34,7 +32,7 @@ export const routes: RouteObject[] = [
     ),
     errorElement: <ErrorBoundaryPage />,
     children: [
-      // Redirect from home to member home if logged in
+      // Redirect from home to member home for all users
       {
         index: true,
         element: <Navigate to="/member/home" replace />,
@@ -58,7 +56,7 @@ export const routes: RouteObject[] = [
       {
         path: "member",
         element: (
-          <AuthGuard requiredRoles={[UserRole.MEMBER]}>
+          <AuthGuard>
             <UserLayout />
           </AuthGuard>
         ),
@@ -67,15 +65,15 @@ export const routes: RouteObject[] = [
             path: "home",
             element: <UserHome />,
           },
-          // Add more staff routes here
+          // Add more member routes here
         ],
       },
-      // Dashboard routes without sidebar for other roles
+      // Dashboard routes for all users
       {
         path: "dashboard",
         element: (
           <AuthGuard>
-            <DashboardLayout />
+            <UserLayout />
           </AuthGuard>
         ),
         children: [
@@ -91,7 +89,7 @@ export const routes: RouteObject[] = [
         path: "host",
         element: (
           <AuthGuard requiredRoles={[UserRole.HOST_INSTITUTION]}>
-            <HostLayout />
+            <UserLayout />
           </AuthGuard>
         ),
         children: [

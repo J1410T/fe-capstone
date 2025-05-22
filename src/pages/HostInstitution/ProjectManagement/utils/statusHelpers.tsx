@@ -1,5 +1,4 @@
-import React from "react";
-import { CheckCircle, XCircle, Clock, AlertTriangle } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 
 export const getStatusColor = (status: string) => {
   switch (status) {
