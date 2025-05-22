@@ -22,12 +22,20 @@ import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
 
 // Host Institution Pages
-import HostDashboard from "../pages/HostInstitution/Dashboard";
 import RegisterProject from "../pages/HostInstitution/RegisterProject";
 import ProjectsList from "../pages/HostInstitution/ProjectsList";
+import MyProjects from "../pages/HostInstitution/MyProjects";
 import ProjectDetails from "../pages/HostInstitution/ProjectDetails";
 import ProjectHistory from "../pages/HostInstitution/ProjectHistory";
-import PIApproval from "../pages/HostInstitution/PIApproval";
+
+// Council Pages
+import CouncilPIApproval from "../pages/Council/PIApproval";
+import PendingEvaluations from "../pages/Council/Evaluations";
+import EvaluationDetail from "../pages/Council/Evaluations/EvaluationDetail";
+import EvaluationForm from "../pages/Council/Evaluations/EvaluationForm";
+import CouncilMeetings from "../pages/Council/Meetings";
+import MeetingMinutes from "../pages/Council/Meetings/MeetingMinutes";
+import ApprovalInterface from "../pages/Council/Approvals";
 
 /**
  * Main application routes configuration
@@ -130,19 +138,15 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            element: <Navigate to="/host/dashboard" replace />,
-          },
-          {
-            path: "dashboard",
-            element: <HostDashboard />,
+            element: <Navigate to="/host/my-projects" replace />,
           },
           {
             path: "register-project",
             element: <RegisterProject />,
           },
           {
-            path: "pi-approval",
-            element: <PIApproval />,
+            path: "my-projects",
+            element: <MyProjects />,
           },
           {
             path: "projects",
@@ -155,6 +159,49 @@ export const routes: RouteObject[] = [
           {
             path: "history",
             element: <ProjectHistory />,
+          },
+        ],
+      },
+      // Council routes
+      {
+        path: "council",
+        element: (
+          <AuthGuard requiredRoles={[UserRole.APPRAISAL_COUNCIL]}>
+            <UserLayout />
+          </AuthGuard>
+        ),
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/council/evaluations" replace />,
+          },
+          {
+            path: "pi-approval",
+            element: <CouncilPIApproval />,
+          },
+          {
+            path: "evaluations",
+            element: <PendingEvaluations />,
+          },
+          {
+            path: "evaluation/:id",
+            element: <EvaluationDetail />,
+          },
+          {
+            path: "evaluation/:id/form",
+            element: <EvaluationForm />,
+          },
+          {
+            path: "meetings",
+            element: <CouncilMeetings />,
+          },
+          {
+            path: "meeting/:id",
+            element: <MeetingMinutes />,
+          },
+          {
+            path: "approvals",
+            element: <ApprovalInterface />,
           },
         ],
       },
