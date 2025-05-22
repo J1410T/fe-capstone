@@ -1,0 +1,5 @@
+feat: Implement Propose Principal Investigator page with topic and applicant management
+
+- Added Host Institution pages and components
+- Added redirection for Host Institution users
+- Maintained Member user functionality
