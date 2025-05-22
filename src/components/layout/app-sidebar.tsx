@@ -1,21 +1,18 @@
 import * as React from "react";
 import {
-  AudioWaveform,
-  BookOpen,
-  Bot,
-  Command,
-  Frame,
-  GalleryVerticalEnd,
-  Map,
-  PieChart,
-  Settings2,
-  SquareTerminal,
+  LayoutDashboard,
+  Users,
+  Settings,
+  FolderOpen,
+  // History,
+  // Shield,
+  // BarChart,
+  ClipboardList,
 } from "lucide-react";
 
 import { NavMain } from "./nav-main";
-import { NavProjects } from "./nav-projects";
+// import { NavProjects } from "./nav-projects";
 import { NavUser } from "./nav-user";
-import { TeamSwitcher } from "./team-switcher";
 import {
   Sidebar,
   SidebarContent,
@@ -23,149 +20,141 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
 
-// This is sample data.
-const data = {
+// Admin navigation data
+const adminNavData = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: "Admin User",
+    email: "admin@example.com",
+    avatar: "/avatars/admin.jpg",
   },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: GalleryVerticalEnd,
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: AudioWaveform,
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: Command,
-      plan: "Free",
-    },
-  ],
   navMain: [
     {
-      title: "Playground",
-      url: "#",
-      icon: SquareTerminal,
+      title: "Dashboard",
+      url: "/staff/dashboard",
+      icon: LayoutDashboard,
       isActive: true,
+      // items: [],
+    },
+    {
+      title: "User Management",
+      url: "/staff/users",
+      icon: Users,
       items: [
         {
-          title: "History",
-          url: "#",
+          title: "All Users",
+          url: "/staff/users",
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
+          title: "Roles",
+          url: "/staff/users/roles",
         },
       ],
     },
     {
-      title: "Models",
-      url: "#",
-      icon: Bot,
+      title: "Projects",
+      url: "/staff/projects",
+      icon: FolderOpen,
       items: [
         {
-          title: "Genesis",
-          url: "#",
+          title: "All Projects",
+          url: "/staff/projects",
         },
         {
-          title: "Explorer",
-          url: "#",
+          title: "Create Project",
+          url: "/staff/projects/create",
         },
         {
-          title: "Quantum",
-          url: "#",
+          title: "Templates",
+          url: "/staff/projects/templates",
         },
       ],
     },
     {
-      title: "Documentation",
-      url: "#",
-      icon: BookOpen,
+      title: "Forms & Approvals",
+      url: "/staff/approvals",
+      icon: ClipboardList,
       items: [
         {
-          title: "Introduction",
-          url: "#",
+          title: "Pending Approvals",
+          url: "/staff/approvals/pending",
         },
         {
-          title: "Get Started",
-          url: "#",
+          title: "Budget Requests",
+          url: "/staff/approvals/budget",
         },
         {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
+          title: "Form Templates",
+          url: "/staff/approvals/templates",
         },
       ],
     },
     {
-      title: "Settings",
-      url: "#",
-      icon: Settings2,
+      title: "System",
+      url: "/staff/system",
+      icon: Settings,
       items: [
         {
-          title: "General",
-          url: "#",
+          title: "Configuration",
+          url: "/staff/system/config",
         },
         {
-          title: "Team",
-          url: "#",
+          title: "Logs",
+          url: "/staff/system/logs",
         },
         {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
+          title: "Backup",
+          url: "/staff/system/backup",
         },
       ],
     },
   ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: Map,
-    },
-  ],
+  // projects: [
+  //   {
+  //     name: "Recent Projects",
+  //     url: "/staff/projects/recent",
+  //     icon: History,
+  //   },
+  //   {
+  //     name: "Statistics",
+  //     url: "/staff/projects/stats",
+  //     icon: BarChart,
+  //   },
+  //   {
+  //     name: "Security",
+  //     url: "/staff/security",
+  //     icon: Shield,
+  //   },
+  // ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useAuth();
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <div className="flex items-center px-4 py-2">
+          <div className="text-xl font-bold text-primary">SRPM Admin</div>
+        </div>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavMain items={adminNavData.navMain} />
+        {/* <NavProjects projects={adminNavData.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={
+            user
+              ? {
+                  name: user.name,
+                  email: user.email,
+                  avatar: user.avatar,
+                }
+              : adminNavData.user
+          }
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -67,6 +67,7 @@ const PaginationPrevious = ({
     aria-label="Go to previous page"
     className={cn("gap-1 pl-2.5", className)}
     {...props}
+    size="default"
   >
     <ChevronLeft className="h-4 w-4" />
     <span>Previous</span>
@@ -82,6 +83,7 @@ const PaginationNext = ({
     aria-label="Go to next page"
     className={cn("gap-1 pr-2.5", className)}
     {...props}
+    size="default"
   >
     <span>Next</span>
     <ChevronRight className="h-4 w-4" />
