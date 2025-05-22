@@ -27,6 +27,13 @@ import CouncilMeetings from "../pages/Council/Meetings";
 import MeetingMinutes from "../pages/Council/Meetings/MeetingMinutes";
 import ApprovalInterface from "../pages/Council/Approvals";
 
+// Admin Pages
+import AdminDashboard from "../pages/Admin/Dashboard";
+import UserManagement from "../pages/Admin/Users";
+import SystemConfig from "../pages/Admin/System/Config";
+import SystemLogs from "../pages/Admin/System/Logs";
+import ApprovalManagement from "../pages/Admin/Approvals";
+
 /**
  * Main application routes configuration
  */
@@ -56,9 +63,44 @@ export const routes: RouteObject[] = [
         children: [
           {
             path: "dashboard",
-            element: <Dashboard />,
+            element: <AdminDashboard />,
           },
-          // Add more staff routes here
+          // User Management
+          {
+            path: "users",
+            element: <UserManagement />,
+          },
+          {
+            path: "users/roles",
+            element: <UserManagement />,
+          },
+          // Projects
+          {
+            path: "projects",
+            element: <ProjectsList />,
+          },
+          {
+            path: "projects/create",
+            element: <RegisterProject />,
+          },
+          // System Configuration
+          {
+            path: "system/config",
+            element: <SystemConfig />,
+          },
+          {
+            path: "system/logs",
+            element: <SystemLogs />,
+          },
+          // Approvals
+          {
+            path: "approvals/pending",
+            element: <ApprovalManagement />,
+          },
+          {
+            path: "approvals/budget",
+            element: <ApprovalManagement />,
+          },
         ],
       },
       {
