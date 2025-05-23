@@ -1,8 +1,8 @@
-import ProjectCard from "@/components/layout/project-card";
-import React from "react";
+import UserProjectCard from "@/components/layout/project-card";
 
 const projects = [
   {
+    id: "1",
     category: "Environmental Science",
     title: "Climate Change Impact Analysis",
     description:
@@ -14,6 +14,7 @@ const projects = [
     status: "Active",
   },
   {
+    id: "2",
     category: "Computer Science",
     title: "Quantum Computing Applications",
     description:
@@ -25,6 +26,7 @@ const projects = [
     status: "Active",
   },
   {
+    id: "3",
     category: "Microbiology",
     title: "Novel Antibiotics Discovery",
     description: "Researching new antibiotic compounds from marine organisms",
@@ -35,6 +37,7 @@ const projects = [
     status: "Completed",
   },
   {
+    id: "4",
     category: "Artificial Intelligence",
     title: "Neural Network Optimization",
     description: "Developing new algorithms for optimizing neural networks",
@@ -45,6 +48,7 @@ const projects = [
     status: "Active",
   },
   {
+    id: "5",
     category: "Materials Science",
     title: "Renewable Energy Storage Solutions",
     description:
@@ -56,6 +60,7 @@ const projects = [
     status: "Active",
   },
   {
+    id: "6",
     category: "Agricultural Science",
     title: "Genetic Markers for Disease Resistance",
     description:
@@ -84,8 +89,8 @@ const FeaturedProjects: React.FC = () => {
           </a>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {projects.slice(0, 6).map((project, index) => (
-            <ProjectCard key={index} {...project} />
+          {projects.slice(0, 6).map((project) => (
+            <UserProjectCard key={project.id} {...project} />
           ))}
         </div>
       </div>
