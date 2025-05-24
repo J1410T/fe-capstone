@@ -24,6 +24,7 @@ import PendingEvaluations from "../pages/Council/Evaluations";
 import EvaluationDetail from "../pages/Council/Evaluations/EvaluationDetail";
 import EvaluationForm from "../pages/Council/Evaluations/EvaluationForm";
 import CouncilMeetings from "../pages/Council/Meetings";
+import ScheduleMeeting from "../pages/Council/Meetings/ScheduleMeeting";
 import MeetingMinutes from "../pages/Council/Meetings/MeetingMinutes";
 import ApprovalInterface from "../pages/Council/Approvals";
 
@@ -33,6 +34,12 @@ import UserManagement from "../pages/Admin/Users";
 import SystemConfig from "../pages/Admin/System/Config";
 import SystemLogs from "../pages/Admin/System/Logs";
 import ApprovalManagement from "../pages/Admin/Approvals";
+import AdminComingSoon from "../pages/Admin/ComingSoon";
+
+// General Coming Soon
+import GeneralComingSoon from "../pages/ComingSoon";
+import ProjectsComingSoon from "../pages/Projects/ComingSoon";
+import FormsComingSoon from "../pages/Forms/ComingSoon";
 
 /**
  * Main application routes configuration
@@ -72,7 +79,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "users/roles",
-            element: <UserManagement />,
+            element: <AdminComingSoon />,
           },
           // Projects
           {
@@ -81,7 +88,19 @@ export const routes: RouteObject[] = [
           },
           {
             path: "projects/create",
-            element: <RegisterProject />,
+            element: <AdminComingSoon />,
+          },
+          {
+            path: "projects/templates",
+            element: <AdminComingSoon />,
+          },
+          {
+            path: "projects/recent",
+            element: <AdminComingSoon />,
+          },
+          {
+            path: "projects/stats",
+            element: <AdminComingSoon />,
           },
           // System Configuration
           {
@@ -92,6 +111,10 @@ export const routes: RouteObject[] = [
             path: "system/logs",
             element: <SystemLogs />,
           },
+          {
+            path: "system/backup",
+            element: <AdminComingSoon />,
+          },
           // Approvals
           {
             path: "approvals/pending",
@@ -99,7 +122,16 @@ export const routes: RouteObject[] = [
           },
           {
             path: "approvals/budget",
-            element: <ApprovalManagement />,
+            element: <AdminComingSoon />,
+          },
+          {
+            path: "approvals/templates",
+            element: <AdminComingSoon />,
+          },
+          // Security
+          {
+            path: "security",
+            element: <AdminComingSoon />,
           },
         ],
       },
@@ -114,6 +146,26 @@ export const routes: RouteObject[] = [
           {
             path: "home",
             element: <UserHome />,
+          },
+          {
+            path: "projects",
+            element: <GeneralComingSoon />,
+          },
+          {
+            path: "profile",
+            element: <GeneralComingSoon />,
+          },
+          {
+            path: "notifications",
+            element: <GeneralComingSoon />,
+          },
+          {
+            path: "forms/*",
+            element: <FormsComingSoon />,
+          },
+          {
+            path: "project/*",
+            element: <ProjectsComingSoon />,
           },
           // Add more member routes here
         ],
@@ -167,6 +219,14 @@ export const routes: RouteObject[] = [
             path: "history",
             element: <ProjectHistory />,
           },
+          {
+            path: "forms/*",
+            element: <FormsComingSoon />,
+          },
+          {
+            path: "project/*",
+            element: <ProjectsComingSoon />,
+          },
         ],
       },
       // Council routes
@@ -203,6 +263,10 @@ export const routes: RouteObject[] = [
             element: <CouncilMeetings />,
           },
           {
+            path: "meetings/schedule",
+            element: <ScheduleMeeting />,
+          },
+          {
             path: "meeting/:id",
             element: <MeetingMinutes />,
           },
@@ -223,10 +287,14 @@ export const routes: RouteObject[] = [
         element: <AuthLayout />,
         children: [...authRoutes],
       },
-      // Catch all route - 404
+      // Catch all route - Coming Soon for authenticated users, login for unauthenticated
       {
         path: "*",
-        element: <Navigate to="/auth/login" replace />,
+        element: (
+          <AuthGuard>
+            <GeneralComingSoon />
+          </AuthGuard>
+        ),
       },
     ],
   },

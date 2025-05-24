@@ -26,7 +26,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Calendar, Clock, Video, FileText } from "lucide-react";
+import { 
+  Search, 
+  Calendar as CalendarIcon, 
+  Clock, 
+  Video, 
+  FileText,
+  CheckCircle,
+  AlertCircle
+} from "lucide-react";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 
 // Mock data for meetings
@@ -34,57 +42,62 @@ const meetings = [
   {
     id: 1,
     title: "Project Evaluation: AI-Driven Medical Diagnostics",
-    date: "2023-07-15",
+    date: "2024-01-15",
     time: "10:00 AM - 12:00 PM",
     location: "Virtual (Zoom)",
     meetingLink: "https://zoom.us/j/123456789",
     status: "Upcoming",
     type: "Proposal Evaluation",
-    projectCode: "PRJ-2023-001",
+    projectCode: "PRJ-2024-001",
+    joined: false,
   },
   {
     id: 2,
     title: "Project Evaluation: Sustainable Energy Solutions",
-    date: "2023-07-20",
+    date: "2024-01-20",
     time: "2:00 PM - 4:00 PM",
     location: "Virtual (Google Meet)",
     meetingLink: "https://meet.google.com/abc-defg-hij",
     status: "Upcoming",
     type: "Proposal Evaluation",
-    projectCode: "PRJ-2023-002",
+    projectCode: "PRJ-2024-002",
+    joined: false,
   },
   {
     id: 3,
     title: "Milestone Review: Biodiversity Conservation",
-    date: "2023-07-10",
+    date: "2024-01-10",
     time: "9:00 AM - 11:00 AM",
     location: "Virtual (Zoom)",
     meetingLink: "https://zoom.us/j/987654321",
     status: "Completed",
     type: "Milestone Evaluation",
-    projectCode: "PRJ-2023-003",
+    projectCode: "PRJ-2024-003",
+    joined: true,
   },
   {
     id: 4,
     title: "Project Evaluation: Quantum Computing Applications",
-    date: "2023-07-05",
+    date: "2024-01-05",
     time: "1:00 PM - 3:00 PM",
     location: "Virtual (Microsoft Teams)",
     meetingLink: "https://teams.microsoft.com/l/meetup-join/...",
     status: "Completed",
     type: "Proposal Evaluation",
-    projectCode: "PRJ-2023-004",
+    projectCode: "PRJ-2024-004",
+    joined: true,
   },
   {
     id: 5,
     title: "Milestone Review: Genetic Engineering Ethics",
-    date: "2023-07-25",
+    date: "2024-01-25",
     time: "11:00 AM - 1:00 PM",
     location: "Virtual (Zoom)",
     meetingLink: "https://zoom.us/j/123123123",
     status: "Upcoming",
     type: "Milestone Evaluation",
-    projectCode: "PRJ-2023-005",
+    projectCode: "PRJ-2024-005",
+    joined: false,
   },
 ];
 
@@ -118,6 +131,19 @@ const CouncilMeetings: React.FC = () => {
     window.open(meetingLink, "_blank");
   };
 
+  const handleScheduleMeeting = () => {
+    navigate("/council/meetings/schedule");
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-start">
@@ -130,8 +156,8 @@ const CouncilMeetings: React.FC = () => {
           </p>
         </div>
         {isChairman && (
-          <Button onClick={() => navigate("/council/meeting/schedule")}>
-            <Calendar className="mr-2 h-4 w-4" />
+          <Button onClick={handleScheduleMeeting}>
+            <CalendarIcon className="mr-2 h-4 w-4" />
             Schedule Meeting
           </Button>
         )}
@@ -195,13 +221,14 @@ const CouncilMeetings: React.FC = () => {
                       <TableHead>Date & Time</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Project Code</TableHead>
+                      <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredMeetings.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="h-24 text-center">
+                        <TableCell colSpan={6} className="h-24 text-center">
                           No meetings found.
                         </TableCell>
                       </TableRow>
@@ -214,8 +241,8 @@ const CouncilMeetings: React.FC = () => {
                           <TableCell>
                             <div className="space-y-1">
                               <div className="flex items-center">
-                                <Calendar className="mr-2 h-3 w-3 text-muted-foreground" />
-                                <span>{meeting.date}</span>
+                                <CalendarIcon className="mr-2 h-3 w-3 text-muted-foreground" />
+                                <span>{formatDate(meeting.date)}</span>
                               </div>
                               <div className="flex items-center">
                                 <Clock className="mr-2 h-3 w-3 text-muted-foreground" />
@@ -236,6 +263,28 @@ const CouncilMeetings: React.FC = () => {
                             </Badge>
                           </TableCell>
                           <TableCell>{meeting.projectCode}</TableCell>
+                          <TableCell>
+                            {meeting.status === "Completed" && (
+                              <div className="flex items-center gap-1">
+                                {meeting.joined ? (
+                                  <>
+                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                    <span className="text-green-700 text-sm">Joined</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <AlertCircle className="h-4 w-4 text-orange-500" />
+                                    <span className="text-orange-700 text-sm">Not Joined</span>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                            {meeting.status === "Upcoming" && (
+                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                                Upcoming
+                              </Badge>
+                            )}
+                          </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               {meeting.status === "Upcoming" && (
