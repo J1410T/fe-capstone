@@ -91,7 +91,11 @@ const UserManagement: React.FC = () => {
   const [newUser, setNewUser] = useState({
     name: "",
     email: "",
+<<<<<<< HEAD
     role: "" as UserRole | "",
+=======
+    role: "",
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
     status: "Active",
   });
 
@@ -100,30 +104,49 @@ const UserManagement: React.FC = () => {
     const matchesSearch =
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase());
+<<<<<<< HEAD
 
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
     const matchesStatus =
       statusFilter === "all" || user.status === statusFilter;
 
+=======
+    
+    const matchesRole = roleFilter === "all" || user.role === roleFilter;
+    const matchesStatus = statusFilter === "all" || user.status === statusFilter;
+    
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   // Handle adding a new user
   const handleAddUser = () => {
+<<<<<<< HEAD
     if (!newUser.role) return; // Don't add user without role
 
+=======
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
     const newUserWithId = {
       ...newUser,
       id: (users.length + 1).toString(),
       lastActive: new Date().toISOString(),
+<<<<<<< HEAD
       role: newUser.role as UserRole,
     };
 
+=======
+    };
+    
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
     setUsers([...users, newUserWithId]);
     setNewUser({
       name: "",
       email: "",
+<<<<<<< HEAD
       role: "" as UserRole | "",
+=======
+      role: "",
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
       status: "Active",
     });
     setIsAddUserDialogOpen(false);

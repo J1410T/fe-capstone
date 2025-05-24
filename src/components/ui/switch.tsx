@@ -1,7 +1,14 @@
+<<<<<<< HEAD
 import * as React from "react";
 import * as SwitchPrimitives from "@radix-ui/react-switch";
 
 import { cn } from "@/lib/utils";
+=======
+import * as React from "react"
+import * as SwitchPrimitives from "@radix-ui/react-switch"
+
+import { cn } from "@/lib/utils"
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
 
 const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitives.Root>,
@@ -21,7 +28,14 @@ const Switch = React.forwardRef<
       )}
     />
   </SwitchPrimitives.Root>
+<<<<<<< HEAD
 ));
 Switch.displayName = SwitchPrimitives.Root.displayName;
 
 export { Switch };
+=======
+))
+Switch.displayName = SwitchPrimitives.Root.displayName
+
+export { Switch }
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781

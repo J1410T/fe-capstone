@@ -20,10 +20,17 @@ const AdminDashboard: React.FC = () => {
     { name: "Pending", value: 5, color: "#f59e0b" },
   ];
 
+<<<<<<< HEAD
   // const budgetData = [
   //   { name: "Disbursed", value: 65, color: "#10b981" },
   //   { name: "Remaining", value: 35, color: "#f59e0b" },
   // ];
+=======
+  const budgetData = [
+    { name: "Disbursed", value: 65, color: "#10b981" },
+    { name: "Remaining", value: 35, color: "#f59e0b" },
+  ];
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
 
   const userRoleData = [
     { name: "PI", value: 15, color: "#4f46e5" },
@@ -32,10 +39,17 @@ const AdminDashboard: React.FC = () => {
     { name: "Staff", value: 5, color: "#ef4444" },
   ];
 
+<<<<<<< HEAD
   // const projectProgressData = [
   //   { name: "On Track", value: 75, color: "#10b981" },
   //   { name: "Delayed", value: 25, color: "#ef4444" },
   // ];
+=======
+  const projectProgressData = [
+    { name: "On Track", value: 75, color: "#10b981" },
+    { name: "Delayed", value: 25, color: "#ef4444" },
+  ];
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
 
   const monthlyProjectData = [
     { month: "Jan", projects: 5, budget: 50000 },
@@ -57,25 +71,41 @@ const AdminDashboard: React.FC = () => {
       id: 1,
       title: "New project proposal submitted",
       time: "10 minutes ago",
+<<<<<<< HEAD
       type: "approval" as const,
+=======
+      type: "approval",
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
     },
     {
       id: 2,
       title: "Budget request needs review",
       time: "1 hour ago",
+<<<<<<< HEAD
       type: "budget" as const,
+=======
+      type: "budget",
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
     },
     {
       id: 3,
       title: "User account activation request",
       time: "3 hours ago",
+<<<<<<< HEAD
       type: "user" as const,
+=======
+      type: "user",
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
     },
     {
       id: 4,
       title: "Form BM05 submitted for review",
       time: "Yesterday",
+<<<<<<< HEAD
       type: "form" as const,
+=======
+      type: "form",
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
     },
   ];
 
@@ -92,7 +122,11 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Project Overview */}
+<<<<<<< HEAD
       <StatCards
+=======
+      <StatCards 
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
         totalProjects={28}
         activeUsers={70}
         pendingApprovals={12}

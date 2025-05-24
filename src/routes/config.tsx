@@ -160,6 +160,7 @@ export const routes: RouteObject[] = [
           {
             path: "projects",
 <<<<<<< HEAD
+<<<<<<< HEAD
             element: <ProjectListing />,
           },
           {
@@ -182,6 +183,8 @@ export const routes: RouteObject[] = [
             path: "settings",
             element: <Settings />,
 =======
+=======
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
             element: <GeneralComingSoon />,
           },
           {
@@ -199,7 +202,10 @@ export const routes: RouteObject[] = [
           {
             path: "project/*",
             element: <ProjectsComingSoon />,
+<<<<<<< HEAD
 >>>>>>> 021c6c9 (feat: Implement Coming Soon pages for unimplemented features)
+=======
+>>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
           },
           // Add more member routes here
         ],
