@@ -111,30 +111,20 @@ const ApprovalInterface: React.FC = () => {
   };
 
   const handleSubmitDecision = () => {
-<<<<<<< HEAD
     if (!selectedApproval) return;
 
-=======
->>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
     setIsSubmitting(true);
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
       setIsApprovalDialogOpen(false);
       toast.success(
-<<<<<<< HEAD
         `Decision submitted for approval ${selectedApproval}: ${
-=======
-        `Decision submitted: ${
->>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
           decision === "approve" ? "Approved" : "Objected"
         }`
       );
       // In a real app, you would update the state or refetch the data
-<<<<<<< HEAD
       setSelectedApproval(null);
-=======
->>>>>>> ec4c6af56fd61ae8fcc44cb1774445895a6dd781
     }, 1000);
   };
 
