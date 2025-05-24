@@ -665,8 +665,8 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             <Table>
               <TableHeader>
                 <TableRow className="border-slate-200">
-                  {table.getHeaderGroups().map((headerGroup: any) =>
-                    headerGroup.headers.map((header: any) => (
+                  {table.getHeaderGroups().map((headerGroup) =>
+                    headerGroup.headers.map((header: Header<Task, unknown>) => (
                       <TableHead
                         key={header.id}
                         className="bg-slate-50 text-slate-700 font-semibold"
