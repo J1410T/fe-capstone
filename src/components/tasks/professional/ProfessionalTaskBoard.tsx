@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -312,10 +312,10 @@ export const ProfessionalTaskBoard: React.FC = () => {
   }
 
   return (
-    <div className=" flex flex-col bg-slate-50">
+    <div className="min-h-screen flex flex-col bg-slate-50">
       {/* Search and Filter Bar */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-4">
+      <div className="bg-white border-b border-slate-200 shadow-sm flex-shrink-0">
+        <div className="px-6 py-4">
           <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
             <div className="flex flex-col sm:flex-row gap-3 flex-1">
               <SearchBar
@@ -351,35 +351,36 @@ export const ProfessionalTaskBoard: React.FC = () => {
       </div>
 
       {/* Stats Bar */}
-      <div className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-3">
+      <div className="bg-white border-b border-slate-200 flex-shrink-0">
+        <div className="px-6 py-3">
           <TaskStatsBar stats={stats} />
         </div>
       </div>
 
       {/* Kanban Board */}
-      <div className="flex-1 overflow-hidden">
-        <div className="max-w-7xl mx-auto h-full">
+      <div className="flex-1 overflow-x-auto kanban-container">
+        <div className="p-4">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 p-6 h-full">
+            <div className="flex gap-4 items-start justify-center min-w-full">
               {TASK_STATUSES.map((status) => (
-                <TaskColumn
-                  key={status}
-                  status={status}
-                  tasks={tasksByStatus[status]}
-                  onTaskClick={handleTaskClick}
-                />
+                <div key={status} className="flex-shrink-0 w-80 min-w-[300px]">
+                  <TaskColumn
+                    status={status}
+                    tasks={tasksByStatus[status]}
+                    onTaskClick={handleTaskClick}
+                  />
+                </div>
               ))}
             </div>
 
             <DragOverlay>
               {activeTask ? (
-                <TaskCard task={activeTask} onClick={() => {}} isDragging />
+                <TaskCard task={activeTask} onClick={() => {}} />
               ) : null}
             </DragOverlay>
           </DndContext>

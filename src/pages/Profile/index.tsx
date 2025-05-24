@@ -6,18 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Calendar, 
-  Edit, 
-  Save, 
-  X, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Edit,
+  Save,
+  X,
   Camera,
   Shield,
-  Clock
+  Clock,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -64,7 +64,10 @@ const Profile: React.FC = () => {
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (editData.phone && !/^[\+]?[1-9][\d]{0,15}$/.test(editData.phone.replace(/[\s\-\(\)]/g, ''))) {
+    if (
+      editData.phone &&
+      !/^[\+]?[1-9][\d]{0,15}$/.test(editData.phone.replace(/[\s\-\(\)]/g, ""))
+    ) {
       newErrors.phone = "Please enter a valid phone number";
     }
 
@@ -76,10 +79,10 @@ const Profile: React.FC = () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
-    
+
     // Simulate API call
     setTimeout(() => {
-      setUser(prev => ({
+      setUser((prev) => ({
         ...prev,
         ...editData,
       }));
@@ -101,11 +104,11 @@ const Profile: React.FC = () => {
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setEditData(prev => ({ ...prev, [field]: value }));
-    
+    setEditData((prev) => ({ ...prev, [field]: value }));
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -147,7 +150,10 @@ const Profile: React.FC = () => {
                 <Avatar className="w-24 h-24">
                   <AvatarImage src={user.avatar} alt={user.name} />
                   <AvatarFallback className="bg-slate-100 text-slate-600 text-2xl">
-                    {user.name.split(' ').map(n => n[0]).join('')}
+                    {user.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
                   </AvatarFallback>
                 </Avatar>
                 {isEditing && (
@@ -164,7 +170,9 @@ const Profile: React.FC = () => {
               {/* User Info */}
               <div className="flex-1">
                 <div className="flex items-center space-x-3 mb-2">
-                  <h2 className="text-2xl font-semibold text-slate-900">{user.name}</h2>
+                  <h2 className="text-2xl font-semibold text-slate-900">
+                    {user.name}
+                  </h2>
                   {user.isLeader && (
                     <Badge className="bg-blue-100 text-blue-700">
                       <Shield className="w-3 h-3 mr-1" />
@@ -172,13 +180,19 @@ const Profile: React.FC = () => {
                     </Badge>
                   )}
                 </div>
-                <p className="text-slate-600 mb-1">{user.role} • {user.department}</p>
+                <p className="text-slate-600 mb-1">
+                  {user.role} • {user.department}
+                </p>
                 <p className="text-sm text-slate-500 mb-4">{user.email}</p>
-                
+
                 {/* Skills */}
                 <div className="flex flex-wrap gap-2">
                   {user.skills.map((skill, index) => (
-                    <Badge key={index} variant="secondary" className="bg-slate-100 text-slate-700">
+                    <Badge
+                      key={index}
+                      variant="secondary"
+                      className="bg-slate-100 text-slate-700"
+                    >
                       {skill}
                     </Badge>
                   ))}
@@ -198,13 +212,19 @@ const Profile: React.FC = () => {
           <CardContent className="space-y-6">
             {/* Name */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Full Name</Label>
+              <Label className="text-sm font-medium text-slate-700">
+                Full Name
+              </Label>
               {isEditing ? (
                 <div>
                   <Input
                     value={editData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className={`${errors.name ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"}`}
+                    className={`${
+                      errors.name
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    }`}
                   />
                   {errors.name && (
                     <p className="text-sm text-red-600 mt-1">{errors.name}</p>
@@ -220,14 +240,20 @@ const Profile: React.FC = () => {
 
             {/* Email */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Email Address</Label>
+              <Label className="text-sm font-medium text-slate-700">
+                Email Address
+              </Label>
               {isEditing ? (
                 <div>
                   <Input
                     type="email"
                     value={editData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    className={`${errors.email ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"}`}
+                    className={`${
+                      errors.email
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    }`}
                   />
                   {errors.email && (
                     <p className="text-sm text-red-600 mt-1">{errors.email}</p>
@@ -243,7 +269,9 @@ const Profile: React.FC = () => {
 
             {/* Phone */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Phone Number</Label>
+              <Label className="text-sm font-medium text-slate-700">
+                Phone Number
+              </Label>
               {isEditing ? (
                 <div>
                   <Input
@@ -251,7 +279,11 @@ const Profile: React.FC = () => {
                     value={editData.phone}
                     onChange={(e) => handleInputChange("phone", e.target.value)}
                     placeholder="+1 (555) 123-4567"
-                    className={`${errors.phone ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"}`}
+                    className={`${
+                      errors.phone
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    }`}
                   />
                   {errors.phone && (
                     <p className="text-sm text-red-600 mt-1">{errors.phone}</p>
@@ -267,11 +299,15 @@ const Profile: React.FC = () => {
 
             {/* Location */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Location</Label>
+              <Label className="text-sm font-medium text-slate-700">
+                Location
+              </Label>
               {isEditing ? (
                 <Input
                   value={editData.location}
-                  onChange={(e) => handleInputChange("location", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("location", e.target.value)
+                  }
                   placeholder="City, State/Country"
                   className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                 />
@@ -296,7 +332,9 @@ const Profile: React.FC = () => {
                 />
               ) : (
                 <div className="p-3 bg-slate-50 rounded-lg">
-                  <p className="text-slate-700 text-sm leading-relaxed">{user.bio}</p>
+                  <p className="text-slate-700 text-sm leading-relaxed">
+                    {user.bio}
+                  </p>
                 </div>
               )}
             </div>
@@ -336,7 +374,9 @@ const Profile: React.FC = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-700">Member Since</Label>
+                <Label className="text-sm font-medium text-slate-700">
+                  Member Since
+                </Label>
                 <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
                   <Calendar className="w-4 h-4 text-slate-500" />
                   <span className="text-slate-700">
@@ -346,11 +386,16 @@ const Profile: React.FC = () => {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-700">Last Login</Label>
+                <Label className="text-sm font-medium text-slate-700">
+                  Last Login
+                </Label>
                 <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
                   <Clock className="w-4 h-4 text-slate-500" />
                   <span className="text-slate-700">
-                    {format(new Date(user.lastLogin), "MMM dd, yyyy 'at' HH:mm")}
+                    {format(
+                      new Date(user.lastLogin),
+                      "MMM dd, yyyy 'at' HH:mm"
+                    )}
                   </span>
                 </div>
               </div>
@@ -359,7 +404,9 @@ const Profile: React.FC = () => {
             <Separator className="bg-slate-200" />
 
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Account Type</Label>
+              <Label className="text-sm font-medium text-slate-700">
+                Account Type
+              </Label>
               <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
                 <Shield className="w-4 h-4 text-slate-500" />
                 <span className="text-slate-700">

@@ -4,12 +4,11 @@ import { CSS } from "@dnd-kit/utilities";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Task } from "@/types/task";
 import { format, parseISO, isAfter } from "date-fns";
-import { Calendar, AlertCircle, Flag } from "lucide-react";
+import { Calendar, AlertCircle } from "lucide-react";
 
 interface TaskCardProps {
   task: Task;
   onClick: (task: Task) => void;
-  isDragging?: boolean;
 }
 
 const getPriorityConfig = (priority: string) => {
@@ -50,7 +49,7 @@ const isOverdue = (dueDate: string, status: string) => {
   return isAfter(new Date(), parseISO(dueDate));
 };
 
-export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, isDragging }) => {
+export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
   const {
     attributes,
     listeners,
@@ -83,7 +82,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, isDragging })
       <div
         className={`
           bg-white rounded-lg border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all duration-200
-          ${sortableIsDragging ? "shadow-lg ring-2 ring-blue-400 ring-opacity-50" : ""}
+          ${
+            sortableIsDragging
+              ? "shadow-lg ring-2 ring-blue-400 ring-opacity-50"
+              : ""
+          }
           ${overdue ? "ring-1 ring-red-300 bg-red-50" : ""}
         `}
       >
@@ -111,7 +114,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, isDragging })
         {/* Due Date */}
         <div className="flex items-center space-x-1 mb-3">
           <Calendar className="w-3 h-3 text-slate-400" />
-          <span className={`text-xs ${overdue ? "text-red-600 font-medium" : "text-slate-500"}`}>
+          <span
+            className={`text-xs ${
+              overdue ? "text-red-600 font-medium" : "text-slate-500"
+            }`}
+          >
             {format(parseISO(task.dueDate), "MMM dd")}
           </span>
         </div>
@@ -120,16 +127,22 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick, isDragging })
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <Avatar className="w-6 h-6">
-              <AvatarImage src={task.assignee.avatar} alt={task.assignee.name} />
+              <AvatarImage
+                src={task.assignee.avatar}
+                alt={task.assignee.name}
+              />
               <AvatarFallback className="text-xs bg-slate-100 text-slate-600">
-                {task.assignee.name.split(' ').map(n => n[0]).join('')}
+                {task.assignee.name
+                  .split(" ")
+                  .map((n) => n[0])
+                  .join("")}
               </AvatarFallback>
             </Avatar>
             <span className="text-xs text-slate-600 truncate max-w-[100px]">
-              {task.assignee.name.split(' ')[0]}
+              {task.assignee.name.split(" ")[0]}
             </span>
           </div>
-          
+
           {/* Task ID for reference */}
           <span className="text-xs text-slate-400 font-mono">
             #{task.id.slice(-4)}

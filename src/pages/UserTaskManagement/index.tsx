@@ -34,7 +34,7 @@ import {
   Plus,
   BarChart3,
   Users,
-  Calendar,
+  // Calendar, // Unused import
   Filter,
 } from "lucide-react";
 
@@ -170,7 +170,7 @@ const UserTaskManagement: React.FC = () => {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading] = useState(false); // Removed unused variable
   const [activeView, setActiveView] = useState<"table" | "kanban">("table");
 
   // Role-based permissions (can be made dynamic based on user context)
@@ -197,26 +197,26 @@ const UserTaskManagement: React.FC = () => {
   };
 
   // Quick status change handler with loading state
-  const handleQuickStatusChange = async (
-    taskId: string,
-    newStatus: Task["status"]
-  ) => {
-    setIsLoading(true);
+  // const handleQuickStatusChange = async ( // Unused function
+  //   taskId: string,
+  //   newStatus: Task["status"]
+  // ) => {
+  //   setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      const updatedTask = tasks.find((task) => task.id === taskId);
-      if (updatedTask) {
-        const updated = {
-          ...updatedTask,
-          status: newStatus,
-          updatedAt: new Date().toISOString(),
-        };
-        handleUpdateTask(updated);
-      }
-      setIsLoading(false);
-    }, 500);
-  };
+  //   // Simulate API call
+  //   setTimeout(() => {
+  //     const updatedTask = tasks.find((task) => task.id === taskId);
+  //     if (updatedTask) {
+  //       const updated = {
+  //         ...updatedTask,
+  //         status: newStatus,
+  //         updatedAt: new Date().toISOString(),
+  //       };
+  //       handleUpdateTask(updated);
+  //     }
+  //     setIsLoading(false);
+  //   }, 500);
+  // };
 
   // Task creation handler
   const handleCreateTaskSubmit = (
@@ -288,8 +288,8 @@ const UserTaskManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Enhanced Header */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
+      {/* Fixed Header - Always Visible */}
+      <div className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-6">
           <div className="flex items-center justify-between">
             <div>
@@ -366,59 +366,43 @@ const UserTaskManagement: React.FC = () => {
         </div>
       </div>
 
-      {/* Task Statistics Dashboard */}
-      <div className="max-w-7xl mx-auto px-6 py-4">
-        <TaskStatsCards
-          stats={taskStats}
-          teamMembers={teamMembers}
-          projectTags={projectTags}
-          showExtendedStats={true}
-        />
-      </div>
-
-      {/* Main Content Area with View Switching */}
-      <div className="max-w-7xl mx-auto px-6 pb-6">
+      {/* Content Area with Top Margin for Fixed Header */}
+      <div className="pt-[140px]">
         {activeView === "table" ? (
-          /* Table View */
-          <TaskTable
-            tasks={tasks}
-            onTaskEdit={handleTaskEdit}
-            onTaskView={handleTaskView}
-            onTaskClick={handleTaskClick}
-            onCreateTask={handleCreateTaskClick}
-            isLeader={isLeader}
-            title="Task Management"
-            description="Manage and track all project tasks with advanced filtering and sorting"
-          />
-        ) : (
-          /* Kanban View */
-          <div className="bg-white rounded-lg border border-slate-200 shadow-sm">
-            <div className="p-6 border-b border-slate-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-900">
-                    Kanban Board
-                  </h2>
-                  <p className="text-sm text-slate-600 mt-1">
-                    Drag and drop tasks to update their status
-                  </p>
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-slate-500">
-                  <div className="flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                    <span>Drag & Drop Enabled</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="h-[calc(100vh-400px)] overflow-hidden">
-              <SharedTaskBoard
-                tasks={tasks}
-                onTaskUpdate={handleUpdateTask}
-                onTaskClick={handleTaskClick}
-                isLeader={isLeader}
+          <>
+            {/* Task Statistics Dashboard - Table View */}
+            <div className="max-w-7xl mx-auto px-6 py-4">
+              <TaskStatsCards
+                stats={taskStats}
+                teamMembers={teamMembers}
+                projectTags={projectTags}
+                showExtendedStats={true}
               />
             </div>
+
+            {/* Table View */}
+            <div className="max-w-7xl mx-auto px-6 pb-6">
+              <TaskTable
+                tasks={tasks}
+                onTaskEdit={handleTaskEdit}
+                onTaskView={handleTaskView}
+                onTaskClick={handleTaskClick}
+                onCreateTask={handleCreateTaskClick}
+                isLeader={isLeader}
+                title="Task Management"
+                description="Manage and track all project tasks with advanced filtering and sorting"
+              />
+            </div>
+          </>
+        ) : (
+          /* Kanban View - Full Screen with Custom Stats */
+          <div className="min-h-screen">
+            <SharedTaskBoard
+              tasks={tasks}
+              onTaskUpdate={handleUpdateTask}
+              onTaskClick={handleTaskClick}
+              isLeader={isLeader}
+            />
           </div>
         )}
       </div>

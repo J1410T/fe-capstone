@@ -111,7 +111,7 @@ const mockProjects = [
 
 function ProjectListing() {
   // State management
-  const [projects, setProjects] = useState(mockProjects);
+  const [projects] = useState(mockProjects); // Removed unused setProjects
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

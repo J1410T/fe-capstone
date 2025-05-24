@@ -11,8 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, Flag, User, Edit, X, Save } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Calendar, Edit, X, Save } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 // Task interface
@@ -94,10 +100,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   };
 
   const handleInputChange = (field: keyof Task, value: any) => {
-    setEditData(prev => ({ ...prev, [field]: value }));
+    setEditData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -150,7 +156,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
             Task Details
           </DialogTitle>
           <DialogDescription className="text-slate-600">
-            {isEditing ? "Edit task information" : "View task details and make changes"}
+            {isEditing
+              ? "Edit task information"
+              : "View task details and make changes"}
           </DialogDescription>
         </DialogHeader>
 
@@ -181,12 +189,16 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
           {/* Task Description */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Description</label>
+            <label className="text-sm font-medium text-slate-700">
+              Description
+            </label>
             {isEditing ? (
               <div>
                 <Textarea
                   value={editData.description || ""}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
                   className={`${
                     errors.description
                       ? "border-red-300 focus:border-red-500 focus:ring-red-500"
@@ -196,7 +208,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                   rows={3}
                 />
                 {errors.description && (
-                  <p className="text-sm text-red-600 mt-1">{errors.description}</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    {errors.description}
+                  </p>
                 )}
               </div>
             ) : (
@@ -208,7 +222,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Status */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Status</label>
+              <label className="text-sm font-medium text-slate-700">
+                Status
+              </label>
               {isEditing ? (
                 <Select
                   value={editData.status || task.status}
@@ -230,11 +246,15 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
             {/* Priority */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Priority</label>
+              <label className="text-sm font-medium text-slate-700">
+                Priority
+              </label>
               {isEditing ? (
                 <Select
                   value={editData.priority || task.priority}
-                  onValueChange={(value) => handleInputChange("priority", value)}
+                  onValueChange={(value) =>
+                    handleInputChange("priority", value)
+                  }
                 >
                   <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500">
                     <SelectValue />
@@ -254,13 +274,22 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
             {/* Due Date */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Due Date</label>
+              <label className="text-sm font-medium text-slate-700">
+                Due Date
+              </label>
               {isEditing ? (
                 <div>
                   <Input
                     type="date"
-                    value={editData.dueDate ? editData.dueDate.split('T')[0] : ""}
-                    onChange={(e) => handleInputChange("dueDate", e.target.value + "T17:00:00Z")}
+                    value={
+                      editData.dueDate ? editData.dueDate.split("T")[0] : ""
+                    }
+                    onChange={(e) =>
+                      handleInputChange(
+                        "dueDate",
+                        e.target.value + "T17:00:00Z"
+                      )
+                    }
                     className={`${
                       errors.dueDate
                         ? "border-red-300 focus:border-red-500 focus:ring-red-500"
@@ -268,7 +297,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     }`}
                   />
                   {errors.dueDate && (
-                    <p className="text-sm text-red-600 mt-1">{errors.dueDate}</p>
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.dueDate}
+                    </p>
                   )}
                 </div>
               ) : (
@@ -283,16 +314,23 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
             {/* Category */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">Category</label>
+              <label className="text-sm font-medium text-slate-700">
+                Category
+              </label>
               {isEditing ? (
                 <Input
                   value={editData.projectTag || ""}
-                  onChange={(e) => handleInputChange("projectTag", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("projectTag", e.target.value)
+                  }
                   className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
                   placeholder="Enter category"
                 />
               ) : (
-                <Badge variant="secondary" className="bg-slate-100 text-slate-700">
+                <Badge
+                  variant="secondary"
+                  className="bg-slate-100 text-slate-700"
+                >
                   {task.projectTag}
                 </Badge>
               )}
@@ -301,17 +339,29 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
           {/* Assigned To */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">Assigned To</label>
+            <label className="text-sm font-medium text-slate-700">
+              Assigned To
+            </label>
             <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
               <Avatar className="w-10 h-10">
-                <AvatarImage src={task.assignedTo.avatar} alt={task.assignedTo.name} />
+                <AvatarImage
+                  src={task.assignedTo.avatar}
+                  alt={task.assignedTo.name}
+                />
                 <AvatarFallback className="bg-slate-100 text-slate-600">
-                  {task.assignedTo.name.split(' ').map(n => n[0]).join('')}
+                  {task.assignedTo.name
+                    .split(" ")
+                    .map((n) => n[0])
+                    .join("")}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <div className="font-medium text-slate-900">{task.assignedTo.name}</div>
-                <div className="text-sm text-slate-500">{task.assignedTo.email}</div>
+                <div className="font-medium text-slate-900">
+                  {task.assignedTo.name}
+                </div>
+                <div className="text-sm text-slate-500">
+                  {task.assignedTo.email}
+                </div>
               </div>
             </div>
           </div>

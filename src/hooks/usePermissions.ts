@@ -1,11 +1,11 @@
-import { useAuth, UserRole } from "@/contexts/AuthContext";
-import { 
-  hasPermission, 
-  canAccessTab, 
-  getAllowedTabs, 
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  hasPermission,
+  canAccessTab,
+  getAllowedTabs,
   canViewSensitiveInfo,
   filterProjectData,
-  PERMISSIONS 
+  PERMISSIONS,
 } from "@/utils/permissions";
 
 /**
@@ -51,7 +51,14 @@ export const usePermissions = () => {
    * Filter project data based on current user's permissions
    */
   const filterProjectForUser = (project: any) => {
-    if (!userRole) return { ...project, budget: undefined, team: undefined, documents: undefined, tasks: undefined };
+    if (!userRole)
+      return {
+        ...project,
+        budget: undefined,
+        team: undefined,
+        documents: undefined,
+        tasks: undefined,
+      };
     return filterProjectData(project, userRole);
   };
 
@@ -60,7 +67,9 @@ export const usePermissions = () => {
    */
   const canViewProjectBudget = checkPermission(PERMISSIONS.VIEW_PROJECT_BUDGET);
   const canViewProjectTeam = checkPermission(PERMISSIONS.VIEW_PROJECT_TEAM);
-  const canViewProjectDocuments = checkPermission(PERMISSIONS.VIEW_PROJECT_DOCUMENTS);
+  const canViewProjectDocuments = checkPermission(
+    PERMISSIONS.VIEW_PROJECT_DOCUMENTS
+  );
   const canViewProjectTasks = checkPermission(PERMISSIONS.VIEW_PROJECT_TASKS);
   const canManageProject = checkPermission(PERMISSIONS.MANAGE_PROJECT);
   const canEditProject = checkPermission(PERMISSIONS.EDIT_PROJECT);
@@ -76,7 +85,7 @@ export const usePermissions = () => {
     getUserAllowedTabs,
     checkSensitiveInfoAccess,
     filterProjectForUser,
-    
+
     // Specific permission flags
     canViewProjectBudget,
     canViewProjectTeam,
@@ -88,7 +97,7 @@ export const usePermissions = () => {
     canViewAllProjects,
     canExportProjectData,
     canApproveProjects,
-    
+
     // User info
     userRole,
     isAuthenticated: !!user,

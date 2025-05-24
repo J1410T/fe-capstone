@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -79,14 +85,14 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
-    
+
     // Simulate file upload and API call
     setTimeout(() => {
-      const mockDocuments = documents.map(file => ({
+      const mockDocuments = documents.map((file) => ({
         name: file.name,
         url: "#", // In real app, this would be the uploaded file URL
         size: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
@@ -99,23 +105,23 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
         reason: formData.reason,
         documents: mockDocuments.length > 0 ? mockDocuments : undefined,
       });
-      
+
       setIsLoading(false);
     }, 1500);
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
+    setFormData((prev) => ({ ...prev, [field]: value }));
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    const validFiles = files.filter(file => {
+    const validFiles = files.filter((file) => {
       // Limit file size to 10MB
       if (file.size > 10 * 1024 * 1024) {
         alert(`File ${file.name} is too large. Maximum size is 10MB.`);
@@ -123,14 +129,14 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
       }
       // Allow common document types
       const allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'text/plain',
-        'image/jpeg',
-        'image/png'
+        "application/pdf",
+        "application/msword",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "application/vnd.ms-excel",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "text/plain",
+        "image/jpeg",
+        "image/png",
       ];
       if (!allowedTypes.includes(file.type)) {
         alert(`File ${file.name} is not a supported format.`);
@@ -139,19 +145,19 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
       return true;
     });
 
-    setDocuments(prev => [...prev, ...validFiles].slice(0, 5)); // Limit to 5 files
+    setDocuments((prev) => [...prev, ...validFiles].slice(0, 5)); // Limit to 5 files
   };
 
   const removeDocument = (index: number) => {
-    setDocuments(prev => prev.filter((_, i) => i !== index));
+    setDocuments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const formatFileSize = (bytes: number): string => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
   };
 
   return (
@@ -166,7 +172,10 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
         <form onSubmit={handleSubmit} className="space-y-5 py-4">
           {/* Title */}
           <div className="space-y-2">
-            <Label htmlFor="title" className="text-sm font-medium text-slate-700">
+            <Label
+              htmlFor="title"
+              className="text-sm font-medium text-slate-700"
+            >
               Request Title *
             </Label>
             <Input
@@ -174,7 +183,11 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
               placeholder="Enter a clear, descriptive title for your funding request..."
               value={formData.title}
               onChange={(e) => handleInputChange("title", e.target.value)}
-              className={`${errors.title ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"}`}
+              className={`${
+                errors.title
+                  ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                  : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+              }`}
             />
             {errors.title && (
               <p className="text-sm text-red-600">{errors.title}</p>
@@ -183,7 +196,10 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium text-slate-700">
+            <Label
+              htmlFor="description"
+              className="text-sm font-medium text-slate-700"
+            >
               Description *
             </Label>
             <Textarea
@@ -191,7 +207,11 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
               placeholder="Provide detailed information about what you need funding for..."
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              className={`min-h-[100px] resize-none ${errors.description ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"}`}
+              className={`min-h-[100px] resize-none ${
+                errors.description
+                  ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                  : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+              }`}
             />
             {errors.description && (
               <p className="text-sm text-red-600">{errors.description}</p>
@@ -200,11 +220,16 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
 
           {/* Amount */}
           <div className="space-y-2">
-            <Label htmlFor="amount" className="text-sm font-medium text-slate-700">
+            <Label
+              htmlFor="amount"
+              className="text-sm font-medium text-slate-700"
+            >
               Requested Amount (USD) *
             </Label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">$</span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">
+                $
+              </span>
               <Input
                 id="amount"
                 type="number"
@@ -214,7 +239,11 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
                 placeholder="0.00"
                 value={formData.amount}
                 onChange={(e) => handleInputChange("amount", e.target.value)}
-                className={`pl-8 ${errors.amount ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"}`}
+                className={`pl-8 ${
+                  errors.amount
+                    ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                    : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                }`}
               />
             </div>
             {errors.amount && (
@@ -227,7 +256,10 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
 
           {/* Reason */}
           <div className="space-y-2">
-            <Label htmlFor="reason" className="text-sm font-medium text-slate-700">
+            <Label
+              htmlFor="reason"
+              className="text-sm font-medium text-slate-700"
+            >
               Justification/Reason *
             </Label>
             <Textarea
@@ -235,7 +267,11 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
               placeholder="Explain why this funding is necessary and how it will benefit your research..."
               value={formData.reason}
               onChange={(e) => handleInputChange("reason", e.target.value)}
-              className={`min-h-[100px] resize-none ${errors.reason ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"}`}
+              className={`min-h-[100px] resize-none ${
+                errors.reason
+                  ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                  : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+              }`}
             />
             {errors.reason && (
               <p className="text-sm text-red-600">{errors.reason}</p>
@@ -251,7 +287,10 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
               <div className="text-center">
                 <Upload className="w-8 h-8 text-slate-400 mx-auto mb-2" />
                 <div className="text-sm text-slate-600 mb-2">
-                  <label htmlFor="file-upload" className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium">
+                  <label
+                    htmlFor="file-upload"
+                    className="cursor-pointer text-blue-600 hover:text-blue-700 font-medium"
+                  >
                     Click to upload files
                   </label>
                   <span> or drag and drop</span>
@@ -273,14 +312,23 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
             {/* Uploaded Files */}
             {documents.length > 0 && (
               <div className="space-y-2">
-                <p className="text-sm font-medium text-slate-700">Uploaded Files:</p>
+                <p className="text-sm font-medium text-slate-700">
+                  Uploaded Files:
+                </p>
                 <div className="space-y-2">
                   {documents.map((file, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-2 bg-slate-50 rounded border border-slate-200"
+                    >
                       <div className="flex items-center space-x-2">
                         <FileText className="w-4 h-4 text-slate-500" />
-                        <span className="text-sm text-slate-700">{file.name}</span>
-                        <span className="text-xs text-slate-500">({formatFileSize(file.size)})</span>
+                        <span className="text-sm text-slate-700">
+                          {file.name}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          ({formatFileSize(file.size)})
+                        </span>
                       </div>
                       <Button
                         type="button"

@@ -1,6 +1,12 @@
 import { User } from "@/contexts/AuthContext";
 
 export type TaskStatus = "To Do" | "In Progress" | "Completed" | "Overdue";
+export type UserTaskStatus =
+  | "Not Started"
+  | "In Progress"
+  | "Complete"
+  | "Overdue";
+export type KanbanStatus = "To Do" | "In Progress" | "Completed" | "Overdue";
 export type TaskPriority = "Low" | "Medium" | "High";
 
 export interface Task {

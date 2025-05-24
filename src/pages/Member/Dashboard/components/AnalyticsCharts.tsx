@@ -2,14 +2,14 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { 
-  BarChart3, 
-  PieChart, 
-  TrendingUp, 
-  Target, 
-  FileText, 
+import {
+  // BarChart3, // Unused import
+  PieChart,
+  TrendingUp,
+  Target,
+  FileText,
   BookOpen,
-  Award
+  Award,
 } from "lucide-react";
 
 // Mock data for analytics
@@ -55,18 +55,25 @@ const getStatusColor = (status: string) => {
 };
 
 export const AnalyticsCharts: React.FC = () => {
-  const totalTasks = taskDistribution.reduce((sum, item) => sum + item.count, 0);
-  const totalOutput = researchOutput.reduce((sum, month) => 
-    sum + month.articles + month.reports + month.presentations, 0
+  const totalTasks = taskDistribution.reduce(
+    (sum, item) => sum + item.count,
+    0
   );
+  // const totalOutput = researchOutput.reduce( // Unused variable
+  //   (sum, month) => sum + month.articles + month.reports + month.presentations,
+  //   0
+  // );
 
   return (
     <div className="space-y-6">
       {/* Analytics Header */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-2">Analytics Overview</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-2">
+          Analytics Overview
+        </h2>
         <p className="text-sm text-slate-600">
-          Visual insights into your project progress, task distribution, and research output
+          Visual insights into your project progress, task distribution, and
+          research output
         </p>
       </div>
 
@@ -98,10 +105,7 @@ export const AnalyticsCharts: React.FC = () => {
                     </span>
                   </div>
                 </div>
-                <Progress 
-                  value={project.completion} 
-                  className="h-2"
-                />
+                <Progress value={project.completion} className="h-2" />
               </div>
             ))}
           </CardContent>
@@ -154,9 +158,14 @@ export const AnalyticsCharts: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div>
                     <div className="text-2xl font-bold text-green-600">
-                      {Math.round((taskDistribution[0].count / totalTasks) * 100)}%
+                      {Math.round(
+                        (taskDistribution[0].count / totalTasks) * 100
+                      )}
+                      %
                     </div>
-                    <div className="text-xs text-slate-500">Completion Rate</div>
+                    <div className="text-xs text-slate-500">
+                      Completion Rate
+                    </div>
                   </div>
                   <div>
                     <div className="text-2xl font-bold text-blue-600">
@@ -204,9 +213,14 @@ export const AnalyticsCharts: React.FC = () => {
               {/* Monthly Data */}
               <div className="space-y-3">
                 {researchOutput.map((month, index) => {
-                  const monthTotal = month.articles + month.reports + month.presentations;
-                  const maxValue = Math.max(...researchOutput.map(m => m.articles + m.reports + m.presentations));
-                  
+                  const monthTotal =
+                    month.articles + month.reports + month.presentations;
+                  const maxValue = Math.max(
+                    ...researchOutput.map(
+                      (m) => m.articles + m.reports + m.presentations
+                    )
+                  );
+
                   return (
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -259,9 +273,14 @@ export const AnalyticsCharts: React.FC = () => {
                   </div>
                   <div>
                     <div className="text-xl font-bold text-purple-600">
-                      {researchOutput.reduce((sum, m) => sum + m.presentations, 0)}
+                      {researchOutput.reduce(
+                        (sum, m) => sum + m.presentations,
+                        0
+                      )}
                     </div>
-                    <div className="text-xs text-slate-500">Total Presentations</div>
+                    <div className="text-xs text-slate-500">
+                      Total Presentations
+                    </div>
                   </div>
                 </div>
               </div>

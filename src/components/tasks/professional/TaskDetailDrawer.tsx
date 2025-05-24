@@ -1,15 +1,26 @@
 import React, { useState, useEffect } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Task, TaskPriority, UpdateTaskData } from "@/types/task";
 import { User, UserRole } from "@/contexts/AuthContext";
-import { Calendar, Clock, Edit, Save, X, User as UserIcon } from "lucide-react";
+import { Calendar, Clock, Edit, Save, X } from "lucide-react";
 import { format, parseISO, isAfter } from "date-fns";
 
 interface TaskDetailDrawerProps {
@@ -77,20 +88,22 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
         description: task.description,
         priority: task.priority,
         assigneeId: task.assignee.id,
-        dueDate: task.dueDate.split('T')[0], // Convert to date input format
+        dueDate: task.dueDate.split("T")[0], // Convert to date input format
       });
     }
   }, [open, task]);
 
   if (!task) return null;
 
-  const isLeader = currentUser.role === UserRole.PRINCIPAL_INVESTIGATOR || 
-                   currentUser.role === UserRole.HOST_INSTITUTION ||
-                   currentUser.role === UserRole.STAFF;
+  const isLeader =
+    currentUser.role === UserRole.PRINCIPAL_INVESTIGATOR ||
+    currentUser.role === UserRole.HOST_INSTITUTION ||
+    currentUser.role === UserRole.STAFF;
 
   const canEdit = isLeader || task.assignee.id === currentUser.id;
-  const isOverdue = isAfter(new Date(), parseISO(task.dueDate)) && task.status !== "Completed";
-  
+  const isOverdue =
+    isAfter(new Date(), parseISO(task.dueDate)) && task.status !== "Completed";
+
   const priorityConfig = getPriorityConfig(task.priority);
   const statusConfig = getStatusConfig(task.status);
 
@@ -111,9 +124,10 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
       const dueDate = new Date(editData.dueDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      
+
       if (dueDate < today && task.status !== "Completed") {
-        newErrors.dueDate = "Due date cannot be in the past for incomplete tasks";
+        newErrors.dueDate =
+          "Due date cannot be in the past for incomplete tasks";
       }
     }
 
@@ -135,21 +149,21 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
       description: task.description,
       priority: task.priority,
       assigneeId: task.assignee.id,
-      dueDate: task.dueDate.split('T')[0],
+      dueDate: task.dueDate.split("T")[0],
     });
     setErrors({});
   };
 
   const handleInputChange = (field: keyof UpdateTaskData, value: string) => {
-    setEditData(prev => ({ ...prev, [field]: value }));
-    
+    setEditData((prev) => ({ ...prev, [field]: value }));
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: undefined }));
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
     }
   };
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toISOString().split("T")[0];
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -174,10 +188,14 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
         <div className="mt-6 space-y-6">
           {/* Status and Priority Badges */}
           <div className="flex gap-2">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.color}`}>
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusConfig.bgColor} ${statusConfig.color}`}
+            >
               {task.status}
             </span>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityConfig.bgColor} ${priorityConfig.color}`}>
+            <span
+              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityConfig.bgColor} ${priorityConfig.color}`}
+            >
               {priorityConfig.icon} {task.priority} Priority
             </span>
             {isOverdue && (
@@ -195,7 +213,11 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                 <Input
                   value={editData.title || ""}
                   onChange={(e) => handleInputChange("title", e.target.value)}
-                  className={`${errors.title ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"}`}
+                  className={`${
+                    errors.title
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                      : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                  }`}
                 />
                 {errors.title && (
                   <p className="text-sm text-red-600 mt-1">{errors.title}</p>
@@ -208,27 +230,41 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-slate-700">Description</Label>
+            <Label className="text-sm font-medium text-slate-700">
+              Description
+            </Label>
             {isEditing ? (
               <div>
                 <Textarea
                   value={editData.description || ""}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
-                  className={`min-h-[100px] resize-none ${errors.description ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"}`}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                  className={`min-h-[100px] resize-none ${
+                    errors.description
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                      : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                  }`}
                 />
                 {errors.description && (
-                  <p className="text-sm text-red-600 mt-1">{errors.description}</p>
+                  <p className="text-sm text-red-600 mt-1">
+                    {errors.description}
+                  </p>
                 )}
               </div>
             ) : (
-              <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{task.description}</p>
+              <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">
+                {task.description}
+              </p>
             )}
           </div>
 
           {/* Priority */}
           {isEditing && isLeader && (
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Priority</Label>
+              <Label className="text-sm font-medium text-slate-700">
+                Priority
+              </Label>
               <Select
                 value={editData.priority || task.priority}
                 onValueChange={(value) => handleInputChange("priority", value)}
@@ -241,7 +277,11 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                     <SelectItem key={priority} value={priority}>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm">
-                          {priority === "High" ? "🔴" : priority === "Medium" ? "🟡" : "🔵"}
+                          {priority === "High"
+                            ? "🔴"
+                            : priority === "Medium"
+                            ? "🟡"
+                            : "🔵"}
                         </span>
                         <span>{priority} Priority</span>
                       </div>
@@ -254,11 +294,15 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 
           {/* Assignee */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-slate-700">Assigned To</Label>
+            <Label className="text-sm font-medium text-slate-700">
+              Assigned To
+            </Label>
             {isEditing && isLeader ? (
               <Select
                 value={editData.assigneeId || task.assignee.id}
-                onValueChange={(value) => handleInputChange("assigneeId", value)}
+                onValueChange={(value) =>
+                  handleInputChange("assigneeId", value)
+                }
               >
                 <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue />
@@ -268,10 +312,15 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                     <SelectItem key={member.id} value={member.id}>
                       <div className="flex items-center space-x-2">
                         <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-medium text-slate-600">
-                          {member.name.split(' ').map(n => n[0]).join('')}
+                          {member.name
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
                         </div>
                         <span>{member.name}</span>
-                        <span className="text-xs text-slate-500">({member.role})</span>
+                        <span className="text-xs text-slate-500">
+                          ({member.role})
+                        </span>
                       </div>
                     </SelectItem>
                   ))}
@@ -280,13 +329,21 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
             ) : (
               <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-lg">
                 <Avatar className="w-8 h-8">
-                  <AvatarImage src={task.assignee.avatar} alt={task.assignee.name} />
+                  <AvatarImage
+                    src={task.assignee.avatar}
+                    alt={task.assignee.name}
+                  />
                   <AvatarFallback className="bg-slate-200 text-slate-600 text-sm">
-                    {task.assignee.name.split(' ').map(n => n[0]).join('')}
+                    {task.assignee.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
                   </AvatarFallback>
                 </Avatar>
                 <div>
-                  <p className="text-sm font-medium text-slate-900">{task.assignee.name}</p>
+                  <p className="text-sm font-medium text-slate-900">
+                    {task.assignee.name}
+                  </p>
                   <p className="text-xs text-slate-500">{task.assignee.role}</p>
                 </div>
               </div>
@@ -295,7 +352,9 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
 
           {/* Due Date */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium text-slate-700">Due Date</Label>
+            <Label className="text-sm font-medium text-slate-700">
+              Due Date
+            </Label>
             {isEditing && (isLeader || task.assignee.id === currentUser.id) ? (
               <div>
                 <Input
@@ -303,7 +362,11 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                   min={task.status === "Completed" ? undefined : today}
                   value={editData.dueDate || ""}
                   onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                  className={`${errors.dueDate ? "border-red-300 focus:border-red-500 focus:ring-red-500" : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"}`}
+                  className={`${
+                    errors.dueDate
+                      ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                      : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                  }`}
                 />
                 {errors.dueDate && (
                   <p className="text-sm text-red-600 mt-1">{errors.dueDate}</p>
@@ -312,7 +375,11 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
             ) : (
               <div className="flex items-center gap-2 p-3 bg-slate-50 rounded-lg">
                 <Calendar className="w-4 h-4 text-slate-500" />
-                <span className={`text-sm ${isOverdue ? "text-red-600 font-medium" : "text-slate-700"}`}>
+                <span
+                  className={`text-sm ${
+                    isOverdue ? "text-red-600 font-medium" : "text-slate-700"
+                  }`}
+                >
                   {format(parseISO(task.dueDate), "EEEE, MMMM dd, yyyy")}
                 </span>
               </div>
@@ -325,11 +392,17 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <Clock className="w-4 h-4" />
-              <span>Created: {format(parseISO(task.createdAt), "MMM dd, yyyy 'at' HH:mm")}</span>
+              <span>
+                Created:{" "}
+                {format(parseISO(task.createdAt), "MMM dd, yyyy 'at' HH:mm")}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <Clock className="w-4 h-4" />
-              <span>Updated: {format(parseISO(task.updatedAt), "MMM dd, yyyy 'at' HH:mm")}</span>
+              <span>
+                Updated:{" "}
+                {format(parseISO(task.updatedAt), "MMM dd, yyyy 'at' HH:mm")}
+              </span>
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-500">
               <span className="font-mono">Task ID: #{task.id}</span>

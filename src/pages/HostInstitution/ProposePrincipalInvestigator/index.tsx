@@ -147,7 +147,7 @@ const ProposePrincipalInvestigator: React.FC = () => {
     setSelectedApplicant(null);
   };
 
-  const handleApprovePI = (applicantId: number) => {
+  const handleApprovePI = (_applicantId: number) => {
     setIsLoading(true);
 
     // Simulate API call
@@ -159,7 +159,7 @@ const ProposePrincipalInvestigator: React.FC = () => {
     }, 1500);
   };
 
-  const handleRejectPI = (applicantId: number) => {
+  const handleRejectPI = (_applicantId: number) => {
     setIsLoading(true);
 
     // Simulate API call
@@ -170,7 +170,7 @@ const ProposePrincipalInvestigator: React.FC = () => {
     }, 1500);
   };
 
-  const handleRequestMoreInfo = (applicantId: number) => {
+  const handleRequestMoreInfo = (_applicantId: number) => {
     setIsLoading(true);
 
     // Simulate API call
@@ -242,7 +242,7 @@ const ProposePrincipalInvestigator: React.FC = () => {
 
       {/* Applicant Profile Dialog */}
       <ApplicantProfile
-        applicant={selectedApplicantData}
+        applicant={selectedApplicantData || null}
         isOpen={!!selectedApplicant}
         onClose={handleCloseProfile}
         onApprove={handleApprovePI}

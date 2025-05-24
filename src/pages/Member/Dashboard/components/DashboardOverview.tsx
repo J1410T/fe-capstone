@@ -1,15 +1,15 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { 
-  CheckSquare, 
-  Clock, 
-  PlayCircle, 
-  AlertTriangle, 
-  DollarSign, 
+import {
+  CheckSquare,
+  // Clock, // Unused import
+  PlayCircle,
+  AlertTriangle,
+  DollarSign,
   CheckCircle,
   TrendingUp,
-  Calendar
+  Calendar,
 } from "lucide-react";
 
 // Mock data for demonstration
@@ -57,23 +57,35 @@ const recentActivity = [
 ];
 
 export const DashboardOverview: React.FC = () => {
-  const completionRate = taskStats.total > 0 ? Math.round((taskStats.completed / taskStats.total) * 100) : 0;
-  const approvalRate = fundingStats.totalRequests > 0 ? Math.round((fundingStats.approved / fundingStats.totalRequests) * 100) : 0;
+  const completionRate =
+    taskStats.total > 0
+      ? Math.round((taskStats.completed / taskStats.total) * 100)
+      : 0;
+  const approvalRate =
+    fundingStats.totalRequests > 0
+      ? Math.round((fundingStats.approved / fundingStats.totalRequests) * 100)
+      : 0;
 
   return (
     <div className="space-y-6">
       {/* Task Summary Section */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Task Summary</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          Task Summary
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Total Tasks */}
           <Card className="border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Total Tasks</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Total Tasks
+              </CardTitle>
               <CheckSquare className="h-4 w-4 text-slate-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{taskStats.total}</div>
+              <div className="text-2xl font-bold text-slate-900">
+                {taskStats.total}
+              </div>
               <div className="flex items-center space-x-2 mt-2">
                 <div className="w-full bg-slate-200 rounded-full h-2">
                   <div
@@ -81,7 +93,9 @@ export const DashboardOverview: React.FC = () => {
                     style={{ width: `${completionRate}%` }}
                   />
                 </div>
-                <span className="text-xs text-slate-500">{completionRate}%</span>
+                <span className="text-xs text-slate-500">
+                  {completionRate}%
+                </span>
               </div>
             </CardContent>
           </Card>
@@ -89,12 +103,19 @@ export const DashboardOverview: React.FC = () => {
           {/* Completed Tasks */}
           <Card className="border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Completed</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Completed
+              </CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{taskStats.completed}</div>
-              <Badge variant="secondary" className="bg-green-100 text-green-700 mt-2">
+              <div className="text-2xl font-bold text-green-600">
+                {taskStats.completed}
+              </div>
+              <Badge
+                variant="secondary"
+                className="bg-green-100 text-green-700 mt-2"
+              >
                 {completionRate}% completion rate
               </Badge>
             </CardContent>
@@ -103,11 +124,15 @@ export const DashboardOverview: React.FC = () => {
           {/* In Progress Tasks */}
           <Card className="border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">In Progress</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">
+                In Progress
+              </CardTitle>
               <PlayCircle className="h-4 w-4 text-blue-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-blue-600">{taskStats.inProgress}</div>
+              <div className="text-2xl font-bold text-blue-600">
+                {taskStats.inProgress}
+              </div>
               <p className="text-xs text-slate-500 mt-2">
                 Active tasks in progress
               </p>
@@ -117,11 +142,15 @@ export const DashboardOverview: React.FC = () => {
           {/* Overdue Tasks */}
           <Card className="border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Overdue</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Overdue
+              </CardTitle>
               <AlertTriangle className="h-4 w-4 text-red-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-red-600">{taskStats.overdue}</div>
+              <div className="text-2xl font-bold text-red-600">
+                {taskStats.overdue}
+              </div>
               {taskStats.overdue > 0 ? (
                 <Badge variant="destructive" className="mt-2">
                   Needs attention
@@ -138,16 +167,22 @@ export const DashboardOverview: React.FC = () => {
 
       {/* Funding Summary Section */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Funding Summary</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          Funding Summary
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Total Requests */}
           <Card className="border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Total Requests</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Total Requests
+              </CardTitle>
               <DollarSign className="h-4 w-4 text-slate-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-slate-900">{fundingStats.totalRequests}</div>
+              <div className="text-2xl font-bold text-slate-900">
+                {fundingStats.totalRequests}
+              </div>
               <p className="text-xs text-slate-500 mt-2">
                 ${fundingStats.totalAmount.toLocaleString()} requested
               </p>
@@ -157,13 +192,20 @@ export const DashboardOverview: React.FC = () => {
           {/* Approved Requests */}
           <Card className="border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Approved</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Approved
+              </CardTitle>
               <CheckCircle className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-green-600">{fundingStats.approved}</div>
+              <div className="text-2xl font-bold text-green-600">
+                {fundingStats.approved}
+              </div>
               <div className="flex items-center space-x-2 mt-2">
-                <Badge variant="secondary" className="bg-green-100 text-green-700">
+                <Badge
+                  variant="secondary"
+                  className="bg-green-100 text-green-700"
+                >
                   {approvalRate}% approval rate
                 </Badge>
               </div>
@@ -173,7 +215,9 @@ export const DashboardOverview: React.FC = () => {
           {/* Approved Amount */}
           <Card className="border-slate-200">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-slate-600">Approved Amount</CardTitle>
+              <CardTitle className="text-sm font-medium text-slate-600">
+                Approved Amount
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-green-600" />
             </CardHeader>
             <CardContent>
@@ -181,7 +225,10 @@ export const DashboardOverview: React.FC = () => {
                 ${fundingStats.approvedAmount.toLocaleString()}
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                {Math.round((fundingStats.approvedAmount / fundingStats.totalAmount) * 100)}% of requested amount
+                {Math.round(
+                  (fundingStats.approvedAmount / fundingStats.totalAmount) * 100
+                )}
+                % of requested amount
               </p>
             </CardContent>
           </Card>
@@ -190,7 +237,9 @@ export const DashboardOverview: React.FC = () => {
 
       {/* Recent Activity Section */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent Activity</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          Recent Activity
+        </h2>
         <Card className="border-slate-200">
           <CardContent className="p-6">
             <div className="space-y-4">
@@ -198,7 +247,9 @@ export const DashboardOverview: React.FC = () => {
                 const Icon = activity.icon;
                 return (
                   <div key={activity.id} className="flex items-start space-x-3">
-                    <div className={`p-2 rounded-full bg-slate-100 ${activity.color}`}>
+                    <div
+                      className={`p-2 rounded-full bg-slate-100 ${activity.color}`}
+                    >
                       <Icon className="w-4 h-4" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -207,7 +258,9 @@ export const DashboardOverview: React.FC = () => {
                       </p>
                       <div className="flex items-center space-x-1 mt-1">
                         <Calendar className="w-3 h-3 text-slate-400" />
-                        <p className="text-xs text-slate-500">{activity.time}</p>
+                        <p className="text-xs text-slate-500">
+                          {activity.time}
+                        </p>
                       </div>
                     </div>
                   </div>

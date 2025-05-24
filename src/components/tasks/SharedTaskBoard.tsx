@@ -9,7 +9,7 @@ import {
   useSensors,
   closestCorners,
 } from "@dnd-kit/core";
-import { TaskColumn, TaskCard, SearchBar, StatusFilter, TaskStatsBar } from "./professional";
+import { TaskColumn, TaskCard, SearchBar, StatusFilter } from "./professional";
 import { toast } from "sonner";
 
 // Unified Task interface that matches UserTaskManagement
@@ -34,20 +34,25 @@ interface Task {
 // Map UserTaskManagement statuses to ProfessionalTaskBoard statuses
 const STATUS_MAPPING = {
   "Not Started": "To Do",
-  "In Progress": "In Progress", 
-  "Complete": "Completed",
-  "Overdue": "Overdue"
+  "In Progress": "In Progress",
+  Complete: "Completed",
+  Overdue: "Overdue",
 } as const;
 
 const REVERSE_STATUS_MAPPING = {
   "To Do": "Not Started",
   "In Progress": "In Progress",
-  "Completed": "Complete", 
-  "Overdue": "Overdue"
+  Completed: "Complete",
+  Overdue: "Overdue",
 } as const;
 
 type KanbanStatus = "To Do" | "In Progress" | "Completed" | "Overdue";
-const KANBAN_STATUSES: KanbanStatus[] = ["To Do", "In Progress", "Completed", "Overdue"];
+const KANBAN_STATUSES: KanbanStatus[] = [
+  "To Do",
+  "In Progress",
+  "Completed",
+  "Overdue",
+];
 
 interface SharedTaskBoardProps {
   tasks: Task[];
@@ -60,7 +65,7 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
   tasks,
   onTaskUpdate,
   onTaskClick,
-  isLeader = true,
+  // isLeader = true, // Unused parameter
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<KanbanStatus | "All">("All");
@@ -76,7 +81,7 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
 
   // Convert tasks to Kanban format
   const kanbanTasks = useMemo(() => {
-    return tasks.map(task => ({
+    return tasks.map((task) => ({
       ...task,
       // Map the assignedTo to assignee for compatibility
       assignee: task.assignedTo,
@@ -92,12 +97,15 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
       if (statusFilter !== "All" && task.status !== statusFilter) {
         return false;
       }
-      
+
       // Search filter
-      if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) {
+      if (
+        searchQuery &&
+        !task.title.toLowerCase().includes(searchQuery.toLowerCase())
+      ) {
         return false;
       }
-      
+
       return true;
     });
   }, [kanbanTasks, statusFilter, searchQuery]);
@@ -111,18 +119,32 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
   }, [filteredTasks]);
 
   // Calculate statistics for displayed tasks only
-  const stats = useMemo(() => ({
-    total: filteredTasks.length,
-    toDo: tasksByStatus["To Do"].length,
-    inProgress: tasksByStatus["In Progress"].length,
-    completed: tasksByStatus["Completed"].length,
-    overdue: tasksByStatus["Overdue"].length,
-  }), [filteredTasks, tasksByStatus]);
+  const stats = useMemo(
+    () => ({
+      total: filteredTasks.length,
+      toDo: tasksByStatus["To Do"].length,
+      inProgress: tasksByStatus["In Progress"].length,
+      completed: tasksByStatus["Completed"].length,
+      overdue: tasksByStatus["Overdue"].length,
+    }),
+    [filteredTasks, tasksByStatus]
+  );
 
   // Handle drag start
   const handleDragStart = (event: DragStartEvent) => {
     const task = kanbanTasks.find((t) => t.id === event.active.id);
-    setActiveTask(task || null);
+    // Convert task status to match expected format
+    if (task) {
+      const convertedTask = {
+        ...task,
+        assignee: task.assignedTo, // Add assignee property
+        status:
+          REVERSE_STATUS_MAPPING[task.status as KanbanStatus] || task.status,
+      };
+      setActiveTask(convertedTask);
+    } else {
+      setActiveTask(null);
+    }
   };
 
   // Handle drag end
@@ -130,18 +152,52 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
     const { active, over } = event;
     setActiveTask(null);
 
-    if (!over) return;
+    if (!over) {
+      return;
+    }
 
     const taskId = active.id as string;
-    const newKanbanStatus = over.id as KanbanStatus;
+    const dropTargetId = over.id as string;
+
+    // Check if we're dropping on a column (status) or a task
+    let newKanbanStatus: KanbanStatus;
+
+    // If dropping on a column directly
+    if (KANBAN_STATUSES.includes(dropTargetId as KanbanStatus)) {
+      newKanbanStatus = dropTargetId as KanbanStatus;
+    }
+    // If dropping on a task, get the task's column
+    else {
+      // Find which column this task belongs to
+      const targetTask = kanbanTasks.find((t) => t.id === dropTargetId);
+      if (targetTask) {
+        newKanbanStatus = targetTask.status;
+      } else {
+        toast.error("Invalid drop target");
+        return;
+      }
+    }
+
     const newStatus = REVERSE_STATUS_MAPPING[newKanbanStatus];
 
     // Find the original task
-    const originalTask = tasks.find(task => task.id === taskId);
-    if (!originalTask) return;
+    const originalTask = tasks.find((task) => task.id === taskId);
+    if (!originalTask) {
+      return;
+    }
 
     // Only update if status actually changed
-    if (originalTask.status === newStatus) return;
+    if (originalTask.status === newStatus) {
+      return;
+    }
+
+    // Validate the new status
+    if (!newStatus) {
+      toast.error("Invalid status update", {
+        description: `Cannot move task to ${newKanbanStatus}`,
+      });
+      return;
+    }
 
     // Update task status
     const updatedTask: Task = {
@@ -161,61 +217,102 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
   // Handle task click
   const handleTaskClick = (task: any) => {
     // Convert back to original task format
-    const originalTask = tasks.find(t => t.id === task.id);
+    const originalTask = tasks.find((t) => t.id === task.id);
     if (originalTask && onTaskClick) {
       onTaskClick(originalTask);
     }
   };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Search and Filter Bar */}
-      <div className="bg-white border-b border-slate-200 p-4">
-        <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-3 flex-1">
+    <div className="min-h-full bg-slate-50">
+      {/* Search and Filter Bar - Aligned with Header */}
+      <div className="bg-white border-b border-slate-200 py-4 flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex flex-col sm:flex-row gap-3">
             <SearchBar
               value={searchQuery}
               onChange={setSearchQuery}
               placeholder="Search tasks in Kanban view..."
             />
-            <StatusFilter
-              value={statusFilter}
-              onChange={setStatusFilter}
-            />
+            <StatusFilter value={statusFilter} onChange={setStatusFilter} />
           </div>
         </div>
       </div>
 
-      {/* Stats Bar */}
-      <div className="bg-white border-b border-slate-200 px-4 py-3">
-        <TaskStatsBar stats={stats} />
+      {/* Stats Bar - Aligned with Header */}
+      <div className="bg-white border-b border-slate-200 py-4 flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex items-center space-x-8 text-sm">
+            <div className="flex items-center space-x-2">
+              <span className="font-medium text-slate-700">Total:</span>
+              <span className="font-semibold text-slate-900">
+                {stats.total}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium text-blue-700">To Do:</span>
+              <span className="font-semibold text-blue-900">{stats.toDo}</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium text-yellow-700">In Progress:</span>
+              <span className="font-semibold text-yellow-900">
+                {stats.inProgress}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium text-green-700">Completed:</span>
+              <span className="font-semibold text-green-900">
+                {stats.completed}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium text-red-700">Overdue:</span>
+              <span className="font-semibold text-red-900">
+                {stats.overdue}
+              </span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="font-medium text-slate-700">Progress:</span>
+              <span className="font-semibold text-slate-900">
+                {stats.total > 0
+                  ? Math.round((stats.completed / stats.total) * 100)
+                  : 0}
+                %
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Kanban Board */}
-      <div className="flex-1 overflow-hidden p-6">
+      <div className="overflow-x-auto p-4 kanban-container">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 h-full">
+          <div className="flex gap-4 items-start justify-center min-w-full pb-4">
             {KANBAN_STATUSES.map((status) => (
-              <TaskColumn
-                key={status}
-                status={status}
-                tasks={tasksByStatus[status]}
-                onTaskClick={handleTaskClick}
-              />
+              <div key={status} className="flex-shrink-0 w-80 min-w-[300px]">
+                <TaskColumn
+                  status={status}
+                  tasks={tasksByStatus[status]}
+                  onTaskClick={handleTaskClick}
+                />
+              </div>
             ))}
           </div>
 
           <DragOverlay>
             {activeTask ? (
               <TaskCard
-                task={activeTask}
+                task={{
+                  ...activeTask,
+                  assignee: { ...activeTask.assignedTo, role: "MEMBER" as any },
+                  status: STATUS_MAPPING[activeTask.status] as any,
+                }}
                 onClick={() => {}}
-                isDragging
               />
             ) : null}
           </DragOverlay>

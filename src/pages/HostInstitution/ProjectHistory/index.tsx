@@ -152,7 +152,7 @@ const ProjectHistory: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [activeTab, setActiveTab] = useState("list");
 
-  const handleExportData = (format: string) => {
+  const handleExportData = (_format: string) => {
     setIsLoading(true);
 
     // Simulate API call

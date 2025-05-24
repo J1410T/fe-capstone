@@ -1,8 +1,14 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, X } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, X } from "lucide-react";
 
 interface TaskFilterBarProps {
   searchQuery: string;
@@ -107,7 +113,9 @@ export const TaskFilterBar: React.FC<TaskFilterBarProps> = ({
 
         {/* Clear Filters */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-slate-700 opacity-0">Actions</label>
+          <label className="text-sm font-medium text-slate-700 opacity-0">
+            Actions
+          </label>
           {hasActiveFilters && (
             <Button
               variant="outline"

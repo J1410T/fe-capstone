@@ -3,23 +3,29 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+// import { Badge } from "@/components/ui/badge"; // Unused import
 import { Separator } from "@/components/ui/separator";
-import { 
-  Moon, 
-  Sun, 
-  Bell, 
-  Mail, 
-  MessageSquare, 
-  Shield, 
-  Globe, 
+import {
+  Moon,
+  Sun,
+  Bell,
+  Mail,
+  // MessageSquare, // Unused import
+  Shield,
+  Globe,
   Clock,
   Save,
   Smartphone,
   Monitor,
   Volume2,
-  VolumeX
+  // VolumeX // Unused import,
 } from "lucide-react";
 
 // Mock settings data
@@ -55,10 +61,10 @@ const Settings: React.FC = () => {
   const [hasChanges, setHasChanges] = useState(false);
 
   const handleSettingChange = (category: string, key: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       [category]: {
-        ...prev[category as keyof typeof prev],
+        ...(prev[category as keyof typeof prev] as Record<string, any>),
         [key]: value,
       },
     }));
@@ -66,7 +72,7 @@ const Settings: React.FC = () => {
   };
 
   const handleDirectChange = (key: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       [key]: value,
     }));
@@ -75,7 +81,7 @@ const Settings: React.FC = () => {
 
   const handleSave = async () => {
     setIsLoading(true);
-    
+
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
@@ -143,7 +149,9 @@ const Settings: React.FC = () => {
           <CardContent className="space-y-6">
             {/* Theme */}
             <div className="space-y-3">
-              <Label className="text-sm font-medium text-slate-700">Theme</Label>
+              <Label className="text-sm font-medium text-slate-700">
+                Theme
+              </Label>
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { value: "light", label: "Light", icon: Sun },
@@ -160,7 +168,9 @@ const Settings: React.FC = () => {
                     }`}
                   >
                     <Icon className="w-5 h-5 mx-auto mb-2 text-slate-600" />
-                    <div className="text-sm font-medium text-slate-700">{label}</div>
+                    <div className="text-sm font-medium text-slate-700">
+                      {label}
+                    </div>
                   </button>
                 ))}
               </div>
@@ -168,7 +178,9 @@ const Settings: React.FC = () => {
 
             {/* Language */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Language</Label>
+              <Label className="text-sm font-medium text-slate-700">
+                Language
+              </Label>
               <Select
                 value={settings.language}
                 onValueChange={(value) => handleDirectChange("language", value)}
@@ -191,7 +203,9 @@ const Settings: React.FC = () => {
 
             {/* Timezone */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Timezone</Label>
+              <Label className="text-sm font-medium text-slate-700">
+                Timezone
+              </Label>
               <Select
                 value={settings.timezone}
                 onValueChange={(value) => handleDirectChange("timezone", value)}
@@ -225,23 +239,44 @@ const Settings: React.FC = () => {
           <CardContent className="space-y-6">
             {/* Notification Channels */}
             <div className="space-y-4">
-              <Label className="text-sm font-medium text-slate-700">Notification Channels</Label>
-              
+              <Label className="text-sm font-medium text-slate-700">
+                Notification Channels
+              </Label>
+
               <div className="space-y-3">
                 {[
                   { key: "email", label: "Email Notifications", icon: Mail },
-                  { key: "push", label: "Push Notifications", icon: Smartphone },
-                  { key: "desktop", label: "Desktop Notifications", icon: Monitor },
+                  {
+                    key: "push",
+                    label: "Push Notifications",
+                    icon: Smartphone,
+                  },
+                  {
+                    key: "desktop",
+                    label: "Desktop Notifications",
+                    icon: Monitor,
+                  },
                   { key: "sound", label: "Sound Notifications", icon: Volume2 },
                 ].map(({ key, label, icon: Icon }) => (
-                  <div key={key} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                  <div
+                    key={key}
+                    className="flex items-center justify-between p-3 bg-slate-50 rounded-lg"
+                  >
                     <div className="flex items-center space-x-3">
                       <Icon className="w-4 h-4 text-slate-500" />
-                      <span className="text-sm font-medium text-slate-700">{label}</span>
+                      <span className="text-sm font-medium text-slate-700">
+                        {label}
+                      </span>
                     </div>
                     <Switch
-                      checked={settings.notifications[key as keyof typeof settings.notifications]}
-                      onCheckedChange={(checked) => handleSettingChange("notifications", key, checked)}
+                      checked={
+                        settings.notifications[
+                          key as keyof typeof settings.notifications
+                        ]
+                      }
+                      onCheckedChange={(checked) =>
+                        handleSettingChange("notifications", key, checked)
+                      }
                     />
                   </div>
                 ))}
@@ -252,23 +287,56 @@ const Settings: React.FC = () => {
 
             {/* Notification Types */}
             <div className="space-y-4">
-              <Label className="text-sm font-medium text-slate-700">What to notify me about</Label>
-              
+              <Label className="text-sm font-medium text-slate-700">
+                What to notify me about
+              </Label>
+
               <div className="space-y-3">
                 {[
-                  { key: "taskUpdates", label: "Task Updates", description: "When tasks are assigned, updated, or completed" },
-                  { key: "projectUpdates", label: "Project Updates", description: "When projects have new updates or milestones" },
-                  { key: "mentions", label: "Mentions", description: "When someone mentions you in comments or discussions" },
-                  { key: "deadlines", label: "Deadline Reminders", description: "Reminders for upcoming task deadlines" },
+                  {
+                    key: "taskUpdates",
+                    label: "Task Updates",
+                    description:
+                      "When tasks are assigned, updated, or completed",
+                  },
+                  {
+                    key: "projectUpdates",
+                    label: "Project Updates",
+                    description: "When projects have new updates or milestones",
+                  },
+                  {
+                    key: "mentions",
+                    label: "Mentions",
+                    description:
+                      "When someone mentions you in comments or discussions",
+                  },
+                  {
+                    key: "deadlines",
+                    label: "Deadline Reminders",
+                    description: "Reminders for upcoming task deadlines",
+                  },
                 ].map(({ key, label, description }) => (
-                  <div key={key} className="flex items-start justify-between p-3 bg-slate-50 rounded-lg">
+                  <div
+                    key={key}
+                    className="flex items-start justify-between p-3 bg-slate-50 rounded-lg"
+                  >
                     <div className="flex-1">
-                      <div className="text-sm font-medium text-slate-700">{label}</div>
-                      <div className="text-xs text-slate-500 mt-1">{description}</div>
+                      <div className="text-sm font-medium text-slate-700">
+                        {label}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {description}
+                      </div>
                     </div>
                     <Switch
-                      checked={settings.notifications[key as keyof typeof settings.notifications]}
-                      onCheckedChange={(checked) => handleSettingChange("notifications", key, checked)}
+                      checked={
+                        settings.notifications[
+                          key as keyof typeof settings.notifications
+                        ]
+                      }
+                      onCheckedChange={(checked) =>
+                        handleSettingChange("notifications", key, checked)
+                      }
                     />
                   </div>
                 ))}
@@ -288,10 +356,14 @@ const Settings: React.FC = () => {
           <CardContent className="space-y-6">
             {/* Profile Visibility */}
             <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Profile Visibility</Label>
+              <Label className="text-sm font-medium text-slate-700">
+                Profile Visibility
+              </Label>
               <Select
                 value={settings.privacy.profileVisibility}
-                onValueChange={(value) => handleSettingChange("privacy", "profileVisibility", value)}
+                onValueChange={(value) =>
+                  handleSettingChange("privacy", "profileVisibility", value)
+                }
               >
                 <SelectTrigger className="w-full border-slate-300 focus:border-blue-500 focus:ring-blue-500">
                   <SelectValue />
@@ -300,19 +372,25 @@ const Settings: React.FC = () => {
                   <SelectItem value="public">
                     <div>
                       <div className="font-medium">Public</div>
-                      <div className="text-xs text-slate-500">Visible to everyone</div>
+                      <div className="text-xs text-slate-500">
+                        Visible to everyone
+                      </div>
                     </div>
                   </SelectItem>
                   <SelectItem value="team">
                     <div>
                       <div className="font-medium">Team Only</div>
-                      <div className="text-xs text-slate-500">Visible to team members only</div>
+                      <div className="text-xs text-slate-500">
+                        Visible to team members only
+                      </div>
                     </div>
                   </SelectItem>
                   <SelectItem value="private">
                     <div>
                       <div className="font-medium">Private</div>
-                      <div className="text-xs text-slate-500">Only visible to you</div>
+                      <div className="text-xs text-slate-500">
+                        Only visible to you
+                      </div>
                     </div>
                   </SelectItem>
                 </SelectContent>
@@ -322,25 +400,37 @@ const Settings: React.FC = () => {
             {/* Activity Status */}
             <div className="space-y-3">
               {[
-                { 
-                  key: "activityStatus", 
-                  label: "Show Activity Status", 
-                  description: "Let others see when you're online or active" 
+                {
+                  key: "activityStatus",
+                  label: "Show Activity Status",
+                  description: "Let others see when you're online or active",
                 },
-                { 
-                  key: "lastSeen", 
-                  label: "Show Last Seen", 
-                  description: "Display when you were last active to team members" 
+                {
+                  key: "lastSeen",
+                  label: "Show Last Seen",
+                  description:
+                    "Display when you were last active to team members",
                 },
               ].map(({ key, label, description }) => (
-                <div key={key} className="flex items-start justify-between p-3 bg-slate-50 rounded-lg">
+                <div
+                  key={key}
+                  className="flex items-start justify-between p-3 bg-slate-50 rounded-lg"
+                >
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-slate-700">{label}</div>
-                    <div className="text-xs text-slate-500 mt-1">{description}</div>
+                    <div className="text-sm font-medium text-slate-700">
+                      {label}
+                    </div>
+                    <div className="text-xs text-slate-500 mt-1">
+                      {description}
+                    </div>
                   </div>
                   <Switch
-                    checked={settings.privacy[key as keyof typeof settings.privacy]}
-                    onCheckedChange={(checked) => handleSettingChange("privacy", key, checked)}
+                    checked={Boolean(
+                      settings.privacy[key as keyof typeof settings.privacy]
+                    )}
+                    onCheckedChange={(checked) =>
+                      handleSettingChange("privacy", key, checked)
+                    }
                   />
                 </div>
               ))}
@@ -354,9 +444,12 @@ const Settings: React.FC = () => {
             <div className="flex items-start space-x-3">
               <Shield className="w-5 h-5 text-blue-600 mt-0.5" />
               <div>
-                <h3 className="text-sm font-medium text-blue-900">Member Account</h3>
+                <h3 className="text-sm font-medium text-blue-900">
+                  Member Account
+                </h3>
                 <p className="text-sm text-blue-700 mt-1">
-                  You have member-level access. Some advanced settings are only available to team leaders and administrators.
+                  You have member-level access. Some advanced settings are only
+                  available to team leaders and administrators.
                 </p>
               </div>
             </div>

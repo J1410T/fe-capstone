@@ -31,12 +31,12 @@ import {
 import {
   Plus,
   Search,
-  Filter,
+  // Filter, // Unused import
   Edit,
   Eye,
   Calendar,
   Flag,
-  User,
+  // User, // Unused import
   ChevronLeft,
   ChevronRight,
   ArrowUpDown,
@@ -82,7 +82,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   onTaskView,
   onTaskClick,
   onCreateTask,
-  isLeader = true,
+  // isLeader = true, // Unused parameter
   title = "Task Management",
   description = "Manage and track your tasks efficiently",
 }) => {
@@ -394,7 +394,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       globalFilter,
     },
     onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: (row, columnId, filterValue) => {
+    globalFilterFn: (row, _columnId, filterValue) => {
       const task = row.original;
       const searchString = `${task.title} ${task.description}`.toLowerCase();
       return searchString.includes(filterValue.toLowerCase());

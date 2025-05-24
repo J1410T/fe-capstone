@@ -4,7 +4,7 @@ import {
   TaskDetailModal,
   CreateTaskModal,
 } from "@/components/tasks";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+// import { useAuth } from "@/contexts/AuthContext"; // Unused import
 import { toast } from "sonner";
 
 // Task interface for TaskTable compatibility
@@ -119,7 +119,7 @@ const mockTasks: Task[] = [
 ];
 
 export const RecentTaskList: React.FC = () => {
-  const { user } = useAuth();
+  // const { user } = useAuth(); // Unused variable
   const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);

@@ -141,11 +141,7 @@ const MemberProjectDetails: React.FC = () => {
       />
 
       {/* Project Progress - without budget info for members */}
-      <ProjectProgress
-        progress={project.progress}
-        spent={undefined}
-        total={undefined}
-      />
+      <ProjectProgress progress={project.progress} spent="$0" total="$0" />
 
       {/* Project Tabs - Only Overview and Team for members */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>

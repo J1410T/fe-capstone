@@ -4,7 +4,28 @@
 
 import { createResource, type Resource } from "@/utils/suspense";
 import { env } from "@/config/env";
-// import { getToken } from './resources/auth';
+
+/**
+ * Get authentication token from localStorage
+ * @returns JWT token or null if not found
+ */
+export function getToken(): string | null {
+  try {
+    const tokenData = localStorage.getItem("auth_token");
+    if (tokenData) {
+      const { token, expiry } = JSON.parse(tokenData);
+      // Check if token is expired
+      if (expiry && expiry > Date.now()) {
+        return token;
+      }
+    }
+    // Fallback to accessToken for compatibility
+    return localStorage.getItem("accessToken");
+  } catch (error) {
+    console.error("Error getting token:", error);
+    return localStorage.getItem("accessToken");
+  }
+}
 
 // Biến để theo dõi nếu đang làm mới token
 let isRefreshingToken = false;
