@@ -148,3 +148,46 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom scrollbar styles for Kanban board */
+@layer utilities {
+  .kanban-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(203 213 225) transparent;
+  }
+
+  .kanban-scroll::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+  }
+
+  .kanban-scroll::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
+  }
+
+  .kanban-scroll::-webkit-scrollbar-thumb {
+    background: rgb(203 213 225);
+    border-radius: 4px;
+    border: 1px solid transparent;
+  }
+
+  .kanban-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgb(148 163 184);
+  }
+
+  .kanban-scroll::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /* Kanban column auto-height support */
+  .kanban-column {
+    min-height: fit-content;
+    height: auto;
+  }
+
+  /* Smooth scrolling for the entire page when columns get tall */
+  .kanban-container {
+    scroll-behavior: smooth;
+  }
+}

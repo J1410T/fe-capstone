@@ -11,6 +11,16 @@ import { AuthProvider } from "../contexts/AuthContext";
 import UserLayout from "../layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
 
+// Member Pages
+import ProjectListing from "../pages/Member/ProjectListing";
+import MemberProjectDetails from "../pages/Member/ProjectDetails";
+import UserTaskManagement from "../pages/UserTaskManagement";
+import MemberDashboard from "../pages/Member/Dashboard";
+
+// Other Pages
+import Profile from "../pages/Profile";
+import Settings from "../pages/Settings";
+
 // Host Institution Pages
 import HostDashboard from "../pages/HostInstitution/Dashboard";
 import RegisterProject from "../pages/HostInstitution/RegisterProject";
@@ -65,6 +75,30 @@ export const routes: RouteObject[] = [
             path: "home",
             element: <UserHome />,
           },
+          {
+            path: "projects",
+            element: <ProjectListing />,
+          },
+          {
+            path: "project/:projectId",
+            element: <MemberProjectDetails />,
+          },
+          {
+            path: "tasks",
+            element: <UserTaskManagement />,
+          },
+          {
+            path: "dashboard",
+            element: <MemberDashboard />,
+          },
+          {
+            path: "profile",
+            element: <Profile />,
+          },
+          {
+            path: "settings",
+            element: <Settings />,
+          },
           // Add more member routes here
         ],
       },
@@ -81,6 +115,7 @@ export const routes: RouteObject[] = [
             index: true,
             element: <Dashboard />,
           },
+
           // Add more dashboard routes here
         ],
       },

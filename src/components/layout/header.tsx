@@ -39,9 +39,9 @@ import {
 const menuItemsByRole = {
   [UserRole.MEMBER]: [
     { name: "Home", path: "/member/home", icon: Home },
-    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-    { name: "Projects", path: "/projects", icon: FolderOpen },
-    { name: "Tasks", path: "/tasks", icon: ClipboardList },
+    { name: "Dashboard", path: "/member/dashboard", icon: LayoutDashboard },
+    { name: "Projects", path: "/member/projects", icon: FolderOpen },
+    { name: "Tasks", path: "/member/tasks", icon: ClipboardList },
   ],
   [UserRole.HOST_INSTITUTION]: [
     { name: "Home", path: "/member/home", icon: Home },

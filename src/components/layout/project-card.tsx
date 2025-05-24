@@ -1,6 +1,8 @@
 import { FaClock, FaUsers } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
-interface ProjectCardProps {
+interface UserProjectCardProps {
+  id: string;
   category: string;
   title: string;
   description: string;
@@ -11,7 +13,8 @@ interface ProjectCardProps {
   status: string;
 }
 
-const ProjectCard: React.FC<ProjectCardProps> = ({
+const UserProjectCard: React.FC<UserProjectCardProps> = ({
+  id,
   category,
   title,
   description,
@@ -63,16 +66,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <p className="text-sm text-gray-600">Manager: {manager}</p>
-          <a
-            href="#"
+          <Link
+            to={`/member/project/${id}`}
             className="text-sm font-semibold text-emerald-600 hover:underline"
           >
             View Details
-          </a>
+          </Link>
         </div>
       </div>
     </div>
   );
 };
 
-export default ProjectCard;
+export default UserProjectCard;

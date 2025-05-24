@@ -126,7 +126,7 @@ const ProjectManagement: React.FC = () => {
   const [feedbackText, setFeedbackText] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-  const handleDownloadDocument = (documentName: string) => {
+  const handleDownloadDocument = (_documentName: string) => {
     setIsLoading(true);
 
     // Simulate API call
@@ -136,7 +136,7 @@ const ProjectManagement: React.FC = () => {
     }, 1500);
   };
 
-  const handleAddComment = (milestoneId: number) => {
+  const handleAddComment = (_milestoneId: number) => {
     if (!commentText.trim()) return;
 
     setIsLoading(true);
@@ -149,7 +149,7 @@ const ProjectManagement: React.FC = () => {
     }, 1500);
   };
 
-  const handleConfirmMilestone = (milestoneId: number) => {
+  const handleConfirmMilestone = (_milestoneId: number) => {
     setIsLoading(true);
 
     // Simulate API call
@@ -159,7 +159,7 @@ const ProjectManagement: React.FC = () => {
     }, 1500);
   };
 
-  const handleRequestRevision = (milestoneId: number) => {
+  const handleRequestRevision = (_milestoneId: number) => {
     if (!feedbackText.trim()) return;
 
     setIsLoading(true);
@@ -190,16 +190,16 @@ const ProjectManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       <ManagementHeader />
-      
+
       {/* Project Overview */}
-      <ProjectOverview 
+      <ProjectOverview
         project={project}
         getStatusColor={getStatusColor}
         getStatusIcon={getStatusIcon}
       />
-      
+
       {/* Milestones */}
-      <MilestonesList 
+      <MilestonesList
         milestones={filteredMilestones}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}

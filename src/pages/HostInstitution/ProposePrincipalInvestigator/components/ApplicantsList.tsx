@@ -59,8 +59,8 @@ export const ApplicantsList: React.FC<ApplicantsListProps> = ({
   onBackToTopics,
   onViewProfile,
   onApprove,
-  onReject,
-  onRequestMoreInfo,
+  // onReject, // Unused prop
+  // onRequestMoreInfo, // Unused prop
 }) => {
   const selectedTopicTitle = selectedTopic
     ? topics.find((t) => t.id === selectedTopic)?.title

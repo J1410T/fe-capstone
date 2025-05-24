@@ -154,7 +154,7 @@ const PIApproval: React.FC = () => {
     setSelectedApplicant(null);
   };
 
-  const handleApprovePI = (applicantId: number) => {
+  const handleApprovePI = (_applicantId: number) => {
     // Handle approve PI
     setIsLoading(true);
 
@@ -166,7 +166,7 @@ const PIApproval: React.FC = () => {
     }, 1500);
   };
 
-  const handleRejectPI = (applicantId: number) => {
+  const handleRejectPI = (_applicantId: number) => {
     // Handle reject PI
     setIsLoading(true);
 
@@ -178,7 +178,7 @@ const PIApproval: React.FC = () => {
     }, 1500);
   };
 
-  const handleRequestRevision = (applicantId: number) => {
+  const handleRequestRevision = (_applicantId: number) => {
     // Handle request revision
     setIsLoading(true);
 
@@ -256,7 +256,7 @@ const PIApproval: React.FC = () => {
 
       {/* Applicant Profile Dialog */}
       <ApplicantProfile
-        applicant={selectedApplicantData}
+        applicant={selectedApplicantData || null}
         isOpen={!!selectedApplicant}
         onClose={handleCloseApplicantProfile}
         onApprove={handleApprovePI}
