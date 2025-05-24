@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import {
   Card,
   CardContent,
@@ -11,6 +12,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { TimePicker } from "@/components/ui/time-picker";
 import {
   Select,
   SelectContent,
@@ -20,7 +30,7 @@ import {
 } from "@/components/ui/select";
 import {
   ArrowLeft,
-  Calendar,
+  Calendar as CalendarIcon,
   Clock,
   MapPin,
   Users,
@@ -28,10 +38,12 @@ import {
   Plus,
   X,
 } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface MeetingFormData {
   title: string;
-  date: string;
+  date: Date | undefined;
   startTime: string;
   endTime: string;
   type: string;
@@ -46,7 +58,7 @@ const ScheduleMeeting: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<MeetingFormData>({
     title: "",
-    date: "",
+    date: undefined,
     startTime: "",
     endTime: "",
     type: "",
@@ -98,11 +110,11 @@ const ScheduleMeeting: React.FC = () => {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Show success message and redirect
-      alert("Meeting scheduled successfully!");
+      toast.success("Meeting scheduled successfully!");
       navigate("/council/meetings");
     } catch (error) {
       console.error("Error creating meeting:", error);
-      alert("Failed to schedule meeting. Please try again.");
+      toast.error("Failed to schedule meeting. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -176,49 +188,73 @@ const ScheduleMeeting: React.FC = () => {
                 </div>
               </div>
 
+              <Separator />
+
               {/* Date and Time */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="date">
-                    <Calendar className="inline mr-1 h-4 w-4" />
+                  <Label>
+                    <CalendarIcon className="inline mr-1 h-4 w-4" />
                     Date *
                   </Label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={formData.date}
-                    onChange={(e) => handleInputChange("date", e.target.value)}
-                    required
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !formData.date && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {formData.date ? (
+                          format(formData.date, "PPP")
+                        ) : (
+                          <span>Pick a date</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={formData.date}
+                        onSelect={(date) =>
+                          setFormData((prev) => ({ ...prev, date }))
+                        }
+                        disabled={(date) =>
+                          date < new Date(new Date().setHours(0, 0, 0, 0))
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="startTime">
+                  <Label>
                     <Clock className="inline mr-1 h-4 w-4" />
                     Start Time *
                   </Label>
-                  <Input
-                    id="startTime"
-                    type="time"
+                  <TimePicker
                     value={formData.startTime}
-                    onChange={(e) =>
-                      handleInputChange("startTime", e.target.value)
+                    onChange={(time) =>
+                      setFormData((prev) => ({ ...prev, startTime: time }))
                     }
-                    required
+                    placeholder="Select start time"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="endTime">End Time *</Label>
-                  <Input
-                    id="endTime"
-                    type="time"
+                  <Label>End Time *</Label>
+                  <TimePicker
                     value={formData.endTime}
-                    onChange={(e) =>
-                      handleInputChange("endTime", e.target.value)
+                    onChange={(time) =>
+                      setFormData((prev) => ({ ...prev, endTime: time }))
                     }
-                    required
+                    placeholder="Select end time"
                   />
                 </div>
               </div>
+
+              <Separator />
 
               {/* Meeting Type */}
               <div className="space-y-2">
@@ -307,6 +343,8 @@ const ScheduleMeeting: React.FC = () => {
                 />
               </div>
 
+              <Separator />
+
               {/* Attendees */}
               <div className="space-y-2">
                 <Label>
@@ -318,7 +356,7 @@ const ScheduleMeeting: React.FC = () => {
                     placeholder="Enter attendee name or email"
                     value={newAttendee}
                     onChange={(e) => setNewAttendee(e.target.value)}
-                    onKeyPress={(e) =>
+                    onKeyDown={(e) =>
                       e.key === "Enter" &&
                       (e.preventDefault(), handleAddAttendee())
                     }
@@ -335,21 +373,22 @@ const ScheduleMeeting: React.FC = () => {
                 {formData.attendees.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {formData.attendees.map((attendee, index) => (
-                      <div
+                      <Badge
                         key={index}
-                        className="flex items-center gap-1 bg-secondary text-secondary-foreground px-2 py-1 rounded-md text-sm"
+                        variant="secondary"
+                        className="flex items-center gap-1 pr-1"
                       >
                         <span>{attendee}</span>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
-                          className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                          className="h-4 w-4 p-0 hover:bg-destructive hover:text-destructive-foreground ml-1"
                           onClick={() => handleRemoveAttendee(attendee)}
                         >
                           <X className="h-3 w-3" />
                         </Button>
-                      </div>
+                      </Badge>
                     ))}
                   </div>
                 )}
