@@ -19,11 +19,15 @@ export function getToken(): string | null {
         return token;
       }
     }
-    // Fallback to accessToken for compatibility
-    return localStorage.getItem("accessToken");
+    // Fallback to accessToken for backward compatibility with older versions
+    const fallbackToken = localStorage.getItem("accessToken");
+    if (fallbackToken) {
+      console.warn("Using fallback token from 'accessToken'. Consider migrating to 'auth_token'.");
+    }
+    return fallbackToken;
   } catch (error) {
     console.error("Error getting token:", error);
-    return localStorage.getItem("accessToken");
+    return null; // Return null if an error occurs
   }
 }
 
