@@ -31,9 +31,9 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
   return (
     <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Projects List</h1>
+        <h1 className="text-2xl font-bold tracking-tight">All Projects</h1>
         <p className="text-muted-foreground">
-          View and manage all research projects at your institution
+          View all research projects available at your institution
         </p>
       </div>
       <div className="flex flex-col md:flex-row gap-2">

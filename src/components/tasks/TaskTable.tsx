@@ -7,6 +7,8 @@ import {
   getPaginationRowModel,
   ColumnDef,
   flexRender,
+  Column,
+  Row,
 } from "@tanstack/react-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -151,7 +153,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
     () => [
       {
         accessorKey: "title",
-        header: ({ column }) => (
+        header: ({ column }: { column: Column<Task, unknown> }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -167,7 +169,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             )}
           </Button>
         ),
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Task> }) => (
           <div className="max-w-[300px]">
             <div className="font-medium text-slate-900 truncate">
               {row.original.title}
@@ -180,7 +182,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       },
       {
         accessorKey: "status",
-        header: ({ column }) => (
+        header: ({ column }: { column: Column<Task, unknown> }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -196,7 +198,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             )}
           </Button>
         ),
-        cell: ({ row }) => {
+        cell: ({ row }: { row: Row<Task> }) => {
           const statusConfig = getStatusConfig(row.original.status);
           return (
             <Badge className={statusConfig.color}>{row.original.status}</Badge>
@@ -205,7 +207,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       },
       {
         accessorKey: "priority",
-        header: ({ column }) => (
+        header: ({ column }: { column: Column<Task, unknown> }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -221,7 +223,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             )}
           </Button>
         ),
-        cell: ({ row }) => {
+        cell: ({ row }: { row: Row<Task> }) => {
           const priorityConfig = getPriorityConfig(row.original.priority);
           return (
             <Badge variant="outline" className={priorityConfig.color}>
@@ -232,7 +234,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       },
       {
         accessorKey: "dueDate",
-        header: ({ column }) => (
+        header: ({ column }: { column: Column<Task, unknown> }) => (
           <Button
             variant="ghost"
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
@@ -248,7 +250,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             )}
           </Button>
         ),
-        cell: ({ row }) => {
+        cell: ({ row }: { row: Row<Task> }) => {
           const dueDate = parseISO(row.original.dueDate);
           const overdue = isOverdue(row.original.dueDate, row.original.status);
           return (
@@ -268,7 +270,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       {
         accessorKey: "projectTag",
         header: "Category",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Task> }) => (
           <Badge variant="secondary" className="bg-slate-100 text-slate-700">
             {row.original.projectTag}
           </Badge>
@@ -277,7 +279,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       {
         accessorKey: "assignedTo",
         header: "Assigned To",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Task> }) => (
           <div className="flex items-center space-x-2">
             <Avatar className="w-6 h-6">
               <AvatarImage
@@ -287,7 +289,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
               <AvatarFallback className="bg-slate-100 text-slate-600 text-xs">
                 {row.original.assignedTo.name
                   .split(" ")
-                  .map((n) => n[0])
+                  .map((n: string) => n[0])
                   .join("")}
               </AvatarFallback>
             </Avatar>
@@ -300,7 +302,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       {
         id: "actions",
         header: "Actions",
-        cell: ({ row }) => (
+        cell: ({ row }: { row: Row<Task> }) => (
           <div className="flex items-center space-x-2">
             {onTaskView && (
               <Button
@@ -394,7 +396,11 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       globalFilter,
     },
     onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: (row, _columnId, filterValue) => {
+    globalFilterFn: (
+      row: Row<Task>,
+      _columnId: string,
+      filterValue: string
+    ) => {
       const task = row.original;
       const searchString = `${task.title} ${task.description}`.toLowerCase();
       return searchString.includes(filterValue.toLowerCase());
@@ -660,7 +666,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
               <TableHeader>
                 <TableRow className="border-slate-200">
                   {table.getHeaderGroups().map((headerGroup) =>
-                    headerGroup.headers.map((header) => (
+                    headerGroup.headers.map((header: Header<Task, unknown>) => (
                       <TableHead
                         key={header.id}
                         className="bg-slate-50 text-slate-700 font-semibold"
@@ -678,13 +684,13 @@ export const TaskTable: React.FC<TaskTableProps> = ({
               </TableHeader>
               <TableBody>
                 {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
+                  table.getRowModel().rows.map((row: any) => (
                     <TableRow
                       key={row.id}
                       className="hover:bg-slate-50 border-slate-200 cursor-pointer"
                       onClick={() => onTaskClick && onTaskClick(row.original)}
                     >
-                      {row.getVisibleCells().map((cell) => (
+                      {row.getVisibleCells().map((cell: any) => (
                         <TableCell key={cell.id} className="py-4">
                           {flexRender(
                             cell.column.columnDef.cell,

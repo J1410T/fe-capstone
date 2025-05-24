@@ -16,6 +16,8 @@ import {
   Home,
   LayoutDashboard,
   FolderOpen,
+  Calendar,
+  CheckSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -45,14 +47,13 @@ const menuItemsByRole = {
   ],
   [UserRole.HOST_INSTITUTION]: [
     { name: "Home", path: "/member/home", icon: Home },
-    { name: "Dashboard", path: "/host/dashboard", icon: LayoutDashboard },
+    { name: "Projects", path: "/host/projects", icon: FolderOpen },
     {
       name: "Register Project",
       path: "/host/register-project",
       icon: FileText,
     },
-    { name: "PI Approval", path: "/host/pi-approval", icon: CheckCircle },
-    { name: "Projects", path: "/host/projects", icon: Briefcase },
+    { name: "My Projects", path: "/host/my-projects", icon: Briefcase },
     { name: "History", path: "/host/history", icon: History },
   ],
   [UserRole.PRINCIPAL_INVESTIGATOR]: [
@@ -63,9 +64,10 @@ const menuItemsByRole = {
   ],
   [UserRole.APPRAISAL_COUNCIL]: [
     { name: "Home", path: "/member/home", icon: Home },
-    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-    { name: "Projects", path: "/projects", icon: FolderOpen },
-    { name: "Tasks", path: "/tasks", icon: ClipboardList },
+    { name: "PI Approval", path: "/council/pi-approval", icon: CheckCircle },
+    { name: "Evaluations", path: "/council/evaluations", icon: FileText },
+    { name: "Meetings", path: "/council/meetings", icon: Calendar },
+    { name: "Approvals", path: "/council/approvals", icon: CheckSquare },
   ],
   [UserRole.STAFF]: [
     { name: "Home", path: "/member/home", icon: Home },

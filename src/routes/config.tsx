@@ -22,12 +22,34 @@ import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
 
 // Host Institution Pages
-import HostDashboard from "../pages/HostInstitution/Dashboard";
 import RegisterProject from "../pages/HostInstitution/RegisterProject";
 import ProjectsList from "../pages/HostInstitution/ProjectsList";
+import MyProjects from "../pages/HostInstitution/MyProjects";
 import ProjectDetails from "../pages/HostInstitution/ProjectDetails";
 import ProjectHistory from "../pages/HostInstitution/ProjectHistory";
-import PIApproval from "../pages/HostInstitution/PIApproval";
+
+// Council Pages
+import CouncilPIApproval from "../pages/Council/PIApproval";
+import PendingEvaluations from "../pages/Council/Evaluations";
+import EvaluationDetail from "../pages/Council/Evaluations/EvaluationDetail";
+import EvaluationForm from "../pages/Council/Evaluations/EvaluationForm";
+import CouncilMeetings from "../pages/Council/Meetings";
+import ScheduleMeeting from "../pages/Council/Meetings/ScheduleMeeting";
+import MeetingMinutes from "../pages/Council/Meetings/MeetingMinutes";
+import ApprovalInterface from "../pages/Council/Approvals";
+
+// Admin Pages
+import AdminDashboard from "../pages/Admin/Dashboard";
+import UserManagement from "../pages/Admin/Users";
+import SystemConfig from "../pages/Admin/System/Config";
+import SystemLogs from "../pages/Admin/System/Logs";
+import ApprovalManagement from "../pages/Admin/Approvals";
+import AdminComingSoon from "../pages/Admin/ComingSoon";
+
+// General Coming Soon
+import GeneralComingSoon from "../pages/ComingSoon";
+import ProjectsComingSoon from "../pages/Projects/ComingSoon";
+import FormsComingSoon from "../pages/Forms/ComingSoon";
 
 /**
  * Main application routes configuration
@@ -58,9 +80,69 @@ export const routes: RouteObject[] = [
         children: [
           {
             path: "dashboard",
-            element: <Dashboard />,
+            element: <AdminDashboard />,
           },
-          // Add more staff routes here
+          // User Management
+          {
+            path: "users",
+            element: <UserManagement />,
+          },
+          {
+            path: "users/roles",
+            element: <AdminComingSoon />,
+          },
+          // Projects
+          {
+            path: "projects",
+            element: <ProjectsList />,
+          },
+          {
+            path: "projects/create",
+            element: <AdminComingSoon />,
+          },
+          {
+            path: "projects/templates",
+            element: <AdminComingSoon />,
+          },
+          {
+            path: "projects/recent",
+            element: <AdminComingSoon />,
+          },
+          {
+            path: "projects/stats",
+            element: <AdminComingSoon />,
+          },
+          // System Configuration
+          {
+            path: "system/config",
+            element: <SystemConfig />,
+          },
+          {
+            path: "system/logs",
+            element: <SystemLogs />,
+          },
+          {
+            path: "system/backup",
+            element: <AdminComingSoon />,
+          },
+          // Approvals
+          {
+            path: "approvals/pending",
+            element: <ApprovalManagement />,
+          },
+          {
+            path: "approvals/budget",
+            element: <AdminComingSoon />,
+          },
+          {
+            path: "approvals/templates",
+            element: <AdminComingSoon />,
+          },
+          // Security
+          {
+            path: "security",
+            element: <AdminComingSoon />,
+          },
         ],
       },
       {
@@ -99,6 +181,14 @@ export const routes: RouteObject[] = [
             path: "settings",
             element: <Settings />,
           },
+          {
+            path: "notifications",
+            element: <GeneralComingSoon />,
+          },
+          {
+            path: "forms/*",
+            element: <FormsComingSoon />,
+          },
           // Add more member routes here
         ],
       },
@@ -130,19 +220,15 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            element: <Navigate to="/host/dashboard" replace />,
-          },
-          {
-            path: "dashboard",
-            element: <HostDashboard />,
+            element: <Navigate to="/host/my-projects" replace />,
           },
           {
             path: "register-project",
             element: <RegisterProject />,
           },
           {
-            path: "pi-approval",
-            element: <PIApproval />,
+            path: "my-projects",
+            element: <MyProjects />,
           },
           {
             path: "projects",
@@ -155,6 +241,61 @@ export const routes: RouteObject[] = [
           {
             path: "history",
             element: <ProjectHistory />,
+          },
+          {
+            path: "forms/*",
+            element: <FormsComingSoon />,
+          },
+          {
+            path: "project/*",
+            element: <ProjectsComingSoon />,
+          },
+        ],
+      },
+      // Council routes
+      {
+        path: "council",
+        element: (
+          <AuthGuard requiredRoles={[UserRole.APPRAISAL_COUNCIL]}>
+            <UserLayout />
+          </AuthGuard>
+        ),
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/council/evaluations" replace />,
+          },
+          {
+            path: "pi-approval",
+            element: <CouncilPIApproval />,
+          },
+          {
+            path: "evaluations",
+            element: <PendingEvaluations />,
+          },
+          {
+            path: "evaluation/:id",
+            element: <EvaluationDetail />,
+          },
+          {
+            path: "evaluation/:id/form",
+            element: <EvaluationForm />,
+          },
+          {
+            path: "meetings",
+            element: <CouncilMeetings />,
+          },
+          {
+            path: "meetings/schedule",
+            element: <ScheduleMeeting />,
+          },
+          {
+            path: "meeting/:id",
+            element: <MeetingMinutes />,
+          },
+          {
+            path: "approvals",
+            element: <ApprovalInterface />,
           },
         ],
       },
@@ -169,10 +310,14 @@ export const routes: RouteObject[] = [
         element: <AuthLayout />,
         children: [...authRoutes],
       },
-      // Catch all route - 404
+      // Catch all route - Coming Soon for authenticated users, login for unauthenticated
       {
         path: "*",
-        element: <Navigate to="/auth/login" replace />,
+        element: (
+          <AuthGuard>
+            <GeneralComingSoon />
+          </AuthGuard>
+        ),
       },
     ],
   },

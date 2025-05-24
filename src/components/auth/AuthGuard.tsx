@@ -48,12 +48,21 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
 
   // Redirect to home page if accessing the root path
   if (location.pathname === "/") {
-    return <Navigate to="/member/home" replace />;
+    if (user?.role === UserRole.STAFF) {
+      return <Navigate to="/staff/dashboard" replace />;
+    } else {
+      return <Navigate to="/member/home" replace />;
+    }
   }
 
   // Redirect non-staff users to member home if they try to access staff dashboard
   if (user?.role !== UserRole.STAFF && location.pathname.startsWith("/staff")) {
     return <Navigate to="/member/home" replace />;
+  }
+
+  // Redirect staff users to admin dashboard if they try to access member home
+  if (user?.role === UserRole.STAFF && location.pathname === "/member/home") {
+    return <Navigate to="/staff/dashboard" replace />;
   }
 
   // Redirect non-host users to member home if they try to access host dashboard
