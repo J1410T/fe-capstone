@@ -34,7 +34,6 @@ const adminNavData = {
       title: "Dashboard",
       url: "/staff/dashboard",
       icon: LayoutDashboard,
-      isActive: true,
       // items: [],
     },
     {
@@ -56,6 +55,7 @@ const adminNavData = {
       title: "Projects",
       url: "/staff/projects",
       icon: FolderOpen,
+      isActive: true,
       items: [
         {
           title: "All Projects",
