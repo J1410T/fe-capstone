@@ -9,6 +9,7 @@ import {
   flexRender,
   Column,
   Row,
+  Header,
 } from "@tanstack/react-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

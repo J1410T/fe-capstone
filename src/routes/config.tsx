@@ -42,7 +42,7 @@ import ApprovalInterface from "../pages/Council/Approvals";
 import AdminDashboard from "../pages/Admin/Dashboard";
 import UserManagement from "../pages/Admin/Users";
 import SystemConfig from "../pages/Admin/System/Config";
-import SystemLogs from "../pages/Admin/System/Logs";
+// import SystemLogs from "../pages/Admin/System/Logs"; // TODO: Create SystemLogs component
 import ApprovalManagement from "../pages/Admin/Approvals";
 import AdminComingSoon from "../pages/Admin/ComingSoon";
 
@@ -119,7 +119,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "system/logs",
-            element: <SystemLogs />,
+            element: <AdminComingSoon />, // TODO: Replace with <SystemLogs /> when component is created
           },
           {
             path: "system/backup",
