@@ -142,10 +142,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (success) {
         toast.success("Login successful");
 
-        // All users go to member home page except staff
+        // Redirect users based on their role
         if (userRole === UserRole.STAFF) {
           // Staff users go to staff dashboard with sidebar
           navigate("/staff/dashboard");
+        } else if (userRole === UserRole.PRINCIPAL_INVESTIGATOR) {
+          // Principal Investigators go to PI dashboard
+          navigate("/pi/dashboard");
+        } else if (userRole === UserRole.HOST_INSTITUTION) {
+          // Host Institution users go to host dashboard
+          navigate("/host/dashboard");
         } else {
           // All other users go to member home page
           navigate("/member/home");

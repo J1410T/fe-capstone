@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Loading } from "@/components/ui/loaders";
 import { ProjectsHeader, ProjectCard, ProjectsPagination } from "./components";
 import { getStatusColor } from "./utils/statusHelpers";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 
 // Mock data for projects
 const projects = [
@@ -110,6 +111,7 @@ const projects = [
 
 const ProjectsList: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedStatus, setSelectedStatus] = useState("all");
@@ -125,8 +127,7 @@ const ProjectsList: React.FC = () => {
     const matchesStatus =
       selectedStatus === "all" || project.status === selectedStatus;
     const matchesDepartment =
-      selectedDepartment === "all" ||
-      project.department === selectedDepartment;
+      selectedDepartment === "all" || project.department === selectedDepartment;
     return matchesSearch && matchesStatus && matchesDepartment;
   });
 
@@ -143,8 +144,15 @@ const ProjectsList: React.FC = () => {
   }, [searchTerm, selectedStatus, selectedDepartment, pageSize]);
 
   const handleViewDetails = (projectId: number) => {
-    // Navigate to project details page
-    navigate(`/host/project/${projectId}`);
+    // Navigate to project details page based on user role
+    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+      navigate(`/pi/project/${projectId}`);
+    } else if (user?.role === UserRole.HOST_INSTITUTION) {
+      navigate(`/host/project/${projectId}`);
+    } else {
+      // Default to member project details for other roles
+      navigate(`/member/project/${projectId}`);
+    }
   };
 
   const handleExportData = (format: string) => {

@@ -50,6 +50,17 @@ import AdminComingSoon from "../pages/Admin/ComingSoon";
 import GeneralComingSoon from "../pages/ComingSoon";
 import ProjectsComingSoon from "../pages/Projects/ComingSoon";
 import FormsComingSoon from "../pages/Forms/ComingSoon";
+import PiProjectDetail from "@/pages/PrincipalInvestigator/PiProjectDetail";
+
+// Principal Investigator Pages
+import PIProfile from "@/pages/PrincipalInvestigator/Profile";
+import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
+import ResearchGroup from "@/pages/PrincipalInvestigator/ResearchGroup";
+import Milestones from "@/pages/PrincipalInvestigator/Milestones";
+import ProgressReports from "@/pages/PrincipalInvestigator/ProgressReports";
+import Budget from "@/pages/PrincipalInvestigator/Budget";
+import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
+import Meetings from "@/pages/PrincipalInvestigator/Meetings";
 
 /**
  * Main application routes configuration
@@ -67,7 +78,21 @@ export const routes: RouteObject[] = [
       // Redirect from home to member home for all users
       {
         index: true,
-        element: <Navigate to="/member/home" replace />,
+        element: <Navigate to="/home" replace />,
+      },
+      {
+        path: "/",
+        element: (
+          <AuthGuard>
+            <UserLayout />
+          </AuthGuard>
+        ),
+        children: [
+          {
+            path: "home",
+            element: <UserHome />,
+          },
+        ],
       },
       // Staff routes with sidebar
       {
@@ -296,6 +321,61 @@ export const routes: RouteObject[] = [
           {
             path: "approvals",
             element: <ApprovalInterface />,
+          },
+        ],
+      },
+      // Principal Investigator routes
+      {
+        path: "pi",
+        element: (
+          <AuthGuard requiredRoles={[UserRole.PRINCIPAL_INVESTIGATOR]}>
+            <UserLayout />
+          </AuthGuard>
+        ),
+        children: [
+          {
+            index: true,
+            element: <Navigate to="/pi/dashboard" replace />,
+          },
+          {
+            path: "projects",
+            element: <ProjectsList />,
+          },
+          {
+            path: "project/:projectId",
+            element: <PiProjectDetail />,
+          },
+          {
+            path: "project-registration",
+            element: <ProjectRegistration />,
+          },
+          {
+            path: "profile",
+            element: <PIProfile />,
+          },
+          {
+            path: "research-group",
+            element: <ResearchGroup />,
+          },
+          {
+            path: "milestones",
+            element: <Milestones />,
+          },
+          {
+            path: "progress-reports",
+            element: <ProgressReports />,
+          },
+          {
+            path: "budget",
+            element: <Budget />,
+          },
+          {
+            path: "dashboard",
+            element: <PIDashboard />,
+          },
+          {
+            path: "meetings",
+            element: <Meetings />,
           },
         ],
       },
