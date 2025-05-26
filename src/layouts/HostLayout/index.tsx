@@ -184,13 +184,13 @@ export const HostLayout: React.FC = () => {
               </SheetTrigger>
               <SheetContent side="left" className="w-72">
                 <div className="flex h-full flex-col">
-                  <div className="flex items-center border-b py-4">
+                  <div className="logo-container border-b py-4">
                     <img
-                      src="/src/assets/images/logo.png"
+                      src="/src/assets/images/pg-logo-green.png"
                       alt="SRPM Logo"
-                      className="h-8 w-auto mr-2"
+                      className="logo-medium"
                     />
-                    <span className="text-lg font-semibold text-primary">
+                    <span className="text-lg font-semibold text-primary font-secondary">
                       SRPM
                     </span>
                   </div>
@@ -225,16 +225,15 @@ export const HostLayout: React.FC = () => {
               </SheetContent>
             </Sheet>
 
-            <a
-              href="/host/dashboard"
-              className="flex items-center gap-2 font-semibold"
-            >
+            <a href="/host/dashboard" className="logo-container font-semibold">
               <img
-                src="/src/assets/images/logo.png"
+                src="/src/assets/images/pg-logo-green.png"
                 alt="SRPM Logo"
-                className="h-8 w-auto"
+                className="logo-medium"
               />
-              <span className="text-lg text-primary hidden md:block">SRPM</span>
+              <span className="text-lg text-primary hidden md:block font-secondary">
+                SRPM
+              </span>
             </a>
 
             <Separator orientation="vertical" className="mx-4 h-6" />

@@ -25,9 +25,13 @@ function UserHeader() {
         {/* Left: Logo + Menu */}
         <div className="flex items-center space-x-10 h-full">
           {/* Logo */}
-          <div className="flex items-center space-x-2">
-            <div className="text-xl text-emerald-600">🧪</div>
-            <span className="font-bold text-xl leading-7 text-gray-800">
+          <div className="logo-container">
+            <img
+              src="/src/assets/images/pg-logo-green.png"
+              alt="SRPM Logo"
+              className="logo-medium"
+            />
+            <span className="font-bold text-xl leading-7 text-gray-800 font-secondary">
               SRPM
             </span>
           </div>

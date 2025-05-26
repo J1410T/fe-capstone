@@ -102,13 +102,13 @@ export const CouncilLayout: React.FC = () => {
               </SheetTrigger>
               <SheetContent side="left" className="w-72">
                 <div className="flex h-full flex-col">
-                  <div className="flex items-center border-b py-4">
+                  <div className="logo-container border-b py-4">
                     <img
-                      src="/src/assets/images/logo.png"
+                      src="/src/assets/images/pg-logo-green.png"
                       alt="SRPM Logo"
-                      className="h-8 w-auto mr-2"
+                      className="logo-medium"
                     />
-                    <span className="text-lg font-semibold text-primary">
+                    <span className="text-lg font-semibold text-primary font-secondary">
                       SRPM
                     </span>
                   </div>
@@ -156,13 +156,15 @@ export const CouncilLayout: React.FC = () => {
             </Sheet>
 
             {/* Logo */}
-            <div className="flex items-center gap-2">
+            <div className="logo-container">
               <img
-                src="/src/assets/images/logo.png"
+                src="/src/assets/images/pg-logo-green.png"
                 alt="SRPM Logo"
-                className="h-8 w-auto"
+                className="logo-medium"
               />
-              <span className="text-lg font-semibold text-primary">SRPM</span>
+              <span className="text-lg font-semibold text-primary font-secondary">
+                SRPM
+              </span>
             </div>
 
             <Separator orientation="vertical" className="mx-4 h-6" />

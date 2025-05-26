@@ -9,17 +9,16 @@ export default function Login() {
 
       {/* Login form in the foreground */}
       <div className="relative z-10 flex min-h-svh flex-col items-center justify-center gap-6 bg-transparent p-6 md:p-10">
-        <div className="flex w-full max-w-sm flex-col gap-6">
-          <a
-            href="#"
-            className="flex items-center gap-2 self-center font-medium"
-          >
+        <div className="flex w-full max-w-lg flex-col gap-6">
+          <a href="#" className="logo-container self-center font-medium">
             <img
-              src="/src/assets/images/logo.png"
+              src="/src/assets/images/pg-logo-green.png"
               alt="SRPM Logo"
-              className="h-10 w-auto"
+              className="logo-large"
             />
-            <span className="text-lg font-semibold text-primary">SRPM</span>
+            <span className="text-2xl font-semibold text-primary font-secondary">
+              SRPM
+            </span>
           </a>
           <LoginForm />
         </div>

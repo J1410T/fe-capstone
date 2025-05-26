@@ -33,13 +33,13 @@ export const DashboardLayout: React.FC = () => {
       <div className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-10 flex h-16 items-center border-b bg-background px-4 md:px-6">
           <div className="flex items-center gap-2">
-            <a href="/" className="flex items-center gap-2 font-semibold">
+            <a href="/" className="logo-container font-semibold">
               <img
-                src="/src/assets/images/logo.png"
+                src="/src/assets/images/pg-logo-green.png"
                 alt="SRPM Logo"
-                className="h-8 w-auto"
+                className="logo-medium"
               />
-              <span className="text-lg text-primary">SRPM</span>
+              <span className="text-lg text-primary font-secondary">SRPM</span>
             </a>
             <Separator orientation="vertical" className="mx-4 h-6" />
             <Breadcrumb>

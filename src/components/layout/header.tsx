@@ -93,9 +93,13 @@ function FlexibleHeader() {
         {/* Left: Logo + Menu */}
         <div className="flex items-center space-x-10 h-full">
           {/* Logo */}
-          <Link to="/member/home" className="flex items-center space-x-2">
-            <div className="text-xl text-emerald-600">🧪</div>
-            <span className="font-bold text-xl leading-7 text-gray-800">
+          <Link to="/member/home" className="logo-container">
+            <img
+              src="/src/assets/images/pg-logo-green.png"
+              alt="SRPM Logo"
+              className="logo-medium"
+            />
+            <span className="font-bold text-xl leading-7 text-gray-800 font-secondary">
               SRPM
             </span>
           </Link>
@@ -182,9 +186,15 @@ function FlexibleHeader() {
           <SheetContent side="left" className="w-[300px] sm:w-[400px]">
             <SheetHeader>
               <SheetTitle>
-                <div className="flex items-center space-x-2">
-                  <div className="text-xl text-emerald-600">🧪</div>
-                  <span className="font-bold text-xl leading-7">SRPM</span>
+                <div className="logo-container">
+                  <img
+                    src="/src/assets/images/pg-logo-green.png"
+                    alt="SRPM Logo"
+                    className="logo-medium"
+                  />
+                  <span className="font-bold text-xl leading-7 font-secondary">
+                    SRPM
+                  </span>
                 </div>
               </SheetTitle>
             </SheetHeader>

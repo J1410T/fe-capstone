@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,500;1,500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -146,11 +148,43 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Roboto Mono", monospace;
+    font-weight: 300;
   }
 }
 
-/* Custom scrollbar styles for Kanban board */
+/* Custom utility classes */
 @layer utilities {
+  /* Font classes */
+  .font-primary {
+    font-family: "Roboto Mono", monospace;
+    font-weight: 300;
+  }
+
+  .font-secondary {
+    font-family: "Orbitron", sans-serif;
+    font-weight: 600;
+    color: theme("colors.emerald.700");
+  }
+
+  /* Logo styling classes */
+
+  .logo-large {
+    height: 4.5rem;
+    width: auto;
+  }
+
+  .logo-medium {
+    height: 3.5rem;
+    width: auto;
+  }
+
+  .logo-container {
+    display: flex;
+    align-items: center;
+  }
+
+  /* Custom scrollbar styles for Kanban board */
   .kanban-scroll {
     scrollbar-width: thin;
     scrollbar-color: rgb(203 213 225) transparent;
