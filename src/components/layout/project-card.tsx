@@ -1,5 +1,6 @@
 import { FaClock, FaUsers } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 
 interface UserProjectCardProps {
   id: string;
@@ -24,6 +25,19 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
   progress,
   status,
 }) => {
+  const { user } = useAuth();
+
+  // Determine the correct route based on user role
+  const getProjectDetailRoute = () => {
+    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+      return `/pi/project/${id}`;
+    } else if (user?.role === UserRole.HOST_INSTITUTION) {
+      return `/host/project/${id}`;
+    } else {
+      // Default to member project details for other roles
+      return `/member/project/${id}`;
+    }
+  };
   return (
     <div className="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition duration-300 h-full flex flex-col">
       <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
@@ -67,7 +81,7 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
         <div className="flex items-center justify-between pt-2 border-t border-gray-100">
           <p className="text-sm text-gray-600">Manager: {manager}</p>
           <Link
-            to={`/member/project/${id}`}
+            to={getProjectDetailRoute()}
             className="text-sm font-semibold text-emerald-600 hover:underline"
           >
             View Details
