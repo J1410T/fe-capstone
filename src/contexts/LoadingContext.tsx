@@ -1,34 +1,7 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { useState, useEffect, ReactNode } from "react";
 import { useLocation, useNavigationType } from "react-router-dom";
 import { PageLoading } from "@/components/ui/loaders";
-
-// Loading component - using the PageLoading component
-export const Loading = PageLoading;
-
-// Loading context type
-interface LoadingContextType {
-  isLoading: boolean;
-  setIsLoading: (value: boolean) => void;
-  startLoading: () => void;
-}
-
-// Create loading context
-const LoadingContext = createContext<LoadingContextType | undefined>(undefined);
-
-// Hook to use loading context
-export const useLoading = () => {
-  const context = useContext(LoadingContext);
-  if (!context) {
-    throw new Error("useLoading must be used within a LoadingProvider");
-  }
-  return context;
-};
+import { LoadingContext } from "./loading-context";
 
 // Loading provider props
 type LoadingProviderProps = {
@@ -91,12 +64,12 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({
       clearTimeout(initialContentTimer);
       clearTimeout(initialLoadingTimer);
     };
-  }, []); // Only run when component mounts for the first time
+  }, [children]); // Include children dependency
 
   return (
     <LoadingContext.Provider value={{ isLoading, setIsLoading, startLoading }}>
       {/* Show loading when isLoading = true */}
-      {isLoading && <Loading />}
+      {isLoading && <PageLoading />}
 
       {/* Only show content when loading is complete */}
       {!isLoading && content ? content : null}

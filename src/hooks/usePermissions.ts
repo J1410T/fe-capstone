@@ -50,7 +50,7 @@ export const usePermissions = () => {
   /**
    * Filter project data based on current user's permissions
    */
-  const filterProjectForUser = (project: any) => {
+  const filterProjectForUser = (project: Record<string, unknown>) => {
     if (!userRole)
       return {
         ...project,

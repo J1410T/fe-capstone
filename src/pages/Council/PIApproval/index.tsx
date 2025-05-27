@@ -143,9 +143,10 @@ const PIApproval: React.FC = () => {
     setSelectedApplicant(null);
   };
 
-  const handleApprovePI = (_applicantId: number) => {
+  const handleApprovePI = (applicantId: number) => {
     // Handle approve PI
     setIsLoading(true);
+    console.log("Approving PI with ID:", applicantId);
 
     // Simulate API call
     setTimeout(() => {
@@ -155,9 +156,10 @@ const PIApproval: React.FC = () => {
     }, 1500);
   };
 
-  const handleRejectPI = (_applicantId: number) => {
+  const handleRejectPI = (applicantId: number) => {
     // Handle reject PI
     setIsLoading(true);
+    console.log("Rejecting PI with ID:", applicantId);
 
     // Simulate API call
     setTimeout(() => {
@@ -167,9 +169,10 @@ const PIApproval: React.FC = () => {
     }, 1500);
   };
 
-  const handleRequestRevision = (_applicantId: number) => {
+  const handleRequestRevision = (applicantId: number) => {
     // Handle request revision
     setIsLoading(true);
+    console.log("Requesting revision for PI with ID:", applicantId);
 
     // Simulate API call
     setTimeout(() => {

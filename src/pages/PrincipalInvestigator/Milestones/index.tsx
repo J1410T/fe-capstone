@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -69,12 +69,7 @@ const Milestones: React.FC = () => {
     dueDate: "",
   });
 
-  useEffect(() => {
-    loadMilestonesAndTasks();
-    loadTeamMembers();
-  }, []);
-
-  const loadMilestonesAndTasks = async () => {
+  const loadMilestonesAndTasks = useCallback(async () => {
     setIsLoading(true);
     try {
       // Simulate API call
@@ -173,7 +168,12 @@ const Milestones: React.FC = () => {
       console.error("Error loading milestones:", error);
       setIsLoading(false);
     }
-  };
+  }, [user?.email]);
+
+  useEffect(() => {
+    loadMilestonesAndTasks();
+    loadTeamMembers();
+  }, [loadMilestonesAndTasks]);
 
   const loadTeamMembers = async () => {
     // Mock team members
@@ -659,7 +659,9 @@ const Milestones: React.FC = () => {
                                 <Label htmlFor="task-priority">Priority</Label>
                                 <Select
                                   value={taskForm.priority}
-                                  onValueChange={(value: any) =>
+                                  onValueChange={(
+                                    value: "Low" | "Medium" | "High"
+                                  ) =>
                                     setTaskForm((prev) => ({
                                       ...prev,
                                       priority: value,
@@ -747,7 +749,9 @@ const Milestones: React.FC = () => {
                             <div className="flex items-center space-x-2">
                               <Select
                                 value={task.status}
-                                onValueChange={(value: any) =>
+                                onValueChange={(
+                                  value: "To Do" | "In Progress" | "Completed"
+                                ) =>
                                   handleTaskStatusChange(
                                     milestone.id,
                                     task.id,

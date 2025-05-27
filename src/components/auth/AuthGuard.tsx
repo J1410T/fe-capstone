@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { Loading } from "@/components/ui/loaders";
 
 interface AuthGuardProps {
   children: ReactNode;
@@ -19,7 +20,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
 
   // Show loading state
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loading className="w-full max-w-md" />
+      </div>
+    );
   }
 
   // Redirect to login if not authenticated

@@ -3,7 +3,11 @@ import { ContextMode } from "glsl-canvas-js/dist/esm/context/context";
 import { Canvas, type ICanvasOptions } from "glsl-canvas-js/dist/esm/glsl";
 import { type FC, useLayoutEffect, useRef } from "react";
 
-const glsl = (x: any) => x;
+const glsl = (strings: TemplateStringsArray, ...values: unknown[]): string => {
+  return strings.reduce((result, string, i) => {
+    return result + string + (values[i] || "");
+  }, "");
+};
 
 const vertexShader = glsl`
   attribute vec4 a_position;
@@ -69,7 +73,7 @@ const fragmentShader = glsl`
         float timeA = u_time * 0.1;
         float timeB = u_time * 0.2;
         float timeC = u_time * 0.3;
-        
+
         // Normalized noise values with different uv scales
         float noiseA = snoise(v_uv + timeA) * 0.5 + 0.5;
         float noiseB = snoise(v_uv * 0.2 - timeB) * 0.5 + 0.5;

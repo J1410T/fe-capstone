@@ -314,7 +314,7 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                         <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-medium text-slate-600">
                           {member.name
                             .split(" ")
-                            .map((n) => n[0])
+                            .map((n: string) => n[0])
                             .join("")}
                         </div>
                         <span>{member.name}</span>
@@ -336,7 +336,7 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                   <AvatarFallback className="bg-slate-200 text-slate-600 text-sm">
                     {task.assignee.name
                       .split(" ")
-                      .map((n) => n[0])
+                      .map((n: string) => n[0])
                       .join("")}
                   </AvatarFallback>
                 </Avatar>

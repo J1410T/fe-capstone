@@ -11,6 +11,8 @@ import {
 } from "@dnd-kit/core";
 import { TaskColumn, TaskCard, SearchBar, StatusFilter } from "./professional";
 import { toast } from "sonner";
+import { Task as ProfessionalTask } from "@/types/task";
+import { UserRole } from "@/contexts/AuthContext";
 
 // Unified Task interface that matches UserTaskManagement
 interface Task {
@@ -30,6 +32,31 @@ interface Task {
   createdAt: string;
   updatedAt: string;
 }
+
+// Kanban task interface for internal use
+interface KanbanTask extends Omit<Task, "status"> {
+  assignee: Task["assignedTo"];
+  status: KanbanStatus;
+}
+
+// Convert UserTaskManagement task to Professional task format
+const convertToProfessionalTask = (task: KanbanTask): ProfessionalTask => {
+  return {
+    id: task.id,
+    title: task.title,
+    description: task.description,
+    status: task.status,
+    priority: task.priority,
+    assignee: {
+      ...task.assignee,
+      role: UserRole.MEMBER, // Default role for compatibility
+    },
+    createdAt: task.createdAt,
+    dueDate: task.dueDate,
+    updatedAt: task.updatedAt,
+    projectId: task.projectTag, // Map projectTag to projectId
+  };
+};
 
 // Map UserTaskManagement statuses to ProfessionalTaskBoard statuses
 const STATUS_MAPPING = {
@@ -115,7 +142,7 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
     return KANBAN_STATUSES.reduce((acc, status) => {
       acc[status] = filteredTasks.filter((task) => task.status === status);
       return acc;
-    }, {} as Record<KanbanStatus, any[]>);
+    }, {} as Record<KanbanStatus, KanbanTask[]>);
   }, [filteredTasks]);
 
   // Calculate statistics for displayed tasks only
@@ -214,15 +241,6 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
     });
   };
 
-  // Handle task click
-  const handleTaskClick = (task: any) => {
-    // Convert back to original task format
-    const originalTask = tasks.find((t) => t.id === task.id);
-    if (originalTask && onTaskClick) {
-      onTaskClick(originalTask);
-    }
-  };
-
   return (
     <div className="min-h-full bg-slate-50">
       {/* Search and Filter Bar - Aligned with Header */}
@@ -297,8 +315,14 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
               <div key={status} className="flex-shrink-0 w-80 min-w-[300px]">
                 <TaskColumn
                   status={status}
-                  tasks={tasksByStatus[status]}
-                  onTaskClick={handleTaskClick}
+                  tasks={tasksByStatus[status].map(convertToProfessionalTask)}
+                  onTaskClick={(task) => {
+                    // Convert back to original task format
+                    const originalTask = tasks.find((t) => t.id === task.id);
+                    if (originalTask && onTaskClick) {
+                      onTaskClick(originalTask);
+                    }
+                  }}
                 />
               </div>
             ))}
@@ -309,8 +333,8 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
               <TaskCard
                 task={{
                   ...activeTask,
-                  assignee: { ...activeTask.assignedTo, role: "MEMBER" as any },
-                  status: STATUS_MAPPING[activeTask.status] as any,
+                  assignee: { ...activeTask.assignedTo, role: UserRole.MEMBER },
+                  status: STATUS_MAPPING[activeTask.status] as KanbanStatus,
                 }}
                 onClick={() => {}}
               />

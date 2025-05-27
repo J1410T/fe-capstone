@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -34,6 +34,7 @@ import { Project, Milestone, ProgressReport } from "../shared/types";
 import { StatusBadge } from "../shared/components";
 import { formatDate, getCurrentQuarter, getTimeLimit } from "../shared/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { Loading } from "@/components/ui/loaders";
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -43,11 +44,7 @@ const Dashboard: React.FC = () => {
   const [reports, setReports] = useState<ProgressReport[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setIsLoading(true);
     try {
       // Simulate API calls
@@ -137,7 +134,11 @@ const Dashboard: React.FC = () => {
       console.error("Error loading dashboard data:", error);
       setIsLoading(false);
     }
-  };
+  }, [user?.name]);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   const getProjectStats = () => {
     return {
@@ -198,7 +199,11 @@ const Dashboard: React.FC = () => {
   const timeLimit = getTimeLimit();
 
   if (isLoading) {
-    return <div>Loading dashboard...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loading className="w-full max-w-md" />
+      </div>
+    );
   }
 
   return (

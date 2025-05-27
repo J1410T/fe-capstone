@@ -158,7 +158,9 @@ export const FundingRequestList: React.FC = () => {
     return request.status.toLowerCase() === activeTab;
   });
 
-  const handleCreateRequest = (newRequest: any) => {
+  const handleCreateRequest = (
+    newRequest: Omit<FundingRequest, "id" | "createdAt" | "status">
+  ) => {
     const request: FundingRequest = {
       ...newRequest,
       id: Date.now().toString(),

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -61,11 +61,7 @@ const ResearchGroup: React.FC = () => {
   >("Normal");
   const [emailError, setEmailError] = useState("");
 
-  useEffect(() => {
-    loadTeamMembers();
-  }, []);
-
-  const loadTeamMembers = async () => {
+  const loadTeamMembers = useCallback(async () => {
     setIsLoading(true);
     try {
       // Simulate API call
@@ -116,7 +112,11 @@ const ResearchGroup: React.FC = () => {
       console.error("Error loading team members:", error);
       setIsLoading(false);
     }
-  };
+  }, [user?.name, user?.email, user?.avatar]);
+
+  useEffect(() => {
+    loadTeamMembers();
+  }, [loadTeamMembers]);
 
   const handleInviteMember = async () => {
     if (!validateEmail(inviteEmail)) {
@@ -303,7 +303,9 @@ const ResearchGroup: React.FC = () => {
                   <Label htmlFor="role">Role</Label>
                   <Select
                     value={inviteRole}
-                    onValueChange={(value: any) => setInviteRole(value)}
+                    onValueChange={(value: "Normal" | "Secretary" | "Leader") =>
+                      setInviteRole(value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -434,9 +436,9 @@ const ResearchGroup: React.FC = () => {
                       <div className="flex items-center justify-end space-x-2">
                         <Select
                           value={member.role}
-                          onValueChange={(value: any) =>
-                            handleRoleChange(member.id, value)
-                          }
+                          onValueChange={(
+                            value: "Normal" | "Secretary" | "Leader"
+                          ) => handleRoleChange(member.id, value)}
                           disabled={
                             member.email === user?.email &&
                             member.role === "Leader" &&

@@ -134,7 +134,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
               <AvatarFallback className="text-xs bg-slate-100 text-slate-600">
                 {task.assignee.name
                   .split(" ")
-                  .map((n) => n[0])
+                  .map((n: string) => n[0])
                   .join("")}
               </AvatarFallback>
             </Avatar>

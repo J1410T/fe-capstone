@@ -147,8 +147,9 @@ const ProposePrincipalInvestigator: React.FC = () => {
     setSelectedApplicant(null);
   };
 
-  const handleApprovePI = (_applicantId: number) => {
+  const handleApprovePI = (applicantId: number) => {
     setIsLoading(true);
+    console.log("Approving PI applicant:", applicantId);
 
     // Simulate API call
     setTimeout(() => {
@@ -159,8 +160,9 @@ const ProposePrincipalInvestigator: React.FC = () => {
     }, 1500);
   };
 
-  const handleRejectPI = (_applicantId: number) => {
+  const handleRejectPI = (applicantId: number) => {
     setIsLoading(true);
+    console.log("Rejecting PI applicant:", applicantId);
 
     // Simulate API call
     setTimeout(() => {
@@ -170,8 +172,9 @@ const ProposePrincipalInvestigator: React.FC = () => {
     }, 1500);
   };
 
-  const handleRequestMoreInfo = (_applicantId: number) => {
+  const handleRequestMoreInfo = (applicantId: number) => {
     setIsLoading(true);
+    console.log("Requesting more info from PI applicant:", applicantId);
 
     // Simulate API call
     setTimeout(() => {

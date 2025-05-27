@@ -60,18 +60,25 @@ const Settings: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  const handleSettingChange = (category: string, key: string, value: any) => {
+  const handleSettingChange = (
+    category: string,
+    key: string,
+    value: string | boolean
+  ) => {
     setSettings((prev) => ({
       ...prev,
       [category]: {
-        ...(prev[category as keyof typeof prev] as Record<string, any>),
+        ...(prev[category as keyof typeof prev] as Record<
+          string,
+          string | boolean
+        >),
         [key]: value,
       },
     }));
     setHasChanges(true);
   };
 
-  const handleDirectChange = (key: string, value: any) => {
+  const handleDirectChange = (key: string, value: string | boolean) => {
     setSettings((prev) => ({
       ...prev,
       [key]: value,

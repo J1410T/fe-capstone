@@ -1,4 +1,4 @@
-import { TimeLimit, PaymentSchedule, PaymentPhase } from './types';
+import { TimeLimit, PaymentSchedule, PaymentPhase } from "./types";
 
 // Time and date utilities
 export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
@@ -10,20 +10,20 @@ export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
 };
 
 export const formatDate = (date: string | Date): string => {
-  return new Date(date).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 };
 
 export const formatDateTime = (date: string | Date): string => {
-  return new Date(date).toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
+  return new Date(date).toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 };
 
@@ -42,150 +42,156 @@ export const getDaysUntilDeadline = (deadline: string): number => {
 export const getTimeLimit = (): TimeLimit => {
   const quarter = getCurrentQuarter();
   const currentYear = new Date().getFullYear();
-  
+
   switch (quarter) {
     case 1:
       return {
         quarter: 1,
-        allowedProjectTypes: ['Application'],
+        allowedProjectTypes: ["Application"],
         deadline: `${currentYear}-03-31`,
-        isActive: true
+        isActive: true,
       };
     case 2:
       return {
         quarter: 2,
-        allowedProjectTypes: ['Basic'],
+        allowedProjectTypes: ["Basic"],
         deadline: `${currentYear}-06-30`,
-        isActive: true
+        isActive: true,
       };
     default:
       return {
         quarter,
         allowedProjectTypes: [],
         deadline: `${currentYear}-12-31`,
-        isActive: false
+        isActive: false,
       };
   }
 };
 
-export const canCreateProjectType = (projectType: 'Basic' | 'Application'): boolean => {
+export const canCreateProjectType = (
+  projectType: "Basic" | "Application"
+): boolean => {
   const timeLimit = getTimeLimit();
-  return timeLimit.isActive && timeLimit.allowedProjectTypes.includes(projectType);
+  return (
+    timeLimit.isActive && timeLimit.allowedProjectTypes.includes(projectType)
+  );
 };
 
 export const getProjectTypeRestrictionMessage = (): string => {
   const timeLimit = getTimeLimit();
   const quarter = getCurrentQuarter();
-  
+
   if (!timeLimit.isActive) {
-    return 'Project creation is currently not allowed. Please wait for the next registration period.';
+    return "Project creation is currently not allowed. Please wait for the next registration period.";
   }
-  
+
   if (quarter === 1) {
-    return 'Only Application projects can be created in Quarter 1.';
+    return "Only Application projects can be created in Quarter 1.";
   }
-  
+
   if (quarter === 2) {
-    return 'Only Basic projects can be created in Quarter 2.';
+    return "Only Basic projects can be created in Quarter 2.";
   }
-  
-  return 'Project creation is currently not allowed.';
+
+  return "Project creation is currently not allowed.";
 };
 
 // Payment schedule utilities
 export const generatePaymentSchedule = (
-  projectType: 'Basic' | 'Application',
+  projectType: "Basic" | "Application",
   totalAmount: number,
   startDate: string
 ): PaymentSchedule => {
   const phases: PaymentPhase[] = [];
-  
-  if (projectType === 'Basic') {
+
+  if (projectType === "Basic") {
     // Basic: 100% after acceptance
     phases.push({
       phase: 1,
       percentage: 100,
       amount: totalAmount,
       dueDate: startDate,
-      status: 'Pending'
+      status: "Pending",
     });
   } else {
     // Application: 30% - 30% - 30% - 10%
     const percentages = [30, 30, 30, 10];
     percentages.forEach((percentage, index) => {
       const dueDate = new Date(startDate);
-      dueDate.setMonth(dueDate.getMonth() + (index * 3)); // Every 3 months
-      
+      dueDate.setMonth(dueDate.getMonth() + index * 3); // Every 3 months
+
       phases.push({
         phase: index + 1,
         percentage,
         amount: (totalAmount * percentage) / 100,
-        dueDate: dueDate.toISOString().split('T')[0],
-        status: 'Pending'
+        dueDate: dueDate.toISOString().split("T")[0],
+        status: "Pending",
       });
     });
   }
-  
+
   return {
     projectType,
     schedule: phases,
     totalAmount,
-    paidAmount: 0
+    paidAmount: 0,
   };
 };
 
 // File validation utilities
-export const validateFileUpload = (file: File): { isValid: boolean; error?: string } => {
+export const validateFileUpload = (
+  file: File
+): { isValid: boolean; error?: string } => {
   const maxSize = 10 * 1024 * 1024; // 10MB
   const allowedTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/plain',
-    'image/jpeg',
-    'image/png'
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/plain",
+    "image/jpeg",
+    "image/png",
   ];
-  
+
   if (file.size > maxSize) {
     return {
       isValid: false,
-      error: `File ${file.name} is too large. Maximum size is 10MB.`
+      error: `File ${file.name} is too large. Maximum size is 10MB.`,
     };
   }
-  
+
   if (!allowedTypes.includes(file.type)) {
     return {
       isValid: false,
-      error: `File ${file.name} is not a supported format.`
+      error: `File ${file.name} is not a supported format.`,
     };
   }
-  
+
   return { isValid: true };
 };
 
 // Status badge utilities
 export const getStatusColor = (status: string): string => {
   switch (status.toLowerCase()) {
-    case 'completed':
-    case 'approved':
-    case 'paid':
-      return 'bg-green-100 text-green-800';
-    case 'in progress':
-    case 'processing':
-    case 'under review':
-      return 'bg-blue-100 text-blue-800';
-    case 'pending':
-    case 'draft':
-      return 'bg-yellow-100 text-yellow-800';
-    case 'overdue':
-    case 'rejected':
-      return 'bg-red-100 text-red-800';
-    case 'cancelled':
-      return 'bg-gray-100 text-gray-800';
+    case "completed":
+    case "approved":
+    case "paid":
+      return "bg-green-100 text-green-800";
+    case "in progress":
+    case "processing":
+    case "under review":
+      return "bg-blue-100 text-blue-800";
+    case "pending":
+    case "draft":
+      return "bg-yellow-100 text-yellow-800";
+    case "overdue":
+    case "rejected":
+      return "bg-red-100 text-red-800";
+    case "cancelled":
+      return "bg-gray-100 text-gray-800";
     default:
-      return 'bg-gray-100 text-gray-800';
+      return "bg-gray-100 text-gray-800";
   }
 };
 
@@ -199,7 +205,11 @@ export const validateRequired = (value: string): boolean => {
   return value.trim().length > 0;
 };
 
-export const validateNumber = (value: string, min?: number, max?: number): boolean => {
+export const validateNumber = (
+  value: string,
+  min?: number,
+  max?: number
+): boolean => {
   const num = parseFloat(value);
   if (isNaN(num)) return false;
   if (min !== undefined && num < min) return false;
@@ -213,8 +223,12 @@ export const calculateProgress = (completed: number, total: number): number => {
   return Math.round((completed / total) * 100);
 };
 
-export const calculateMilestoneProgress = (tasks: any[]): number => {
+export const calculateMilestoneProgress = (
+  tasks: { status: string }[]
+): number => {
   if (tasks.length === 0) return 0;
-  const completedTasks = tasks.filter(task => task.status === 'Completed').length;
+  const completedTasks = tasks.filter(
+    (task) => task.status === "Completed"
+  ).length;
   return calculateProgress(completedTasks, tasks.length);
 };

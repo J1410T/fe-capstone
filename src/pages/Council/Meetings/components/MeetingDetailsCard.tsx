@@ -17,8 +17,31 @@ import { EvaluationsList } from "./EvaluationsList";
 import { MinutesForm } from "./MinutesForm";
 import { ScoreSummary } from "./ScoreSummary";
 
+interface Meeting {
+  date: string;
+  time: string;
+  location: string;
+  projectTitle: string;
+  projectCode: string;
+  type: string;
+  attendees: Array<{
+    id: number;
+    name: string;
+    role: string;
+    present: boolean;
+  }>;
+  evaluations: Array<{
+    id: number;
+    evaluator: string;
+    score: number;
+    maxScore: number;
+    recommendation: string;
+    submitted: boolean;
+  }>;
+}
+
 interface MeetingDetailsCardProps {
-  meeting: any;
+  meeting: Meeting;
   discussion: string;
   conclusion: string;
   nextSteps: string;

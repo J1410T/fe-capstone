@@ -99,7 +99,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     }
   };
 
-  const handleInputChange = (field: keyof Task, value: any) => {
+  const handleInputChange = (field: keyof Task, value: string) => {
     setEditData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {

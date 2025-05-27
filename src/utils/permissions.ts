@@ -11,12 +11,12 @@ export const PERMISSIONS = {
   VIEW_PROJECT_DOCUMENTS: "view_project_documents",
   VIEW_PROJECT_TASKS: "view_project_tasks",
   VIEW_PROJECT_FULL: "view_project_full",
-  
+
   // Project management permissions
   MANAGE_PROJECT: "manage_project",
   EDIT_PROJECT: "edit_project",
   DELETE_PROJECT: "delete_project",
-  
+
   // Administrative permissions
   VIEW_ALL_PROJECTS: "view_all_projects",
   EXPORT_PROJECT_DATA: "export_project_data",
@@ -27,9 +27,7 @@ export const PERMISSIONS = {
  * Role-based permission mapping
  */
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  [UserRole.MEMBER]: [
-    PERMISSIONS.VIEW_PROJECT_BASIC,
-  ],
+  [UserRole.MEMBER]: [PERMISSIONS.VIEW_PROJECT_BASIC],
   [UserRole.PRINCIPAL_INVESTIGATOR]: [
     PERMISSIONS.VIEW_PROJECT_BASIC,
     PERMISSIONS.VIEW_PROJECT_TASKS,
@@ -74,7 +72,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
 /**
  * Check if a user role has a specific permission
  */
-export const hasPermission = (userRole: UserRole, permission: string): boolean => {
+export const hasPermission = (
+  userRole: UserRole,
+  permission: string
+): boolean => {
   const rolePermissions = ROLE_PERMISSIONS[userRole];
   return rolePermissions.includes(permission);
 };
@@ -104,39 +105,44 @@ export const canAccessTab = (userRole: UserRole, tabName: string): boolean => {
  */
 export const getAllowedTabs = (userRole: UserRole): string[] => {
   const tabs = ["overview", "tasks", "team", "documents", "budget"];
-  return tabs.filter(tab => canAccessTab(userRole, tab));
+  return tabs.filter((tab) => canAccessTab(userRole, tab));
 };
 
 /**
  * Check if user can view sensitive project information
  */
 export const canViewSensitiveInfo = (userRole: UserRole): boolean => {
-  return hasPermission(userRole, PERMISSIONS.VIEW_PROJECT_BUDGET) ||
-         hasPermission(userRole, PERMISSIONS.VIEW_PROJECT_FULL);
+  return (
+    hasPermission(userRole, PERMISSIONS.VIEW_PROJECT_BUDGET) ||
+    hasPermission(userRole, PERMISSIONS.VIEW_PROJECT_FULL)
+  );
 };
 
 /**
  * Filter project data based on user permissions
  */
-export const filterProjectData = (project: any, userRole: UserRole) => {
+export const filterProjectData = (
+  project: Record<string, unknown>,
+  userRole: UserRole
+) => {
   const filteredProject = { ...project };
-  
+
   // Remove sensitive information for users without proper permissions
   if (!hasPermission(userRole, PERMISSIONS.VIEW_PROJECT_BUDGET)) {
     delete filteredProject.budget;
   }
-  
+
   if (!hasPermission(userRole, PERMISSIONS.VIEW_PROJECT_TEAM)) {
     delete filteredProject.team;
   }
-  
+
   if (!hasPermission(userRole, PERMISSIONS.VIEW_PROJECT_DOCUMENTS)) {
     delete filteredProject.documents;
   }
-  
+
   if (!hasPermission(userRole, PERMISSIONS.VIEW_PROJECT_TASKS)) {
     delete filteredProject.tasks;
   }
-  
+
   return filteredProject;
 };

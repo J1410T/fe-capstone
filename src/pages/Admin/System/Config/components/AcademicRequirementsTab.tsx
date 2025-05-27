@@ -32,21 +32,23 @@ export interface DegreeRequirements {
 
 interface AcademicRequirementsTabProps {
   degreeRequirements: DegreeRequirements;
-  onDegreeRequirementsChange: (field: keyof DegreeRequirements, value: any) => void;
+  onDegreeRequirementsChange: (
+    field: keyof DegreeRequirements,
+    value: string | number | boolean
+  ) => void;
   onSave: () => void;
 }
 
-export const AcademicRequirementsTab: React.FC<AcademicRequirementsTabProps> = ({
-  degreeRequirements,
-  onDegreeRequirementsChange,
-  onSave,
-}) => {
+export const AcademicRequirementsTab: React.FC<
+  AcademicRequirementsTabProps
+> = ({ degreeRequirements, onDegreeRequirementsChange, onSave }) => {
   return (
     <Card>
       <CardHeader>
         <CardTitle>Academic Degree & CV Requirements</CardTitle>
         <CardDescription>
-          Configure minimum academic qualifications and CV requirements for different roles
+          Configure minimum academic qualifications and CV requirements for
+          different roles
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -117,15 +119,16 @@ export const AcademicRequirementsTab: React.FC<AcademicRequirementsTabProps> = (
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="minPublications">
-              Minimum Publications for PI
-            </Label>
+            <Label htmlFor="minPublications">Minimum Publications for PI</Label>
             <Input
               id="minPublications"
               type="number"
               value={degreeRequirements.minPublications}
               onChange={(e) =>
-                onDegreeRequirementsChange("minPublications", parseInt(e.target.value))
+                onDegreeRequirementsChange(
+                  "minPublications",
+                  parseInt(e.target.value)
+                )
               }
             />
           </div>

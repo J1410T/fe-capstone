@@ -66,7 +66,7 @@ const Profile: React.FC = () => {
 
     if (
       editData.phone &&
-      !/^[\+]?[1-9][\d]{0,15}$/.test(editData.phone.replace(/[\s\-\(\)]/g, ""))
+      !/^[+]?[1-9][\d]{0,15}$/.test(editData.phone.replace(/[\s\-()]/g, ""))
     ) {
       newErrors.phone = "Please enter a valid phone number";
     }

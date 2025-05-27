@@ -11,6 +11,15 @@ import { UserPlus } from "lucide-react";
 import { UserRole } from "@/contexts/AuthContext";
 import { UserTable, UserFilters, AddUserDialog } from "./components";
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  status: string;
+  lastActive: string;
+}
+
 // Sample user data
 const sampleUsers = [
   {
@@ -145,22 +154,22 @@ const UserManagement: React.FC = () => {
   };
 
   // Placeholder handlers for user actions
-  const handleEditUser = (user: any) => {
+  const handleEditUser = (user: User) => {
     console.log("Edit user:", user);
     // Implement edit user functionality
   };
 
-  const handleChangeRole = (user: any) => {
+  const handleChangeRole = (user: User) => {
     console.log("Change role for user:", user);
     // Implement change role functionality
   };
 
-  const handleResetPassword = (user: any) => {
+  const handleResetPassword = (user: User) => {
     console.log("Reset password for user:", user);
     // Implement reset password functionality
   };
 
-  const handleToggleStatus = (user: any) => {
+  const handleToggleStatus = (user: User) => {
     console.log("Toggle status for user:", user);
     // Implement toggle status functionality
     const updatedUsers = users.map((u) => {
