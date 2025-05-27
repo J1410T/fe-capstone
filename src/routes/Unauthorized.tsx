@@ -10,7 +10,7 @@ export const Unauthorized: React.FC = () => {
           Sorry, you don't have permission to access this page.
         </p>
         <Link
-          to="/member/home"
+          to="/home"
           className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
         >
           Go to Home

@@ -3,7 +3,6 @@ import AuthLayout from "../layouts/AuthLayout";
 import MainLayout from "../layouts/StaffLayout";
 import { Unauthorized } from "./Unauthorized";
 import { Navigate, RouteObject, Outlet } from "react-router-dom";
-import Dashboard from "../pages/Dashboard";
 import ErrorBoundaryPage from "../pages/ErrorBoundaryPage";
 import { authRoutes } from "./auth";
 import { UserRole } from "../contexts/AuthContext";
@@ -48,8 +47,6 @@ import AdminComingSoon from "../pages/Admin/ComingSoon";
 
 // General Coming Soon
 import GeneralComingSoon from "../pages/ComingSoon";
-import ProjectsComingSoon from "../pages/Projects/ComingSoon";
-import FormsComingSoon from "../pages/Forms/ComingSoon";
 import PiProjectDetail from "@/pages/PrincipalInvestigator/PiProjectDetail";
 
 // Principal Investigator Pages
@@ -212,7 +209,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "forms/*",
-            element: <FormsComingSoon />,
+            element: <GeneralComingSoon />,
           },
           // Add more member routes here
         ],
@@ -225,14 +222,6 @@ export const routes: RouteObject[] = [
             <UserLayout />
           </AuthGuard>
         ),
-        children: [
-          {
-            index: true,
-            element: <Dashboard />,
-          },
-
-          // Add more dashboard routes here
-        ],
       },
       // Host Institution routes
       {
@@ -269,11 +258,11 @@ export const routes: RouteObject[] = [
           },
           {
             path: "forms/*",
-            element: <FormsComingSoon />,
+            element: <GeneralComingSoon />,
           },
           {
             path: "project/*",
-            element: <ProjectsComingSoon />,
+            element: <GeneralComingSoon />,
           },
         ],
       },

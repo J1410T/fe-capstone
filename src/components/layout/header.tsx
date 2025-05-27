@@ -41,13 +41,13 @@ import {
 // Define menu items for each role
 const menuItemsByRole = {
   [UserRole.MEMBER]: [
-    { name: "Home", path: "/member/home", icon: Home },
+    { name: "Home", path: "/home", icon: Home },
     { name: "Dashboard", path: "/member/dashboard", icon: LayoutDashboard },
     { name: "Projects", path: "/member/projects", icon: FolderOpen },
     { name: "Tasks", path: "/member/tasks", icon: ClipboardList },
   ],
   [UserRole.HOST_INSTITUTION]: [
-    { name: "Home", path: "/member/home", icon: Home },
+    { name: "Home", path: "/home", icon: Home },
     { name: "Projects", path: "/host/projects", icon: FolderOpen },
     {
       name: "Register Project",
@@ -68,14 +68,14 @@ const menuItemsByRole = {
     { name: "CV", path: "/pi/profile", icon: User },
   ],
   [UserRole.APPRAISAL_COUNCIL]: [
-    { name: "Home", path: "/member/home", icon: Home },
+    { name: "Home", path: "/home", icon: Home },
     { name: "PI Approval", path: "/council/pi-approval", icon: CheckCircle },
     { name: "Evaluations", path: "/council/evaluations", icon: FileText },
     { name: "Meetings", path: "/council/meetings", icon: Calendar },
     { name: "Approvals", path: "/council/approvals", icon: CheckSquare },
   ],
   [UserRole.STAFF]: [
-    { name: "Home", path: "/member/home", icon: Home },
+    { name: "Home", path: "/home", icon: Home },
     { name: "Dashboard", path: "/staff/dashboard", icon: LayoutDashboard },
     { name: "Projects", path: "/projects", icon: FolderOpen },
     { name: "Tasks", path: "/tasks", icon: ClipboardList },
@@ -98,7 +98,7 @@ function FlexibleHeader() {
         {/* Left: Logo + Menu */}
         <div className="flex items-center space-x-10 h-full">
           {/* Logo */}
-          <Link to="/member/home" className="logo-container">
+          <Link to="/home" className="logo-container">
             <img
               src="/src/assets/images/pg-logo-green.png"
               alt="SRPM Logo"
