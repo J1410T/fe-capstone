@@ -149,12 +149,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } else if (userRole === UserRole.PRINCIPAL_INVESTIGATOR) {
           // Principal Investigators go to PI dashboard
           navigate("/pi/dashboard");
-        } else if (userRole === UserRole.HOST_INSTITUTION) {
-          // Host Institution users go to host dashboard
-          navigate("/host/dashboard");
         } else {
           // All other users go to member home page
-          navigate("/member/home");
+          navigate("/home");
         }
       } else {
         toast.error("Login failed");

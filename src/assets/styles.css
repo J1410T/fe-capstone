@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,500;1,500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -148,18 +148,16 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Roboto Mono", monospace;
-    font-weight: 300;
+    font-family: "Fira Code", monospace;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
   }
 }
 
 /* Custom utility classes */
 @layer utilities {
   /* Font classes */
-  .font-primary {
-    font-family: "Roboto Mono", monospace;
-    font-weight: 300;
-  }
 
   .font-secondary {
     font-family: "Orbitron", sans-serif;

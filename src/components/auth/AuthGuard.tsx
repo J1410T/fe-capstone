@@ -44,7 +44,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       return <Navigate to="/pi/dashboard" replace />;
     } else {
-      return <Navigate to="/member/home" replace />;
+      return <Navigate to="/home" replace />;
     }
   }
 
@@ -55,17 +55,17 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       return <Navigate to="/pi/dashboard" replace />;
     } else {
-      return <Navigate to="/member/home" replace />;
+      return <Navigate to="/home" replace />;
     }
   }
 
   // Redirect non-staff users to member home if they try to access staff dashboard
   if (user?.role !== UserRole.STAFF && location.pathname.startsWith("/staff")) {
-    return <Navigate to="/member/home" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   // Redirect staff users to admin dashboard if they try to access member home
-  if (user?.role === UserRole.STAFF && location.pathname === "/member/home") {
+  if (user?.role === UserRole.STAFF && location.pathname === "/home") {
     return <Navigate to="/staff/dashboard" replace />;
   }
 
@@ -74,7 +74,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     user?.role !== UserRole.HOST_INSTITUTION &&
     location.pathname.startsWith("/host")
   ) {
-    return <Navigate to="/member/home" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   // Redirect non-PI users to member home if they try to access PI dashboard
@@ -82,7 +82,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     user?.role !== UserRole.PRINCIPAL_INVESTIGATOR &&
     location.pathname.startsWith("/pi")
   ) {
-    return <Navigate to="/member/home" replace />;
+    return <Navigate to="/home" replace />;
   }
 
   // Render children if authenticated and has required role

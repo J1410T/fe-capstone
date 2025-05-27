@@ -4,7 +4,7 @@ import { Outlet, useLocation } from "react-router-dom";
 
 function UserLayout() {
   const location = useLocation();
-  const isHomePage = location.pathname === "/member/home";
+  const isHomePage = location.pathname === "/home";
   const isTasksPage = location.pathname === "/member/tasks";
 
   return (

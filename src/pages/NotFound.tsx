@@ -5,11 +5,11 @@ import { UserRole } from "@/contexts/AuthContext";
 
 const NotFound: React.FC = () => {
   const { user } = useAuth();
-  
+
   // Determine the back path based on user role
   const getBackPath = () => {
     if (!user) return "/auth/login";
-    
+
     switch (user.role) {
       case UserRole.STAFF:
         return "/staff/dashboard";
@@ -20,7 +20,7 @@ const NotFound: React.FC = () => {
       case UserRole.PRINCIPAL_INVESTIGATOR:
       case UserRole.MEMBER:
       default:
-        return "/member/home";
+        return "/home";
     }
   };
 
