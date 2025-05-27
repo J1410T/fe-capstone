@@ -11,25 +11,20 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: ⬇️ Checkout source
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-      - name: 🟢 Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '22.x'
           cache: 'pnpm'
 
-      - name: 📦 Setup pnpm
-        uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v2
         with:
-          version: 10
+          version: '10'
 
-      - name: 📥 Install dependencies
-        run: pnpm install
+      - run: pnpm -v
+      - run: which pnpm
 
-      - name: 🧹 Lint code
-        run: pnpm lint
-
-      - name: ⚙️ Build project
-        run: pnpm build
+      - run: pnpm install
+      - run: pnpm lint
+      - run: pnpm build
