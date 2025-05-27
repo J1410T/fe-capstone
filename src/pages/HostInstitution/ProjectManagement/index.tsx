@@ -126,8 +126,9 @@ const ProjectManagement: React.FC = () => {
   const [feedbackText, setFeedbackText] = useState("");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
 
-  const handleDownloadDocument = (_documentName: string) => {
+  const handleDownloadDocument = (documentName: string) => {
     setIsLoading(true);
+    console.log("Downloading document:", documentName);
 
     // Simulate API call
     setTimeout(() => {
@@ -136,10 +137,11 @@ const ProjectManagement: React.FC = () => {
     }, 1500);
   };
 
-  const handleAddComment = (_milestoneId: number) => {
+  const handleAddComment = (milestoneId: number) => {
     if (!commentText.trim()) return;
 
     setIsLoading(true);
+    console.log("Adding comment to milestone:", milestoneId);
 
     // Simulate API call
     setTimeout(() => {
@@ -149,8 +151,9 @@ const ProjectManagement: React.FC = () => {
     }, 1500);
   };
 
-  const handleConfirmMilestone = (_milestoneId: number) => {
+  const handleConfirmMilestone = (milestoneId: number) => {
     setIsLoading(true);
+    console.log("Confirming milestone:", milestoneId);
 
     // Simulate API call
     setTimeout(() => {
@@ -159,10 +162,11 @@ const ProjectManagement: React.FC = () => {
     }, 1500);
   };
 
-  const handleRequestRevision = (_milestoneId: number) => {
+  const handleRequestRevision = (milestoneId: number) => {
     if (!feedbackText.trim()) return;
 
     setIsLoading(true);
+    console.log("Requesting revision for milestone:", milestoneId);
 
     // Simulate API call
     setTimeout(() => {

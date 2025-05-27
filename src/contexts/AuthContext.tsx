@@ -1,55 +1,14 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useEffect,
-  ReactNode,
-} from "react";
+import React, { useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
+import { UserRole, User, JwtPayload } from "./auth-types";
+import { AuthContext } from "./auth-context";
 
-// Define user roles
-export enum UserRole {
-  MEMBER = "Member",
-  APPRAISAL_COUNCIL = "Appraisal council",
-  HOST_INSTITUTION = "Host Institution",
-  PRINCIPAL_INVESTIGATOR = "Principal Investigator",
-  STAFF = "Staff",
-}
-
-// Define user interface
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  avatar: string;
-  role: UserRole;
-  accessToken?: string;
-}
-
-// Define JWT token payload interface
-interface JwtPayload {
-  sub: string;
-  name: string;
-  email: string;
-  picture: string;
-  role: UserRole;
-  exp: number;
-}
-
-// Define auth context interface
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (accessToken: string) => void;
-  logout: () => void;
-  hasRole: (role: UserRole) => boolean;
-}
-
-// Create auth context
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Re-export types and hooks for convenience
+export type { User } from "./auth-types";
+export { UserRole } from "./auth-types";
+export { useAuth } from "./auth-hooks";
 
 // Auth provider props
 interface AuthProviderProps {
@@ -187,13 +146,4 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-};
-
-// Custom hook to use auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
 };

@@ -1,14 +1,29 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { X, Send } from "lucide-react";
 
+interface AccessRequestData {
+  name: string;
+  email: string;
+  institution: string;
+  position: string;
+  reason: string;
+  experience: string;
+}
+
 interface RequestAccessFormProps {
   projectTitle: string;
-  onSubmit: (data: any) => void;
+  onSubmit: (data: AccessRequestData) => void;
   onCancel: () => void;
 }
 
@@ -29,10 +44,10 @@ export const RequestAccessForm: React.FC<RequestAccessFormProps> = ({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -67,7 +82,7 @@ export const RequestAccessForm: React.FC<RequestAccessFormProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (validateForm()) {
       onSubmit(formData);
     }
@@ -131,7 +146,9 @@ export const RequestAccessForm: React.FC<RequestAccessFormProps> = ({
                 <Input
                   id="institution"
                   value={formData.institution}
-                  onChange={(e) => handleInputChange("institution", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("institution", e.target.value)
+                  }
                   placeholder="Enter your institution"
                   className={errors.institution ? "border-red-300" : ""}
                 />
@@ -145,7 +162,9 @@ export const RequestAccessForm: React.FC<RequestAccessFormProps> = ({
                 <Input
                   id="position"
                   value={formData.position}
-                  onChange={(e) => handleInputChange("position", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("position", e.target.value)
+                  }
                   placeholder="Enter your position/title"
                   className={errors.position ? "border-red-300" : ""}
                 />
@@ -175,24 +194,19 @@ export const RequestAccessForm: React.FC<RequestAccessFormProps> = ({
               <Textarea
                 id="experience"
                 value={formData.experience}
-                onChange={(e) => handleInputChange("experience", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("experience", e.target.value)
+                }
                 placeholder="Describe your relevant experience or qualifications"
                 rows={3}
               />
             </div>
 
             <div className="flex justify-end space-x-4 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onCancel}
-              >
+              <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
-              <Button
-                type="submit"
-                className="bg-blue-600 hover:bg-blue-700"
-              >
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
                 <Send className="w-4 h-4 mr-2" />
                 Submit Request
               </Button>

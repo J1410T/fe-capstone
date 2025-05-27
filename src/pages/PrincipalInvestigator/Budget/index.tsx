@@ -49,6 +49,7 @@ import { StatusBadge, FileUpload } from "../shared/components";
 import { formatDate } from "../shared/utils";
 import { FileUpload as FileUploadType } from "../shared/types";
 import { toast } from "sonner";
+import { Loading } from "@/components/ui/loaders";
 
 const Budget: React.FC = () => {
   const [budget, setBudget] = useState<BudgetType | null>(null);
@@ -163,7 +164,12 @@ const Budget: React.FC = () => {
       setTimeout(() => {
         const newExpense: Expense = {
           id: `expense_${Date.now()}`,
-          category: expenseForm.category as any,
+          category: expenseForm.category as
+            | "personnel"
+            | "equipment"
+            | "travel"
+            | "materials"
+            | "other",
           description: expenseForm.description,
           amount: parseFloat(expenseForm.amount),
           date: expenseForm.date,
@@ -270,7 +276,11 @@ const Budget: React.FC = () => {
   const utilization = getBudgetUtilization();
 
   if (!budget) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loading className="w-full max-w-md" />
+      </div>
+    );
   }
 
   return (
@@ -309,7 +319,15 @@ const Budget: React.FC = () => {
                     <Label htmlFor="expense-category">Category *</Label>
                     <Select
                       value={expenseForm.category}
-                      onValueChange={(value: any) =>
+                      onValueChange={(
+                        value:
+                          | ""
+                          | "personnel"
+                          | "equipment"
+                          | "travel"
+                          | "materials"
+                          | "other"
+                      ) =>
                         setExpenseForm((prev) => ({ ...prev, category: value }))
                       }
                     >

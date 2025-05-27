@@ -1,17 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
-import {
-  GraduationCap,
-  FileText,
-  Settings,
-  RefreshCw,
-} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GraduationCap, FileText, Settings, RefreshCw } from "lucide-react";
 import {
   AcademicRequirementsTab,
   SystemLimitsTab,
@@ -26,14 +16,15 @@ import {
  */
 const SystemConfig: React.FC = () => {
   // Academic Degree & CV Requirements
-  const [degreeRequirements, setDegreeRequirements] = useState<DegreeRequirements>({
-    piMinDegree: "PhD",
-    memberMinDegree: "Bachelor",
-    councilMinDegree: "PhD",
-    requireCV: true,
-    requirePublications: true,
-    minPublications: 3,
-  });
+  const [degreeRequirements, setDegreeRequirements] =
+    useState<DegreeRequirements>({
+      piMinDegree: "PhD",
+      memberMinDegree: "Bachelor",
+      councilMinDegree: "PhD",
+      requireCV: true,
+      requirePublications: true,
+      minPublications: 3,
+    });
 
   // System Limits
   const [systemLimits, setSystemLimits] = useState<SystemLimits>({
@@ -46,16 +37,20 @@ const SystemConfig: React.FC = () => {
   });
 
   // Form Fields & Approval Conditions
-  const [approvalConditions, setApprovalConditions] = useState<ApprovalConditions>({
-    budgetThreshold: 200000,
-    requireSeniorReview: true,
-    minCouncilApprovals: 2,
-    requireChairmanApproval: true,
-    autoCloseInactiveDays: 30,
-  });
+  const [approvalConditions, setApprovalConditions] =
+    useState<ApprovalConditions>({
+      budgetThreshold: 200000,
+      requireSeniorReview: true,
+      minCouncilApprovals: 2,
+      requireChairmanApproval: true,
+      autoCloseInactiveDays: 30,
+    });
 
   // Handle degree requirements changes
-  const handleDegreeRequirementsChange = (field: keyof DegreeRequirements, value: any) => {
+  const handleDegreeRequirementsChange = (
+    field: keyof DegreeRequirements,
+    value: string | number | boolean
+  ) => {
     setDegreeRequirements({
       ...degreeRequirements,
       [field]: value,
@@ -63,7 +58,10 @@ const SystemConfig: React.FC = () => {
   };
 
   // Handle system limits changes
-  const handleSystemLimitsChange = (field: keyof SystemLimits, value: number) => {
+  const handleSystemLimitsChange = (
+    field: keyof SystemLimits,
+    value: number
+  ) => {
     setSystemLimits({
       ...systemLimits,
       [field]: value,
@@ -71,7 +69,10 @@ const SystemConfig: React.FC = () => {
   };
 
   // Handle approval conditions changes
-  const handleApprovalConditionsChange = (field: keyof ApprovalConditions, value: any) => {
+  const handleApprovalConditionsChange = (
+    field: keyof ApprovalConditions,
+    value: number | boolean
+  ) => {
     setApprovalConditions({
       ...approvalConditions,
       [field]: value,
@@ -132,7 +133,9 @@ const SystemConfig: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">System Configuration</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          System Configuration
+        </h1>
         <Button onClick={handleResetToDefaults}>
           <RefreshCw className="mr-2 h-4 w-4" />
           Reset to Defaults

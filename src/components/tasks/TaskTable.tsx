@@ -10,6 +10,7 @@ import {
   Column,
   Row,
   Header,
+  Cell,
 } from "@tanstack/react-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -685,20 +686,22 @@ export const TaskTable: React.FC<TaskTableProps> = ({
               </TableHeader>
               <TableBody>
                 {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row: any) => (
+                  table.getRowModel().rows.map((row: Row<Task>) => (
                     <TableRow
                       key={row.id}
                       className="hover:bg-slate-50 border-slate-200 cursor-pointer"
                       onClick={() => onTaskClick && onTaskClick(row.original)}
                     >
-                      {row.getVisibleCells().map((cell: any) => (
-                        <TableCell key={cell.id} className="py-4">
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      ))}
+                      {row
+                        .getVisibleCells()
+                        .map((cell: Cell<Task, unknown>) => (
+                          <TableCell key={cell.id} className="py-4">
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext()
+                            )}
+                          </TableCell>
+                        ))}
                     </TableRow>
                   ))
                 ) : (

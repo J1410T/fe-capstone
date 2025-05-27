@@ -5,7 +5,7 @@ export interface PIUser {
   name: string;
   email: string;
   avatar?: string;
-  role: 'Leader' | 'Secretary' | 'Normal';
+  role: "Leader" | "Secretary" | "Normal";
   department?: string;
   position?: string;
   joinedAt: string;
@@ -14,11 +14,18 @@ export interface PIUser {
 export interface Project {
   id: string;
   name: string;
-  type: 'Basic' | 'Application';
+  type: "Basic" | "Application";
   objective: string;
   description: string;
   relatedProjects?: string[];
-  status: 'Draft' | 'Submitted' | 'Under Review' | 'Approved' | 'Rejected' | 'Active' | 'Completed';
+  status:
+    | "Draft"
+    | "Submitted"
+    | "Under Review"
+    | "Approved"
+    | "Rejected"
+    | "Active"
+    | "Completed";
   createdAt: string;
   updatedAt: string;
   pi: string;
@@ -42,11 +49,11 @@ export interface Budget {
 
 export interface Expense {
   id: string;
-  category: 'personnel' | 'equipment' | 'travel' | 'materials' | 'other';
+  category: "personnel" | "equipment" | "travel" | "materials" | "other";
   description: string;
   amount: number;
   date: string;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  status: "Pending" | "Approved" | "Rejected";
   receipt?: string;
   approvedBy?: string;
   feedback?: string;
@@ -57,7 +64,7 @@ export interface Milestone {
   name: string;
   description: string;
   deadline: string;
-  status: 'Not Started' | 'In Progress' | 'Completed' | 'Overdue';
+  status: "Not Started" | "In Progress" | "Completed" | "Overdue";
   tasks: Task[];
   progress: number;
 }
@@ -67,8 +74,8 @@ export interface Task {
   title: string;
   description: string;
   assignedTo?: string;
-  status: 'To Do' | 'In Progress' | 'Completed' | 'Overdue';
-  priority: 'Low' | 'Medium' | 'High';
+  status: "To Do" | "In Progress" | "Completed" | "Overdue";
+  priority: "Low" | "Medium" | "High";
   dueDate: string;
   createdAt: string;
   completedAt?: string;
@@ -78,11 +85,11 @@ export interface Task {
 
 export interface ProgressReport {
   id: string;
-  formCode: 'BM06';
+  formCode: "BM06";
   title: string;
   period: string;
   submittedAt: string;
-  status: 'Draft' | 'Submitted' | 'Processing' | 'Approved' | 'Rejected';
+  status: "Draft" | "Submitted" | "Processing" | "Approved" | "Rejected";
   feedback?: string;
   file?: string;
   approvedBy?: string;
@@ -93,31 +100,31 @@ export interface Meeting {
   title: string;
   date: string;
   time: string;
-  type: 'Online' | 'In-Person';
+  type: "Online" | "In-Person";
   link?: string;
   location?: string;
   agenda: string;
   documents?: string[];
   attendees: PIUser[];
-  status: 'Scheduled' | 'Completed' | 'Cancelled';
+  status: "Scheduled" | "Completed" | "Cancelled";
   reminderSent?: boolean;
 }
 
 export interface SummaryReport {
   id: string;
-  formCode: 'BM09';
+  formCode: "BM09";
   title: string;
   content: string;
   hasSeminar: boolean;
   seminarForm?: string; // BM08 if applicable
   submittedAt: string;
-  status: 'Draft' | 'Submitted' | 'Under Review' | 'Approved' | 'Rejected';
+  status: "Draft" | "Submitted" | "Under Review" | "Approved" | "Rejected";
   feedback?: string;
 }
 
 export interface AcceptanceStatus {
   projectId: string;
-  status: 'Pending' | 'Under Review' | 'Accepted' | 'Rejected';
+  status: "Pending" | "Under Review" | "Accepted" | "Rejected";
   councilForms: {
     BM10?: string;
     BM11?: string;
@@ -129,7 +136,7 @@ export interface AcceptanceStatus {
 }
 
 export interface PaymentSchedule {
-  projectType: 'Basic' | 'Application';
+  projectType: "Basic" | "Application";
   schedule: PaymentPhase[];
   totalAmount: number;
   paidAmount: number;
@@ -140,12 +147,12 @@ export interface PaymentPhase {
   percentage: number;
   amount: number;
   dueDate: string;
-  status: 'Pending' | 'Paid' | 'Overdue';
+  status: "Pending" | "Paid" | "Overdue";
   paidDate?: string;
 }
 
 export interface FormData {
-  [key: string]: any;
+  [key: string]: string | number | boolean | Date | File | null | undefined;
 }
 
 export interface FileUpload {
@@ -160,7 +167,7 @@ export interface FileUpload {
 // Time limits and role management
 export interface TimeLimit {
   quarter: 1 | 2 | 3 | 4;
-  allowedProjectTypes: ('Basic' | 'Application')[];
+  allowedProjectTypes: ("Basic" | "Application")[];
   deadline: string;
   isActive: boolean;
 }

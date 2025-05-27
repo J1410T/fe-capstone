@@ -29,7 +29,10 @@ export function LoginForm({
   const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
   const { login } = useAuth();
 
-  const handleGoogleSuccess = (credentialResponse: any) => {
+  const handleGoogleSuccess = (credentialResponse: {
+    credential?: string;
+    clientId?: string;
+  }) => {
     try {
       setIsLoading(true);
       // Use the credential token from Google

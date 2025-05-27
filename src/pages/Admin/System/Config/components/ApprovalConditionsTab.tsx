@@ -24,7 +24,10 @@ export interface ApprovalConditions {
 
 interface ApprovalConditionsTabProps {
   approvalConditions: ApprovalConditions;
-  onApprovalConditionsChange: (field: keyof ApprovalConditions, value: any) => void;
+  onApprovalConditionsChange: (
+    field: keyof ApprovalConditions,
+    value: number | boolean
+  ) => void;
   onSave: () => void;
 }
 
@@ -52,7 +55,10 @@ export const ApprovalConditionsTab: React.FC<ApprovalConditionsTabProps> = ({
               type="number"
               value={approvalConditions.budgetThreshold}
               onChange={(e) =>
-                onApprovalConditionsChange("budgetThreshold", parseInt(e.target.value))
+                onApprovalConditionsChange(
+                  "budgetThreshold",
+                  parseInt(e.target.value)
+                )
               }
             />
           </div>
@@ -66,7 +72,10 @@ export const ApprovalConditionsTab: React.FC<ApprovalConditionsTabProps> = ({
               type="number"
               value={approvalConditions.minCouncilApprovals}
               onChange={(e) =>
-                onApprovalConditionsChange("minCouncilApprovals", parseInt(e.target.value))
+                onApprovalConditionsChange(
+                  "minCouncilApprovals",
+                  parseInt(e.target.value)
+                )
               }
             />
           </div>
@@ -80,7 +89,10 @@ export const ApprovalConditionsTab: React.FC<ApprovalConditionsTabProps> = ({
               type="number"
               value={approvalConditions.autoCloseInactiveDays}
               onChange={(e) =>
-                onApprovalConditionsChange("autoCloseInactiveDays", parseInt(e.target.value))
+                onApprovalConditionsChange(
+                  "autoCloseInactiveDays",
+                  parseInt(e.target.value)
+                )
               }
             />
           </div>
