@@ -12,7 +12,7 @@ export default function Login() {
         <div className="flex w-full max-w-lg flex-col gap-6">
           <a href="#" className="logo-container self-center font-medium">
             <img
-              src="/src/assets/images/pg-logo-green.png"
+              src="/images/pg-logo-green.png"
               alt="SRPM Logo"
               className="logo-large"
             />

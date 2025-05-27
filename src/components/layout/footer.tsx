@@ -15,7 +15,7 @@ const Footer: React.FC = () => {
               <img
                 alt="SRPM Logo"
                 className="logo-medium"
-                src="/src/assets/images/pg-logo-white.png"
+                src="/images/pg-logo-white.png"
               />
               <span className="font-bold text-xl leading-7 !text-white font-secondary">
                 SRPM

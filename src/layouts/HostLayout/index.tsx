@@ -186,7 +186,7 @@ export const HostLayout: React.FC = () => {
                 <div className="flex h-full flex-col">
                   <div className="logo-container border-b py-4">
                     <img
-                      src="/src/assets/images/pg-logo-green.png"
+                      src="/images/pg-logo-green.png"
                       alt="SRPM Logo"
                       className="logo-medium"
                     />
@@ -227,7 +227,7 @@ export const HostLayout: React.FC = () => {
 
             <a href="/host/dashboard" className="logo-container font-semibold">
               <img
-                src="/src/assets/images/pg-logo-green.png"
+                src="/images/pg-logo-green.png"
                 alt="SRPM Logo"
                 className="logo-medium"
               />
