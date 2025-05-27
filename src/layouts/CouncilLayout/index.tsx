@@ -104,7 +104,7 @@ export const CouncilLayout: React.FC = () => {
                 <div className="flex h-full flex-col">
                   <div className="logo-container border-b py-4">
                     <img
-                      src="/src/assets/images/pg-logo-green.png"
+                      src="/images/pg-logo-green.png"
                       alt="SRPM Logo"
                       className="logo-medium"
                     />
@@ -158,7 +158,7 @@ export const CouncilLayout: React.FC = () => {
             {/* Logo */}
             <div className="logo-container">
               <img
-                src="/src/assets/images/pg-logo-green.png"
+                src="/images/pg-logo-green.png"
                 alt="SRPM Logo"
                 className="logo-medium"
               />

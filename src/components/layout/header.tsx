@@ -100,7 +100,7 @@ function FlexibleHeader() {
           {/* Logo */}
           <Link to="/home" className="logo-container">
             <img
-              src="/src/assets/images/pg-logo-green.png"
+              src="/images/pg-logo-green.png"
               alt="SRPM Logo"
               className="logo-medium"
             />
@@ -193,7 +193,7 @@ function FlexibleHeader() {
               <SheetTitle>
                 <div className="logo-container">
                   <img
-                    src="/src/assets/images/pg-logo-green.png"
+                    src="/images/pg-logo-green.png"
                     alt="SRPM Logo"
                     className="logo-medium"
                   />

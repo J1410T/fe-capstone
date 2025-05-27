@@ -35,7 +35,7 @@ export const DashboardLayout: React.FC = () => {
           <div className="flex items-center gap-2">
             <a href="/" className="logo-container font-semibold">
               <img
-                src="/src/assets/images/pg-logo-green.png"
+                src="/images/pg-logo-green.png"
                 alt="SRPM Logo"
                 className="logo-medium"
               />
