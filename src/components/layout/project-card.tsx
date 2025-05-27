@@ -1,29 +1,63 @@
-import { FaClock, FaUsers } from "react-icons/fa";
+import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Users,
+  Briefcase,
+  Calendar,
+  ChevronRight,
+  DollarSign,
+  User,
+} from "lucide-react";
 
-interface UserProjectCardProps {
-  id: string;
-  category: string;
+interface ProjectCardProps {
+  // Common fields
+  id: string | number;
   title: string;
-  description: string;
-  updatedAt: string;
-  teamMembers: number;
-  manager: string;
   progress: number;
   status: string;
+
+  // Optional fields for different use cases
+  category?: string;
+  description?: string;
+  updatedAt?: string;
+  teamMembers?: number;
+  manager?: string;
+  pi?: string;
+  department?: string;
+  year?: string;
+  budget?: string;
+
+  // Callback functions
+  onViewDetails?: (projectId: string | number) => void;
+  getStatusColor?: (status: string) => string;
 }
 
-const UserProjectCard: React.FC<UserProjectCardProps> = ({
+const ProjectCard: React.FC<ProjectCardProps> = ({
   id,
-  category,
   title,
+  progress,
+  status,
+  category,
   description,
   updatedAt,
   teamMembers,
   manager,
-  progress,
-  status,
+  pi,
+  department,
+  year,
+  budget,
+  onViewDetails,
+  getStatusColor,
 }) => {
   const { user } = useAuth();
 
@@ -38,58 +72,156 @@ const UserProjectCard: React.FC<UserProjectCardProps> = ({
       return `/member/project/${id}`;
     }
   };
+
+  // Default status color function if not provided
+  const defaultGetStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "active":
+        return "text-emerald-700 border-emerald-200 bg-emerald-50";
+      case "completed":
+        return "text-indigo-700 border-indigo-200 bg-indigo-50";
+      case "pending":
+        return "text-yellow-700 border-yellow-200 bg-yellow-50";
+      case "on hold":
+        return "text-orange-700 border-orange-200 bg-orange-50";
+      default:
+        return "text-gray-700 border-gray-200 bg-gray-50";
+    }
+  };
+
+  const statusColorClass = getStatusColor
+    ? getStatusColor(status)
+    : defaultGetStatusColor(status);
+
+  const handleViewDetails = () => {
+    if (onViewDetails) {
+      onViewDetails(id);
+    }
+  };
+
   return (
-    <div className="bg-white p-6 rounded-xl border shadow-sm hover:shadow-md transition duration-300 h-full flex flex-col">
-      <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-        <span className="text-xs font-semibold px-3 py-1 rounded-full bg-emerald-100 text-emerald-800">
-          {category}
-        </span>
-        <span className="text-xs bg-gray-100 text-gray-600 px-3 py-1 rounded-full font-medium">
-          {progress}% Complete
-        </span>
-      </div>
-
-      <h3 className="text-lg font-bold text-gray-900 mb-2">{title}</h3>
-      <p className="text-sm text-gray-600 mb-4 flex-grow">{description}</p>
-
-      <div className="mt-auto space-y-3">
-        <div className="flex items-center text-sm text-gray-500 gap-2">
-          <FaClock className="text-gray-400 flex-shrink-0" />
-          <span>Updated {updatedAt}</span>
-        </div>
-        <div className="flex items-center text-sm text-gray-500 gap-2">
-          <FaUsers className="text-gray-400 flex-shrink-0" />
-          <span>{teamMembers} team members</span>
-        </div>
-
-        {/* Status section */}
-        <div className="inline-flex items-center px-3 py-1 rounded-md bg-gray-100 text-sm gap-1 my-2">
-          <span className="text-gray-700">Status:</span>
-          <span
-            className={`font-semibold ${
-              status === "Active"
-                ? "text-emerald-700"
-                : status === "Completed"
-                ? "text-indigo-700"
-                : "text-yellow-700"
-            }`}
-          >
+    <Card className="h-full flex flex-col hover:shadow-md transition-shadow duration-300">
+      <CardHeader className="pb-3">
+        <div className="flex justify-between items-start gap-2">
+          <CardTitle className="text-lg leading-tight">{title}</CardTitle>
+          <Badge variant="outline" className={statusColorClass}>
             {status}
-          </span>
+          </Badge>
+        </div>
+        {category && (
+          <Badge
+            variant="secondary"
+            className="w-fit text-xs bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
+          >
+            {category}
+          </Badge>
+        )}
+      </CardHeader>
+
+      <CardContent className="flex-1 space-y-4">
+        {description && (
+          <p className="text-sm text-muted-foreground line-clamp-2">
+            {description}
+          </p>
+        )}
+
+        <div className="space-y-3">
+          {/* PI or Manager */}
+          {(pi || manager) && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <User className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span>{pi ? `PI: ${pi}` : `Manager: ${manager}`}</span>
+            </div>
+          )}
+
+          {/* Department */}
+          {department && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Briefcase className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span>Department: {department}</span>
+            </div>
+          )}
+
+          {/* Team Members */}
+          {teamMembers && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Users className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span>{teamMembers} team members</span>
+            </div>
+          )}
+
+          {/* Year or Updated Date */}
+          {(year || updatedAt) && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span>{year ? `Year: ${year}` : `Updated ${updatedAt}`}</span>
+            </div>
+          )}
+
+          {/* Budget */}
+          {budget && (
+            <div className="flex items-center text-sm text-muted-foreground">
+              <DollarSign className="mr-2 h-4 w-4 flex-shrink-0" />
+              <span>Budget: {budget}</span>
+            </div>
+          )}
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-          <p className="text-sm text-gray-600">Manager: {manager}</p>
-          <Link
-            to={getProjectDetailRoute()}
-            className="text-sm font-semibold text-emerald-600 hover:underline"
+        {/* Progress Bar */}
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-medium">Progress</span>
+            <span className="text-sm text-muted-foreground">{progress}%</span>
+          </div>
+          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-600 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      </CardContent>
+
+      <CardFooter className="pt-0">
+        {onViewDetails ? (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleViewDetails}
+            className="w-full"
           >
             View Details
+            <ChevronRight className="ml-1 h-4 w-4" />
+          </Button>
+        ) : (
+          <Link to={getProjectDetailRoute()} className="w-full">
+            <Button variant="outline" size="sm" className="w-full">
+              View Details
+              <ChevronRight className="ml-1 h-4 w-4" />
+            </Button>
           </Link>
-        </div>
-      </div>
-    </div>
+        )}
+      </CardFooter>
+    </Card>
   );
 };
 
+// Backward compatibility - keep the old interface
+interface UserProjectCardProps {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  updatedAt: string;
+  teamMembers: number;
+  manager: string;
+  progress: number;
+  status: string;
+}
+
+const UserProjectCard: React.FC<UserProjectCardProps> = (props) => {
+  return <ProjectCard {...props} />;
+};
+
 export default UserProjectCard;
+export { ProjectCard };

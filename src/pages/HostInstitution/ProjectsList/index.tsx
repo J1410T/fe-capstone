@@ -143,7 +143,7 @@ const ProjectsList: React.FC = () => {
     setCurrentPage(1);
   }, [searchTerm, selectedStatus, selectedDepartment, pageSize]);
 
-  const handleViewDetails = (projectId: number) => {
+  const handleViewDetails = (projectId: string | number) => {
     // Navigate to project details page based on user role
     if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       navigate(`/pi/project/${projectId}`);
@@ -188,7 +188,14 @@ const ProjectsList: React.FC = () => {
             {paginatedProjects.map((project) => (
               <ProjectCard
                 key={project.id}
-                project={project}
+                id={project.id}
+                title={project.title}
+                progress={project.progress}
+                status={project.status}
+                pi={project.pi}
+                department={project.department}
+                year={project.year}
+                budget={project.budget}
                 onViewDetails={handleViewDetails}
                 getStatusColor={getStatusColor}
               />
