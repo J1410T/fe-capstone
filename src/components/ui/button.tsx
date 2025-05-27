@@ -57,4 +57,5 @@ function Button({
 }
 
 export { Button };
+// Re-export for compatibility (but keep in separate file for fast refresh)
 export { buttonVariants } from "./button-variants";

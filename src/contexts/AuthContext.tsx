@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { UserRole, User, JwtPayload } from "./auth-types";
 import { AuthContext } from "./auth-context";
 
-// Re-export types and hooks for convenience
+// Re-export for compatibility (but keep them in separate files for fast refresh)
 export type { User } from "./auth-types";
 export { UserRole } from "./auth-types";
 export { useAuth } from "./auth-hooks";
