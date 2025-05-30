@@ -11,7 +11,6 @@ import UserLayout from "../layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
 
 // Member Pages
-import ProjectListing from "../pages/Member/ProjectListing";
 import MemberProjectDetails from "../pages/Member/ProjectDetails";
 import UserTaskManagement from "../pages/UserTaskManagement";
 import MemberDashboard from "../pages/Member/Dashboard";
@@ -181,7 +180,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "projects",
-            element: <ProjectListing />,
+            element: <ProjectsList />,
           },
           {
             path: "project/:projectId",

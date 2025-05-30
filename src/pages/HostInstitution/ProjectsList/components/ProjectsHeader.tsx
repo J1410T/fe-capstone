@@ -1,6 +1,6 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Download } from "lucide-react";
+import { Search, Filter, SortAsc } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,9 +14,10 @@ interface ProjectsHeaderProps {
   onSearchChange: (value: string) => void;
   selectedStatus: string;
   onStatusChange: (value: string) => void;
-  selectedDepartment: string;
-  onDepartmentChange: (value: string) => void;
-  onExportData: (format: string) => void;
+  selectedField: string;
+  onFieldChange: (value: string) => void;
+  selectedSort: string;
+  onSortChange: (value: string) => void;
 }
 
 export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
@@ -24,9 +25,10 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
   onSearchChange,
   selectedStatus,
   onStatusChange,
-  selectedDepartment,
-  onDepartmentChange,
-  onExportData,
+  selectedField,
+  onFieldChange,
+  selectedSort,
+  onSortChange,
 }) => {
   return (
     <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
@@ -47,6 +49,31 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
             onChange={(e) => onSearchChange(e.target.value)}
           />
         </div>
+        {/* Research Field Filter */}
+        <Select value={selectedField} onValueChange={onFieldChange}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <Filter className="mr-2 h-4 w-4" />
+            <SelectValue placeholder="Field" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Fields</SelectItem>
+            <SelectItem value="Environmental Science">
+              Environmental Science
+            </SelectItem>
+            <SelectItem value="Computer Science">Computer Science</SelectItem>
+            <SelectItem value="Microbiology">Microbiology</SelectItem>
+            <SelectItem value="Artificial Intelligence">
+              Artificial Intelligence
+            </SelectItem>
+            <SelectItem value="Materials Science">Materials Science</SelectItem>
+            <SelectItem value="Agricultural Science">
+              Agricultural Science
+            </SelectItem>
+            <SelectItem value="Engineering">Engineering</SelectItem>
+            <SelectItem value="Medicine">Medicine</SelectItem>
+            <SelectItem value="Business">Business</SelectItem>
+          </SelectContent>
+        </Select>
         <Select value={selectedStatus} onValueChange={onStatusChange}>
           <SelectTrigger className="w-full md:w-[180px]">
             <Filter className="mr-2 h-4 w-4" />
@@ -54,36 +81,25 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="Active">Active</SelectItem>
             <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="In Progress">In Progress</SelectItem>
+            <SelectItem value="On Hold">On Hold</SelectItem>
             <SelectItem value="Completed">Completed</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={selectedDepartment} onValueChange={onDepartmentChange}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <Filter className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Department" />
+        {/* Sort By */}
+        <Select value={selectedSort} onValueChange={onSortChange}>
+          <SelectTrigger className="w-full sm:w-[150px]">
+            <SortAsc className="mr-2 h-4 w-4" />
+            <SelectValue placeholder="Sort By" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Departments</SelectItem>
-            <SelectItem value="Computer Science">Computer Science</SelectItem>
-            <SelectItem value="Engineering">Engineering</SelectItem>
-            <SelectItem value="Business">Business</SelectItem>
-            <SelectItem value="Medicine">Medicine</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          defaultValue="xlsx"
-          onValueChange={(value) => onExportData(value)}
-        >
-          <SelectTrigger className="w-full md:w-[180px]">
-            <Download className="mr-2 h-4 w-4" />
-            <SelectValue placeholder="Export" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="xlsx">Export as Excel</SelectItem>
-            <SelectItem value="csv">Export as CSV</SelectItem>
-            <SelectItem value="pdf">Export as PDF</SelectItem>
+            <SelectItem value="latest">Latest</SelectItem>
+            <SelectItem value="oldest">Oldest</SelectItem>
+            <SelectItem value="a-z">A - Z</SelectItem>
+            <SelectItem value="z-a">Z - A</SelectItem>
+            <SelectItem value="progress-high">Progress (High)</SelectItem>
+            <SelectItem value="progress-low">Progress (Low)</SelectItem>
           </SelectContent>
         </Select>
       </div>
