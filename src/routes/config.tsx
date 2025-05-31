@@ -11,7 +11,7 @@ import UserLayout from "../layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
 
 // Member Pages
-import UserTaskManagement from "../pages/UserTaskManagement";
+import UserTaskManagement from "@/pages/TaskManagement";
 import MemberDashboard from "../pages/Member/Dashboard";
 
 // Other Pages
@@ -48,10 +48,10 @@ import GeneralComingSoon from "../pages/ComingSoon";
 // Principal Investigator Pages
 import PIProfile from "@/pages/PrincipalInvestigator/Profile";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
-import ResearchGroup from "@/pages/PrincipalInvestigator/ResearchGroup";
+// import ResearchGroup from "@/pages/PrincipalInvestigator/ResearchGroup";
 import Milestones from "@/pages/PrincipalInvestigator/Milestones";
 import ProgressReports from "@/pages/PrincipalInvestigator/ProgressReports";
-import Budget from "@/pages/PrincipalInvestigator/Budget";
+// import Budget from "@/pages/PrincipalInvestigator/Budget";
 import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
 import Meetings from "@/pages/PrincipalInvestigator/Meetings";
 import ProjectDetail from "@/pages/ProjectDetail";
@@ -187,6 +187,10 @@ export const routes: RouteObject[] = [
           {
             path: "tasks",
             element: <UserTaskManagement />,
+          },
+          {
+            path: "milestones",
+            element: <Milestones />,
           },
           {
             path: "dashboard",
@@ -340,10 +344,6 @@ export const routes: RouteObject[] = [
             element: <PIProfile />,
           },
           {
-            path: "research-group",
-            element: <ResearchGroup />,
-          },
-          {
             path: "milestones",
             element: <Milestones />,
           },
@@ -352,16 +352,16 @@ export const routes: RouteObject[] = [
             element: <ProgressReports />,
           },
           {
-            path: "budget",
-            element: <Budget />,
-          },
-          {
             path: "dashboard",
             element: <PIDashboard />,
           },
           {
             path: "meetings",
             element: <Meetings />,
+          },
+          {
+            path: "tasks",
+            element: <UserTaskManagement />,
           },
         ],
       },

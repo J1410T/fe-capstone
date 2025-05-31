@@ -11,7 +11,7 @@ import {
   Bell,
   Menu as MenuIcon,
   User,
-  Users,
+  // Users,
   Settings,
   LogOut,
   Home,
@@ -45,6 +45,7 @@ const menuItemsByRole = {
     { name: "Dashboard", path: "/member/dashboard", icon: LayoutDashboard },
     { name: "Projects", path: "/member/projects", icon: FolderOpen },
     { name: "Tasks", path: "/member/tasks", icon: ClipboardList },
+    { name: "Milestones", path: "/member/milestones", icon: ClipboardList },
   ],
   [UserRole.HOST_INSTITUTION]: [
     { name: "Home", path: "/home", icon: Home },
@@ -60,12 +61,13 @@ const menuItemsByRole = {
   [UserRole.PRINCIPAL_INVESTIGATOR]: [
     { name: "Dashboard", path: "/pi/dashboard", icon: LayoutDashboard },
     { name: "Projects", path: "/pi/projects", icon: FolderOpen },
-    { name: "Group", path: "/pi/research-group", icon: Users },
+    // { name: "Group", path: "/pi/research-group", icon: Users },
     { name: "Milestones", path: "/pi/milestones", icon: ClipboardList },
     { name: "Meetings", path: "/pi/meetings", icon: Calendar },
     { name: "Progress", path: "/pi/progress-reports", icon: FileText },
-    { name: "Budget", path: "/pi/budget", icon: Briefcase },
-    { name: "CV", path: "/pi/profile", icon: User },
+    // { name: "Budget", path: "/pi/budget", icon: Briefcase },
+    { name: "Tasks", path: "/pi/tasks", icon: ClipboardList },
+    // { name: "CV", path: "/pi/profile", icon: User },
   ],
   [UserRole.APPRAISAL_COUNCIL]: [
     { name: "Home", path: "/home", icon: Home },

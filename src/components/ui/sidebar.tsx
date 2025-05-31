@@ -720,7 +720,5 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
+  useSidebar,
 };
-
-// Re-export for compatibility (but keep in separate file for fast refresh)
-export { useSidebar } from "./sidebar-hooks";

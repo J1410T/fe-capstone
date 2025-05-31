@@ -374,36 +374,42 @@ const Milestones: React.FC = () => {
   const isCurrentUserLeader = true; // In real app, check user role
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <Target className="w-8 h-8 text-blue-600" />
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      {/* Header - Responsive */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          {/* <Target className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 flex-shrink-0" /> */}
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold tracking-tight truncate">
               Milestones & Tasks
             </h1>
-            <p className="text-muted-foreground">
+            <p className="text-sm sm:text-base text-muted-foreground">
               Manage project milestones and track task progress
             </p>
           </div>
         </div>
         {isCurrentUserLeader && (
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 flex-shrink-0">
             <Dialog
               open={showMilestoneDialog}
               onOpenChange={setShowMilestoneDialog}
             >
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button
+                  variant="outline"
+                  className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald -700 cursor-pointer text-white"
+                >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Milestone
+                  <span className="hidden sm:inline">Add Milestone</span>
+                  <span className="sm:hidden">Add</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="w-[95vw] max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Create New Milestone</DialogTitle>
-                  <DialogDescription>
+                  <DialogTitle className="text-lg sm:text-xl">
+                    Create New Milestone
+                  </DialogTitle>
+                  <DialogDescription className="text-sm sm:text-base">
                     Define a new milestone for your research project
                   </DialogDescription>
                 </DialogHeader>
@@ -469,60 +475,68 @@ const Milestones: React.FC = () => {
         )}
       </div>
 
-      {/* Milestones Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
+      {/* Milestones Overview - Responsive Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center space-x-2">
-              <Target className="w-5 h-5 text-blue-600" />
-              <div>
-                <p className="text-2xl font-bold">{milestones.length}</p>
-                <p className="text-sm text-muted-foreground">
+              <Target className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-lg sm:text-2xl font-bold">
+                  {milestones.length}
+                </p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
                   Total Milestones
                 </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-6">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center space-x-2">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <div>
-                <p className="text-2xl font-bold">
+              <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-lg sm:text-2xl font-bold">
                   {milestones.filter((m) => m.status === "Completed").length}
                 </p>
-                <p className="text-sm text-muted-foreground">Completed</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                  Completed
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-6">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center space-x-2">
-              <Clock className="w-5 h-5 text-blue-600" />
-              <div>
-                <p className="text-2xl font-bold">
+              <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-lg sm:text-2xl font-bold">
                   {milestones.filter((m) => m.status === "In Progress").length}
                 </p>
-                <p className="text-sm text-muted-foreground">In Progress</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                  In Progress
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card>
-          <CardContent className="p-6">
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="p-4 sm:p-6">
             <div className="flex items-center space-x-2">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              <div>
-                <p className="text-2xl font-bold">
+              <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 flex-shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="text-lg sm:text-2xl font-bold">
                   {
                     milestones.filter(
                       (m) => isOverdue(m.deadline) && m.status !== "Completed"
                     ).length
                   }
                 </p>
-                <p className="text-sm text-muted-foreground">Overdue</p>
+                <p className="text-xs sm:text-sm text-muted-foreground truncate">
+                  Overdue
+                </p>
               </div>
             </div>
           </CardContent>
@@ -542,23 +556,28 @@ const Milestones: React.FC = () => {
             {milestones.map((milestone) => (
               <AccordionItem key={milestone.id} value={milestone.id}>
                 <AccordionTrigger className="hover:no-underline">
-                  <div className="flex items-center justify-between w-full mr-4">
-                    <div className="flex items-center space-x-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full mr-2 sm:mr-4 gap-3 sm:gap-4">
+                    <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
                       {getStatusIcon(milestone.status)}
-                      <div className="text-left">
-                        <h3 className="font-medium">{milestone.name}</h3>
-                        <p className="text-sm text-muted-foreground">
+                      <div className="text-left min-w-0 flex-1">
+                        <h3 className="font-medium text-sm sm:text-base truncate">
+                          {milestone.name}
+                        </h3>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           Due: {formatDate(milestone.deadline)} •{" "}
                           {milestone.tasks.length} tasks
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <div className="text-right">
-                        <p className="text-sm font-medium">
+                    <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-4 flex-shrink-0">
+                      <div className="text-left sm:text-right">
+                        <p className="text-xs sm:text-sm font-medium">
                           {milestone.progress}% Complete
                         </p>
-                        <Progress value={milestone.progress} className="w-24" />
+                        <Progress
+                          value={milestone.progress}
+                          className="w-16 sm:w-24"
+                        />
                       </div>
                       <StatusBadge status={milestone.status} />
                     </div>
@@ -586,10 +605,12 @@ const Milestones: React.FC = () => {
                             Add Task
                           </Button>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="w-[95vw] max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
                           <DialogHeader>
-                            <DialogTitle>Create New Task</DialogTitle>
-                            <DialogDescription>
+                            <DialogTitle className="text-lg sm:text-xl">
+                              Create New Task
+                            </DialogTitle>
+                            <DialogDescription className="text-sm sm:text-base">
                               Add a new task to {milestone.name}
                             </DialogDescription>
                           </DialogHeader>
@@ -625,7 +646,7 @@ const Milestones: React.FC = () => {
                                 rows={3}
                               />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               <div className="space-y-2">
                                 <Label htmlFor="task-assignee">Assign To</Label>
                                 <Select
@@ -719,25 +740,29 @@ const Milestones: React.FC = () => {
                       {milestone.tasks.map((task) => (
                         <div
                           key={task.id}
-                          className="border rounded-lg p-4 space-y-3"
+                          className="border rounded-lg p-3 sm:p-4 space-y-3"
                         >
-                          <div className="flex items-start justify-between">
-                            <div className="space-y-1">
-                              <div className="flex items-center space-x-2">
-                                <h4 className="font-medium">{task.title}</h4>
+                          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                            <div className="space-y-1 min-w-0 flex-1">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <h4 className="font-medium text-sm sm:text-base">
+                                  {task.title}
+                                </h4>
                                 <Badge
-                                  className={getPriorityColor(task.priority)}
+                                  className={`${getPriorityColor(
+                                    task.priority
+                                  )} text-xs`}
                                 >
                                   {task.priority}
                                 </Badge>
                               </div>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-xs sm:text-sm text-muted-foreground">
                                 {task.description}
                               </p>
-                              <div className="flex items-center space-x-4 text-xs text-muted-foreground">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-muted-foreground">
                                 <span>Due: {formatDate(task.dueDate)}</span>
                                 {task.assignedTo && (
-                                  <span>
+                                  <span className="truncate">
                                     Assigned to:{" "}
                                     {teamMembers.find(
                                       (m) => m.email === task.assignedTo
@@ -746,7 +771,7 @@ const Milestones: React.FC = () => {
                                 )}
                               </div>
                             </div>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-2 flex-shrink-0">
                               <Select
                                 value={task.status}
                                 onValueChange={(
@@ -763,7 +788,7 @@ const Milestones: React.FC = () => {
                                   task.assignedTo !== user?.email
                                 }
                               >
-                                <SelectTrigger className="w-32">
+                                <SelectTrigger className="w-24 sm:w-32">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -781,8 +806,8 @@ const Milestones: React.FC = () => {
                           </div>
 
                           {task.evaluation && (
-                            <div className="bg-green-50 border border-green-200 rounded p-3">
-                              <p className="text-sm text-green-800">
+                            <div className="bg-green-50 border border-green-200 rounded p-2 sm:p-3">
+                              <p className="text-xs sm:text-sm text-green-800">
                                 <strong>Evaluation:</strong> {task.evaluation}
                               </p>
                               {task.evaluatedBy && (

@@ -4,8 +4,8 @@ import {
   TaskDetailModal,
   SharedTaskBoard,
   TaskStatsCards,
+  CreateTaskModal,
 } from "@/components/tasks";
-import { CreateTaskModal } from "./components/CreateTaskModal";
 import { Button } from "@/components/ui/button";
 
 import { toast } from "sonner";
@@ -177,28 +177,6 @@ const UserTaskManagement: React.FC = () => {
     setIsCreateModalOpen(true);
   };
 
-  // Quick status change handler with loading state
-  // const handleQuickStatusChange = async ( // Unused function
-  //   taskId: string,
-  //   newStatus: Task["status"]
-  // ) => {
-  //   setIsLoading(true);
-
-  //   // Simulate API call
-  //   setTimeout(() => {
-  //     const updatedTask = tasks.find((task) => task.id === taskId);
-  //     if (updatedTask) {
-  //       const updated = {
-  //         ...updatedTask,
-  //         status: newStatus,
-  //         updatedAt: new Date().toISOString(),
-  //       };
-  //       handleUpdateTask(updated);
-  //     }
-  //     setIsLoading(false);
-  //   }, 500);
-  // };
-
   // Task creation handler
   const handleCreateTaskSubmit = (
     newTask: Omit<Task, "id" | "createdAt" | "updatedAt">
@@ -269,90 +247,93 @@ const UserTaskManagement: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Fixed Header - Always Visible */}
-      <div className="fixed top-16 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-                Task Management
-              </h1>
-              <p className="text-sm text-slate-600 mt-1">
-                Organize, track, and manage your team's work with powerful tools
-              </p>
+      {/* Responsive Header */}
+      <div className="sticky top-16 left-0 right-0 z-40 bg-white border-b border-slate-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          {/* Mobile-first header layout */}
+          <div className="space-y-4">
+            {/* Title Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight truncate">
+                  Task Management
+                </h1>
+                <p className="text-sm text-slate-600 mt-1 hidden sm:block">
+                  Organize, track, and manage your team's work with powerful
+                  tools
+                </p>
+              </div>
+
+              {/* Create Task Button - Mobile Priority */}
+              {isLeader && (
+                <div className="flex-shrink-0">
+                  <Button
+                    onClick={handleCreateTaskClick}
+                    className="bg-emerald-600 hover:bg-emerald -700 cursor-pointer text-white flex items-center space-x-2 w-full sm:w-auto"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create Task</span>
+                  </Button>
+                </div>
+              )}
             </div>
 
-            {/* Header Statistics and Controls */}
-            <div className="flex items-center space-x-6">
-              {/* Quick Stats */}
-              <div className="hidden lg:flex items-center space-x-4 text-sm">
-                <div className="flex items-center space-x-2">
+            {/* Controls Section */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Quick Stats - Responsive */}
+              <div className="flex items-center justify-between sm:justify-start sm:space-x-6 text-sm">
+                <div className="flex items-center space-x-1 sm:space-x-2">
                   <BarChart3 className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">
+                  <span className="text-slate-600 text-xs sm:text-sm">
                     {taskStats.total} Tasks
                   </span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 sm:space-x-2">
                   <Users className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">{teamMembers} Members</span>
+                  <span className="text-slate-600 text-xs sm:text-sm">
+                    {teamMembers} Members
+                  </span>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 sm:space-x-2">
                   <Filter className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-600">{projectTags} Projects</span>
+                  <span className="text-slate-600 text-xs sm:text-sm">
+                    {projectTags} Projects
+                  </span>
                 </div>
               </div>
 
               {/* View Toggle */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 bg-slate-100 rounded-lg p-1">
                 <Button
-                  variant={activeView === "table" ? "default" : "outline"}
+                  variant={activeView === "table" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setActiveView("table")}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 flex-1 sm:flex-none"
                 >
                   <TableIcon className="w-4 h-4" />
-                  <span className="hidden sm:inline">Table</span>
+                  <span className="text-xs sm:text-sm">Table</span>
                 </Button>
                 <Button
-                  variant={activeView === "kanban" ? "default" : "outline"}
+                  variant={activeView === "kanban" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setActiveView("kanban")}
-                  className="flex items-center space-x-2"
+                  className="flex items-center space-x-2 flex-1 sm:flex-none"
                 >
                   <Kanban className="w-4 h-4" />
-                  <span className="hidden sm:inline">Kanban</span>
+                  <span className="text-xs sm:text-sm">Kanban</span>
                 </Button>
-              </div>
-
-              {/* Create Task Button */}
-              {isLeader && (
-                <Button
-                  onClick={handleCreateTaskClick}
-                  className="bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Create Task</span>
-                </Button>
-              )}
-
-              {/* Live Status */}
-              <div className="flex items-center space-x-2 text-sm text-slate-500">
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="hidden md:inline">Live</span>
-                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Content Area with Top Margin for Fixed Header */}
-      <div className="pt-[140px]">
+      {/* Content Area - Responsive */}
+      <div className="flex-1">
         {activeView === "table" ? (
           <>
             {/* Task Statistics Dashboard - Table View */}
-            <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
               <TaskStatsCards
                 stats={taskStats}
                 teamMembers={teamMembers}
@@ -362,7 +343,7 @@ const UserTaskManagement: React.FC = () => {
             </div>
 
             {/* Table View */}
-            <div className="max-w-7xl mx-auto px-6 pb-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
               <TaskTable
                 tasks={tasks}
                 onTaskEdit={handleTaskEdit}
@@ -370,13 +351,11 @@ const UserTaskManagement: React.FC = () => {
                 onTaskClick={handleTaskClick}
                 onCreateTask={handleCreateTaskClick}
                 isLeader={isLeader}
-                title="Task Management"
-                description="Manage and track all project tasks with advanced filtering and sorting"
               />
             </div>
           </>
         ) : (
-          /* Kanban View - Full Screen with Custom Stats */
+          /* Kanban View - Responsive */
           <div className="min-h-screen">
             <SharedTaskBoard
               tasks={tasks}

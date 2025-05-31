@@ -150,12 +150,12 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-slate-900">
+          <DialogTitle className="text-lg sm:text-xl font-semibold text-slate-900">
             Task Details
           </DialogTitle>
-          <DialogDescription className="text-slate-600">
+          <DialogDescription className="text-sm sm:text-base text-slate-600">
             {isEditing
               ? "Edit task information"
               : "View task details and make changes"}
