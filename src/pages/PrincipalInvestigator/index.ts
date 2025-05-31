@@ -7,7 +7,6 @@ export { default as Meetings } from "./Meetings";
 export { default as ProgressReports } from "./ProgressReports";
 export { default as Budget } from "./Budget";
 export { default as Dashboard } from "./Dashboard";
-export { default as PiProjectDetail } from "./PiProjectDetail";
 
 // Shared components and utilities
 export * from "./shared/types";

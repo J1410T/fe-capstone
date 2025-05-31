@@ -90,6 +90,14 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     return <Navigate to="/home" replace />;
   }
 
+  // Redirect non-member users to unauthorized page if they try to access member routes
+  if (
+    user?.role !== UserRole.MEMBER &&
+    location.pathname.startsWith("/member")
+  ) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+
   // Render children if authenticated and has required role
   return <>{children}</>;
 };

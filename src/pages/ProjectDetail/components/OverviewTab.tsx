@@ -7,7 +7,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { UserPlus } from "lucide-react";
 import { getStatusColor, getStatusIcon } from "../utils/statusHelpers";
 
 interface TimelinePhase {
@@ -20,18 +22,37 @@ interface OverviewTabProps {
   description: string;
   objectives: string[];
   timeline: TimelinePhase[];
+  showEnrollButton?: boolean;
+  onEnrollProject?: () => void;
 }
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({
   description,
   objectives,
   timeline,
+  showEnrollButton = false,
+  onEnrollProject,
 }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Project Overview</CardTitle>
-        <CardDescription>Key information about the research project</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle>Project Overview</CardTitle>
+            <CardDescription>
+              Key information about the research project
+            </CardDescription>
+          </div>
+          {showEnrollButton && (
+            <Button
+              onClick={onEnrollProject}
+              className="bg-emerald-600 hover:bg-emerald -700 cursor-pointer"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Enroll Project
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
         <div>

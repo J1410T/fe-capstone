@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loading } from "@/components/ui/loaders";
 import {
-  BudgetTab,
+  Button,
+  Loading,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import {
   DocumentsTab,
   OverviewTab,
+  ProjectHeader,
   ProjectProgress,
   TasksTab,
   TeamTab,
-} from "@/pages/HostInstitution/ProjectDetails/components";
-import { PiProjectHeader, RequestAccessForm } from "./components/index";
+} from "./components";
+import BudgetTab from "./components/BudgetTab";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { RequestAccessForm } from "./components/RequestAccessForm";
 
-// Mock current user - trong thực tế sẽ lấy từ authentication context
-// const currentUser = {
-//   email: "john.doe@example.com", // Thay đổi email này để test các trường hợp khác nhau
-//   name: "John Doe",
-// };
-
-// Mock project data
 const projectData = {
   id: 1,
   title: "Machine Learning for Medical Diagnosis",
@@ -78,25 +78,25 @@ const projectData = {
     },
     {
       name: "Dr. Michael Johnson",
-      role: "Co-Investigator",
+      role: "Leader",
       department: "Computer Science",
       email: "michael.johnson@example.com",
     },
     {
       name: "Dr. Sarah Williams",
-      role: "Research Associate",
+      role: "Secretary",
       department: "Medicine",
       email: "sarah.williams@example.com",
     },
     {
       name: "Robert Chen",
-      role: "PhD Student",
+      role: "Member",
       department: "Computer Science",
       email: "robert.chen@example.com",
     },
     {
       name: "Emily Davis",
-      role: "PhD Student",
+      role: "Member",
       department: "Medicine",
       email: "emily.davis@example.com",
     },
@@ -201,13 +201,19 @@ const projectData = {
   ],
 };
 
-const PiProjectDetail: React.FC = () => {
+function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [project, setProject] = useState<typeof projectData | null>(null);
   const [showRequestForm, setShowRequestForm] = useState(false);
+  const [showAllTabs, setShowAllTabs] = useState(false);
+  const [memberRole, setMemberRole] = useState<
+    "Member" | "Leader" | "Secretary"
+  >("Member");
 
   useEffect(() => {
     // Simulate API call to fetch project details
@@ -248,6 +254,33 @@ const PiProjectDetail: React.FC = () => {
     // In real app, you would make API call here
   };
 
+  // Determine which tabs to show based on user role and switch state
+  const getVisibleTabs = () => {
+    if (!user) return ["overview", "team"];
+
+    switch (user.role) {
+      case UserRole.PRINCIPAL_INVESTIGATOR:
+        return showAllTabs
+          ? ["overview", "team", "tasks", "documents", "budget"]
+          : ["overview", "team"];
+      case UserRole.MEMBER:
+        return showAllTabs
+          ? ["overview", "team", "tasks", "documents", "budget"]
+          : ["overview", "team"];
+      case UserRole.HOST_INSTITUTION:
+      case UserRole.APPRAISAL_COUNCIL:
+        return ["overview", "team"];
+      default:
+        return ["overview", "team"];
+    }
+  };
+
+  const visibleTabs = getVisibleTabs();
+
+  // Show Enroll Project button for PI in Overview tab only when switch is true
+  const shouldShowEnrollButton =
+    user?.role === UserRole.PRINCIPAL_INVESTIGATOR && showAllTabs;
+
   if (isLoading) {
     return <Loading />;
   }
@@ -269,12 +302,14 @@ const PiProjectDetail: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Project Header */}
-      <PiProjectHeader
+      <ProjectHeader
         title={project.title}
         status={project.status}
         pi={project.pi}
-        hasAccess={true}
-        onRequestAccess={() => setShowRequestForm(true)}
+        showAllTabs={showAllTabs}
+        onToggleAllTabs={setShowAllTabs}
+        memberRole={memberRole}
+        onMemberRoleChange={setMemberRole}
       />
 
       {/* Project Progress - Always show */}
@@ -284,61 +319,113 @@ const PiProjectDetail: React.FC = () => {
         total={project.budget.total}
       />
 
-      {/* Register for Project Button - Only for PIs */}
-      <div className="flex justify-end">
-        <Button
-          onClick={() => navigate("/pi/project-registration")}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          Register for Project
-        </Button>
-      </div>
-
-      {/* Project Tabs - Show all tabs */}
+      {/* Project Tabs - Dynamic based on role and switch */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="team">Team</TabsTrigger>
-          <TabsTrigger value="tasks">Tasks</TabsTrigger>
-          <TabsTrigger value="documents">Documents</TabsTrigger>
-          <TabsTrigger value="budget">Budget</TabsTrigger>
+        <TabsList
+          className={`grid w-full ${
+            visibleTabs.length === 2
+              ? "grid-cols-2"
+              : visibleTabs.length === 3
+              ? "grid-cols-3"
+              : visibleTabs.length === 4
+              ? "grid-cols-2 sm:grid-cols-4"
+              : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+          } gap-1`}
+        >
+          {visibleTabs.includes("overview") && (
+            <TabsTrigger value="overview" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Overview</span>
+              <span className="sm:hidden">Info</span>
+            </TabsTrigger>
+          )}
+          {visibleTabs.includes("team") && (
+            <TabsTrigger value="team" className="text-xs sm:text-sm">
+              Team
+            </TabsTrigger>
+          )}
+          {visibleTabs.includes("tasks") && (
+            <TabsTrigger value="tasks" className="text-xs sm:text-sm">
+              Tasks
+            </TabsTrigger>
+          )}
+          {visibleTabs.includes("documents") && (
+            <TabsTrigger value="documents" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Documents</span>
+              <span className="sm:hidden">Docs</span>
+            </TabsTrigger>
+          )}
+          {visibleTabs.includes("budget") && (
+            <TabsTrigger value="budget" className="text-xs sm:text-sm">
+              Budget
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-4">
-          <OverviewTab
-            description={project.description}
-            objectives={project.objectives}
-            timeline={project.timeline}
-          />
-        </TabsContent>
+        {visibleTabs.includes("overview") && (
+          <TabsContent value="overview" className="space-y-4">
+            <OverviewTab
+              description={project.description}
+              objectives={project.objectives}
+              timeline={project.timeline}
+              showEnrollButton={shouldShowEnrollButton}
+              onEnrollProject={() =>
+                navigate("/pi/project-enroll-form", {
+                  state: { from: location.pathname },
+                })
+              }
+            />
+          </TabsContent>
+        )}
 
         {/* Team Tab */}
-        <TabsContent value="team" className="space-y-4">
-          <TeamTab team={project.team} />
-        </TabsContent>
+        {visibleTabs.includes("team") && (
+          <TabsContent value="team" className="space-y-4">
+            <TeamTab
+              team={
+                project.team as Array<{
+                  name: string;
+                  role:
+                    | "Member"
+                    | "Leader"
+                    | "Secretary"
+                    | "Principal Investigator";
+                  department: string;
+                  email: string;
+                }>
+              }
+              showEditingButtons={
+                user?.role === UserRole.PRINCIPAL_INVESTIGATOR
+                  ? showAllTabs
+                  : false
+              }
+            />
+          </TabsContent>
+        )}
 
         {/* Tasks Tab */}
-        <TabsContent value="tasks" className="space-y-4">
-          <TasksTab tasks={project.tasks} />
-        </TabsContent>
+        {visibleTabs.includes("tasks") && (
+          <TabsContent value="tasks" className="space-y-4">
+            <TasksTab tasks={project.tasks} />
+          </TabsContent>
+        )}
 
         {/* Documents Tab */}
-        <TabsContent value="documents" className="space-y-4">
-          <DocumentsTab
-            documents={project.documents}
-            onDownload={handleDownloadDocument}
-          />
-        </TabsContent>
+        {visibleTabs.includes("documents") && (
+          <TabsContent value="documents" className="space-y-4">
+            <DocumentsTab
+              documents={project.documents}
+              onDownload={handleDownloadDocument}
+            />
+          </TabsContent>
+        )}
 
         {/* Budget Tab */}
-        <TabsContent value="budget" className="space-y-4">
-          <BudgetTab
-            total={project.budget.total}
-            spent={project.budget.spent}
-            allocated={project.budget.allocated}
-          />
-        </TabsContent>
+        {visibleTabs.includes("budget") && (
+          <TabsContent value="budget" className="space-y-4">
+            <BudgetTab />
+          </TabsContent>
+        )}
       </Tabs>
 
       {/* Request Access Form Modal */}
@@ -351,6 +438,6 @@ const PiProjectDetail: React.FC = () => {
       )}
     </div>
   );
-};
+}
 
-export default PiProjectDetail;
+export default ProjectDetail;

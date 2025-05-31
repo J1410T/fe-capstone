@@ -11,7 +11,6 @@ import UserLayout from "../layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
 
 // Member Pages
-import MemberProjectDetails from "../pages/Member/ProjectDetails";
 import UserTaskManagement from "../pages/UserTaskManagement";
 import MemberDashboard from "../pages/Member/Dashboard";
 
@@ -23,7 +22,6 @@ import Settings from "../pages/Settings";
 import RegisterProject from "../pages/HostInstitution/RegisterProject";
 import ProjectsList from "../pages/HostInstitution/ProjectsList";
 import MyProjects from "../pages/HostInstitution/MyProjects";
-import ProjectDetails from "../pages/HostInstitution/ProjectDetails";
 import ProjectHistory from "../pages/HostInstitution/ProjectHistory";
 
 // Council Pages
@@ -46,7 +44,6 @@ import AdminComingSoon from "../pages/Admin/ComingSoon";
 
 // General Coming Soon
 import GeneralComingSoon from "../pages/ComingSoon";
-import PiProjectDetail from "@/pages/PrincipalInvestigator/PiProjectDetail";
 
 // Principal Investigator Pages
 import PIProfile from "@/pages/PrincipalInvestigator/Profile";
@@ -57,6 +54,7 @@ import ProgressReports from "@/pages/PrincipalInvestigator/ProgressReports";
 import Budget from "@/pages/PrincipalInvestigator/Budget";
 import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
 import Meetings from "@/pages/PrincipalInvestigator/Meetings";
+import ProjectDetail from "@/pages/ProjectDetail";
 
 /**
  * Main application routes configuration
@@ -169,7 +167,7 @@ export const routes: RouteObject[] = [
       {
         path: "member",
         element: (
-          <AuthGuard>
+          <AuthGuard requiredRoles={[UserRole.MEMBER]}>
             <UserLayout />
           </AuthGuard>
         ),
@@ -184,7 +182,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "project/:projectId",
-            element: <MemberProjectDetails />,
+            element: <ProjectDetail />,
           },
           {
             path: "tasks",
@@ -249,7 +247,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "project/:projectId",
-            element: <ProjectDetails />,
+            element: <ProjectDetail />,
           },
           {
             path: "history",
@@ -331,10 +329,10 @@ export const routes: RouteObject[] = [
           },
           {
             path: "project/:projectId",
-            element: <PiProjectDetail />,
+            element: <ProjectDetail />,
           },
           {
-            path: "project-registration",
+            path: "project-enroll-form",
             element: <ProjectRegistration />,
           },
           {
