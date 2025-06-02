@@ -38,13 +38,13 @@ const priorityOptions: TaskPriority[] = ["Low", "Medium", "High"];
 const getPriorityConfig = (priority: string) => {
   switch (priority) {
     case "High":
-      return { color: "text-red-600", bgColor: "bg-red-100", icon: "🔴" };
+      return { color: "text-red-600", bgColor: "bg-red-100", icon: "" };
     case "Medium":
-      return { color: "text-amber-600", bgColor: "bg-amber-100", icon: "🟡" };
+      return { color: "text-amber-600", bgColor: "bg-amber-100", icon: "" };
     case "Low":
-      return { color: "text-blue-600", bgColor: "bg-blue-100", icon: "🔵" };
+      return { color: "text-blue-600", bgColor: "bg-blue-100", icon: "" };
     default:
-      return { color: "text-slate-600", bgColor: "bg-slate-100", icon: "⚪" };
+      return { color: "text-slate-600", bgColor: "bg-slate-100", icon: "" };
   }
 };
 
@@ -278,10 +278,10 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                       <div className="flex items-center space-x-2">
                         <span className="text-sm">
                           {priority === "High"
-                            ? "🔴"
+                            ? ""
                             : priority === "Medium"
-                            ? "🟡"
-                            : "🔵"}
+                            ? ""
+                            : ""}
                         </span>
                         <span>{priority} Priority</span>
                       </div>

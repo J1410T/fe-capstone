@@ -86,9 +86,9 @@ export const TaskFilterBar: React.FC<TaskFilterBarProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Priorities</SelectItem>
-              <SelectItem value="High">🔴 High</SelectItem>
-              <SelectItem value="Medium">🟡 Medium</SelectItem>
-              <SelectItem value="Low">🔵 Low</SelectItem>
+              <SelectItem value="High">High</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="Low">Low</SelectItem>
             </SelectContent>
           </Select>
         </div>

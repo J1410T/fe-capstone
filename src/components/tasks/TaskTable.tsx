@@ -112,13 +112,13 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   const getPriorityConfig = (priority: string) => {
     switch (priority) {
       case "High":
-        return { color: "bg-red-100 text-red-700", icon: "🔴" };
+        return { color: "bg-red-100 text-red-700", icon: "" };
       case "Medium":
-        return { color: "bg-yellow-100 text-yellow-700", icon: "🟡" };
+        return { color: "bg-yellow-100 text-yellow-700", icon: "" };
       case "Low":
-        return { color: "bg-blue-100 text-blue-700", icon: "🔵" };
+        return { color: "bg-blue-100 text-blue-700", icon: "" };
       default:
-        return { color: "bg-slate-100 text-slate-700", icon: "⚪" };
+        return { color: "bg-slate-100 text-slate-700", icon: "" };
     }
   };
 
@@ -179,31 +179,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         ),
       },
       {
-        accessorKey: "status",
-        header: ({ column }: { column: Column<Task, unknown> }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-auto p-0 font-semibold text-slate-700 hover:text-slate-900"
-          >
-            Status
-            {column.getIsSorted() === "asc" ? (
-              <ArrowUp className="ml-2 h-4 w-4" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ArrowDown className="ml-2 h-4 w-4" />
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            )}
-          </Button>
-        ),
-        cell: ({ row }: { row: Row<Task> }) => {
-          const statusConfig = getStatusConfig(row.original.status);
-          return (
-            <Badge className={statusConfig.color}>{row.original.status}</Badge>
-          );
-        },
-      },
-      {
         accessorKey: "priority",
         header: ({ column }: { column: Column<Task, unknown> }) => (
           <Button
@@ -224,9 +199,11 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         cell: ({ row }: { row: Row<Task> }) => {
           const priorityConfig = getPriorityConfig(row.original.priority);
           return (
-            <Badge variant="outline" className={priorityConfig.color}>
-              {priorityConfig.icon} {row.original.priority}
-            </Badge>
+            <div className="flex justify-center">
+              <Badge variant="outline" className={priorityConfig.color}>
+                {priorityConfig.icon} {row.original.priority}
+              </Badge>
+            </div>
           );
         },
       },
@@ -296,6 +273,31 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             </span>
           </div>
         ),
+      },
+      {
+        accessorKey: "status",
+        header: ({ column }: { column: Column<Task, unknown> }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-auto p-0 font-semibold text-slate-700 hover:text-slate-900"
+          >
+            Status
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-2 h-4 w-4" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-2 h-4 w-4" />
+            ) : (
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            )}
+          </Button>
+        ),
+        cell: ({ row }: { row: Row<Task> }) => {
+          const statusConfig = getStatusConfig(row.original.status);
+          return (
+            <Badge className={statusConfig.color}>{row.original.status}</Badge>
+          );
+        },
       },
       {
         id: "actions",
@@ -488,9 +490,9 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Priorities</SelectItem>
-                  <SelectItem value="High">🔴 High</SelectItem>
-                  <SelectItem value="Medium">🟡 Medium</SelectItem>
-                  <SelectItem value="Low">🔵 Low</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
                 </SelectContent>
               </Select>
             </div>

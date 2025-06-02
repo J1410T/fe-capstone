@@ -18,28 +18,28 @@ const getPriorityConfig = (priority: string) => {
         color: "text-red-600",
         bgColor: "bg-red-50",
         borderColor: "border-red-200",
-        icon: "🔴",
+        icon: "",
       };
     case "Medium":
       return {
         color: "text-amber-600",
         bgColor: "bg-amber-50",
         borderColor: "border-amber-200",
-        icon: "🟡",
+        icon: "",
       };
     case "Low":
       return {
         color: "text-blue-600",
         bgColor: "bg-blue-50",
         borderColor: "border-blue-200",
-        icon: "🔵",
+        icon: "",
       };
     default:
       return {
         color: "text-slate-600",
         bgColor: "bg-slate-50",
         borderColor: "border-slate-200",
-        icon: "⚪",
+        icon: "",
       };
   }
 };
@@ -95,7 +95,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
         <div className="flex items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center space-x-1">
             <span className="text-xs sm:text-sm">{priorityConfig.icon}</span>
-            <span className={`text-xs font-medium ${priorityConfig.color}`}>
+            <span className={`text-sm  font-semibold ${priorityConfig.color}`}>
               {task.priority}
             </span>
           </div>

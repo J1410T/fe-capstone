@@ -256,9 +256,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Low">🔵 Low</SelectItem>
-                  <SelectItem value="Medium">🟡 Medium</SelectItem>
-                  <SelectItem value="High">🔴 High</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
                 </SelectContent>
               </Select>
             </div>
