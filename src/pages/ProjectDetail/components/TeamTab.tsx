@@ -145,15 +145,15 @@ export const TeamTab: React.FC<TeamTabProps> = ({
   };
 
   return (
-    <div className="space-y-4">
-      {/* Add Member Button for PIs */}
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Research Team</CardTitle>
-              <CardDescription>
+    <div className="space-y-4 sm:space-y-6">
+      <Card className="shadow-sm">
+        <CardHeader className="pb-4 sm:pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+            <div className="flex-1 min-w-0">
+              <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
+                Project Team
+              </CardTitle>
+              <CardDescription className="text-sm sm:text-base mt-1">
                 Team members involved in the research project
               </CardDescription>
             </div>
@@ -163,9 +163,10 @@ export const TeamTab: React.FC<TeamTabProps> = ({
                 onOpenChange={setShowAddMemberDialog}
               >
                 <DialogTrigger asChild>
-                  <Button>
+                  <Button className="w-full sm:w-auto text-sm sm:text-base">
                     <UserPlus className="w-4 h-4 mr-2" />
-                    Invite Member
+                    <span className="hidden sm:inline">Invite Member</span>
+                    <span className="sm:hidden">Invite</span>
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
@@ -219,21 +220,21 @@ export const TeamTab: React.FC<TeamTabProps> = ({
             )}
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <CardContent className="pt-0">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
             {team.map((member, index) => (
               <div
                 key={index}
-                className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200"
+                className="group relative bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md hover:border-gray-300 transition-all duration-200"
               >
                 {/* Action buttons for PI */}
                 {showEditingButtons && (
-                  <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                  <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                     {canEditRole(member.role) && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 w-7 p-0 hover:bg-blue-50"
+                        className="h-6 w-6 sm:h-7 sm:w-7 p-0 hover:bg-blue-50"
                         onClick={() => {
                           setSelectedMember(member);
                           setEditingRole(member.role as MemberRole);
@@ -247,7 +248,7 @@ export const TeamTab: React.FC<TeamTabProps> = ({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 w-7 p-0 hover:bg-red-50"
+                        className="h-6 w-6 sm:h-7 sm:w-7 p-0 hover:bg-red-50"
                         onClick={() => handleRemoveMember(member)}
                       >
                         <UserMinus className="h-3 w-3 text-red-600" />
@@ -256,16 +257,18 @@ export const TeamTab: React.FC<TeamTabProps> = ({
                   </div>
                 )}
 
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-lg">{getRoleIcon(member.role)}</span>
+                <div className="flex items-start gap-2 sm:gap-3 mb-3">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-base sm:text-lg">
+                      {getRoleIcon(member.role)}
+                    </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-gray-900 truncate">
+                    <h3 className="font-medium text-sm sm:text-base text-gray-900 truncate">
                       {member.name}
                     </h3>
                     <Badge
-                      className={`${getRoleColor(member.role)} mt-1`}
+                      className={`${getRoleColor(member.role)} mt-1 text-xs`}
                       variant="outline"
                     >
                       {member.role}
@@ -273,20 +276,22 @@ export const TeamTab: React.FC<TeamTabProps> = ({
                   </div>
                 </div>
 
-                <div className="space-y-2 text-sm text-gray-600">
+                <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-600">
                   <div className="flex items-center">
-                    <Briefcase className="h-4 w-4 mr-2 flex-shrink-0" />
+                    <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="truncate">{member.department}</span>
                   </div>
                   <div className="flex items-center">
-                    <Mail className="h-4 w-4 mr-2 flex-shrink-0" />
-                    <span className="truncate">{member.email}</span>
+                    <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    <span className="truncate text-xs sm:text-sm">
+                      {member.email}
+                    </span>
                   </div>
                 </div>
 
                 {/* Special indicator for Principal Investigator */}
                 {member.role === "Principal Investigator" && (
-                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-800  to-emerald-600 rounded-t-lg"></div>
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-800 to-emerald-600 rounded-t-lg"></div>
                 )}
               </div>
             ))}

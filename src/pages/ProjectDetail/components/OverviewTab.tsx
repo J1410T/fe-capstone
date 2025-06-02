@@ -34,71 +34,85 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   onEnrollProject,
 }) => {
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle>Project Overview</CardTitle>
-            <CardDescription>
+    <Card className="shadow-sm">
+      <CardHeader className="pb-4 sm:pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
+              Project Overview
+            </CardTitle>
+            <CardDescription className="text-sm sm:text-base mt-1">
               Key information about the research project
             </CardDescription>
           </div>
           {showEnrollButton && (
             <Button
               onClick={onEnrollProject}
-              className="bg-emerald-600 hover:bg-emerald -700 cursor-pointer"
+              className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer w-full sm:w-auto text-sm sm:text-base"
             >
               <UserPlus className="w-4 h-4 mr-2" />
-              Enroll Project
+              <span className="hidden sm:inline">Enroll Project</span>
+              <span className="sm:hidden">Enroll</span>
             </Button>
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4 sm:space-y-6 pt-0">
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+          <h3 className="text-sm sm:text-base font-medium text-gray-700 mb-2 sm:mb-3">
             Description
           </h3>
-          <p>{description}</p>
+          <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+            {description}
+          </p>
         </div>
 
-        <Separator />
+        <Separator className="my-4 sm:my-6" />
 
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+          <h3 className="text-sm sm:text-base font-medium text-gray-700 mb-2 sm:mb-3">
             Research Objectives
           </h3>
-          <ul className="list-disc pl-5 space-y-1">
+          <ul className="list-disc pl-4 sm:pl-5 space-y-1 sm:space-y-2">
             {objectives.map((objective, index) => (
-              <li key={index}>{objective}</li>
+              <li
+                key={index}
+                className="text-sm sm:text-base text-gray-600 leading-relaxed"
+              >
+                {objective}
+              </li>
             ))}
           </ul>
         </div>
 
-        <Separator />
+        <Separator className="my-4 sm:my-6" />
 
         <div>
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">
+          <h3 className="text-sm sm:text-base font-medium text-gray-700 mb-3 sm:mb-4">
             Project Timeline
           </h3>
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {timeline.map((phase, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-3 bg-muted/50 rounded-lg"
+                className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 bg-muted/50 rounded-lg border border-gray-100"
               >
-                <div>
-                  <p className="font-medium">{phase.phase}</p>
-                  <p className="text-sm text-muted-foreground">
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm sm:text-base text-gray-900 break-words">
+                    {phase.phase}
+                  </p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                     {phase.duration}
                   </p>
                 </div>
                 <Badge
                   variant="outline"
-                  className={getStatusColor(phase.status)}
+                  className={`${getStatusColor(
+                    phase.status
+                  )} w-fit text-xs sm:text-sm`}
                 >
                   {getStatusIcon(phase.status)}
-                  {phase.status}
+                  <span className="ml-1">{phase.status}</span>
                 </Badge>
               </div>
             ))}

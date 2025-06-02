@@ -183,46 +183,66 @@ const ProjectHistory: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <HistoryHeader onExportData={handleExportData} />
+    <div className="min-h-screen bg-gray-50/30">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
+        <div className="space-y-4 sm:space-y-6">
+          <HistoryHeader onExportData={handleExportData} />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 md:w-auto md:grid-cols-2">
-          <TabsTrigger value="list">
-            <FileText className="mr-2 h-4 w-4" />
-            Project List
-          </TabsTrigger>
-          <TabsTrigger value="stats">
-            <BarChart className="mr-2 h-4 w-4" />
-            Statistics
-          </TabsTrigger>
-        </TabsList>
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <div className="w-full overflow-x-auto">
+              <TabsList className="flex w-full h-auto min-h-[40px] p-1 gap-1 bg-muted rounded-lg justify-start">
+                <TabsTrigger
+                  value="list"
+                  className="flex-1 min-w-[120px] text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  <FileText className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Project List</span>
+                  <span className="sm:hidden">List</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value="stats"
+                  className="flex-1 min-w-[120px] text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
+                >
+                  <BarChart className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
+                  <span className="hidden sm:inline">Statistics</span>
+                  <span className="sm:hidden">Stats</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-        {/* Project List Tab */}
-        <TabsContent value="list" className="space-y-4">
-          <ProjectListTab
-            projects={filteredProjects}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            selectedYear={selectedYear}
-            onYearChange={setSelectedYear}
-            selectedDepartment={selectedDepartment}
-            onDepartmentChange={setSelectedDepartment}
-            selectedStatus={selectedStatus}
-            onStatusChange={setSelectedStatus}
-          />
-        </TabsContent>
+            <div className="mt-4 sm:mt-6">
+              {/* Project List Tab */}
+              <TabsContent value="list" className="space-y-4 mt-0">
+                <ProjectListTab
+                  projects={filteredProjects}
+                  searchTerm={searchTerm}
+                  onSearchChange={setSearchTerm}
+                  selectedYear={selectedYear}
+                  onYearChange={setSelectedYear}
+                  selectedDepartment={selectedDepartment}
+                  onDepartmentChange={setSelectedDepartment}
+                  selectedStatus={selectedStatus}
+                  onStatusChange={setSelectedStatus}
+                />
+              </TabsContent>
 
-        {/* Statistics Tab */}
-        <TabsContent value="stats" className="space-y-4">
-          <StatisticsTab
-            yearlyStats={yearlyStats}
-            departmentStats={departmentStats}
-            statusStats={statusStats}
-            reportStats={reportStats}
-          />
-        </TabsContent>
-      </Tabs>
+              {/* Statistics Tab */}
+              <TabsContent value="stats" className="space-y-4 mt-0">
+                <StatisticsTab
+                  yearlyStats={yearlyStats}
+                  departmentStats={departmentStats}
+                  statusStats={statusStats}
+                  reportStats={reportStats}
+                />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </div>
+      </div>
     </div>
   );
 };

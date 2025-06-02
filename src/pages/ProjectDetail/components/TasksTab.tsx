@@ -46,49 +46,115 @@ export const TasksTab: React.FC<TasksTabProps> = ({ tasks }) => {
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Project Tasks</CardTitle>
-        <CardDescription>Manage and track project tasks and activities</CardDescription>
+    <Card className="shadow-sm">
+      <CardHeader className="pb-4 sm:pb-6">
+        <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
+          Project Tasks
+        </CardTitle>
+        <CardDescription className="text-sm sm:text-base mt-1">
+          Manage and track project tasks and activities
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[300px]">Task</TableHead>
-              <TableHead>Assignee</TableHead>
-              <TableHead>Due Date</TableHead>
-              <TableHead>Priority</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {tasks.map((task) => (
-              <TableRow key={task.id}>
-                <TableCell className="font-medium">{task.title}</TableCell>
-                <TableCell>{task.assignee}</TableCell>
-                <TableCell>{task.dueDate}</TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={getPriorityColor(task.priority)}>
+      <CardContent className="pt-0">
+        {/* Mobile Card View */}
+        <div className="block sm:hidden space-y-3">
+          {tasks.map((task) => (
+            <div
+              key={task.id}
+              className="bg-white border border-gray-200 rounded-lg p-4 space-y-3"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <h3 className="font-medium text-sm text-gray-900 flex-1 break-words">
+                  {task.title}
+                </h3>
+                <Badge
+                  variant="outline"
+                  className={getStatusColor(task.status)}
+                >
+                  {getStatusIcon(task.status)}
+                  <span className="ml-1">{task.status}</span>
+                </Badge>
+              </div>
+
+              <div className="space-y-2 text-xs text-gray-600">
+                <div className="flex items-center justify-between">
+                  <span>Assignee:</span>
+                  <span className="font-medium">{task.assignee}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Due Date:</span>
+                  <span className="font-medium">{task.dueDate}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Priority:</span>
+                  <Badge
+                    variant="outline"
+                    className={getPriorityColor(task.priority)}
+                  >
                     {task.priority}
                   </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge variant="outline" className={getStatusColor(task.status)}>
-                    {getStatusIcon(task.status)}
-                    {task.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button variant="outline" size="sm">
-                    View Details
-                  </Button>
-                </TableCell>
+                </div>
+              </div>
+
+              <Button variant="outline" size="sm" className="w-full text-xs">
+                View Details
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden sm:block overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="min-w-[200px] sm:w-[300px]">
+                  Task
+                </TableHead>
+                <TableHead className="min-w-[120px]">Assignee</TableHead>
+                <TableHead className="min-w-[100px]">Due Date</TableHead>
+                <TableHead className="min-w-[80px]">Priority</TableHead>
+                <TableHead className="min-w-[80px]">Status</TableHead>
+                <TableHead className="text-right min-w-[100px]">
+                  Actions
+                </TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {tasks.map((task) => (
+                <TableRow key={task.id}>
+                  <TableCell className="font-medium text-sm break-words">
+                    {task.title}
+                  </TableCell>
+                  <TableCell className="text-sm">{task.assignee}</TableCell>
+                  <TableCell className="text-sm">{task.dueDate}</TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={`${getPriorityColor(task.priority)} text-xs`}
+                    >
+                      {task.priority}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge
+                      variant="outline"
+                      className={`${getStatusColor(task.status)} text-xs`}
+                    >
+                      {getStatusIcon(task.status)}
+                      <span className="ml-1">{task.status}</span>
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button variant="outline" size="sm" className="text-xs">
+                      View Details
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );

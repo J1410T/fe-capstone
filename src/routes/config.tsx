@@ -212,6 +212,10 @@ export const routes: RouteObject[] = [
             path: "forms/*",
             element: <GeneralComingSoon />,
           },
+          {
+            path: "my-projects",
+            element: <ProjectDetail />,
+          },
           // Add more member routes here
         ],
       },
@@ -362,6 +366,10 @@ export const routes: RouteObject[] = [
           {
             path: "tasks",
             element: <UserTaskManagement />,
+          },
+          {
+            path: "my-projects",
+            element: <MyProjects />,
           },
         ],
       },

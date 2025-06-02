@@ -6,18 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -27,52 +16,99 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   DollarSign,
-  Plus,
   Receipt,
-  Upload,
   CheckCircle,
   TrendingUp,
   PieChart,
 } from "lucide-react";
-import {
-  Budget as BudgetType,
-  Expense,
-  FileUpload as FileUploadType,
-} from "../shared/types";
-import { StatusBadge, FileUploadComponent } from "../shared/components";
-import { formatDate } from "../shared/utils";
-import { toast } from "sonner";
 import { Loading } from "@/components/ui/loaders";
 
-const BudgetTab: React.FC = () => {
-  const [budget, setBudget] = useState<BudgetType | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showExpenseDialog, setShowExpenseDialog] = useState(false);
-  const [showApprovalDialog, setShowApprovalDialog] = useState(false);
-  const [receiptFiles, setReceiptFiles] = useState<FileUploadType[]>([]);
+// Local types
+interface BudgetData {
+  total: number;
+  spent: number;
+  allocated: {
+    personnel: number;
+    equipment: number;
+    travel: number;
+    materials: number;
+    other: number;
+  };
+  expenses: ExpenseItem[];
+}
 
-  const [expenseForm, setExpenseForm] = useState({
-    category: "" as
-      | "personnel"
-      | "equipment"
-      | "travel"
-      | "materials"
-      | "other"
-      | "",
-    description: "",
-    amount: "",
-    date: new Date().toISOString().split("T")[0],
+interface ExpenseItem {
+  id: string;
+  category: "personnel" | "equipment" | "travel" | "materials" | "other";
+  description: string;
+  amount: number;
+  date: string;
+  status: "Pending" | "Approved" | "Rejected";
+  receipt?: string;
+  approvedBy?: string;
+  feedback?: string;
+}
+
+// Utility functions
+const formatDate = (date: string): string => {
+  return new Date(date).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
+};
+
+const getCategoryIcon = (category: string) => {
+  switch (category) {
+    case "personnel":
+      return "👥";
+    case "equipment":
+      return "🖥️";
+    case "travel":
+      return "✈️";
+    case "materials":
+      return "📦";
+    case "other":
+      return "📋";
+    default:
+      return "💰";
+  }
+};
+
+const getCategoryColor = (category: string) => {
+  switch (category) {
+    case "personnel":
+      return "bg-blue-100 text-blue-800";
+    case "equipment":
+      return "bg-purple-100 text-purple-800";
+    case "travel":
+      return "bg-green-100 text-green-800";
+    case "materials":
+      return "bg-orange-100 text-orange-800";
+    case "other":
+      return "bg-gray-100 text-gray-800";
+    default:
+      return "bg-gray-100 text-gray-800";
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case "Approved":
+      return "bg-green-100 text-green-800 border-green-200";
+    case "Pending":
+      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+    case "Rejected":
+      return "bg-red-100 text-red-800 border-red-200";
+    default:
+      return "bg-gray-100 text-gray-800 border-gray-200";
+  }
+};
+
+const BudgetTab: React.FC = () => {
+  const [budget, setBudget] = useState<BudgetData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     loadBudgetData();
@@ -83,7 +119,7 @@ const BudgetTab: React.FC = () => {
     try {
       // Simulate API call
       setTimeout(() => {
-        const mockBudget: BudgetType = {
+        const mockBudget: BudgetData = {
           total: 120000,
           spent: 78000,
           allocated: {
@@ -145,121 +181,6 @@ const BudgetTab: React.FC = () => {
     }
   };
 
-  const handleAddExpense = async () => {
-    if (
-      !expenseForm.category ||
-      !expenseForm.description ||
-      !expenseForm.amount ||
-      !expenseForm.date
-    ) {
-      toast.error("Please fill in all required fields");
-      return;
-    }
-
-    if (receiptFiles.length === 0) {
-      toast.error("Please upload a receipt");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      setTimeout(() => {
-        const newExpense: Expense = {
-          id: `expense_${Date.now()}`,
-          category: expenseForm.category as
-            | "personnel"
-            | "equipment"
-            | "travel"
-            | "materials"
-            | "other",
-          description: expenseForm.description,
-          amount: parseFloat(expenseForm.amount),
-          date: expenseForm.date,
-          status: "Pending",
-          receipt: receiptFiles[0].name,
-        };
-
-        setBudget((prev) =>
-          prev
-            ? {
-                ...prev,
-                expenses: [...prev.expenses, newExpense],
-                spent: prev.spent + newExpense.amount,
-              }
-            : null
-        );
-
-        setExpenseForm({
-          category: "",
-          description: "",
-          amount: "",
-          date: new Date().toISOString().split("T")[0],
-        });
-        setReceiptFiles([]);
-        setShowExpenseDialog(false);
-        toast.success("Expense submitted for approval");
-        setIsLoading(false);
-      }, 1500);
-    } catch (error) {
-      console.error("Error adding expense:", error);
-      toast.error("Failed to submit expense");
-      setIsLoading(false);
-    }
-  };
-
-  const handleSubmitForApproval = async () => {
-    setIsLoading(true);
-    try {
-      // Simulate API call to submit BM05 + BM06 for approval
-      setTimeout(() => {
-        toast.success(
-          "Budget approval request (BM05 + BM06) submitted successfully"
-        );
-        setShowApprovalDialog(false);
-        setIsLoading(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Error submitting for approval:", error);
-      toast.error("Failed to submit for approval");
-      setIsLoading(false);
-    }
-  };
-
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case "personnel":
-        return "👥";
-      case "equipment":
-        return "🖥️";
-      case "travel":
-        return "✈️";
-      case "materials":
-        return "📦";
-      case "other":
-        return "📋";
-      default:
-        return "💰";
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "personnel":
-        return "bg-blue-100 text-blue-800";
-      case "equipment":
-        return "bg-purple-100 text-purple-800";
-      case "travel":
-        return "bg-green-100 text-green-800";
-      case "materials":
-        return "bg-orange-100 text-orange-800";
-      case "other":
-        return "bg-gray-100 text-gray-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   const getStatusStats = () => {
     if (!budget) return { approved: 0, pending: 0, rejected: 0 };
 
@@ -278,249 +199,49 @@ const BudgetTab: React.FC = () => {
   const stats = getStatusStats();
   const utilization = getBudgetUtilization();
 
-  if (!budget) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loading className="w-full max-w-md" />
+        <Loading />
       </div>
+    );
+  }
+
+  if (!budget) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-8">
+          <p className="text-muted-foreground">No budget data available.</p>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <DollarSign className="w-8 h-8 text-green-600" />
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Budget Management
-            </h1>
-            <p className="text-muted-foreground">
-              Forms BM05 + BM06 - Manage expenses and budget approvals
-            </p>
-          </div>
-        </div>
-        <div className="flex space-x-2">
-          <Dialog open={showExpenseDialog} onOpenChange={setShowExpenseDialog}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Expense
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Add New Expense</DialogTitle>
-                <DialogDescription>
-                  Record a new expense for budget tracking
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="expense-category">Category *</Label>
-                    <Select
-                      value={expenseForm.category}
-                      onValueChange={(
-                        value:
-                          | ""
-                          | "personnel"
-                          | "equipment"
-                          | "travel"
-                          | "materials"
-                          | "other"
-                      ) =>
-                        setExpenseForm((prev) => ({ ...prev, category: value }))
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="personnel">👥 Personnel</SelectItem>
-                        <SelectItem value="equipment">🖥️ Equipment</SelectItem>
-                        <SelectItem value="travel">✈️ Travel</SelectItem>
-                        <SelectItem value="materials">📦 Materials</SelectItem>
-                        <SelectItem value="other">📋 Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="expense-amount">Amount (USD) *</Label>
-                    <Input
-                      id="expense-amount"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={expenseForm.amount}
-                      onChange={(e) =>
-                        setExpenseForm((prev) => ({
-                          ...prev,
-                          amount: e.target.value,
-                        }))
-                      }
-                      placeholder="0.00"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="expense-description">Description *</Label>
-                  <Textarea
-                    id="expense-description"
-                    value={expenseForm.description}
-                    onChange={(e) =>
-                      setExpenseForm((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    placeholder="Describe the expense"
-                    rows={3}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="expense-date">Date *</Label>
-                  <Input
-                    id="expense-date"
-                    type="date"
-                    value={expenseForm.date}
-                    onChange={(e) =>
-                      setExpenseForm((prev) => ({
-                        ...prev,
-                        date: e.target.value,
-                      }))
-                    }
-                  />
-                </div>
-                <FileUploadComponent
-                  files={receiptFiles}
-                  onFilesChange={setReceiptFiles}
-                  maxFiles={1}
-                  label="Upload Receipt *"
-                  description="PDF, JPG, PNG up to 10MB"
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  required
-                />
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowExpenseDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleAddExpense} disabled={isLoading}>
-                  <Receipt className="w-4 h-4 mr-2" />
-                  {isLoading ? "Adding..." : "Add Expense"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
-          <Dialog
-            open={showApprovalDialog}
-            onOpenChange={setShowApprovalDialog}
-          >
-            <DialogTrigger asChild>
-              <Button className="bg-green-600 hover:bg-green-700">
-                <Upload className="w-4 h-4 mr-2" />
-                Submit for Approval
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Submit Budget for Approval</DialogTitle>
-                <DialogDescription>
-                  Submit forms BM05 + BM06 for budget approval
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h4 className="font-medium text-blue-900 mb-2">
-                    Forms to be submitted:
-                  </h4>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• BM05 - Budget Request Form</li>
-                    <li>• BM06 - Expense Report</li>
-                  </ul>
-                </div>
-                <div className="space-y-2">
-                  <Label>Current Budget Status</Label>
-                  <div className="text-sm text-muted-foreground">
-                    <p>Total Budget: ${budget.total.toLocaleString()}</p>
-                    <p>
-                      Spent: ${budget.spent.toLocaleString()} ({utilization}%)
-                    </p>
-                    <p>
-                      Remaining: $
-                      {(budget.total - budget.spent).toLocaleString()}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowApprovalDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button onClick={handleSubmitForApproval} disabled={isLoading}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  {isLoading ? "Submitting..." : "Submit for Approval"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {/* Form Badges */}
-      <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
-          <Badge
-            variant="outline"
-            className="bg-green-50 text-green-700 border-green-200"
-          >
-            <DollarSign className="w-3 h-3 mr-1" />
-            BM05
-          </Badge>
-          <span className="text-sm text-muted-foreground">Budget Request</span>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Badge
-            variant="outline"
-            className="bg-blue-50 text-blue-700 border-blue-200"
-          >
-            <Receipt className="w-3 h-3 mr-1" />
-            BM06
-          </Badge>
-          <span className="text-sm text-muted-foreground">Expense Report</span>
-        </div>
-      </div>
-
       {/* Budget Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Budget Overview</CardTitle>
+          <CardDescription>
+            Project budget allocation and expense tracking
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
               <DollarSign className="w-5 h-5 text-green-600" />
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xl font-bold">
                   ${budget.total.toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">Total Budget</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
               <TrendingUp className="w-5 h-5 text-blue-600" />
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xl font-bold">
                   ${budget.spent.toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">
@@ -528,35 +249,27 @@ const BudgetTab: React.FC = () => {
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
               <PieChart className="w-5 h-5 text-purple-600" />
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-xl font-bold">
                   ${(budget.total - budget.spent).toLocaleString()}
                 </p>
                 <p className="text-sm text-muted-foreground">Remaining</p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
               <CheckCircle className="w-5 h-5 text-green-600" />
               <div>
-                <p className="text-2xl font-bold">{stats.approved}</p>
+                <p className="text-xl font-bold">{stats.approved}</p>
                 <p className="text-sm text-muted-foreground">
                   Approved Expenses
                 </p>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Budget Allocation */}
       <Card>
@@ -572,7 +285,7 @@ const BudgetTab: React.FC = () => {
                   (e) => e.category === category && e.status === "Approved"
                 )
                 .reduce((sum, e) => sum + e.amount, 0);
-              const percentage = Math.round((spent / amount) * 100);
+              const percentage = Math.round((spent / (amount as number)) * 100);
 
               return (
                 <div key={category} className="space-y-2">
@@ -583,7 +296,8 @@ const BudgetTab: React.FC = () => {
                       </span>
                       <span className="font-medium capitalize">{category}</span>
                       <Badge className={getCategoryColor(category)}>
-                        ${spent.toLocaleString()} / ${amount.toLocaleString()}
+                        ${spent.toLocaleString()} / $
+                        {(amount as number).toLocaleString()}
                       </Badge>
                     </div>
                     <span className="text-sm text-muted-foreground">
@@ -621,7 +335,7 @@ const BudgetTab: React.FC = () => {
                 <TableHead>Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Approved By</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right">Receipt</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -648,15 +362,20 @@ const BudgetTab: React.FC = () => {
                   <TableCell>${expense.amount.toLocaleString()}</TableCell>
                   <TableCell>{formatDate(expense.date)}</TableCell>
                   <TableCell>
-                    <StatusBadge status={expense.status} />
+                    <Badge
+                      variant="outline"
+                      className={getStatusColor(expense.status)}
+                    >
+                      {expense.status}
+                    </Badge>
                   </TableCell>
                   <TableCell>{expense.approvedBy || "-"}</TableCell>
                   <TableCell className="text-right">
                     {expense.receipt && (
-                      <Button variant="outline" size="sm">
+                      <Badge variant="outline" className="text-xs">
                         <Receipt className="w-3 h-3 mr-1" />
                         Receipt
-                      </Button>
+                      </Badge>
                     )}
                   </TableCell>
                 </TableRow>
