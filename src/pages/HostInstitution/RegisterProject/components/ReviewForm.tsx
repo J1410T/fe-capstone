@@ -8,22 +8,14 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, CheckCircle } from "lucide-react";
 
 interface FormData {
   title: string;
   field: string;
-  startDate: string;
-  endDate: string;
-  budget: string;
-  manager: string;
-  institution: string;
-  department: string;
-  description: string;
-  objectives: string;
-  methodology: string;
-  expectedOutcomes: string;
+  type: string;
+  target: string;
+  overview: string;
 }
 
 interface ResearchField {
@@ -76,83 +68,28 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Start Date
+                Project Type
               </p>
-              <p className="text-base">{formData.startDate}</p>
+              <p className="text-base">{formData.type}</p>
             </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                End Date
-              </p>
-              <p className="text-base">{formData.endDate}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Estimated Budget
-              </p>
-              <p className="text-base">{formData.budget}</p>
-            </div>
-          </div>
 
-          <Separator />
-
-          <h3 className="text-lg font-medium">Project Manager</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Principal Investigator
-              </p>
-              <p className="text-base">{formData.manager}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Institution
-              </p>
-              <p className="text-base">{formData.institution}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Department
-              </p>
-              <p className="text-base">{formData.department}</p>
-            </div>
-          </div>
-
-          <Separator />
-
-          <h3 className="text-lg font-medium">Research Details</h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Project Description
-              </p>
-              <p className="text-base whitespace-pre-line">
-                {formData.description}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Research Objectives
-              </p>
-              <p className="text-base whitespace-pre-line">
-                {formData.objectives}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Methodology
-              </p>
-              <p className="text-base whitespace-pre-line">
-                {formData.methodology}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Expected Outcomes
-              </p>
-              <p className="text-base whitespace-pre-line">
-                {formData.expectedOutcomes}
-              </p>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Project Description
+                </p>
+                <p className="text-base whitespace-pre-line">
+                  {formData.overview}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Research Target
+                </p>
+                <p className="text-base whitespace-pre-line">
+                  {formData.target}
+                </p>
+              </div>
             </div>
           </div>
         </div>

@@ -17,15 +17,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import {
-  Calendar,
-  DollarSign,
-  Users,
-  Building,
-  GraduationCap,
-  ArrowRight,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { Textarea } from "@/components/ui";
 
 interface ResearchField {
   id: string;
@@ -36,18 +29,17 @@ interface ResearchField {
 interface FormData {
   title: string;
   field: string;
-  startDate: string;
-  endDate: string;
-  budget: string;
-  manager: string;
-  institution: string;
-  department: string;
+  overview: string;
+  target: string;
+  type: string;
 }
 
 interface ProjectInfoFormProps {
   formData: FormData;
   researchFields: ResearchField[];
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onInputChange: (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void;
   onSelectChange: (name: string, value: string) => void;
   onNextStep: () => void;
 }
@@ -104,108 +96,51 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="startDate"
-                  name="startDate"
-                  type="date"
-                  className="pl-10"
-                  value={formData.startDate}
-                  onChange={onInputChange}
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <div className="relative">
-                <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="endDate"
-                  name="endDate"
-                  type="date"
-                  className="pl-10"
-                  value={formData.endDate}
-                  onChange={onInputChange}
-                  required
-                />
-              </div>
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="field">Project Type</Label>
+            <Select
+              value={formData.type}
+              onValueChange={(value) => onSelectChange("type", value)}
+              required
+            >
+              <SelectTrigger id="type">
+                <SelectValue placeholder="Select a project type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value=" Đề tài nghiên cứu ứng dụn">
+                  Đề tài nghiên cứu ứng dụng
+                </SelectItem>
+                <SelectItem value="Đề tài nghiên cứu cơ bản">
+                  Đề tài nghiên cứu cơ bản
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="budget">Estimated Budget</Label>
-            <div className="relative">
-              <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="budget"
-                name="budget"
-                placeholder="Enter the estimated budget"
-                className="pl-10"
-                value={formData.budget}
-                onChange={onInputChange}
-                required
-              />
-            </div>
+            <Label htmlFor="description">Project Overview</Label>
+            <Textarea
+              id="overview"
+              name="overview"
+              placeholder="Provide a detailed description of your research project"
+              rows={4}
+              value={formData.overview}
+              onChange={onInputChange}
+              required
+            />
           </div>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-4">
-          <h3 className="text-lg font-medium">Project Manager</h3>
 
           <div className="space-y-2">
-            <Label htmlFor="manager">Principal Investigator</Label>
-            <div className="relative">
-              <Users className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="manager"
-                name="manager"
-                placeholder="Enter the name of the principal investigator"
-                className="pl-10"
-                value={formData.manager}
-                onChange={onInputChange}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="institution">Institution</Label>
-              <div className="relative">
-                <Building className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="institution"
-                  name="institution"
-                  placeholder="Enter your institution"
-                  className="pl-10"
-                  value={formData.institution}
-                  onChange={onInputChange}
-                  required
-                />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
-              <div className="relative">
-                <GraduationCap className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="department"
-                  name="department"
-                  placeholder="Enter your department"
-                  className="pl-10"
-                  value={formData.department}
-                  onChange={onInputChange}
-                  required
-                />
-              </div>
-            </div>
+            <Label htmlFor="target">Project Target</Label>
+            <Textarea
+              id="target"
+              name="target"
+              placeholder="Provide a detailed target of your research project"
+              rows={4}
+              value={formData.target}
+              onChange={onInputChange}
+              required
+            />
           </div>
         </div>
       </CardContent>
