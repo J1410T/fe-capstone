@@ -105,3 +105,62 @@ export interface RoleChangeConfirmation {
   newRole: MemberRole;
   targetMember: TeamMember;
 }
+
+// Milestone and Task types
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  assignedTo?: string;
+  status: "To Do" | "In Progress" | "Completed";
+  priority: "Low" | "Medium" | "High";
+  dueDate: string;
+  createdAt: string;
+  completedAt?: string;
+  evaluatedBy?: string;
+  evaluation?: string;
+}
+
+export interface Milestone {
+  id: string;
+  name: string;
+  description: string;
+  deadline: string;
+  status: "Not Started" | "In Progress" | "Completed" | "Overdue";
+  progress: number;
+  tasks: Task[];
+}
+
+// Progress Report types
+export interface ProgressReport {
+  id: string;
+  formCode?: string;
+  title: string;
+  description?: string;
+  period?: string;
+  submittedAt: string;
+  submittedBy?: string;
+  status:
+    | "Draft"
+    | "Submitted"
+    | "Under Review"
+    | "Approved"
+    | "Rejected"
+    | "Processing";
+  feedback?: string;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  approvedBy?: string;
+  file?: string;
+  attachments?: FileUpload[];
+}
+
+// PI User type for team management
+export interface PIUser {
+  id: string;
+  name: string;
+  email: string;
+  role: "Normal" | "Secretary" | "Leader";
+  joinedAt: string;
+  avatar?: string;
+}

@@ -33,7 +33,10 @@ export const formatFileSize = (bytes: number): string => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 };
 
-export const calculateBudgetUtilization = (spent: number, total: number): number => {
+export const calculateBudgetUtilization = (
+  spent: number,
+  total: number
+): number => {
   if (total === 0) return 0;
   return Math.round((spent / total) * 100);
 };
@@ -106,7 +109,10 @@ export const getStatusColor = (status: string): string => {
   }
 };
 
-export const sortByDate = <T extends { date: string }>(items: T[], ascending = false): T[] => {
+export const sortByDate = <T extends { date: string }>(
+  items: T[],
+  ascending = false
+): T[] => {
   return [...items].sort((a, b) => {
     const dateA = new Date(a.date).getTime();
     const dateB = new Date(b.date).getTime();
@@ -119,7 +125,9 @@ export const filterByStatus = <T extends { status: string }>(
   status: string
 ): T[] => {
   if (status === "all") return items;
-  return items.filter((item) => item.status.toLowerCase() === status.toLowerCase());
+  return items.filter(
+    (item) => item.status.toLowerCase() === status.toLowerCase()
+  );
 };
 
 export const searchItems = <T extends Record<string, any>>(
@@ -128,11 +136,23 @@ export const searchItems = <T extends Record<string, any>>(
   searchFields: (keyof T)[]
 ): T[] => {
   if (!searchTerm.trim()) return items;
-  
+
   const lowercaseSearch = searchTerm.toLowerCase();
   return items.filter((item) =>
     searchFields.some((field) =>
       String(item[field]).toLowerCase().includes(lowercaseSearch)
     )
   );
+};
+
+// Calculate milestone progress based on task completion
+export const calculateMilestoneProgress = (
+  tasks: Array<{ status: string }>
+): number => {
+  if (tasks.length === 0) return 0;
+
+  const completedTasks = tasks.filter(
+    (task) => task.status === "Completed"
+  ).length;
+  return Math.round((completedTasks / tasks.length) * 100);
 };

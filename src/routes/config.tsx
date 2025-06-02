@@ -48,10 +48,6 @@ import GeneralComingSoon from "../pages/ComingSoon";
 // Principal Investigator Pages
 import PIProfile from "@/pages/PrincipalInvestigator/Profile";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
-// import ResearchGroup from "@/pages/PrincipalInvestigator/ResearchGroup";
-import Milestones from "@/pages/PrincipalInvestigator/Milestones";
-import ProgressReports from "@/pages/PrincipalInvestigator/ProgressReports";
-// import Budget from "@/pages/PrincipalInvestigator/Budget";
 import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
 import Meetings from "@/pages/PrincipalInvestigator/Meetings";
 import ProjectDetail from "@/pages/ProjectDetail";
@@ -187,10 +183,6 @@ export const routes: RouteObject[] = [
           {
             path: "tasks",
             element: <UserTaskManagement />,
-          },
-          {
-            path: "milestones",
-            element: <Milestones />,
           },
           {
             path: "dashboard",
@@ -348,24 +340,12 @@ export const routes: RouteObject[] = [
             element: <PIProfile />,
           },
           {
-            path: "milestones",
-            element: <Milestones />,
-          },
-          {
-            path: "progress-reports",
-            element: <ProgressReports />,
-          },
-          {
             path: "dashboard",
             element: <PIDashboard />,
           },
           {
             path: "meetings",
             element: <Meetings />,
-          },
-          {
-            path: "tasks",
-            element: <UserTaskManagement />,
           },
           {
             path: "my-projects",

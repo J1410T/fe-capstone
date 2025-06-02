@@ -56,15 +56,15 @@ const menuItemsByRole = {
       path: "/host/register-project",
       icon: FileText,
     },
-    { name: "My Projects", path: "/host/my-projects", icon: Briefcase },
+    // { name: "My Projects", path: "/host/my-projects", icon: Briefcase },
     { name: "History", path: "/host/history", icon: History },
   ],
   [UserRole.PRINCIPAL_INVESTIGATOR]: [
     { name: "Dashboard", path: "/pi/dashboard", icon: LayoutDashboard },
     { name: "Projects", path: "/pi/projects", icon: FolderOpen },
-    { name: "Meetings", path: "/pi/meetings", icon: Calendar },
-    { name: "Progress", path: "/pi/progress-reports", icon: FileText },
     { name: "My Projects", path: "/pi/my-projects", icon: Briefcase },
+    { name: "Meetings", path: "/pi/meetings", icon: Calendar },
+    // { name: "Progress", path: "/pi/progress-reports", icon: FileText },
   ],
   [UserRole.APPRAISAL_COUNCIL]: [
     { name: "Home", path: "/home", icon: Home },

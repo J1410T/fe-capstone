@@ -9,16 +9,16 @@ import {
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
-  DocumentsTab,
   OverviewTab,
   ProjectHeader,
   ProjectProgress,
-  TasksTab,
   TeamTab,
 } from "./components";
 import BudgetTab from "./components/BudgetTab";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { RequestAccessForm } from "./components/RequestAccessForm";
+import ProgressTab from "./components/ProgressTab";
+import MilestoneTab from "./components/MilestoneTab";
 
 const projectData = {
   id: 1,
@@ -235,11 +235,6 @@ function ProjectDetail() {
     fetchProjectDetails();
   }, [projectId]);
 
-  const handleDownloadDocument = (documentId: number) => {
-    // Handle document download
-    console.log(`Downloading document ${documentId}`);
-  };
-
   const handleRequestAccess = (requestData: {
     name: string;
     email: string;
@@ -345,13 +340,13 @@ function ProjectDetail() {
           )}
           {visibleTabs.includes("tasks") && (
             <TabsTrigger value="tasks" className="text-xs sm:text-sm">
-              Tasks
+              Milestone
             </TabsTrigger>
           )}
           {visibleTabs.includes("documents") && (
             <TabsTrigger value="documents" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">Documents</span>
-              <span className="sm:hidden">Docs</span>
+              <span className="hidden sm:inline">Progress</span>
+              <span className="sm:hidden">Progress</span>
             </TabsTrigger>
           )}
           {visibleTabs.includes("budget") && (
@@ -403,20 +398,17 @@ function ProjectDetail() {
           </TabsContent>
         )}
 
-        {/* Tasks Tab */}
+        {/* Tasks/Milestone Tab */}
         {visibleTabs.includes("tasks") && (
           <TabsContent value="tasks" className="space-y-4">
-            <TasksTab tasks={project.tasks} />
+            <MilestoneTab />
           </TabsContent>
         )}
 
-        {/* Documents Tab */}
+        {/* Documents/Progress Tab */}
         {visibleTabs.includes("documents") && (
           <TabsContent value="documents" className="space-y-4">
-            <DocumentsTab
-              documents={project.documents}
-              onDownload={handleDownloadDocument}
-            />
+            <ProgressTab />
           </TabsContent>
         )}
 

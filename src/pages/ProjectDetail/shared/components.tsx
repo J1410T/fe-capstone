@@ -7,20 +7,30 @@ import { Upload, X, File } from "lucide-react";
 import { FileUpload } from "./types";
 
 interface StatusBadgeProps {
-  status: "Pending" | "Approved" | "Rejected";
+  status: string;
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Approved":
+    switch (status.toLowerCase()) {
+      case "approved":
+      case "completed":
         return "bg-green-100 text-green-800 border-green-200";
-      case "Pending":
+      case "pending":
+      case "in progress":
+      case "processing":
+      case "under review":
+      case "submitted":
         return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "Rejected":
+      case "rejected":
+      case "overdue":
         return "bg-red-100 text-red-800 border-red-200";
-      default:
+      case "draft":
+      case "not started":
+      case "to do":
         return "bg-gray-100 text-gray-800 border-gray-200";
+      default:
+        return "bg-blue-100 text-blue-800 border-blue-200";
     }
   };
 
@@ -111,7 +121,7 @@ export const FileUploadComponent: React.FC<FileUploadProps> = ({
       <Label>
         {label} {required && <span className="text-red-500">*</span>}
       </Label>
-      
+
       <div
         className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
           isDragOver
@@ -172,3 +182,6 @@ export const FileUploadComponent: React.FC<FileUploadProps> = ({
     </div>
   );
 };
+
+// Export alias for easier importing
+export { FileUploadComponent as FileUpload };

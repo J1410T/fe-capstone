@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
@@ -218,67 +219,67 @@ const BudgetTab: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Budget Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Budget Overview</CardTitle>
-          <CardDescription>
-            Project budget allocation and expense tracking
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
-              <DollarSign className="w-5 h-5 text-green-600" />
-              <div>
-                <p className="text-xl font-bold">
-                  ${budget.total.toLocaleString()}
-                </p>
-                <p className="text-sm text-muted-foreground">Total Budget</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
-              <div>
-                <p className="text-xl font-bold">
-                  ${budget.spent.toLocaleString()}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Spent ({utilization}%)
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
-              <PieChart className="w-5 h-5 text-purple-600" />
-              <div>
-                <p className="text-xl font-bold">
-                  ${(budget.total - budget.spent).toLocaleString()}
-                </p>
-                <p className="text-sm text-muted-foreground">Remaining</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
-              <CheckCircle className="w-5 h-5 text-green-600" />
-              <div>
-                <p className="text-xl font-bold">{stats.approved}</p>
-                <p className="text-sm text-muted-foreground">
-                  Approved Expenses
-                </p>
-              </div>
+    <Card className="shadow-sm">
+      <CardHeader className="pb-4 sm:pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
+              Budget Overview
+            </CardTitle>
+            <CardDescription className="text-sm sm:text-base mt-1">
+              Project budget allocation and expense tracking
+            </CardDescription>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4 sm:space-y-6 pt-0">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
+            <DollarSign className="w-5 h-5 text-green-600" />
+            <div>
+              <p className="text-xl font-bold">
+                ${budget.total.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Total Budget</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+          <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
+            <TrendingUp className="w-5 h-5 text-blue-600" />
+            <div>
+              <p className="text-xl font-bold">
+                ${budget.spent.toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Spent ({utilization}%)
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
+            <PieChart className="w-5 h-5 text-purple-600" />
+            <div>
+              <p className="text-xl font-bold">
+                ${(budget.total - budget.spent).toLocaleString()}
+              </p>
+              <p className="text-sm text-muted-foreground">Remaining</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <div>
+              <p className="text-xl font-bold">{stats.approved}</p>
+              <p className="text-sm text-muted-foreground">Approved Expenses</p>
+            </div>
+          </div>
+        </div>
 
-      {/* Budget Allocation */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Budget Allocation</CardTitle>
-          <CardDescription>Breakdown of budget by category</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
+        <Separator className="my-4 sm:my-6" />
+
+        {/* Budget Allocation Section */}
+        <div>
+          <h3 className="text-sm sm:text-base font-medium text-gray-700 mb-3 sm:mb-4">
+            Budget Allocation
+          </h3>
+          <div className="space-y-3 sm:space-y-4">
             {Object.entries(budget.allocated).map(([category, amount]) => {
               const spent = budget.expenses
                 .filter(
@@ -294,13 +295,17 @@ const BudgetTab: React.FC = () => {
                       <span className="text-lg">
                         {getCategoryIcon(category)}
                       </span>
-                      <span className="font-medium capitalize">{category}</span>
-                      <Badge className={getCategoryColor(category)}>
+                      <span className="font-medium capitalize text-sm sm:text-base">
+                        {category}
+                      </span>
+                      <Badge
+                        className={`${getCategoryColor(category)} text-xs`}
+                      >
                         ${spent.toLocaleString()} / $
                         {(amount as number).toLocaleString()}
                       </Badge>
                     </div>
-                    <span className="text-sm text-muted-foreground">
+                    <span className="text-xs sm:text-sm text-muted-foreground">
                       {percentage}%
                     </span>
                   </div>
@@ -314,83 +319,94 @@ const BudgetTab: React.FC = () => {
               );
             })}
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Expenses Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Expense History</CardTitle>
-          <CardDescription>
-            Track all submitted expenses and their approval status
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Description</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Approved By</TableHead>
-                <TableHead className="text-right">Receipt</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {budget.expenses.map((expense) => (
-                <TableRow key={expense.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{expense.description}</p>
-                      {expense.feedback && (
-                        <p className="text-sm text-red-600 mt-1">
-                          {expense.feedback}
-                        </p>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <span>{getCategoryIcon(expense.category)}</span>
-                      <Badge className={getCategoryColor(expense.category)}>
-                        {expense.category}
-                      </Badge>
-                    </div>
-                  </TableCell>
-                  <TableCell>${expense.amount.toLocaleString()}</TableCell>
-                  <TableCell>{formatDate(expense.date)}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={getStatusColor(expense.status)}
-                    >
-                      {expense.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{expense.approvedBy || "-"}</TableCell>
-                  <TableCell className="text-right">
-                    {expense.receipt && (
-                      <Badge variant="outline" className="text-xs">
-                        <Receipt className="w-3 h-3 mr-1" />
-                        Receipt
-                      </Badge>
-                    )}
-                  </TableCell>
+        <Separator className="my-4 sm:my-6" />
+
+        {/* Expenses Table Section */}
+        <div>
+          <h3 className="text-sm sm:text-base font-medium text-gray-700 mb-3 sm:mb-4">
+            Recent Expenses
+          </h3>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="min-w-[200px]">Description</TableHead>
+                  <TableHead className="min-w-[100px]">Category</TableHead>
+                  <TableHead className="min-w-[80px]">Amount</TableHead>
+                  <TableHead className="min-w-[100px]">Date</TableHead>
+                  <TableHead className="min-w-[80px]">Status</TableHead>
+                  <TableHead className="text-right min-w-[80px]">
+                    Receipt
+                  </TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {budget.expenses.slice(0, 5).map((expense) => (
+                  <TableRow key={expense.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium text-sm sm:text-base break-words">
+                          {expense.description}
+                        </p>
+                        {expense.feedback && (
+                          <p className="text-xs sm:text-sm text-red-600 mt-1">
+                            {expense.feedback}
+                          </p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-1 sm:space-x-2">
+                        <span className="text-sm">
+                          {getCategoryIcon(expense.category)}
+                        </span>
+                        <Badge
+                          className={`${getCategoryColor(
+                            expense.category
+                          )} text-xs`}
+                        >
+                          {expense.category}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      ${expense.amount.toLocaleString()}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {formatDate(expense.date)}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={`${getStatusColor(expense.status)} text-xs`}
+                      >
+                        {expense.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {expense.receipt && (
+                        <Badge variant="outline" className="text-xs">
+                          <Receipt className="w-3 h-3 mr-1" />
+                          <span className="hidden sm:inline">Receipt</span>
+                        </Badge>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
 
-          {budget.expenses.length === 0 && (
-            <p className="text-muted-foreground text-center py-8">
-              No expenses recorded yet.
-            </p>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+            {budget.expenses.length === 0 && (
+              <p className="text-muted-foreground text-center py-8 text-sm sm:text-base">
+                No expenses recorded yet.
+              </p>
+            )}
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
