@@ -29,7 +29,6 @@ import CouncilPIApproval from "../pages/Council/PIApproval";
 import PendingEvaluations from "../pages/Council/Evaluations";
 import EvaluationDetail from "../pages/Council/Evaluations/EvaluationDetail";
 import EvaluationForm from "../pages/Council/Evaluations/EvaluationForm";
-import CouncilMeetings from "../pages/Council/Meetings";
 import ScheduleMeeting from "../pages/Council/Meetings/ScheduleMeeting";
 import MeetingMinutes from "../pages/Council/Meetings/MeetingMinutes";
 import ApprovalInterface from "../pages/Council/Approvals";
@@ -49,9 +48,9 @@ import GeneralComingSoon from "../pages/ComingSoon";
 import PIProfile from "@/pages/PrincipalInvestigator/Profile";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
 import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
-import Meetings from "@/pages/PrincipalInvestigator/Meetings";
 import FormRegister from "@/pages/PrincipalInvestigator/FormRegister";
 import ProjectDetail from "@/pages/ProjectDetail";
+import Meetings from "@/pages/Council/Meetings";
 
 /**
  * Main application routes configuration
@@ -295,7 +294,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "meetings",
-            element: <CouncilMeetings />,
+            element: <Meetings />,
           },
           {
             path: "meetings/schedule",
@@ -347,6 +346,14 @@ export const routes: RouteObject[] = [
           {
             path: "meetings",
             element: <Meetings />,
+          },
+          {
+            path: "meetings/schedule",
+            element: <ScheduleMeeting />,
+          },
+          {
+            path: "meeting/:id",
+            element: <MeetingMinutes />,
           },
           {
             path: "forms",
