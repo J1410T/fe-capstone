@@ -36,9 +36,11 @@ import {
 } from "lucide-react";
 import { ProgressReport } from "../shared/types";
 import { formatDateTime } from "../shared/utils";
+import { UserRole, useAuth } from "@/contexts/AuthContext";
 
 const ProgressTab: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [reports, setReports] = useState<ProgressReport[]>([]);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [selectedReport, setSelectedReport] = useState<ProgressReport | null>(
@@ -103,7 +105,11 @@ const ProgressTab: React.FC = () => {
   };
 
   const handleCreateForm = () => {
-    navigate("/pi/progress-report-form");
+    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+      navigate("/pi/forms");
+    } else if (user?.role === UserRole.MEMBER) {
+      navigate("/member/forms");
+    }
   };
 
   const getStatusIcon = (status: string) => {

@@ -50,6 +50,7 @@ import PIProfile from "@/pages/PrincipalInvestigator/Profile";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
 import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
 import Meetings from "@/pages/PrincipalInvestigator/Meetings";
+import FormRegister from "@/pages/PrincipalInvestigator/FormRegister";
 import ProjectDetail from "@/pages/ProjectDetail";
 
 /**
@@ -201,8 +202,8 @@ export const routes: RouteObject[] = [
             element: <GeneralComingSoon />,
           },
           {
-            path: "forms/*",
-            element: <GeneralComingSoon />,
+            path: "forms",
+            element: <FormRegister />,
           },
           {
             path: "my-projects",
@@ -346,6 +347,10 @@ export const routes: RouteObject[] = [
           {
             path: "meetings",
             element: <Meetings />,
+          },
+          {
+            path: "forms",
+            element: <FormRegister />,
           },
           {
             path: "my-projects",
