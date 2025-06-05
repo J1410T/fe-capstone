@@ -23,8 +23,12 @@ import MilestoneTab from "./components/MilestoneTab";
 const projectData = {
   id: 1,
   title: "Machine Learning for Medical Diagnosis",
+  category: "Basic scientific research topic",
+  type: "Medical",
   description:
     "This research project aims to develop AI algorithms for early disease detection and diagnosis, focusing on improving healthcare outcomes through machine learning and data analysis.",
+  objective:
+    "To develop and validate machine learning algorithms that can accurately detect early signs of diseases from medical imaging and patient data, ultimately improving diagnostic accuracy and patient outcomes in healthcare settings.",
   pi: "Dr. Jane Smith",
   department: "Computer Science",
   year: "2023",
@@ -47,28 +51,6 @@ const projectData = {
     "Design user-friendly interfaces for healthcare professionals",
     "Validate system accuracy through clinical trials",
   ],
-  timeline: [
-    {
-      phase: "Planning & Requirements",
-      duration: "Jan 2023 - Feb 2023",
-      status: "Completed",
-    },
-    {
-      phase: "Data Collection & Analysis",
-      duration: "Mar 2023 - May 2023",
-      status: "Completed",
-    },
-    {
-      phase: "Algorithm Development",
-      duration: "Jun 2023 - Sep 2023",
-      status: "In Progress",
-    },
-    {
-      phase: "Testing & Validation",
-      duration: "Oct 2023 - Dec 2023",
-      status: "Pending",
-    },
-  ],
   team: [
     {
       name: "Dr. Jane Smith",
@@ -77,13 +59,13 @@ const projectData = {
       email: "jane.smith@example.com",
     },
     {
-      name: "Dr. Michael Johnson",
+      name: "Michael Johnson",
       role: "Leader",
       department: "Computer Science",
       email: "michael.johnson@example.com",
     },
     {
-      name: "Dr. Sarah Williams",
+      name: "Sarah Williams",
       role: "Secretary",
       department: "Medicine",
       email: "sarah.williams@example.com",
@@ -360,9 +342,10 @@ function ProjectDetail() {
         {visibleTabs.includes("overview") && (
           <TabsContent value="overview" className="space-y-4">
             <OverviewTab
+              category={project.category}
+              type={project.type}
               description={project.description}
               objectives={project.objectives}
-              timeline={project.timeline}
               showEnrollButton={shouldShowEnrollButton}
               onEnrollProject={() =>
                 navigate("/pi/project-enroll-form", {

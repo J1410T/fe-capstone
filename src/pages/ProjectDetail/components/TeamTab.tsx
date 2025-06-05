@@ -26,7 +26,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Briefcase, Mail, UserPlus, Edit, UserMinus } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Briefcase,
+  Mail,
+  UserPlus,
+  Edit,
+  UserMinus,
+  MoreVertical,
+} from "lucide-react";
 import { MemberRole } from "../shared/types";
 import { toast } from "sonner";
 
@@ -50,6 +63,8 @@ export const TeamTab: React.FC<TeamTabProps> = ({
   const [showAddMemberDialog, setShowAddMemberDialog] = useState(false);
   const [showEditRoleDialog, setShowEditRoleDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showEditConfirmDialog, setShowEditConfirmDialog] = useState(false);
+  const [showDeleteConfirmDialog, setShowDeleteConfirmDialog] = useState(false);
   const [selectedMember, setSelectedMember] = useState<TeamMember | null>(null);
   const [newMemberEmail, setNewMemberEmail] = useState("");
   const [newMemberRole, setNewMemberRole] = useState<MemberRole>("Member");
@@ -83,27 +98,51 @@ export const TeamTab: React.FC<TeamTabProps> = ({
     setShowAddMemberDialog(false);
   };
 
-  const handleEditRole = (member: TeamMember, newRole: MemberRole) => {
-    if (newRole === "Leader" || newRole === "Secretary") {
-      const existingMember = team.find(
-        (m) => m.role === newRole && m.email !== member.email
-      );
-      if (existingMember) {
-        setSelectedMember(existingMember);
-        setEditingRole(newRole);
-        setShowConfirmDialog(true);
-        return;
-      }
-    }
-
-    // Edit role logic here
-    toast.success(`Role updated to: ${newRole}`);
-    setShowEditRoleDialog(false);
+  const handleEditClick = (member: TeamMember) => {
+    setSelectedMember(member);
+    setEditingRole(member.role as MemberRole);
+    setShowEditRoleDialog(true); // Directly open edit dialog
   };
 
-  const handleRemoveMember = (member: TeamMember) => {
-    // Remove member logic here
-    toast.success(`${member.name} removed from project`);
+  const handleDeleteClick = (member: TeamMember) => {
+    setSelectedMember(member);
+    setShowDeleteConfirmDialog(true);
+  };
+
+  const handleSaveEdit = () => {
+    // Show confirmation dialog when Save is clicked
+    setShowEditRoleDialog(false);
+    setShowEditConfirmDialog(true);
+  };
+
+  const handleConfirmEdit = () => {
+    if (selectedMember) {
+      // Check for role conflicts first
+      if (editingRole === "Leader" || editingRole === "Secretary") {
+        const existingMember = team.find(
+          (m) => m.role === editingRole && m.email !== selectedMember.email
+        );
+        if (existingMember) {
+          setShowEditConfirmDialog(false);
+          setShowConfirmDialog(true);
+          return;
+        }
+      }
+
+      // Apply role change
+      toast.success(`${selectedMember.name}'s role updated to ${editingRole}`);
+      setShowEditConfirmDialog(false);
+      setSelectedMember(null);
+    }
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedMember) {
+      // Remove member logic here
+      toast.success(`${selectedMember.name} removed from project`);
+      setShowDeleteConfirmDialog(false);
+      setSelectedMember(null);
+    }
   };
 
   const getRoleColor = (role: string) => {
@@ -227,37 +266,44 @@ export const TeamTab: React.FC<TeamTabProps> = ({
                 key={index}
                 className="group relative bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md hover:border-gray-300 transition-all duration-200"
               >
-                {/* Action buttons for PI */}
-                {showEditingButtons && (
-                  <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                    {canEditRole(member.role) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 sm:h-7 sm:w-7 p-0 hover:bg-blue-50"
-                        onClick={() => {
-                          setSelectedMember(member);
-                          setEditingRole(member.role as MemberRole);
-                          setShowEditRoleDialog(true);
-                        }}
-                      >
-                        <Edit className="h-3 w-3 text-blue-600" />
-                      </Button>
-                    )}
-                    {canRemoveMember(member.role) && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 sm:h-7 sm:w-7 p-0 hover:bg-red-50"
-                        onClick={() => handleRemoveMember(member)}
-                      >
-                        <UserMinus className="h-3 w-3 text-red-600" />
-                      </Button>
-                    )}
-                  </div>
-                )}
+                {/* Action dropdown for PI */}
+                {showEditingButtons &&
+                  (canEditRole(member.role) ||
+                    canRemoveMember(member.role)) && (
+                    <div className="absolute top-2 sm:top-3 right-2 sm:right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 sm:h-7 sm:w-7 p-0 hover:bg-gray-100"
+                          >
+                            <MoreVertical className="h-3 w-3 text-gray-600" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                          {canEditRole(member.role) && (
+                            <DropdownMenuItem
+                              onClick={() => handleEditClick(member)}
+                            >
+                              <Edit className="h-3 w-3 mr-2 text-blue-600" />
+                              Edit
+                            </DropdownMenuItem>
+                          )}
+                          {canRemoveMember(member.role) && (
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteClick(member)}
+                            >
+                              <UserMinus className="h-3 w-3 mr-2 text-red-600" />
+                              Delete
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  )}
 
-                <div className="flex items-start gap-2 sm:gap-3 mb-3">
+                <div className="flex items-start gap-2 sm:gap-3 mb-3 ">
                   <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                     <span className="text-base sm:text-lg">
                       {getRoleIcon(member.role)}
@@ -333,13 +379,7 @@ export const TeamTab: React.FC<TeamTabProps> = ({
             >
               Cancel
             </Button>
-            <Button
-              onClick={() =>
-                selectedMember && handleEditRole(selectedMember, editingRole)
-              }
-            >
-              Update Role
-            </Button>
+            <Button onClick={handleSaveEdit}>Save</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -379,6 +419,57 @@ export const TeamTab: React.FC<TeamTabProps> = ({
               }}
             >
               Confirm Change
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Confirmation Dialog */}
+      <Dialog
+        open={showEditConfirmDialog}
+        onOpenChange={setShowEditConfirmDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Edit</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to edit {selectedMember?.name}'s role?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowEditConfirmDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmEdit}>Confirm Edit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={showDeleteConfirmDialog}
+        onOpenChange={setShowDeleteConfirmDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Delete</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove {selectedMember?.name} from the
+              project? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirmDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleConfirmDelete}>
+              Delete Member
             </Button>
           </DialogFooter>
         </DialogContent>
