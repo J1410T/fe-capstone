@@ -47,7 +47,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     } else if (user?.role === UserRole.HOST_INSTITUTION) {
       return <Navigate to="/host/dashboard" replace />;
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
-      return <Navigate to="/pi/dashboard" replace />;
+      return <Navigate to="/home" replace />;
     } else {
       return <Navigate to="/home" replace />;
     }
@@ -58,7 +58,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     if (user?.role === UserRole.STAFF) {
       return <Navigate to="/staff/dashboard" replace />;
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
-      return <Navigate to="/pi/dashboard" replace />;
+      return <Navigate to="/home" replace />;
     } else {
       return <Navigate to="/home" replace />;
     }

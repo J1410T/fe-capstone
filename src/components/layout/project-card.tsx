@@ -67,6 +67,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       return `/pi/project/${id}`;
     } else if (user?.role === UserRole.HOST_INSTITUTION) {
       return `/host/project/${id}`;
+    } else if (user?.role === UserRole.APPRAISAL_COUNCIL) {
+      return `/council/project/${id}`;
     } else {
       // Default to member project details for other roles
       return `/member/project/${id}`;

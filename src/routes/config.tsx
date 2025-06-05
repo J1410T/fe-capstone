@@ -308,6 +308,10 @@ export const routes: RouteObject[] = [
             path: "approvals",
             element: <ApprovalInterface />,
           },
+          {
+            path: "project/:projectId",
+            element: <ProjectDetail />,
+          },
         ],
       },
       // Principal Investigator routes
