@@ -29,7 +29,8 @@ import { Search } from "lucide-react";
 interface Topic {
   id: number;
   title: string;
-  department: string;
+  type: string;
+  category: string;
   createdAt: string;
   applicants: number;
   status: string;
@@ -39,8 +40,10 @@ interface TopicsTabProps {
   topics: Topic[];
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  selectedDepartment: string;
-  onDepartmentChange: (value: string) => void;
+  selectedType: string;
+  onTypeChange: (value: string) => void;
+  selectedCategory: string;
+  onCategoryChange: (value: string) => void;
   selectedStatus: string;
   onStatusChange: (value: string) => void;
   onViewApplicants: (topicId: number) => void;
@@ -50,17 +53,33 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
   topics,
   searchTerm,
   onSearchChange,
-  selectedDepartment,
-  onDepartmentChange,
+  selectedType,
+  onTypeChange,
+  selectedCategory,
+  onCategoryChange,
   selectedStatus,
   onStatusChange,
   onViewApplicants,
 }) => {
-  // Get unique departments for filter
-  const departments = ["all", ...new Set(topics.map((topic) => topic.department))];
-  
-  // Get unique statuses for filter
-  const statuses = ["all", ...new Set(topics.map((topic) => topic.status))];
+  // Fixed types for filter
+  const types = [
+    "all",
+    "Information Technology",
+    "Environment",
+    "Biology",
+    "Physics",
+    "Biotechnology",
+    "Civil Engineering",
+    "Environmental Science",
+  ];
+
+  // Fixed categories for filter (Applied Science and Basic Science)
+  const categories = ["all", "Applied Science", "Basic Science"];
+
+  // Fixed statuses for filter
+  const statuses = ["all", "Waiting for PI", "PI Assigned"];
+
+  console.log("Topics:", topics);
 
   return (
     <Card>
@@ -83,24 +102,33 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
             />
           </div>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Select
-              value={selectedDepartment}
-              onValueChange={onDepartmentChange}
-            >
+            <Select value={selectedType} onValueChange={onTypeChange}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Department" />
+                <SelectValue placeholder="All Types" />
               </SelectTrigger>
               <SelectContent>
-                {departments.map((dept) => (
-                  <SelectItem key={dept} value={dept}>
-                    {dept === "all" ? "All Departments" : dept}
+                {types.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type === "all" ? "All Types" : type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedCategory} onValueChange={onCategoryChange}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {category === "all" ? "All Categories" : category}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
             <Select value={selectedStatus} onValueChange={onStatusChange}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Status" />
+                <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
                 {statuses.map((status) => (
@@ -118,32 +146,32 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
             <TableHeader>
               <TableRow>
                 <TableHead>Topic Title</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead>Created Date</TableHead>
-                <TableHead>Applicants</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead className="text-center">Category</TableHead>
+                <TableHead className="text-center">Applicants</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {topics.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     No topics found.
                   </TableCell>
                 </TableRow>
               ) : (
                 topics.map((topic) => (
                   <TableRow key={topic.id}>
-                    <TableCell className="font-medium">
-                      {topic.title}
+                    <TableCell className="font-medium">{topic.title}</TableCell>
+                    <TableCell>{topic.type}</TableCell>
+                    <TableCell className="text-center">
+                      {topic.category}
                     </TableCell>
-                    <TableCell>{topic.department}</TableCell>
-                    <TableCell>{topic.createdAt}</TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <Badge variant="outline">{topic.applicants}</Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="text-center">
                       <Badge
                         variant="outline"
                         className={
@@ -155,7 +183,7 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                         {topic.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-center">
                       <Button
                         variant="outline"
                         size="sm"

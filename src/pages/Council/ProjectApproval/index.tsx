@@ -15,7 +15,8 @@ const proposedTopics = [
   {
     id: 1,
     title: "AI-Driven Medical Diagnostics",
-    department: "Computer Science",
+    type: "Information Technology", // Major field
+    category: "Applied Science", // Fixed category
     createdAt: "2023-05-15",
     applicants: 3,
     status: "Waiting for PI",
@@ -23,7 +24,8 @@ const proposedTopics = [
   {
     id: 2,
     title: "Sustainable Energy Solutions",
-    department: "Engineering",
+    type: "Environment", // Major field
+    category: "Applied Science", // Fixed category
     createdAt: "2023-05-10",
     applicants: 2,
     status: "Waiting for PI",
@@ -31,7 +33,8 @@ const proposedTopics = [
   {
     id: 3,
     title: "Biodiversity Conservation",
-    department: "Environmental Science",
+    type: "Biology", // Major field
+    category: "Basic Science", // Fixed category
     createdAt: "2023-05-05",
     applicants: 1,
     status: "PI Assigned",
@@ -39,7 +42,8 @@ const proposedTopics = [
   {
     id: 4,
     title: "Quantum Computing Applications",
-    department: "Physics",
+    type: "Physics", // Major field
+    category: "Basic Science", // Fixed category
     createdAt: "2023-05-01",
     applicants: 0,
     status: "Waiting for PI",
@@ -47,10 +51,29 @@ const proposedTopics = [
   {
     id: 5,
     title: "Genetic Engineering Ethics",
-    department: "Bioethics",
+    type: "Biotechnology", // Major field
+    category: "Basic Science", // Fixed category
     createdAt: "2023-04-25",
     applicants: 2,
     status: "Waiting for PI",
+  },
+  {
+    id: 6,
+    title: "Smart City Infrastructure",
+    type: "Civil Engineering", // Major field
+    category: "Applied Science", // Fixed category
+    createdAt: "2023-04-20",
+    applicants: 1,
+    status: "Waiting for PI",
+  },
+  {
+    id: 7,
+    title: "Climate Change Modeling",
+    type: "Environmental Science", // Major field
+    category: "Basic Science", // Fixed category
+    createdAt: "2023-04-15",
+    applicants: 2,
+    status: "PI Assigned",
   },
 ];
 
@@ -426,8 +449,9 @@ const ProjectApproval: React.FC = () => {
   const [selectedApplicant, setSelectedApplicant] = useState<number | null>(
     null
   );
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedType, setSelectedType] = useState<string>("all"); // Changed from selectedDepartment
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
   const handleViewApplicants = (topicId: number) => {
     setSelectedTopic(topicId);
@@ -491,11 +515,12 @@ const ProjectApproval: React.FC = () => {
     const matchesSearch = topic.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesDepartment =
-      selectedDepartment === "all" || topic.department === selectedDepartment;
+    const matchesType = selectedType === "all" || topic.type === selectedType; // Changed from department
+    const matchesCategory =
+      selectedCategory === "all" || topic.category === selectedCategory; // New filter
     const matchesStatus =
       selectedStatus === "all" || topic.status === selectedStatus;
-    return matchesSearch && matchesDepartment && matchesStatus;
+    return matchesSearch && matchesType && matchesCategory && matchesStatus;
   });
 
   // Get applicants for the selected topic
@@ -533,8 +558,10 @@ const ProjectApproval: React.FC = () => {
             topics={filteredTopics}
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
-            selectedDepartment={selectedDepartment}
-            onDepartmentChange={setSelectedDepartment}
+            selectedType={selectedType} // Changed from selectedDepartment
+            onTypeChange={setSelectedType} // Changed from onDepartmentChange
+            selectedCategory={selectedCategory} // New prop
+            onCategoryChange={setSelectedCategory} // New prop
             selectedStatus={selectedStatus}
             onStatusChange={setSelectedStatus}
             onViewApplicants={handleViewApplicants}

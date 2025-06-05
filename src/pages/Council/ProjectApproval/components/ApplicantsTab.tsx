@@ -21,7 +21,8 @@ import { Eye } from "lucide-react";
 interface Topic {
   id: number;
   title: string;
-  department: string;
+  type: string; // Changed from department to match TopicsTab
+  category: string; // Added category field
   createdAt: string;
   applicants: number;
   status: string;
