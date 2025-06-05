@@ -5,10 +5,26 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { FormData } from "../../constants";
+
+interface BM2FormData extends FormData {
+  meetingDate: string;
+  meetingTime: string;
+  meetingLocation: string;
+  chairperson: string;
+  attendees: string;
+  projectTitle: string;
+  principalInvestigator: string;
+  discussionPoints: string;
+  recommendations: string;
+  decision: string;
+  nextSteps: string;
+  additionalNotes: string;
+}
 
 interface BM2FormProps {
-  formData: Record<string, any>;
-  onDataChange: (data: Record<string, any>) => void;
+  formData: BM2FormData;
+  onDataChange: (data: BM2FormData) => void;
   onSubmit: () => void;
 }
 

@@ -40,7 +40,6 @@ interface Applicant {
   status: string;
   appliedFor: number;
   appliedDate: string;
-  documents: { name: string; url: string }[];
 }
 
 interface ApplicantsTabProps {

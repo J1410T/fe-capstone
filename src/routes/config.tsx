@@ -25,7 +25,6 @@ import MyProjects from "../pages/HostInstitution/MyProjects";
 import ProjectHistory from "../pages/HostInstitution/ProjectHistory";
 
 // Council Pages
-import CouncilPIApproval from "../pages/Council/PIApproval";
 import PendingEvaluations from "../pages/Council/Evaluations";
 import EvaluationDetail from "../pages/Council/Evaluations/EvaluationDetail";
 import EvaluationForm from "../pages/Council/Evaluations/EvaluationForm";
@@ -51,6 +50,7 @@ import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
 import FormRegister from "@/pages/PrincipalInvestigator/FormRegister";
 import ProjectDetail from "@/pages/ProjectDetail";
 import Meetings from "@/pages/Council/Meetings";
+import ProjectApproval from "../pages/Council/ProjectApproval";
 
 /**
  * Main application routes configuration
@@ -277,8 +277,8 @@ export const routes: RouteObject[] = [
             element: <Navigate to="/council/evaluations" replace />,
           },
           {
-            path: "pi-approval",
-            element: <CouncilPIApproval />,
+            path: "project-approval",
+            element: <ProjectApproval />,
           },
           {
             path: "evaluations",

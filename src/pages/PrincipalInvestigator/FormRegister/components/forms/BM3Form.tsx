@@ -5,10 +5,28 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { FormData } from "../../constants";
+
+interface BM3FormData extends FormData {
+  projectTitle: string;
+  principalInvestigator: string;
+  institution: string;
+  projectPeriod: string;
+  totalBudget: string;
+  executiveSummary: string;
+  objectives: string;
+  methodology: string;
+  results: string;
+  conclusions: string;
+  impact: string;
+  publications: string;
+  futureWork: string;
+  additionalNotes: string;
+}
 
 interface BM3FormProps {
-  formData: Record<string, any>;
-  onDataChange: (data: Record<string, any>) => void;
+  formData: BM3FormData;
+  onDataChange: (data: BM3FormData) => void;
   onSubmit: () => void;
 }
 
@@ -22,10 +40,10 @@ export const BM3Form: React.FC<BM3FormProps> = ({
   const handleInputChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
     onDataChange(newData);
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -36,7 +54,8 @@ export const BM3Form: React.FC<BM3FormProps> = ({
       newErrors.projectTitle = "Project title is required";
     }
     if (!formData.principalInvestigator?.trim()) {
-      newErrors.principalInvestigator = "Principal investigator name is required";
+      newErrors.principalInvestigator =
+        "Principal investigator name is required";
     }
     if (!formData.projectPeriod?.trim()) {
       newErrors.projectPeriod = "Project period is required";
@@ -79,13 +98,15 @@ export const BM3Form: React.FC<BM3FormProps> = ({
           <div className="space-y-4">
             <h3 className="text-base font-semibold">Project Information</h3>
             <Separator />
-            
+
             <div className="space-y-2">
               <Label htmlFor="projectTitle">Project Title *</Label>
               <Input
                 id="projectTitle"
                 value={formData.projectTitle || ""}
-                onChange={(e) => handleInputChange("projectTitle", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("projectTitle", e.target.value)
+                }
                 placeholder="Enter project title"
                 className={errors.projectTitle ? "border-red-500" : ""}
               />
@@ -96,16 +117,24 @@ export const BM3Form: React.FC<BM3FormProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="principalInvestigator">Principal Investigator *</Label>
+                <Label htmlFor="principalInvestigator">
+                  Principal Investigator *
+                </Label>
                 <Input
                   id="principalInvestigator"
                   value={formData.principalInvestigator || ""}
-                  onChange={(e) => handleInputChange("principalInvestigator", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("principalInvestigator", e.target.value)
+                  }
                   placeholder="Enter PI name"
-                  className={errors.principalInvestigator ? "border-red-500" : ""}
+                  className={
+                    errors.principalInvestigator ? "border-red-500" : ""
+                  }
                 />
                 {errors.principalInvestigator && (
-                  <p className="text-sm text-red-500">{errors.principalInvestigator}</p>
+                  <p className="text-sm text-red-500">
+                    {errors.principalInvestigator}
+                  </p>
                 )}
               </div>
 
@@ -114,7 +143,9 @@ export const BM3Form: React.FC<BM3FormProps> = ({
                 <Input
                   id="institution"
                   value={formData.institution || ""}
-                  onChange={(e) => handleInputChange("institution", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("institution", e.target.value)
+                  }
                   placeholder="Enter institution name"
                 />
               </div>
@@ -126,7 +157,9 @@ export const BM3Form: React.FC<BM3FormProps> = ({
                 <Input
                   id="projectPeriod"
                   value={formData.projectPeriod || ""}
-                  onChange={(e) => handleInputChange("projectPeriod", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("projectPeriod", e.target.value)
+                  }
                   placeholder="e.g., January 2023 - December 2023"
                   className={errors.projectPeriod ? "border-red-500" : ""}
                 />
@@ -141,7 +174,9 @@ export const BM3Form: React.FC<BM3FormProps> = ({
                   id="totalBudget"
                   type="number"
                   value={formData.totalBudget || ""}
-                  onChange={(e) => handleInputChange("totalBudget", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("totalBudget", e.target.value)
+                  }
                   placeholder="Enter total budget (VND)"
                 />
               </div>
@@ -158,13 +193,17 @@ export const BM3Form: React.FC<BM3FormProps> = ({
               <Textarea
                 id="executiveSummary"
                 value={formData.executiveSummary || ""}
-                onChange={(e) => handleInputChange("executiveSummary", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("executiveSummary", e.target.value)
+                }
                 placeholder="Provide a brief executive summary of the project"
                 rows={4}
                 className={errors.executiveSummary ? "border-red-500" : ""}
               />
               {errors.executiveSummary && (
-                <p className="text-sm text-red-500">{errors.executiveSummary}</p>
+                <p className="text-sm text-red-500">
+                  {errors.executiveSummary}
+                </p>
               )}
             </div>
 
@@ -173,7 +212,9 @@ export const BM3Form: React.FC<BM3FormProps> = ({
               <Textarea
                 id="objectives"
                 value={formData.objectives || ""}
-                onChange={(e) => handleInputChange("objectives", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("objectives", e.target.value)
+                }
                 placeholder="List the main objectives of the project"
                 rows={4}
                 className={errors.objectives ? "border-red-500" : ""}
@@ -188,7 +229,9 @@ export const BM3Form: React.FC<BM3FormProps> = ({
               <Textarea
                 id="methodology"
                 value={formData.methodology || ""}
-                onChange={(e) => handleInputChange("methodology", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("methodology", e.target.value)
+                }
                 placeholder="Describe the methodology used in the project"
                 rows={4}
                 className={errors.methodology ? "border-red-500" : ""}
@@ -218,7 +261,9 @@ export const BM3Form: React.FC<BM3FormProps> = ({
               <Textarea
                 id="conclusions"
                 value={formData.conclusions || ""}
-                onChange={(e) => handleInputChange("conclusions", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("conclusions", e.target.value)
+                }
                 placeholder="State the main conclusions drawn from the project"
                 rows={4}
                 className={errors.conclusions ? "border-red-500" : ""}
@@ -250,7 +295,9 @@ export const BM3Form: React.FC<BM3FormProps> = ({
               <Textarea
                 id="publications"
                 value={formData.publications || ""}
-                onChange={(e) => handleInputChange("publications", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("publications", e.target.value)
+                }
                 placeholder="List any publications, patents, or other outputs"
                 rows={3}
               />
@@ -261,7 +308,9 @@ export const BM3Form: React.FC<BM3FormProps> = ({
               <Textarea
                 id="futureWork"
                 value={formData.futureWork || ""}
-                onChange={(e) => handleInputChange("futureWork", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("futureWork", e.target.value)
+                }
                 placeholder="Describe potential future work or follow-up projects"
                 rows={3}
               />
@@ -272,7 +321,9 @@ export const BM3Form: React.FC<BM3FormProps> = ({
               <Textarea
                 id="additionalNotes"
                 value={formData.additionalNotes || ""}
-                onChange={(e) => handleInputChange("additionalNotes", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("additionalNotes", e.target.value)
+                }
                 placeholder="Any additional information or notes"
                 rows={3}
               />

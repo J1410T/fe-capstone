@@ -7,7 +7,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FORM_TYPES, FormType } from "../index";
+import { FORM_TYPES, FormType } from "../constants";
 
 interface FormSelectorProps {
   selectedForm: FormType;

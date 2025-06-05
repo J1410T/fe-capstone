@@ -1,5 +1,5 @@
 import React, { memo, useMemo } from "react";
-import { FormType } from "../index";
+import { FormType } from "../constants";
 import { BM1Form } from "./forms/BM1Form";
 import { BM2Form } from "./forms/BM2Form";
 import { BM3Form } from "./forms/BM3Form";
@@ -31,15 +31,15 @@ export const FormContent: React.FC<FormContentProps> = memo(
     const renderForm = () => {
       switch (formType) {
         case "BM1":
-          return <BM1Form {...commonProps} />;
+          return <BM1Form {...(commonProps as any)} />;
         case "BM2":
-          return <BM2Form {...commonProps} />;
+          return <BM2Form {...(commonProps as any)} />;
         case "BM3":
-          return <BM3Form {...commonProps} />;
+          return <BM3Form {...(commonProps as any)} />;
         case "BM4":
-          return <BM4Form {...commonProps} />;
+          return <BM4Form {...(commonProps as any)} />;
         case "BM5":
-          return <BM5Form {...commonProps} />;
+          return <BM5Form {...(commonProps as any)} />;
         default:
           return (
             <div className="flex items-center justify-center py-12">

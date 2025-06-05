@@ -130,7 +130,7 @@ export const filterByStatus = <T extends { status: string }>(
   );
 };
 
-export const searchItems = <T extends Record<string, any>>(
+export const searchItems = <T extends Record<string, unknown>>(
   items: T[],
   searchTerm: string,
   searchFields: (keyof T)[]

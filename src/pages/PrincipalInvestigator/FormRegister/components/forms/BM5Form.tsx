@@ -12,10 +12,33 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { FormData } from "../../constants";
+
+interface BM5FormData extends FormData {
+  projectTitle: string;
+  principalInvestigator: string;
+  requestDate: string;
+  projectPhase: string;
+  urgency: string;
+  changeType: string;
+  changeDescription: string;
+  currentSituation: string;
+  justification: string;
+  impact: string;
+  risks: string;
+  implementationPlan: string;
+  proposedStartDate: string;
+  estimatedDuration: string;
+  resourceRequirements: string;
+  additionalCosts: string;
+  costSavings: string;
+  budgetJustification: string;
+  additionalNotes: string;
+}
 
 interface BM5FormProps {
-  formData: Record<string, any>;
-  onDataChange: (data: Record<string, any>) => void;
+  formData: BM5FormData;
+  onDataChange: (data: BM5FormData) => void;
   onSubmit: () => void;
 }
 
@@ -29,10 +52,10 @@ export const BM5Form: React.FC<BM5FormProps> = ({
   const handleInputChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
     onDataChange(newData);
-    
+
     // Clear error when user starts typing
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
@@ -73,7 +96,8 @@ export const BM5Form: React.FC<BM5FormProps> = ({
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">
-          BM5: Proposed Changes During the Implementation of the Scientific Research Topic
+          BM5: Proposed Changes During the Implementation of the Scientific
+          Research Topic
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -82,13 +106,15 @@ export const BM5Form: React.FC<BM5FormProps> = ({
           <div className="space-y-4">
             <h3 className="text-base font-semibold">Project Information</h3>
             <Separator />
-            
+
             <div className="space-y-2">
               <Label htmlFor="projectTitle">Project Title *</Label>
               <Input
                 id="projectTitle"
                 value={formData.projectTitle || ""}
-                onChange={(e) => handleInputChange("projectTitle", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("projectTitle", e.target.value)
+                }
                 placeholder="Enter project title"
                 className={errors.projectTitle ? "border-red-500" : ""}
               />
@@ -99,11 +125,15 @@ export const BM5Form: React.FC<BM5FormProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="principalInvestigator">Principal Investigator</Label>
+                <Label htmlFor="principalInvestigator">
+                  Principal Investigator
+                </Label>
                 <Input
                   id="principalInvestigator"
                   value={formData.principalInvestigator || ""}
-                  onChange={(e) => handleInputChange("principalInvestigator", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("principalInvestigator", e.target.value)
+                  }
                   placeholder="Enter PI name"
                 />
               </div>
@@ -114,7 +144,9 @@ export const BM5Form: React.FC<BM5FormProps> = ({
                   id="requestDate"
                   type="date"
                   value={formData.requestDate || ""}
-                  onChange={(e) => handleInputChange("requestDate", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("requestDate", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -125,7 +157,9 @@ export const BM5Form: React.FC<BM5FormProps> = ({
                 <Input
                   id="projectPhase"
                   value={formData.projectPhase || ""}
-                  onChange={(e) => handleInputChange("projectPhase", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("projectPhase", e.target.value)
+                  }
                   placeholder="e.g., Phase 1, Implementation, etc."
                 />
               </div>
@@ -159,16 +193,22 @@ export const BM5Form: React.FC<BM5FormProps> = ({
               <Label htmlFor="changeType">Type of Change *</Label>
               <Select
                 value={formData.changeType || ""}
-                onValueChange={(value) => handleInputChange("changeType", value)}
+                onValueChange={(value) =>
+                  handleInputChange("changeType", value)
+                }
               >
-                <SelectTrigger className={errors.changeType ? "border-red-500" : ""}>
+                <SelectTrigger
+                  className={errors.changeType ? "border-red-500" : ""}
+                >
                   <SelectValue placeholder="Select type of change" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="scope">Scope Change</SelectItem>
                   <SelectItem value="timeline">Timeline Change</SelectItem>
                   <SelectItem value="budget">Budget Change</SelectItem>
-                  <SelectItem value="methodology">Methodology Change</SelectItem>
+                  <SelectItem value="methodology">
+                    Methodology Change
+                  </SelectItem>
                   <SelectItem value="team">Team Change</SelectItem>
                   <SelectItem value="objectives">Objectives Change</SelectItem>
                   <SelectItem value="other">Other</SelectItem>
@@ -180,17 +220,23 @@ export const BM5Form: React.FC<BM5FormProps> = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="changeDescription">Detailed Description of Changes *</Label>
+              <Label htmlFor="changeDescription">
+                Detailed Description of Changes *
+              </Label>
               <Textarea
                 id="changeDescription"
                 value={formData.changeDescription || ""}
-                onChange={(e) => handleInputChange("changeDescription", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("changeDescription", e.target.value)
+                }
                 placeholder="Provide a detailed description of the proposed changes"
                 rows={5}
                 className={errors.changeDescription ? "border-red-500" : ""}
               />
               {errors.changeDescription && (
-                <p className="text-sm text-red-500">{errors.changeDescription}</p>
+                <p className="text-sm text-red-500">
+                  {errors.changeDescription}
+                </p>
               )}
             </div>
 
@@ -199,7 +245,9 @@ export const BM5Form: React.FC<BM5FormProps> = ({
               <Textarea
                 id="currentSituation"
                 value={formData.currentSituation || ""}
-                onChange={(e) => handleInputChange("currentSituation", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("currentSituation", e.target.value)
+                }
                 placeholder="Describe the current situation that necessitates these changes"
                 rows={3}
               />
@@ -208,7 +256,9 @@ export const BM5Form: React.FC<BM5FormProps> = ({
 
           {/* Justification and Impact */}
           <div className="space-y-4">
-            <h3 className="text-base font-semibold">Justification and Impact</h3>
+            <h3 className="text-base font-semibold">
+              Justification and Impact
+            </h3>
             <Separator />
 
             <div className="space-y-2">
@@ -216,7 +266,9 @@ export const BM5Form: React.FC<BM5FormProps> = ({
               <Textarea
                 id="justification"
                 value={formData.justification || ""}
-                onChange={(e) => handleInputChange("justification", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("justification", e.target.value)
+                }
                 placeholder="Explain why these changes are necessary"
                 rows={4}
                 className={errors.justification ? "border-red-500" : ""}
@@ -263,13 +315,17 @@ export const BM5Form: React.FC<BM5FormProps> = ({
               <Textarea
                 id="implementationPlan"
                 value={formData.implementationPlan || ""}
-                onChange={(e) => handleInputChange("implementationPlan", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("implementationPlan", e.target.value)
+                }
                 placeholder="Describe how the changes will be implemented"
                 rows={4}
                 className={errors.implementationPlan ? "border-red-500" : ""}
               />
               {errors.implementationPlan && (
-                <p className="text-sm text-red-500">{errors.implementationPlan}</p>
+                <p className="text-sm text-red-500">
+                  {errors.implementationPlan}
+                </p>
               )}
             </div>
 
@@ -280,7 +336,9 @@ export const BM5Form: React.FC<BM5FormProps> = ({
                   id="proposedStartDate"
                   type="date"
                   value={formData.proposedStartDate || ""}
-                  onChange={(e) => handleInputChange("proposedStartDate", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("proposedStartDate", e.target.value)
+                  }
                 />
               </div>
 
@@ -289,18 +347,24 @@ export const BM5Form: React.FC<BM5FormProps> = ({
                 <Input
                   id="estimatedDuration"
                   value={formData.estimatedDuration || ""}
-                  onChange={(e) => handleInputChange("estimatedDuration", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("estimatedDuration", e.target.value)
+                  }
                   placeholder="e.g., 2 weeks, 1 month"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="resourceRequirements">Resource Requirements</Label>
+              <Label htmlFor="resourceRequirements">
+                Resource Requirements
+              </Label>
               <Textarea
                 id="resourceRequirements"
                 value={formData.resourceRequirements || ""}
-                onChange={(e) => handleInputChange("resourceRequirements", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("resourceRequirements", e.target.value)
+                }
                 placeholder="List any additional resources needed for implementation"
                 rows={3}
               />
@@ -319,7 +383,9 @@ export const BM5Form: React.FC<BM5FormProps> = ({
                   id="additionalCosts"
                   type="number"
                   value={formData.additionalCosts || ""}
-                  onChange={(e) => handleInputChange("additionalCosts", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("additionalCosts", e.target.value)
+                  }
                   placeholder="Amount (VND)"
                 />
               </div>
@@ -330,7 +396,9 @@ export const BM5Form: React.FC<BM5FormProps> = ({
                   id="costSavings"
                   type="number"
                   value={formData.costSavings || ""}
-                  onChange={(e) => handleInputChange("costSavings", e.target.value)}
+                  onChange={(e) =>
+                    handleInputChange("costSavings", e.target.value)
+                  }
                   placeholder="Amount (VND)"
                 />
               </div>
@@ -341,7 +409,9 @@ export const BM5Form: React.FC<BM5FormProps> = ({
               <Textarea
                 id="budgetJustification"
                 value={formData.budgetJustification || ""}
-                onChange={(e) => handleInputChange("budgetJustification", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("budgetJustification", e.target.value)
+                }
                 placeholder="Justify any budget changes"
                 rows={3}
               />
@@ -352,7 +422,9 @@ export const BM5Form: React.FC<BM5FormProps> = ({
               <Textarea
                 id="additionalNotes"
                 value={formData.additionalNotes || ""}
-                onChange={(e) => handleInputChange("additionalNotes", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("additionalNotes", e.target.value)
+                }
                 placeholder="Any additional information or notes"
                 rows={3}
               />

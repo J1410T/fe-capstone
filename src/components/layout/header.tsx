@@ -68,7 +68,11 @@ const menuItemsByRole = {
   ],
   [UserRole.APPRAISAL_COUNCIL]: [
     { name: "Home", path: "/home", icon: Home },
-    { name: "PI Approval", path: "/council/pi-approval", icon: CheckCircle },
+    {
+      name: "Project Approval",
+      path: "/council/project-approval",
+      icon: CheckCircle,
+    },
     { name: "Evaluations", path: "/council/evaluations", icon: FileText },
     { name: "Meetings", path: "/council/meetings", icon: Calendar },
     { name: "Approvals", path: "/council/approvals", icon: CheckSquare },
