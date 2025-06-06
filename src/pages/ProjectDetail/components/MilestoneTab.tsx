@@ -1,11 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -543,16 +536,16 @@ const MilestoneTab: React.FC = () => {
   };
 
   return (
-    <Card className="shadow-sm">
-      <CardHeader className="pb-0 sm:pb-6">
+    <div className="bg-gray-50 rounded-lg shadow-sm">
+      <div className="p-4 sm:p-6 pb-0 sm:pb-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
           <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
               Project Milestones
-            </CardTitle>
-            <CardDescription className="text-sm sm:text-base mt-1">
+            </h2>
+            <p className="text-sm sm:text-base mt-1">
               Track progress and manage tasks for each milestone
-            </CardDescription>
+            </p>
           </div>
           {isCurrentUserLeader && (
             <div className="flex space-x-2 flex-shrink-0">
@@ -566,7 +559,7 @@ const MilestoneTab: React.FC = () => {
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
-                    className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 cursor-pointer text-white"
+                    className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 cursor-pointer text-white border-0 text-base"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     <span className="hidden sm:inline">Add Milestone</span>
@@ -575,12 +568,12 @@ const MilestoneTab: React.FC = () => {
                 </DialogTrigger>
                 <DialogContent className="w-[95vw] max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle className="text-lg sm:text-xl">
+                    <DialogTitle className="text-xl sm:text-2xl">
                       {editingMilestone
                         ? "Edit Milestone"
                         : "Create New Milestone"}
                     </DialogTitle>
-                    <DialogDescription className="text-sm sm:text-base">
+                    <DialogDescription className="text-base sm:text-lg">
                       {editingMilestone
                         ? "Update milestone details"
                         : "Define a new milestone for your research project"}
@@ -588,7 +581,9 @@ const MilestoneTab: React.FC = () => {
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="milestone-name">Milestone Name *</Label>
+                      <Label htmlFor="milestone-name" className="text-base">
+                        Milestone Name *
+                      </Label>
                       <Input
                         id="milestone-name"
                         value={milestoneForm.name}
@@ -599,10 +594,14 @@ const MilestoneTab: React.FC = () => {
                           }))
                         }
                         placeholder="Enter milestone name"
+                        className="text-base"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="milestone-description">
+                      <Label
+                        htmlFor="milestone-description"
+                        className="text-base"
+                      >
                         Description *
                       </Label>
                       <Textarea
@@ -616,17 +615,18 @@ const MilestoneTab: React.FC = () => {
                         }
                         placeholder="Describe the milestone objectives"
                         rows={3}
+                        className="text-base"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label>Deadline *</Label>
+                      <Label className="text-base">Deadline *</Label>
 
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
                             variant="outline"
                             className={cn(
-                              "w-full justify-start text-left font-normal",
+                              "w-full justify-start text-left font-normal text-base",
                               !milestoneDeadlineDate && "text-muted-foreground"
                             )}
                           >
@@ -678,12 +678,14 @@ const MilestoneTab: React.FC = () => {
                     <Button
                       variant="outline"
                       onClick={() => setShowMilestoneDialog(false)}
+                      className="text-base"
                     >
                       Cancel
                     </Button>
                     <Button
                       onClick={handleCreateMilestone}
                       disabled={isLoading}
+                      className="text-base"
                     >
                       {isLoading
                         ? editingMilestone
@@ -699,506 +701,559 @@ const MilestoneTab: React.FC = () => {
             </div>
           )}
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="space-y-4 sm:space-y-6 pt-0">
-        {/* Overview Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <Card>
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center space-x-2">
-                <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-lg sm:text-2xl font-bold">
-                    {milestones.filter((m) => m.status === "Completed").length}
-                  </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                    Completed
-                  </p>
+      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 pt-0">
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Column - Overview Cards (Narrower) */}
+          <div className="lg:col-span-1">
+            <div className="space-y-3">
+              <div className="bg-green-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl font-bold text-green-800">
+                      {
+                        milestones.filter((m) => m.status === "Completed")
+                          .length
+                      }
+                    </p>
+                    <p className="text-sm text-green-700">Completed</p>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-lg sm:text-2xl font-bold">
-                    {
-                      milestones.filter((m) => m.status === "In Progress")
-                        .length
-                    }
-                  </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                    In Progress
-                  </p>
+              <div className="bg-blue-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <Clock className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl font-bold text-blue-800">
+                      {
+                        milestones.filter((m) => m.status === "In Progress")
+                          .length
+                      }
+                    </p>
+                    <p className="text-sm text-blue-700">In Progress</p>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center space-x-2">
-                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-lg sm:text-2xl font-bold">
-                    {
-                      milestones.filter((m) => m.status === "Not Started")
-                        .length
-                    }
-                  </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                    Not Started
-                  </p>
+              <div className="bg-orange-50 rounded-lg p-3">
+                <div className="flex items-center space-x-2">
+                  <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl font-bold text-orange-800">
+                      {
+                        milestones.filter((m) => m.status === "Not Started")
+                          .length
+                      }
+                    </p>
+                    <p className="text-sm text-orange-700">Not Started</p>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3 sm:p-4">
-              <div className="flex items-center space-x-2">
-                <Plus className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  <p className="text-lg sm:text-2xl font-bold">
-                    {milestones.reduce((total, m) => total + m.tasks.length, 0)}
-                  </p>
-                  <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                    Total Tasks
-                  </p>
+              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <Plus className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xl font-bold text-gray-800">
+                      {milestones.reduce(
+                        (total, m) => total + m.tasks.length,
+                        0
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-700">Total Tasks</p>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </div>
 
-        {/* Milestones List */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Project Milestones</CardTitle>
-            <CardDescription>
-              Track progress and manage tasks for each milestone
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              {milestones.map((milestone) => (
-                <AccordionItem key={milestone.id} value={milestone.id}>
-                  <AccordionTrigger className="hover:no-underline">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full mr-2 sm:mr-4 gap-3 sm:gap-4">
-                      <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
-                        {getStatusIcon(milestone.status)}
-                        <div className="text-left min-w-0 flex-1">
-                          <h3 className="font-medium text-sm sm:text-base truncate">
-                            {milestone.name}
-                          </h3>
-                          <p className="text-xs sm:text-sm text-muted-foreground">
-                            Due: {formatDate(milestone.deadline)} •{" "}
-                            {milestone.tasks.length} tasks
-                          </p>
+          {/* Right Column - Milestones and Tasks List (Wider) */}
+          <div className="lg:col-span-3">
+            <div className="bg-white rounded-lg">
+              <Accordion type="single" collapsible className="w-full">
+                {milestones.map((milestone) => (
+                  <AccordionItem
+                    key={milestone.id}
+                    value={milestone.id}
+                    className="border-0"
+                  >
+                    <AccordionTrigger className="hover:no-underline bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-3 mb-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full mr-2 sm:mr-4 gap-3 sm:gap-4">
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
+                          {getStatusIcon(milestone.status)}
+                          <div className="text-left min-w-0 flex-1">
+                            <h3 className="font-semibold text-lg text-gray-900 truncate">
+                              {milestone.name}
+                            </h3>
+                            <p className="text-base text-gray-600">
+                              Due: {formatDate(milestone.deadline)} •{" "}
+                              {milestone.tasks.length} tasks
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-4 flex-shrink-0">
-                        {/* <StatusBadge status={milestone.status} /> */}
-                        <div className="text-left sm:text-right">
-                          <p className="text-xs sm:text-sm font-medium text-gray-700">
-                            {milestone.progress}% Complete
-                          </p>
-                          <div className="relative w-20 sm:w-28 h-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full overflow-hidden shadow-inner">
-                            <div
-                              className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${
-                                milestone.progress === 100
-                                  ? "bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-200"
-                                  : milestone.progress >= 75
-                                  ? "bg-gradient-to-r from-blue-400 to-blue-600 shadow-lg shadow-blue-200"
-                                  : milestone.progress >= 50
-                                  ? "bg-gradient-to-r from-yellow-400 to-yellow-600 shadow-lg shadow-yellow-200"
-                                  : milestone.progress >= 25
-                                  ? "bg-gradient-to-r from-orange-400 to-orange-600 shadow-lg shadow-orange-200"
-                                  : "bg-gradient-to-r from-red-400 to-red-600 shadow-lg shadow-red-200"
-                              }`}
-                              style={{ width: `${milestone.progress}%` }}
-                            >
-                              {milestone.progress > 0 && (
-                                <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent rounded-full"></div>
-                              )}
+                        <div className="flex items-center justify-between sm:justify-end space-x-4 flex-shrink-0">
+                          <div className="text-left sm:text-right">
+                            <p className="text-base font-medium text-gray-700">
+                              {milestone.progress}% Complete
+                            </p>
+                            <div className="relative w-24 sm:w-32 h-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full overflow-hidden shadow-inner">
+                              <div
+                                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${
+                                  milestone.progress === 100
+                                    ? "bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-200"
+                                    : milestone.progress >= 75
+                                    ? "bg-gradient-to-r from-blue-400 to-blue-600 shadow-lg shadow-blue-200"
+                                    : milestone.progress >= 50
+                                    ? "bg-gradient-to-r from-yellow-400 to-yellow-600 shadow-lg shadow-yellow-200"
+                                    : milestone.progress >= 25
+                                    ? "bg-gradient-to-r from-orange-400 to-orange-600 shadow-lg shadow-orange-200"
+                                    : "bg-gradient-to-r from-red-400 to-red-600 shadow-lg shadow-red-200"
+                                }`}
+                                style={{ width: `${milestone.progress}%` }}
+                              >
+                                {milestone.progress > 0 && (
+                                  <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent rounded-full"></div>
+                                )}
+                              </div>
                             </div>
                           </div>
+
+                          {isCurrentUserLeader && (
+                            <div className="flex items-center space-x-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditMilestone(milestone);
+                                }}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteMilestone(milestone.id);
+                                }}
+                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          )}
                         </div>
-
-                        {isCurrentUserLeader && (
-                          <div className="flex items-center space-x-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleEditMilestone(milestone);
-                              }}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteMilestone(milestone.id);
-                              }}
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4 pt-4">
-                      <p className="text-muted-foreground">
-                        {milestone.description}
-                      </p>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4 pt-4 px-4">
+                        <p className="text-base text-gray-600 bg-gray-50 p-3 rounded-lg">
+                          {milestone.description}
+                        </p>
 
-                      {/* Add Task Button */}
-                      {isCurrentUserLeader && (
-                        <Dialog
-                          open={showTaskDialog}
-                          onOpenChange={(open) => {
-                            setShowTaskDialog(open);
-                            if (!open) resetTaskForm();
-                          }}
-                        >
-                          <DialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedMilestone(milestone.id)}
-                            >
-                              <Plus className="w-3 h-3 mr-1" />
-                              Add Task
-                            </Button>
-                          </DialogTrigger>
-                          <DialogContent className="w-[95vw] max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle className="text-lg sm:text-xl">
-                                {editingTask ? "Edit Task" : "Create New Task"}
-                              </DialogTitle>
-                              <DialogDescription className="text-sm sm:text-base">
-                                {editingTask
-                                  ? `Update task in ${milestone.name}`
-                                  : `Add a new task to ${milestone.name}`}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4">
-                              <div className="space-y-2">
-                                <Label htmlFor="task-title">Task Title *</Label>
-                                <Input
-                                  id="task-title"
-                                  value={taskForm.title}
-                                  onChange={(e) =>
-                                    setTaskForm((prev) => ({
-                                      ...prev,
-                                      title: e.target.value,
-                                    }))
-                                  }
-                                  placeholder="Enter task title"
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <Label htmlFor="task-description">
-                                  Description *
-                                </Label>
-                                <Textarea
-                                  id="task-description"
-                                  value={taskForm.description}
-                                  onChange={(e) =>
-                                    setTaskForm((prev) => ({
-                                      ...prev,
-                                      description: e.target.value,
-                                    }))
-                                  }
-                                  placeholder="Describe the task"
-                                  rows={3}
-                                />
-                              </div>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Add Task Button */}
+                        {isCurrentUserLeader && (
+                          <Dialog
+                            open={showTaskDialog}
+                            onOpenChange={(open) => {
+                              setShowTaskDialog(open);
+                              if (!open) resetTaskForm();
+                            }}
+                          >
+                            <DialogTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setSelectedMilestone(milestone.id)
+                                }
+                                className="border-0 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-base"
+                              >
+                                <Plus className="w-3 h-3 mr-1" />
+                                Add Task
+                              </Button>
+                            </DialogTrigger>
+                            <DialogContent className="w-[95vw] max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
+                              <DialogHeader>
+                                <DialogTitle className="text-xl sm:text-2xl">
+                                  {editingTask
+                                    ? "Edit Task"
+                                    : "Create New Task"}
+                                </DialogTitle>
+                                <DialogDescription className="text-base sm:text-lg">
+                                  {editingTask
+                                    ? `Update task in ${milestone.name}`
+                                    : `Add a new task to ${milestone.name}`}
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
                                 <div className="space-y-2">
-                                  <Label htmlFor="task-assignee">
-                                    Assign To
+                                  <Label
+                                    htmlFor="task-title"
+                                    className="text-base"
+                                  >
+                                    Task Title *
                                   </Label>
-                                  <Select
-                                    value={taskForm.assignedTo}
-                                    onValueChange={(value) =>
+                                  <Input
+                                    id="task-title"
+                                    value={taskForm.title}
+                                    onChange={(e) =>
                                       setTaskForm((prev) => ({
                                         ...prev,
-                                        assignedTo: value,
+                                        title: e.target.value,
                                       }))
                                     }
-                                  >
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select member" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="unassigned">
-                                        Unassigned
-                                      </SelectItem>
-                                      {teamMembers.map((member) => (
-                                        <SelectItem
-                                          key={member.id}
-                                          value={member.email}
-                                        >
-                                          {member.name}
-                                        </SelectItem>
-                                      ))}
-                                    </SelectContent>
-                                  </Select>
+                                    placeholder="Enter task title"
+                                    className="text-base"
+                                  />
                                 </div>
                                 <div className="space-y-2">
-                                  <Label htmlFor="task-priority">
-                                    Priority
+                                  <Label
+                                    htmlFor="task-description"
+                                    className="text-base"
+                                  >
+                                    Description *
                                   </Label>
-                                  <Select
-                                    value={taskForm.priority}
-                                    onValueChange={(
-                                      value: "Low" | "Medium" | "High"
-                                    ) =>
+                                  <Textarea
+                                    id="task-description"
+                                    value={taskForm.description}
+                                    onChange={(e) =>
                                       setTaskForm((prev) => ({
                                         ...prev,
-                                        priority: value,
+                                        description: e.target.value,
                                       }))
                                     }
+                                    placeholder="Describe the task"
+                                    rows={3}
+                                    className="text-base"
+                                  />
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                  <div className="space-y-2">
+                                    <Label
+                                      htmlFor="task-assignee"
+                                      className="text-base"
+                                    >
+                                      Assign To
+                                    </Label>
+                                    <Select
+                                      value={taskForm.assignedTo}
+                                      onValueChange={(value) =>
+                                        setTaskForm((prev) => ({
+                                          ...prev,
+                                          assignedTo: value,
+                                        }))
+                                      }
+                                    >
+                                      <SelectTrigger className="text-base">
+                                        <SelectValue placeholder="Select member" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem
+                                          value="unassigned"
+                                          className="text-base"
+                                        >
+                                          Unassigned
+                                        </SelectItem>
+                                        {teamMembers.map((member) => (
+                                          <SelectItem
+                                            key={member.id}
+                                            value={member.email}
+                                            className="text-base"
+                                          >
+                                            {member.name}
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label
+                                      htmlFor="task-priority"
+                                      className="text-base"
+                                    >
+                                      Priority
+                                    </Label>
+                                    <Select
+                                      value={taskForm.priority}
+                                      onValueChange={(
+                                        value: "Low" | "Medium" | "High"
+                                      ) =>
+                                        setTaskForm((prev) => ({
+                                          ...prev,
+                                          priority: value,
+                                        }))
+                                      }
+                                    >
+                                      <SelectTrigger className="text-base">
+                                        <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem
+                                          value="Low"
+                                          className="text-base"
+                                        >
+                                          Low
+                                        </SelectItem>
+                                        <SelectItem
+                                          value="Medium"
+                                          className="text-base"
+                                        >
+                                          Medium
+                                        </SelectItem>
+                                        <SelectItem
+                                          value="High"
+                                          className="text-base"
+                                        >
+                                          High
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                </div>
+                                <div className="space-y-2">
+                                  <Label className="text-base">
+                                    Due Date *
+                                  </Label>
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        className={cn(
+                                          "w-full justify-start text-left font-normal text-base",
+                                          !taskDueDate &&
+                                            "text-muted-foreground"
+                                        )}
+                                      >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {taskDueDate ? (
+                                          format(taskDueDate, "PPP")
+                                        ) : (
+                                          <span>Pick a due date</span>
+                                        )}
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent
+                                      className="w-auto p-0"
+                                      align="start"
+                                    >
+                                      <div className="p-3 space-y-3">
+                                        <Calendar
+                                          mode="single"
+                                          selected={taskDueDate}
+                                          onSelect={setTaskDueDate}
+                                          disabled={(date) =>
+                                            date <
+                                            new Date(
+                                              new Date().setHours(0, 0, 0, 0)
+                                            )
+                                          }
+                                          className="rounded-md border-0"
+                                        />
+                                        {taskDueDate && (
+                                          <div className="flex justify-between items-center pt-2 border-t">
+                                            <span className="text-sm text-muted-foreground">
+                                              {format(
+                                                taskDueDate,
+                                                "EEEE, MMMM do, yyyy"
+                                              )}
+                                            </span>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() =>
+                                                setTaskDueDate(undefined)
+                                              }
+                                              className="h-7 px-2 text-xs"
+                                            >
+                                              Clear
+                                            </Button>
+                                          </div>
+                                        )}
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
+                                </div>
+                              </div>
+                              <DialogFooter>
+                                <Button
+                                  variant="outline"
+                                  onClick={() => setShowTaskDialog(false)}
+                                  className="text-base"
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={handleCreateTask}
+                                  disabled={isLoading}
+                                  className="text-base"
+                                >
+                                  {isLoading
+                                    ? editingTask
+                                      ? "Updating..."
+                                      : "Creating..."
+                                    : editingTask
+                                    ? "Update Task"
+                                    : "Create Task"}
+                                </Button>
+                              </DialogFooter>
+                            </DialogContent>
+                          </Dialog>
+                        )}
+
+                        {/* Tasks List */}
+                        <div className="space-y-2 ml-6">
+                          {milestone.tasks.map((task) => (
+                            <div
+                              key={task.id}
+                              className="bg-gray-50 hover:bg-gray-100 rounded-lg p-3 sm:p-4 space-y-3 transition-colors"
+                            >
+                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                <div className="space-y-1 min-w-0 flex-1">
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                    <h4 className="font-normal text-base sm:text-lg text-gray-800">
+                                      {task.title}
+                                    </h4>
+                                    <Badge
+                                      className={`${getPriorityColor(
+                                        task.priority
+                                      )} text-sm border-0`}
+                                    >
+                                      {task.priority}
+                                    </Badge>
+                                  </div>
+                                  <p className="text-sm sm:text-base text-gray-600">
+                                    {task.description}
+                                  </p>
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-gray-500">
+                                    <span>Due: {formatDate(task.dueDate)}</span>
+                                    {task.assignedTo && (
+                                      <span className="truncate">
+                                        Assigned to:{" "}
+                                        {teamMembers.find(
+                                          (m) => m.email === task.assignedTo
+                                        )?.name || task.assignedTo}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-2 flex-shrink-0">
+                                  <Select
+                                    value={task.status}
+                                    onValueChange={(
+                                      value:
+                                        | "To Do"
+                                        | "In Progress"
+                                        | "Completed"
+                                    ) =>
+                                      handleTaskStatusChange(
+                                        milestone.id,
+                                        task.id,
+                                        value
+                                      )
+                                    }
+                                    disabled={
+                                      !isCurrentUserLeader &&
+                                      task.assignedTo !== user?.email
+                                    }
                                   >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-24 sm:w-32 text-sm">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="Low">Low</SelectItem>
-                                      <SelectItem value="Medium">
-                                        Medium
+                                      <SelectItem
+                                        value="To Do"
+                                        className="text-sm"
+                                      >
+                                        To Do
                                       </SelectItem>
-                                      <SelectItem value="High">High</SelectItem>
+                                      <SelectItem
+                                        value="In Progress"
+                                        className="text-sm"
+                                      >
+                                        In Progress
+                                      </SelectItem>
+                                      <SelectItem
+                                        value="Completed"
+                                        className="text-sm"
+                                      >
+                                        Completed
+                                      </SelectItem>
                                     </SelectContent>
                                   </Select>
-                                </div>
-                              </div>
-                              <div className="space-y-2">
-                                <Label>Due Date *</Label>
-                                <Popover>
-                                  <PopoverTrigger asChild>
-                                    <Button
-                                      variant="outline"
-                                      className={cn(
-                                        "w-full justify-start text-left font-normal",
-                                        !taskDueDate && "text-muted-foreground"
-                                      )}
-                                    >
-                                      <CalendarIcon className="mr-2 h-4 w-4" />
-                                      {taskDueDate ? (
-                                        format(taskDueDate, "PPP")
-                                      ) : (
-                                        <span>Pick a due date</span>
-                                      )}
-                                    </Button>
-                                  </PopoverTrigger>
-                                  <PopoverContent
-                                    className="w-auto p-0"
-                                    align="start"
-                                  >
-                                    <div className="p-3 space-y-3">
-                                      <Calendar
-                                        mode="single"
-                                        selected={taskDueDate}
-                                        onSelect={setTaskDueDate}
-                                        disabled={(date) =>
-                                          date <
-                                          new Date(
-                                            new Date().setHours(0, 0, 0, 0)
+                                  <StatusBadge status={task.status} />
+                                  {isCurrentUserLeader && (
+                                    <div className="flex items-center space-x-1">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleEditTask(task, milestone.id)
+                                        }
+                                        className="h-8 w-8 p-0"
+                                      >
+                                        <Edit className="w-3 h-3" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() =>
+                                          handleDeleteTask(
+                                            milestone.id,
+                                            task.id
                                           )
                                         }
-                                        className="rounded-md border-0"
-                                      />
-                                      {taskDueDate && (
-                                        <div className="flex justify-between items-center pt-2 border-t">
-                                          <span className="text-sm text-muted-foreground">
-                                            {format(
-                                              taskDueDate,
-                                              "EEEE, MMMM do, yyyy"
-                                            )}
-                                          </span>
-                                          <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() =>
-                                              setTaskDueDate(undefined)
-                                            }
-                                            className="h-7 px-2 text-xs"
-                                          >
-                                            Clear
-                                          </Button>
-                                        </div>
-                                      )}
+                                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </Button>
                                     </div>
-                                  </PopoverContent>
-                                </Popover>
-                              </div>
-                            </div>
-                            <DialogFooter>
-                              <Button
-                                variant="outline"
-                                onClick={() => setShowTaskDialog(false)}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                onClick={handleCreateTask}
-                                disabled={isLoading}
-                              >
-                                {isLoading
-                                  ? editingTask
-                                    ? "Updating..."
-                                    : "Creating..."
-                                  : editingTask
-                                  ? "Update Task"
-                                  : "Create Task"}
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-
-                      {/* Tasks List */}
-                      <div className="space-y-3">
-                        {milestone.tasks.map((task) => (
-                          <div
-                            key={task.id}
-                            className="border rounded-lg p-3 sm:p-4 space-y-3"
-                          >
-                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                              <div className="space-y-1 min-w-0 flex-1">
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                  <h4 className="font-medium text-sm sm:text-base">
-                                    {task.title}
-                                  </h4>
-                                  <Badge
-                                    className={`${getPriorityColor(
-                                      task.priority
-                                    )} text-xs`}
-                                  >
-                                    {task.priority}
-                                  </Badge>
-                                </div>
-                                <p className="text-xs sm:text-sm text-muted-foreground">
-                                  {task.description}
-                                </p>
-                                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-muted-foreground">
-                                  <span>Due: {formatDate(task.dueDate)}</span>
-                                  {task.assignedTo && (
-                                    <span className="truncate">
-                                      Assigned to:{" "}
-                                      {teamMembers.find(
-                                        (m) => m.email === task.assignedTo
-                                      )?.name || task.assignedTo}
-                                    </span>
                                   )}
                                 </div>
                               </div>
-                              <div className="flex items-center space-x-2 flex-shrink-0">
-                                <Select
-                                  value={task.status}
-                                  onValueChange={(
-                                    value: "To Do" | "In Progress" | "Completed"
-                                  ) =>
-                                    handleTaskStatusChange(
-                                      milestone.id,
-                                      task.id,
-                                      value
-                                    )
-                                  }
-                                  disabled={
-                                    !isCurrentUserLeader &&
-                                    task.assignedTo !== user?.email
-                                  }
-                                >
-                                  <SelectTrigger className="w-24 sm:w-32">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="To Do">To Do</SelectItem>
-                                    <SelectItem value="In Progress">
-                                      In Progress
-                                    </SelectItem>
-                                    <SelectItem value="Completed">
-                                      Completed
-                                    </SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <StatusBadge status={task.status} />
-                                {isCurrentUserLeader && (
-                                  <div className="flex items-center space-x-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() =>
-                                        handleEditTask(task, milestone.id)
-                                      }
-                                      className="h-8 w-8 p-0"
-                                    >
-                                      <Edit className="w-3 h-3" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() =>
-                                        handleDeleteTask(milestone.id, task.id)
-                                      }
-                                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                    >
-                                      <Trash2 className="w-3 h-3" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
 
-                            {task.evaluation && (
-                              <div className="bg-green-50 border border-green-200 rounded p-2 sm:p-3">
-                                <p className="text-xs sm:text-sm text-green-800">
-                                  <strong>Evaluation:</strong> {task.evaluation}
-                                </p>
-                                {task.evaluatedBy && (
-                                  <p className="text-xs text-green-600 mt-1">
-                                    Evaluated by: {task.evaluatedBy}
+                              {task.evaluation && (
+                                <div className="bg-green-50 rounded-lg p-2 sm:p-3 border-0">
+                                  <p className="text-sm sm:text-base text-green-800">
+                                    <strong>Evaluation:</strong>{" "}
+                                    {task.evaluation}
                                   </p>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                                  {task.evaluatedBy && (
+                                    <p className="text-xs sm:text-sm text-green-600 mt-1">
+                                      Evaluated by: {task.evaluatedBy}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          ))}
 
-                        {milestone.tasks.length === 0 && (
-                          <p className="text-muted-foreground text-center py-4">
-                            No tasks added to this milestone yet.
-                          </p>
-                        )}
+                          {milestone.tasks.length === 0 && (
+                            <p className="text-gray-500 text-center py-4 ml-6 text-base">
+                              No tasks added to this milestone yet.
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
 
-            {milestones.length === 0 && (
-              <p className="text-muted-foreground text-center py-8">
-                No milestones created yet. Create your first milestone to start
-                tracking progress.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      </CardContent>
-    </Card>
+              {milestones.length === 0 && (
+                <p className="text-gray-500 text-center py-8 text-base">
+                  No milestones created yet. Create your first milestone to
+                  start tracking progress.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

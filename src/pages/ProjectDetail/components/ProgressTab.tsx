@@ -166,19 +166,6 @@ const ProgressTab: React.FC = () => {
         </div>
       </CardHeader>
       <CardContent className="pt-0">
-        <div className="flex items-center space-x-2 mb-4 sm:mb-6">
-          <Badge
-            variant="outline"
-            className="bg-blue-50 text-blue-700 border-blue-200"
-          >
-            <FileText className="w-3 h-3 mr-1" />
-            BM06
-          </Badge>
-          <span className="text-sm text-muted-foreground">
-            Progress Report Form
-          </span>
-        </div>
-
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
