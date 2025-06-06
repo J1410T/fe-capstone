@@ -32,7 +32,6 @@ interface BudgetData {
   allocated: {
     personnel: number;
     equipment: number;
-    travel: number;
     materials: number;
     other: number;
   };
@@ -41,7 +40,7 @@ interface BudgetData {
 
 interface ExpenseItem {
   id: string;
-  category: "personnel" | "equipment" | "travel" | "materials" | "other";
+  category: "personnel" | "equipment" | "materials" | "other";
   description: string;
   amount: number;
   date: string;
@@ -66,8 +65,6 @@ const getCategoryIcon = (category: string) => {
       return "👥";
     case "equipment":
       return "🖥️";
-    case "travel":
-      return "✈️";
     case "materials":
       return "📦";
     case "other":
@@ -83,8 +80,6 @@ const getCategoryColor = (category: string) => {
       return "bg-blue-100 text-blue-800";
     case "equipment":
       return "bg-purple-100 text-purple-800";
-    case "travel":
-      return "bg-green-100 text-green-800";
     case "materials":
       return "bg-orange-100 text-orange-800";
     case "other":
@@ -126,7 +121,6 @@ const BudgetTab: React.FC = () => {
           allocated: {
             personnel: 60000,
             equipment: 30000,
-            travel: 10000,
             materials: 15000,
             other: 5000,
           },
@@ -150,15 +144,6 @@ const BudgetTab: React.FC = () => {
               status: "Approved",
               receipt: "server-invoice.pdf",
               approvedBy: "Finance Department",
-            },
-            {
-              id: "3",
-              category: "travel",
-              description: "Conference Travel - ICML 2024",
-              amount: 3500,
-              date: "2024-05-20",
-              status: "Pending",
-              receipt: "travel-receipts.pdf",
             },
             {
               id: "4",
@@ -234,40 +219,44 @@ const BudgetTab: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4 sm:space-y-6 pt-0">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
-            <DollarSign className="w-5 h-5 text-green-600" />
+          <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg border border-green-100">
+            <DollarSign className="w-6 h-6 text-green-600" />
             <div>
-              <p className="text-xl font-bold">
+              <p className="text-xl font-semibold text-gray-900">
                 ${budget.total.toLocaleString()}
               </p>
-              <p className="text-sm text-muted-foreground">Total Budget</p>
+              <p className="text-sm text-gray-600 font-medium">Total Budget</p>
             </div>
           </div>
-          <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
-            <TrendingUp className="w-5 h-5 text-blue-600" />
+          <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
+            <TrendingUp className="w-6 h-6 text-blue-600" />
             <div>
-              <p className="text-xl font-bold">
+              <p className="text-xl font-bold text-gray-900">
                 ${budget.spent.toLocaleString()}
               </p>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-600 font-medium">
                 Spent ({utilization}%)
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
-            <PieChart className="w-5 h-5 text-purple-600" />
+          <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-100">
+            <PieChart className="w-6 h-6 text-purple-600" />
             <div>
-              <p className="text-xl font-bold">
+              <p className="text-xl font-bold text-gray-900">
                 ${(budget.total - budget.spent).toLocaleString()}
               </p>
-              <p className="text-sm text-muted-foreground">Remaining</p>
+              <p className="text-sm text-gray-600 font-medium">Remaining</p>
             </div>
           </div>
-          <div className="flex items-center space-x-2 p-4 bg-muted/50 rounded-lg">
-            <CheckCircle className="w-5 h-5 text-green-600" />
+          <div className="flex items-center space-x-3 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
+            <CheckCircle className="w-6 h-6 text-emerald-600" />
             <div>
-              <p className="text-xl font-bold">{stats.approved}</p>
-              <p className="text-sm text-muted-foreground">Approved Expenses</p>
+              <p className="text-xl font-bold text-gray-900">
+                {stats.approved}
+              </p>
+              <p className="text-sm text-gray-600 font-medium">
+                Approved Expenses
+              </p>
             </div>
           </div>
         </div>

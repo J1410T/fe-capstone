@@ -40,7 +40,6 @@ const projectData = {
     allocated: {
       personnel: "$60,000",
       equipment: "$30,000",
-      travel: "$10,000",
       materials: "$15,000",
       other: "$5,000",
     },

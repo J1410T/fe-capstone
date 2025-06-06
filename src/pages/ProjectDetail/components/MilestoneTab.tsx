@@ -49,6 +49,7 @@ import { StatusBadge } from "../shared/components";
 import { formatDate, calculateMilestoneProgress } from "../shared/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Card } from "@/components/ui";
 
 const MilestoneTab: React.FC = () => {
   const { user } = useAuth();
@@ -536,7 +537,7 @@ const MilestoneTab: React.FC = () => {
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg shadow-sm">
+    <Card>
       <div className="p-4 sm:p-6 pb-0 sm:pb-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
           <div className="flex-1 min-w-0">
@@ -1253,7 +1254,7 @@ const MilestoneTab: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
+    </Card>
   );
 };
 
