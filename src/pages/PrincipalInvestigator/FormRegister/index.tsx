@@ -3,18 +3,33 @@ import { UserRole, useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FormSelector } from "./components/FormSelector";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FormContent } from "./components/FormContent";
 import { ConfirmationModal } from "./components/ConfirmationModal";
 import { FORM_TYPES, FormType, FormData } from "./constants";
+import { Button } from "@/components/ui";
+import { ArrowLeft } from "lucide-react";
 
 const FormRegister: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [selectedForm, setSelectedForm] = useState<FormType>("BM1");
   const [formData, setFormData] = useState<FormData>({});
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const previousPage = location.state?.from || "/pi/projects";
+
+  // Handle back navigation
+  const handleBackNavigation = useCallback(() => {
+    // If we have a specific previous page from navigation state, use it
+    if (location.state?.from) {
+      navigate(previousPage);
+    } else {
+      // Otherwise, use browser history to go back
+      navigate(-1);
+    }
+  }, [navigate, previousPage, location.state?.from]);
 
   // Memoize available forms based on user role
   const availableForms = useMemo((): FormType[] => {
@@ -62,7 +77,8 @@ const FormRegister: React.FC = () => {
         description: `${FORM_TYPES[selectedForm].title} has been submitted for review.`,
       });
 
-      navigate("/");
+      // Navigate back to the previous page instead of hardcoded "/"
+      navigate(previousPage);
 
       // Reset form
       setFormData({});
@@ -75,7 +91,7 @@ const FormRegister: React.FC = () => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedForm, navigate]);
+  }, [selectedForm, navigate, previousPage]); // Added previousPage to dependencies
 
   // Handle submission cancellation
   const handleCancelSubmit = useCallback(() => {
@@ -100,11 +116,20 @@ const FormRegister: React.FC = () => {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <Card className="border-none shadow-none pt-0">
-        <CardHeader>
+        <CardHeader className="flex items-center justify-between">
           <CardTitle className="text-2xl font-bold">
             Form Registration
           </CardTitle>
+          <Button
+            variant="outline"
+            onClick={handleBackNavigation}
+            className="flex items-center gap-2 hover:bg-gray-50 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back
+          </Button>
         </CardHeader>
+
         <CardContent className="space-y-6">
           <FormSelector
             selectedForm={selectedForm}
