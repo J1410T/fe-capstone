@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { getStatusColor, getStatusIcon } from "../utils/statusHelpers";
+import { ArrowLeft } from "lucide-react";
 
 interface ProjectHeaderProps {
   title: string;
@@ -59,7 +60,10 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex md:flex-row items-start md:items-center gap-4">
+        <Button variant="outline" onClick={() => navigate(getBackPath())}>
+          <ArrowLeft className="w-4 h-4" />
+        </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">{title}</h1>
           <div className="flex items-center gap-2 mt-1">
@@ -72,9 +76,6 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
             </span>
           </div>
         </div>
-        <Button variant="outline" onClick={() => navigate(getBackPath())}>
-          Back to Projects
-        </Button>
       </div>
 
       {/* Tab Controls */}

@@ -47,10 +47,10 @@ import GeneralComingSoon from "../pages/ComingSoon";
 import PIProfile from "@/pages/PrincipalInvestigator/Profile";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
 import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
-import FormRegister from "@/pages/PrincipalInvestigator/FormRegister";
 import ProjectDetail from "@/pages/ProjectDetail";
 import Meetings from "@/pages/Council/Meetings";
 import ProjectApproval from "../pages/Council/ProjectApproval";
+import FormRegister from "@/pages/FormRegister";
 
 /**
  * Main application routes configuration

@@ -116,18 +116,17 @@ const FormRegister: React.FC = () => {
   return (
     <div className="container mx-auto py-8 space-y-6">
       <Card className="border-none shadow-none pt-0">
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle className="text-2xl font-bold">
-            Form Registration
-          </CardTitle>
+        <CardHeader className="  flex items-center ">
           <Button
             variant="outline"
             onClick={handleBackNavigation}
             className="flex items-center gap-2 hover:bg-gray-50 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back
           </Button>
+          <CardTitle className="text-2xl font-bold">
+            Form Registration
+          </CardTitle>
         </CardHeader>
 
         <CardContent className="space-y-6">

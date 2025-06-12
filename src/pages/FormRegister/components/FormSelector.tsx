@@ -37,9 +37,8 @@ export const FormSelector: React.FC<FormSelectorProps> = memo(
             {availableForms.map((formKey) => (
               <SelectItem key={formKey} value={formKey} className="py-3">
                 <div className="flex flex-col items-start space-y-1">
-                  <span className="font-semibold text-gray-900">{formKey}</span>
                   <span className="text-sm text-muted-foreground line-clamp-2">
-                    {FORM_TYPES[formKey].title}
+                    {formKey}: {FORM_TYPES[formKey].title}
                   </span>
                 </div>
               </SelectItem>

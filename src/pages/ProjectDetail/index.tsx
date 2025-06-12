@@ -8,17 +8,13 @@ import {
 } from "@/components/ui";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import {
-  OverviewTab,
-  ProjectHeader,
-  ProjectProgress,
-  TeamTab,
-} from "./components";
+import { OverviewTab, ProjectHeader, TeamTab } from "./components";
 import BudgetTab from "./components/BudgetTab";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { RequestAccessForm } from "./components/RequestAccessForm";
 import ProgressTab from "./components/ProgressTab";
 import MilestoneTab from "./components/MilestoneTab";
+import { ArrowLeft } from "lucide-react";
 
 const projectData = {
   id: 1,
@@ -269,7 +265,7 @@ function ProjectDetail() {
           The project you're looking for doesn't exist or you don't have access.
         </p>
         <Button onClick={() => navigate("/host/projects")}>
-          Back to Projects
+          <ArrowLeft className=" h-4 w-4" />
         </Button>
       </div>
     );
@@ -286,13 +282,6 @@ function ProjectDetail() {
         onToggleAllTabs={setShowAllTabs}
         memberRole={memberRole}
         onMemberRoleChange={setMemberRole}
-      />
-
-      {/* Project Progress - Always show */}
-      <ProjectProgress
-        progress={project.progress}
-        spent={project.budget.spent}
-        total={project.budget.total}
       />
 
       {/* Project Tabs - Dynamic based on role and switch */}
