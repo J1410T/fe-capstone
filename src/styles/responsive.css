@@ -1,0 +1,422 @@
+/* Responsive styles for TaskManagement and related components */
+
+/* Kanban Board Responsive Styles */
+.kanban-container {
+  /* Ensure horizontal scrolling on mobile */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Kanban Column Responsive Styles */
+.kanban-column {
+  /* Ensure proper touch handling */
+  touch-action: manipulation;
+}
+
+/* Mobile-specific Kanban improvements */
+@media (max-width: 640px) {
+  .kanban-container {
+    /* Remove horizontal scrolling on mobile - use grid instead */
+    overflow-x: visible;
+    padding-bottom: 1rem;
+  }
+
+  .kanban-column {
+    /* Full width columns on mobile */
+    width: 100% !important;
+    min-width: unset !important;
+  }
+}
+
+/* Tablet-specific Kanban improvements */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .kanban-container {
+    /* Remove horizontal scrolling on tablet - use grid instead */
+    overflow-x: visible;
+  }
+
+  .kanban-column {
+    /* Half width columns on tablet */
+    width: 100% !important;
+    min-width: unset !important;
+  }
+}
+
+/* Desktop Kanban improvements */
+@media (min-width: 1024px) {
+  .kanban-container {
+    /* Enable horizontal scrolling on desktop if needed */
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  .kanban-column {
+    /* Fixed width columns on desktop */
+    width: 320px !important;
+    min-width: 300px !important;
+    flex-shrink: 0;
+  }
+}
+
+/* Responsive Grid Layout for Kanban */
+.kanban-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .kanban-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .kanban-grid {
+    display: flex;
+    gap: 1rem;
+  }
+}
+
+/* Improve drag feedback on all devices */
+.cursor-grab {
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.cursor-grab:active,
+.active\:cursor-grabbing:active {
+  cursor: grabbing;
+}
+
+/* Better touch targets for drag handles */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Improve drag overlay on mobile */
+[data-dnd-overlay] {
+  z-index: 9999;
+  pointer-events: none;
+}
+
+/* Milestones Page Responsive Styles */
+.milestones-container {
+  /* Ensure proper spacing on all devices */
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .milestones-container {
+    padding: 1.5rem;
+  }
+}
+
+/* Milestone Cards Responsive */
+.milestone-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.milestone-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Task Cards Responsive */
+@media (max-width: 640px) {
+  .task-card {
+    /* Stack task elements vertically on mobile */
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .task-controls {
+    /* Full width controls on mobile */
+    width: 100%;
+    justify-content: space-between;
+    margin-top: 0.75rem;
+  }
+
+  .task-select {
+    /* Smaller select on mobile */
+    min-width: 100px;
+  }
+}
+
+/* Accordion Responsive */
+@media (max-width: 640px) {
+  .accordion-trigger {
+    /* Stack accordion content on mobile */
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .accordion-content {
+    /* Better spacing on mobile */
+    padding: 0.75rem 0;
+  }
+}
+
+/* Progress Bar Responsive */
+.progress-bar-mobile {
+  min-width: 4rem;
+}
+
+@media (min-width: 640px) {
+  .progress-bar-mobile {
+    min-width: 6rem;
+  }
+}
+
+/* Dialog Responsive Improvements */
+@media (max-width: 640px) {
+  .dialog-content {
+    /* Full screen on mobile */
+    width: 95vw;
+    max-height: 90vh;
+    margin: 1rem;
+  }
+
+  .dialog-form {
+    /* Stack form elements on mobile */
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+
+/* Status Badge Responsive */
+.status-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  white-space: nowrap;
+}
+
+@media (min-width: 640px) {
+  .status-badge {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.75rem;
+  }
+}
+
+/* Mobile-specific table improvements */
+@media (max-width: 768px) {
+  /* Hide less important table columns on mobile */
+  .table-hide-mobile {
+    display: none;
+  }
+
+  /* Compact table cells */
+  .table-cell-compact {
+    padding: 0.5rem 0.25rem;
+  }
+
+  /* Stack table content vertically on very small screens */
+  .table-stack-mobile {
+    display: block;
+    width: 100%;
+  }
+
+  .table-stack-mobile thead,
+  .table-stack-mobile tbody,
+  .table-stack-mobile th,
+  .table-stack-mobile td,
+  .table-stack-mobile tr {
+    display: block;
+  }
+
+  .table-stack-mobile thead tr {
+    position: absolute;
+    top: -9999px;
+    left: -9999px;
+  }
+
+  .table-stack-mobile tr {
+    border: 1px solid #e2e8f0;
+    margin-bottom: 0.5rem;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    background: white;
+  }
+
+  .table-stack-mobile td {
+    border: none;
+    position: relative;
+    padding-left: 50% !important;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .table-stack-mobile td:before {
+    content: attr(data-label) ": ";
+    position: absolute;
+    left: 6px;
+    width: 45%;
+    padding-right: 10px;
+    white-space: nowrap;
+    font-weight: 600;
+    color: #64748b;
+  }
+}
+
+/* Improved touch targets for mobile */
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Larger buttons on mobile */
+  .btn-mobile {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  /* Better spacing for mobile cards */
+  .card-mobile {
+    margin-bottom: 1rem;
+    border-radius: 0.75rem;
+  }
+
+  /* Improved modal sizing */
+  .modal-mobile {
+    margin: 1rem;
+    max-height: calc(100vh - 2rem);
+    width: calc(100vw - 2rem);
+  }
+}
+
+/* Tablet-specific improvements */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .kanban-column {
+    min-width: 280px;
+    width: 320px;
+  }
+
+  .stats-grid-tablet {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Desktop improvements */
+@media (min-width: 1025px) {
+  .kanban-column {
+    min-width: 300px;
+    width: 350px;
+  }
+
+  .stats-grid-desktop {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
+/* Utility classes for responsive design */
+.hide-mobile {
+  @media (max-width: 640px) {
+    display: none !important;
+  }
+}
+
+.hide-tablet {
+  @media (min-width: 641px) and (max-width: 1024px) {
+    display: none !important;
+  }
+}
+
+.hide-desktop {
+  @media (min-width: 1025px) {
+    display: none !important;
+  }
+}
+
+.show-mobile {
+  display: none;
+  @media (max-width: 640px) {
+    display: block !important;
+  }
+}
+
+.show-tablet {
+  display: none;
+  @media (min-width: 641px) and (max-width: 1024px) {
+    display: block !important;
+  }
+}
+
+.show-desktop {
+  display: none;
+  @media (min-width: 1025px) {
+    display: block !important;
+  }
+}
+
+/* Improved scrollbar styling */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animation improvements for mobile */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-mobile {
+    transition: all 0.2s ease-in-out;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  }
+}
+
+/* Reduce animations on mobile for better performance */
+@media (max-width: 640px) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus improvements for accessibility */
+.focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Better contrast for mobile */
+@media (max-width: 640px) {
+  .text-contrast {
+    color: #1e293b;
+    font-weight: 500;
+  }
+
+  .bg-contrast {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+  }
+}

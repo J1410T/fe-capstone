@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -49,7 +49,11 @@ interface ProjectFormErrors {
 
 const ProjectRegistration: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
+
+  // Get the previous page from state or default to projects list
+  const previousPage = location.state?.from || "/pi/projects";
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState<ProjectFormData>({
     name: "",
@@ -146,7 +150,7 @@ const ProjectRegistration: React.FC = () => {
         <div className="flex items-center space-x-3">
           <Button
             variant="outline"
-            onClick={() => navigate("/pi/projects")}
+            onClick={() => navigate(previousPage)}
             className="p-2"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -311,7 +315,7 @@ const ProjectRegistration: React.FC = () => {
           <Button
             type="button"
             variant="outline"
-            onClick={() => navigate("/pi/projects")}
+            onClick={() => navigate(previousPage)}
           >
             Cancel
           </Button>

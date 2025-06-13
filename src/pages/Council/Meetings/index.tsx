@@ -26,14 +26,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Search, 
-  Calendar as CalendarIcon, 
-  Clock, 
-  Video, 
+import {
+  Search,
+  Calendar as CalendarIcon,
+  Clock,
+  Video,
   FileText,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
 } from "lucide-react";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 
@@ -48,7 +48,6 @@ const meetings = [
     meetingLink: "https://zoom.us/j/123456789",
     status: "Upcoming",
     type: "Proposal Evaluation",
-    projectCode: "PRJ-2024-001",
     joined: false,
   },
   {
@@ -60,7 +59,6 @@ const meetings = [
     meetingLink: "https://meet.google.com/abc-defg-hij",
     status: "Upcoming",
     type: "Proposal Evaluation",
-    projectCode: "PRJ-2024-002",
     joined: false,
   },
   {
@@ -72,7 +70,6 @@ const meetings = [
     meetingLink: "https://zoom.us/j/987654321",
     status: "Completed",
     type: "Milestone Evaluation",
-    projectCode: "PRJ-2024-003",
     joined: true,
   },
   {
@@ -84,7 +81,6 @@ const meetings = [
     meetingLink: "https://teams.microsoft.com/l/meetup-join/...",
     status: "Completed",
     type: "Proposal Evaluation",
-    projectCode: "PRJ-2024-004",
     joined: true,
   },
   {
@@ -96,12 +92,11 @@ const meetings = [
     meetingLink: "https://zoom.us/j/123123123",
     status: "Upcoming",
     type: "Milestone Evaluation",
-    projectCode: "PRJ-2024-005",
     joined: false,
   },
 ];
 
-const CouncilMeetings: React.FC = () => {
+const Meetings: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -124,7 +119,11 @@ const CouncilMeetings: React.FC = () => {
   });
 
   const handleViewMeeting = (meetingId: number) => {
-    navigate(`/council/meeting/${meetingId}`);
+    if (UserRole.PRINCIPAL_INVESTIGATOR) {
+      navigate(`/pi/meeting/${meetingId}`);
+    } else if (UserRole.APPRAISAL_COUNCIL) {
+      navigate(`/council/meeting/${meetingId}`);
+    }
   };
 
   const handleJoinMeeting = (meetingLink: string) => {
@@ -132,7 +131,11 @@ const CouncilMeetings: React.FC = () => {
   };
 
   const handleScheduleMeeting = () => {
-    navigate("/council/meetings/schedule");
+    if (UserRole.PRINCIPAL_INVESTIGATOR) {
+      navigate("/pi/meetings/schedule");
+    } else if (UserRole.APPRAISAL_COUNCIL) {
+      navigate("/council/meetings/schedule");
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -148,11 +151,9 @@ const CouncilMeetings: React.FC = () => {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-start">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Council Meetings
-          </h1>
+          <h1 className="text-2xl font-bold tracking-tight">Meetings</h1>
           <p className="text-muted-foreground">
-            Schedule and participate in council meetings
+            Schedule and participate in Online meetings
           </p>
         </div>
         {isChairman && (
@@ -220,7 +221,6 @@ const CouncilMeetings: React.FC = () => {
                       <TableHead>Meeting Title</TableHead>
                       <TableHead>Date & Time</TableHead>
                       <TableHead>Type</TableHead>
-                      <TableHead>Project Code</TableHead>
                       <TableHead>Status</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
@@ -262,25 +262,31 @@ const CouncilMeetings: React.FC = () => {
                               {meeting.type}
                             </Badge>
                           </TableCell>
-                          <TableCell>{meeting.projectCode}</TableCell>
                           <TableCell>
                             {meeting.status === "Completed" && (
                               <div className="flex items-center gap-1">
                                 {meeting.joined ? (
                                   <>
                                     <CheckCircle className="h-4 w-4 text-green-500" />
-                                    <span className="text-green-700 text-sm">Joined</span>
+                                    <span className="text-green-700 text-sm">
+                                      Joined
+                                    </span>
                                   </>
                                 ) : (
                                   <>
                                     <AlertCircle className="h-4 w-4 text-orange-500" />
-                                    <span className="text-orange-700 text-sm">Not Joined</span>
+                                    <span className="text-orange-700 text-sm">
+                                      Not Joined
+                                    </span>
                                   </>
                                 )}
                               </div>
                             )}
                             {meeting.status === "Upcoming" && (
-                              <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
+                              <Badge
+                                variant="outline"
+                                className="bg-blue-50 text-blue-700 border-blue-200"
+                              >
                                 Upcoming
                               </Badge>
                             )}
@@ -325,4 +331,4 @@ const CouncilMeetings: React.FC = () => {
   );
 };
 
-export default CouncilMeetings;
+export default Meetings;

@@ -73,13 +73,13 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const getPriorityConfig = (priority: string) => {
     switch (priority) {
       case "High":
-        return { color: "bg-red-100 text-red-700", icon: "🔴" };
+        return { color: "bg-red-100 text-red-700", icon: "" };
       case "Medium":
-        return { color: "bg-yellow-100 text-yellow-700", icon: "🟡" };
+        return { color: "bg-yellow-100 text-yellow-700", icon: "" };
       case "Low":
-        return { color: "bg-blue-100 text-blue-700", icon: "🔵" };
+        return { color: "bg-blue-100 text-blue-700", icon: "" };
       default:
-        return { color: "bg-slate-100 text-slate-700", icon: "⚪" };
+        return { color: "bg-slate-100 text-slate-700", icon: "" };
     }
   };
 
@@ -150,12 +150,12 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-slate-900">
+          <DialogTitle className="text-lg sm:text-xl font-semibold text-slate-900">
             Task Details
           </DialogTitle>
-          <DialogDescription className="text-slate-600">
+          <DialogDescription className="text-sm sm:text-base text-slate-600">
             {isEditing
               ? "Edit task information"
               : "View task details and make changes"}
@@ -260,9 +260,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Low">🔵 Low</SelectItem>
-                    <SelectItem value="Medium">🟡 Medium</SelectItem>
-                    <SelectItem value="High">🔴 High</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
                   </SelectContent>
                 </Select>
               ) : (

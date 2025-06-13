@@ -79,25 +79,36 @@ export const TaskStatsCards: React.FC<TaskStatsCardsProps> = ({
       : []),
   ];
 
-  const statsToShow = showExtendedStats ? [...baseStats, ...extendedStats] : baseStats;
+  const statsToShow = showExtendedStats
+    ? [...baseStats, ...extendedStats]
+    : baseStats;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4">
       {statsToShow.map((stat, index) => {
         const IconComponent = stat.icon;
         return (
-          <Card key={index} className="border-slate-200">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-slate-600">{stat.title}</p>
-                  <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
+          <Card
+            key={index}
+            className="border-slate-200 hover:shadow-md transition-shadow"
+          >
+            <CardContent className="p-3 sm:p-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">
+                    {stat.title}
+                  </p>
+                  <p
+                    className={`text-lg sm:text-2xl font-bold ${stat.color} leading-tight`}
+                  >
+                    {stat.value}
+                  </p>
                 </div>
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center ${stat.iconColor}`}
+                  className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${stat.iconColor}`}
                 >
                   {typeof IconComponent === "function" && IconComponent.name ? (
-                    <IconComponent className="w-4 h-4" />
+                    <IconComponent className="w-3 h-3 sm:w-4 sm:h-4" />
                   ) : (
                     <IconComponent />
                   )}

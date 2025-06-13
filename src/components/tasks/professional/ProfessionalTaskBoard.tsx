@@ -5,6 +5,7 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCorners,
@@ -158,6 +159,12 @@ export const ProfessionalTaskBoard: React.FC = () => {
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 8,
       },
     })
   );
@@ -357,18 +364,22 @@ export const ProfessionalTaskBoard: React.FC = () => {
         </div>
       </div>
 
-      {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto kanban-container">
-        <div className="p-4">
+      {/* Kanban Board - Responsive with Column Wrapping */}
+      <div className="flex-1 lg:overflow-x-auto kanban-container">
+        <div className="p-2 sm:p-4">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
           >
-            <div className="flex gap-4 items-start justify-center min-w-full">
+            {/* Responsive Grid: Mobile(1col) -> Tablet(2col) -> Desktop(4col flex) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:gap-4 gap-3 lg:items-start lg:justify-center lg:min-w-full">
               {TASK_STATUSES.map((status) => (
-                <div key={status} className="flex-shrink-0 w-80 min-w-[300px]">
+                <div
+                  key={status}
+                  className="w-full lg:flex-shrink-0 lg:w-80 lg:min-w-[300px] kanban-column"
+                >
                   <TaskColumn
                     status={status}
                     tasks={tasksByStatus[status]}
@@ -380,7 +391,9 @@ export const ProfessionalTaskBoard: React.FC = () => {
 
             <DragOverlay>
               {activeTask ? (
-                <TaskCard task={activeTask} onClick={() => {}} />
+                <div className="transform rotate-3 scale-105 opacity-95">
+                  <TaskCard task={activeTask} onClick={() => {}} />
+                </div>
               ) : null}
             </DragOverlay>
           </DndContext>

@@ -4,7 +4,6 @@ export { buttonVariants } from "./button-variants";
 
 // Sidebar exports
 export * from "./sidebar";
-export { useSidebar } from "./sidebar-hooks";
 
 // Badge exports
 export { Badge } from "./badge";

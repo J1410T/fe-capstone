@@ -85,16 +85,15 @@ const EvaluationDetail: React.FC = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <Button
-            variant="ghost"
-            className="mb-2"
-            onClick={() => navigate("/council/evaluations")}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Evaluations
-          </Button>
+      <div className="flex items-center">
+        <Button
+          variant="outline"
+          className="mr-4"
+          onClick={() => navigate("/council/evaluations")}
+        >
+          <ArrowLeft className="  h-4 w-4" />
+        </Button>
+        <div className="flex justify-between flex-col ">
           <h1 className="text-2xl font-bold tracking-tight">
             {evaluation.projectTitle}
           </h1>
@@ -123,8 +122,6 @@ const EvaluationDetail: React.FC = () => {
               {evaluation.status}
             </Badge>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
           <Button
             variant="outline"
             onClick={() => navigate(`/council/evaluation/${id}/form`)}

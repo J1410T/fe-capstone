@@ -196,10 +196,10 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
                     <div className="flex items-center space-x-2">
                       <span className="text-sm">
                         {priority === "High"
-                          ? "🔴"
+                          ? ""
                           : priority === "Medium"
-                          ? "🟡"
-                          : "🔵"}
+                          ? ""
+                          : ""}
                       </span>
                       <span>{priority} Priority</span>
                     </div>

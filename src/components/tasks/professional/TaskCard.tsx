@@ -18,28 +18,28 @@ const getPriorityConfig = (priority: string) => {
         color: "text-red-600",
         bgColor: "bg-red-50",
         borderColor: "border-red-200",
-        icon: "🔴",
+        icon: "",
       };
     case "Medium":
       return {
         color: "text-amber-600",
         bgColor: "bg-amber-50",
         borderColor: "border-amber-200",
-        icon: "🟡",
+        icon: "",
       };
     case "Low":
       return {
         color: "text-blue-600",
         bgColor: "bg-blue-50",
         borderColor: "border-blue-200",
-        icon: "🔵",
+        icon: "",
       };
     default:
       return {
         color: "text-slate-600",
         bgColor: "bg-slate-50",
         borderColor: "border-slate-200",
-        icon: "⚪",
+        icon: "",
       };
   }
 };
@@ -81,38 +81,42 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
     >
       <div
         className={`
-          bg-white rounded-lg border border-slate-200 p-4 shadow-sm hover:shadow-md transition-all duration-200
+          bg-white rounded-lg border border-slate-200 p-3 sm:p-4 shadow-sm hover:shadow-md transition-all duration-200
+          touch-manipulation select-none
           ${
             sortableIsDragging
-              ? "shadow-lg ring-2 ring-blue-400 ring-opacity-50"
+              ? "shadow-lg ring-2 ring-blue-400 ring-opacity-50 scale-105"
               : ""
           }
           ${overdue ? "ring-1 ring-red-300 bg-red-50" : ""}
         `}
       >
         {/* Priority and Overdue Indicators */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center space-x-1">
-            <span className="text-sm">{priorityConfig.icon}</span>
-            <span className={`text-xs font-medium ${priorityConfig.color}`}>
+            <span className="text-xs sm:text-sm">{priorityConfig.icon}</span>
+            <span className={`text-sm  font-semibold ${priorityConfig.color}`}>
               {task.priority}
             </span>
           </div>
           {overdue && (
             <div className="flex items-center space-x-1 text-red-600">
               <AlertCircle className="w-3 h-3" />
-              <span className="text-xs font-medium">Overdue</span>
+              <span className="text-xs font-medium hidden sm:inline">
+                Overdue
+              </span>
+              <span className="text-xs font-medium sm:hidden">!</span>
             </div>
           )}
         </div>
 
         {/* Task Title */}
-        <h4 className="font-semibold text-sm text-slate-900 mb-2 line-clamp-2 leading-tight">
+        <h4 className="font-semibold text-xs sm:text-sm text-slate-900 mb-2 line-clamp-2 leading-tight">
           {task.title}
         </h4>
 
         {/* Due Date */}
-        <div className="flex items-center space-x-1 mb-3">
+        <div className="flex items-center space-x-1 mb-2 sm:mb-3">
           <Calendar className="w-3 h-3 text-slate-400" />
           <span
             className={`text-xs ${
@@ -125,8 +129,8 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
 
         {/* Footer with Assignee */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Avatar className="w-6 h-6">
+          <div className="flex items-center space-x-1 sm:space-x-2 min-w-0 flex-1">
+            <Avatar className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0">
               <AvatarImage
                 src={task.assignee.avatar}
                 alt={task.assignee.name}
@@ -138,13 +142,13 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
                   .join("")}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-slate-600 truncate max-w-[100px]">
+            <span className="text-xs text-slate-600 truncate max-w-[60px] sm:max-w-[100px]">
               {task.assignee.name.split(" ")[0]}
             </span>
           </div>
 
           {/* Task ID for reference */}
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-slate-400 font-mono flex-shrink-0 ml-1">
             #{task.id.slice(-4)}
           </span>
         </div>

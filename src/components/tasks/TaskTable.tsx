@@ -33,13 +33,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  Plus,
+  // Plus,
   Search,
   // Filter, // Unused import
   Edit,
   Eye,
   Calendar,
-  Flag,
+  // Flag,
   // User, // Unused import
   ChevronLeft,
   ChevronRight,
@@ -85,10 +85,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   onTaskEdit,
   onTaskView,
   onTaskClick,
-  onCreateTask,
-  // isLeader = true, // Unused parameter
-  title = "Task Management",
-  description = "Manage and track your tasks efficiently",
 }) => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -116,13 +112,13 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   const getPriorityConfig = (priority: string) => {
     switch (priority) {
       case "High":
-        return { color: "bg-red-100 text-red-700", icon: "🔴" };
+        return { color: "bg-red-100 text-red-700", icon: "" };
       case "Medium":
-        return { color: "bg-yellow-100 text-yellow-700", icon: "🟡" };
+        return { color: "bg-yellow-100 text-yellow-700", icon: "" };
       case "Low":
-        return { color: "bg-blue-100 text-blue-700", icon: "🔵" };
+        return { color: "bg-blue-100 text-blue-700", icon: "" };
       default:
-        return { color: "bg-slate-100 text-slate-700", icon: "⚪" };
+        return { color: "bg-slate-100 text-slate-700", icon: "" };
     }
   };
 
@@ -183,31 +179,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         ),
       },
       {
-        accessorKey: "status",
-        header: ({ column }: { column: Column<Task, unknown> }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-auto p-0 font-semibold text-slate-700 hover:text-slate-900"
-          >
-            Status
-            {column.getIsSorted() === "asc" ? (
-              <ArrowUp className="ml-2 h-4 w-4" />
-            ) : column.getIsSorted() === "desc" ? (
-              <ArrowDown className="ml-2 h-4 w-4" />
-            ) : (
-              <ArrowUpDown className="ml-2 h-4 w-4" />
-            )}
-          </Button>
-        ),
-        cell: ({ row }: { row: Row<Task> }) => {
-          const statusConfig = getStatusConfig(row.original.status);
-          return (
-            <Badge className={statusConfig.color}>{row.original.status}</Badge>
-          );
-        },
-      },
-      {
         accessorKey: "priority",
         header: ({ column }: { column: Column<Task, unknown> }) => (
           <Button
@@ -228,9 +199,11 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         cell: ({ row }: { row: Row<Task> }) => {
           const priorityConfig = getPriorityConfig(row.original.priority);
           return (
-            <Badge variant="outline" className={priorityConfig.color}>
-              {priorityConfig.icon} {row.original.priority}
-            </Badge>
+            <div className="flex justify-center">
+              <Badge variant="outline" className={priorityConfig.color}>
+                {priorityConfig.icon} {row.original.priority}
+              </Badge>
+            </div>
           );
         },
       },
@@ -300,6 +273,31 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             </span>
           </div>
         ),
+      },
+      {
+        accessorKey: "status",
+        header: ({ column }: { column: Column<Task, unknown> }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-auto p-0 font-semibold text-slate-700 hover:text-slate-900"
+          >
+            Status
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-2 h-4 w-4" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-2 h-4 w-4" />
+            ) : (
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            )}
+          </Button>
+        ),
+        cell: ({ row }: { row: Row<Task> }) => {
+          const statusConfig = getStatusConfig(row.original.status);
+          return (
+            <Badge className={statusConfig.color}>{row.original.status}</Badge>
+          );
+        },
       },
       {
         id: "actions",
@@ -417,7 +415,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-slate-900">{title}</h2>
           <p className="text-sm text-slate-600 mt-1">{description}</p>
@@ -431,7 +429,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             Create Task
           </Button>
         )}
-      </div>
+      </div> */}
 
       {/* Filters */}
       <Card className="border-slate-200">
@@ -460,8 +458,8 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             )}
           </div>
 
-          {/* Filter Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Filter Row - Responsive */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* Status Filter */}
             <div className="space-y-2">
               <label className="text-sm font-medium text-slate-700">
@@ -492,9 +490,9 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Priorities</SelectItem>
-                  <SelectItem value="High">🔴 High</SelectItem>
-                  <SelectItem value="Medium">🟡 Medium</SelectItem>
-                  <SelectItem value="Low">🔵 Low</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -565,8 +563,8 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         </CardContent>
       </Card>
 
-      {/* Task Statistics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Task Statistics - Responsive */}
+      {/* <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
         <Card className="border-slate-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -658,7 +656,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             </div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
       {/* Task Table */}
       <Card className="border-slate-200">
@@ -726,9 +724,9 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         </CardContent>
       </Card>
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between">
-        <div className="text-sm text-slate-600">
+      {/* Pagination - Responsive */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="text-xs sm:text-sm text-slate-600 text-center sm:text-left">
           Showing{" "}
           {table.getState().pagination.pageIndex *
             table.getState().pagination.pageSize +
@@ -741,7 +739,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
           )}{" "}
           of {table.getFilteredRowModel().rows.length} tasks
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-1 sm:space-x-2">
           <Button
             variant="outline"
             size="sm"
@@ -749,8 +747,8 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             disabled={!table.getCanPreviousPage()}
             className="border-slate-300 text-slate-700 hover:bg-slate-50"
           >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Previous
+            <ChevronLeft className="w-4 h-4 sm:mr-1" />
+            <span className="hidden sm:inline">Previous</span>
           </Button>
           <div className="flex items-center space-x-1">
             {Array.from({ length: table.getPageCount() }, (_, i) => i + 1)
@@ -794,8 +792,8 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             disabled={!table.getCanNextPage()}
             className="border-slate-300 text-slate-700 hover:bg-slate-50"
           >
-            Next
-            <ChevronRight className="w-4 h-4 ml-1" />
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRight className="w-4 h-4 sm:ml-1" />
           </Button>
         </div>
       </div>

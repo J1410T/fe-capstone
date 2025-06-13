@@ -36,10 +36,9 @@ export const ProjectsPagination: React.FC<ProjectsPaginationProps> = ({
             <SelectValue placeholder={pageSize.toString()} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="5">5</SelectItem>
-            <SelectItem value="10">10</SelectItem>
-            <SelectItem value="20">20</SelectItem>
-            <SelectItem value="50">50</SelectItem>
+            <SelectItem value="6">6</SelectItem>
+            <SelectItem value="9">9</SelectItem>
+            <SelectItem value="12">12</SelectItem>
           </SelectContent>
         </Select>
       </div>

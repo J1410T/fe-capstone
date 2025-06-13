@@ -5,6 +5,7 @@ import {
   DragOverlay,
   DragStartEvent,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   closestCorners,
@@ -102,6 +103,12 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,
+        tolerance: 8,
       },
     })
   );
@@ -243,16 +250,20 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
 
   return (
     <div className="min-h-full bg-slate-50">
-      {/* Search and Filter Bar - Aligned with Header */}
-      <div className="bg-white border-b border-slate-200 py-4 flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-6">
+      {/* Search and Filter Bar - Mobile Responsive */}
+      <div className="bg-white border-b border-slate-200 py-3 sm:py-4 flex-shrink-0">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row gap-3">
-            <SearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              placeholder="Search tasks in Kanban view..."
-            />
-            <StatusFilter value={statusFilter} onChange={setStatusFilter} />
+            <div className="flex-1">
+              <SearchBar
+                value={searchQuery}
+                onChange={setSearchQuery}
+                placeholder="Search tasks..."
+              />
+            </div>
+            <div className="w-full sm:w-auto">
+              <StatusFilter value={statusFilter} onChange={setStatusFilter} />
+            </div>
           </div>
         </div>
       </div>
@@ -302,17 +313,21 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
         </div>
       </div>
 
-      {/* Kanban Board */}
-      <div className="overflow-x-auto p-4 kanban-container">
+      {/* Kanban Board - Responsive with Column Wrapping */}
+      <div className="p-2 sm:p-4 lg:overflow-x-auto kanban-container">
         <DndContext
           sensors={sensors}
           collisionDetection={closestCorners}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="flex gap-4 items-start justify-center min-w-full pb-4">
+          {/* Responsive Grid: Mobile(1col) -> Tablet(2col) -> Desktop(4col flex) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:gap-4 gap-3 lg:items-start lg:min-w-max pb-4">
             {KANBAN_STATUSES.map((status) => (
-              <div key={status} className="flex-shrink-0 w-80 min-w-[300px]">
+              <div
+                key={status}
+                className="w-full lg:flex-shrink-0 lg:w-80 lg:min-w-[320px] kanban-column"
+              >
                 <TaskColumn
                   status={status}
                   tasks={tasksByStatus[status].map(convertToProfessionalTask)}
@@ -330,14 +345,19 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
 
           <DragOverlay>
             {activeTask ? (
-              <TaskCard
-                task={{
-                  ...activeTask,
-                  assignee: { ...activeTask.assignedTo, role: UserRole.MEMBER },
-                  status: STATUS_MAPPING[activeTask.status] as KanbanStatus,
-                }}
-                onClick={() => {}}
-              />
+              <div className="transform rotate-3 scale-105 opacity-95">
+                <TaskCard
+                  task={{
+                    ...activeTask,
+                    assignee: {
+                      ...activeTask.assignedTo,
+                      role: UserRole.MEMBER,
+                    },
+                    status: STATUS_MAPPING[activeTask.status] as KanbanStatus,
+                  }}
+                  onClick={() => {}}
+                />
+              </div>
             ) : null}
           </DragOverlay>
         </DndContext>
