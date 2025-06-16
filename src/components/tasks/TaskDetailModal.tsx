@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar, Edit, X, Save } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { DatePicker } from "@/components/ui/date-picker";
 
 // Task interface
 interface Task {
@@ -58,10 +59,12 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<Task>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedDueDate, setSelectedDueDate] = useState<Date | undefined>();
 
   useEffect(() => {
     if (task) {
       setEditData(task);
+      setSelectedDueDate(task.dueDate ? parseISO(task.dueDate) : undefined);
       setErrors({});
       setIsEditing(false);
     }
@@ -141,6 +144,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   const handleCancel = () => {
     setEditData(task);
+    setSelectedDueDate(task.dueDate ? parseISO(task.dueDate) : undefined);
     setErrors({});
     setIsEditing(false);
   };
@@ -279,17 +283,18 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </label>
               {isEditing ? (
                 <div>
-                  <Input
-                    type="date"
-                    value={
-                      editData.dueDate ? editData.dueDate.split("T")[0] : ""
-                    }
-                    onChange={(e) =>
+                  <DatePicker
+                    date={selectedDueDate}
+                    onDateChange={(date) => {
+                      setSelectedDueDate(date);
                       handleInputChange(
                         "dueDate",
-                        e.target.value + "T17:00:00Z"
-                      )
-                    }
+                        date ? date.toISOString() : ""
+                      );
+                    }}
+                    placeholder="Select due date"
+                    disablePastDates={true}
+                    inDialog={true}
                     className={`${
                       errors.dueDate
                         ? "border-red-300 focus:border-red-500 focus:ring-red-500"

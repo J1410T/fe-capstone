@@ -5,6 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 import { FormData } from "../../constants";
 
 interface BM2FormData extends FormData {
@@ -34,6 +36,9 @@ export const BM2Form: React.FC<BM2FormProps> = ({
   onSubmit,
 }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedMeetingDate, setSelectedMeetingDate] = useState<
+    Date | undefined
+  >(formData.meetingDate ? new Date(formData.meetingDate) : undefined);
 
   const handleInputChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
@@ -97,14 +102,17 @@ export const BM2Form: React.FC<BM2FormProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="meetingDate">Meeting Date *</Label>
-                <Input
-                  id="meetingDate"
-                  type="date"
-                  value={String(formData.meetingDate || "")}
-                  onChange={(e) =>
-                    handleInputChange("meetingDate", e.target.value)
-                  }
+                <Label>Meeting Date *</Label>
+                <DatePicker
+                  date={selectedMeetingDate}
+                  onDateChange={(date) => {
+                    setSelectedMeetingDate(date);
+                    handleInputChange(
+                      "meetingDate",
+                      date ? date.toISOString().split("T")[0] : ""
+                    );
+                  }}
+                  placeholder="Select meeting date"
                   className={errors.meetingDate ? "border-red-500" : ""}
                 />
                 {errors.meetingDate && (
@@ -113,14 +121,11 @@ export const BM2Form: React.FC<BM2FormProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="meetingTime">Meeting Time</Label>
-                <Input
-                  id="meetingTime"
-                  type="time"
-                  value={String(formData.meetingTime || "")}
-                  onChange={(e) =>
-                    handleInputChange("meetingTime", e.target.value)
-                  }
+                <Label>Meeting Time</Label>
+                <TimePicker
+                  value={formData.meetingTime || ""}
+                  onChange={(time) => handleInputChange("meetingTime", time)}
+                  placeholder="Select meeting time"
                 />
               </div>
             </div>

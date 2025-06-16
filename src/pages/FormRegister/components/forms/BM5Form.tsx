@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DatePicker } from "@/components/ui/date-picker";
 import { FormData } from "../../constants";
 
 interface BM5FormData extends FormData {
@@ -48,6 +49,14 @@ export const BM5Form: React.FC<BM5FormProps> = ({
   onSubmit,
 }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedRequestDate, setSelectedRequestDate] = useState<
+    Date | undefined
+  >(formData.requestDate ? new Date(formData.requestDate) : undefined);
+  const [selectedStartDate, setSelectedStartDate] = useState<Date | undefined>(
+    formData.proposedStartDate
+      ? new Date(formData.proposedStartDate)
+      : undefined
+  );
 
   const handleInputChange = (field: string, value: string) => {
     const newData = { ...formData, [field]: value };
@@ -139,14 +148,17 @@ export const BM5Form: React.FC<BM5FormProps> = ({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="requestDate">Request Date</Label>
-                <Input
-                  id="requestDate"
-                  type="date"
-                  value={formData.requestDate || ""}
-                  onChange={(e) =>
-                    handleInputChange("requestDate", e.target.value)
-                  }
+                <Label>Request Date</Label>
+                <DatePicker
+                  date={selectedRequestDate}
+                  onDateChange={(date) => {
+                    setSelectedRequestDate(date);
+                    handleInputChange(
+                      "requestDate",
+                      date ? date.toISOString().split("T")[0] : ""
+                    );
+                  }}
+                  placeholder="Select request date"
                 />
               </div>
             </div>
@@ -331,14 +343,18 @@ export const BM5Form: React.FC<BM5FormProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="proposedStartDate">Proposed Start Date</Label>
-                <Input
-                  id="proposedStartDate"
-                  type="date"
-                  value={formData.proposedStartDate || ""}
-                  onChange={(e) =>
-                    handleInputChange("proposedStartDate", e.target.value)
-                  }
+                <Label>Proposed Start Date</Label>
+                <DatePicker
+                  date={selectedStartDate}
+                  onDateChange={(date) => {
+                    setSelectedStartDate(date);
+                    handleInputChange(
+                      "proposedStartDate",
+                      date ? date.toISOString().split("T")[0] : ""
+                    );
+                  }}
+                  placeholder="Select proposed start date"
+                  disablePastDates={true}
                 />
               </div>
 

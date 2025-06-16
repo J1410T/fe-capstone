@@ -27,6 +27,8 @@ export * from "./progress";
 export * from "./table";
 export * from "./tabs";
 export * from "./calendar";
+export * from "./date-picker";
+export * from "./date-time-picker";
 export * from "./popover";
 export * from "./command";
 export * from "./sheet";
