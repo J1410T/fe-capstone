@@ -34,22 +34,14 @@ import {
   AlertTriangle,
   Edit,
   Trash2,
-  CalendarIcon,
 } from "lucide-react";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
 import { Milestone, Task, PIUser } from "../shared/types";
 import { StatusBadge } from "../shared/components";
 import { formatDate, calculateMilestoneProgress } from "../shared/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Card } from "@/components/ui";
+import { DatePicker } from "@/components/ui/date-picker";
 
 const MilestoneTab: React.FC = () => {
   const { user } = useAuth();
@@ -621,58 +613,18 @@ const MilestoneTab: React.FC = () => {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-base">Deadline *</Label>
-
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal text-base",
-                              !milestoneDeadlineDate && "text-muted-foreground"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {milestoneDeadlineDate ? (
-                              format(milestoneDeadlineDate, "PPP")
-                            ) : (
-                              <span>Pick a deadline</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <div className="p-3 space-y-3">
-                            <Calendar
-                              mode="single"
-                              selected={milestoneDeadlineDate}
-                              onSelect={setMilestoneDeadlineDate}
-                              disabled={(date) =>
-                                date < new Date(new Date().setHours(0, 0, 0, 0))
-                              }
-                              className="rounded-md border-0"
-                            />
-                            {milestoneDeadlineDate && (
-                              <div className="flex justify-between items-center pt-2 border-t">
-                                <span className="text-sm text-muted-foreground">
-                                  {format(
-                                    milestoneDeadlineDate,
-                                    "EEEE, MMMM do, yyyy"
-                                  )}
-                                </span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    setMilestoneDeadlineDate(undefined)
-                                  }
-                                  className="h-7 px-2 text-xs"
-                                >
-                                  Clear
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                      <DatePicker
+                        date={milestoneDeadlineDate}
+                        onDateChange={setMilestoneDeadlineDate}
+                        placeholder="Select a date"
+                        disablePastDates={true}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Selected:{" "}
+                        {milestoneDeadlineDate
+                          ? milestoneDeadlineDate.toLocaleDateString()
+                          : "None"}
+                      </p>
                     </div>
                   </div>
                   <DialogFooter>
@@ -1019,64 +971,18 @@ const MilestoneTab: React.FC = () => {
                                   <Label className="text-base">
                                     Due Date *
                                   </Label>
-                                  <Popover>
-                                    <PopoverTrigger asChild>
-                                      <Button
-                                        variant="outline"
-                                        className={cn(
-                                          "w-full justify-start text-left font-normal text-base",
-                                          !taskDueDate &&
-                                            "text-muted-foreground"
-                                        )}
-                                      >
-                                        <CalendarIcon className="mr-2 h-4 w-4" />
-                                        {taskDueDate ? (
-                                          format(taskDueDate, "PPP")
-                                        ) : (
-                                          <span>Pick a due date</span>
-                                        )}
-                                      </Button>
-                                    </PopoverTrigger>
-                                    <PopoverContent
-                                      className="w-auto p-0"
-                                      align="start"
-                                    >
-                                      <div className="p-3 space-y-3">
-                                        <Calendar
-                                          mode="single"
-                                          selected={taskDueDate}
-                                          onSelect={setTaskDueDate}
-                                          disabled={(date) =>
-                                            date <
-                                            new Date(
-                                              new Date().setHours(0, 0, 0, 0)
-                                            )
-                                          }
-                                          className="rounded-md border-0"
-                                        />
-                                        {taskDueDate && (
-                                          <div className="flex justify-between items-center pt-2 border-t">
-                                            <span className="text-sm text-muted-foreground">
-                                              {format(
-                                                taskDueDate,
-                                                "EEEE, MMMM do, yyyy"
-                                              )}
-                                            </span>
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={() =>
-                                                setTaskDueDate(undefined)
-                                              }
-                                              className="h-7 px-2 text-xs"
-                                            >
-                                              Clear
-                                            </Button>
-                                          </div>
-                                        )}
-                                      </div>
-                                    </PopoverContent>
-                                  </Popover>
+                                  <DatePicker
+                                    date={taskDueDate}
+                                    onDateChange={setTaskDueDate}
+                                    placeholder="Select a date"
+                                    disablePastDates={true}
+                                  />
+                                  <p className="text-sm text-muted-foreground">
+                                    Selected:{" "}
+                                    {taskDueDate
+                                      ? taskDueDate.toLocaleDateString()
+                                      : "None"}
+                                  </p>
                                 </div>
                               </div>
                               <DialogFooter>

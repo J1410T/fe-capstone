@@ -218,9 +218,9 @@ const ScheduleMeeting: React.FC = () => {
                       <Calendar
                         mode="single"
                         selected={formData.date}
-                        onSelect={(date) =>
-                          setFormData((prev) => ({ ...prev, date }))
-                        }
+                        onSelect={(date) => {
+                          setFormData((prev) => ({ ...prev, date }));
+                        }}
                         disabled={(date) =>
                           date < new Date(new Date().setHours(0, 0, 0, 0))
                         }

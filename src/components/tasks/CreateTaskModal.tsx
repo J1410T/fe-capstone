@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Calendar, User, Flag, Tag } from "lucide-react";
+import { DatePicker } from "../ui";
 
 interface Task {
   title: string;
@@ -96,8 +97,18 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     projectTag: "",
     assignedToId: "",
   });
+  const [selectedDueDate, setSelectedDueDate] = useState<Date | undefined>(
+    formData.dueDate ? new Date(formData.dueDate) : undefined
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sync selectedDueDate with formData.dueDate
+  useEffect(() => {
+    if (formData.dueDate && !selectedDueDate) {
+      setSelectedDueDate(new Date(formData.dueDate));
+    }
+  }, [formData.dueDate, selectedDueDate]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -164,6 +175,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         projectTag: "",
         assignedToId: "",
       });
+      setSelectedDueDate(undefined);
       setErrors({});
     }, 1000);
   };
@@ -226,20 +238,22 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Due Date */}
             <div className="space-y-2">
-              <Label htmlFor="dueDate" className="flex items-center space-x-1">
+              <Label className="flex items-center space-x-1">
                 <Calendar className="w-4 h-4" />
                 <span>Due Date *</span>
               </Label>
-              <Input
-                id="dueDate"
-                type="datetime-local"
-                value={formData.dueDate}
-                onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                className={errors.dueDate ? "border-red-500" : ""}
+              <DatePicker
+                date={selectedDueDate}
+                onDateChange={setSelectedDueDate}
+                placeholder="Select a date"
+                disablePastDates={true}
               />
-              {errors.dueDate && (
-                <p className="text-sm text-red-500">{errors.dueDate}</p>
-              )}
+              <p className="text-sm text-muted-foreground">
+                Selected:{" "}
+                {selectedDueDate
+                  ? selectedDueDate.toLocaleDateString()
+                  : "None"}
+              </p>
             </div>
 
             {/* Priority */}

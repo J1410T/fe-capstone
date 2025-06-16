@@ -1,26 +1,27 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { format } from "date-fns"
-import { Calendar as CalendarIcon, Clock } from "lucide-react"
+import * as React from "react";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon, Clock } from "lucide-react";
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 interface DateTimePickerProps {
-  date?: Date
-  onDateChange?: (date: Date | undefined) => void
-  placeholder?: string
-  className?: string
-  disabled?: boolean
+  date?: Date;
+  onDateChange?: (date: Date | undefined) => void;
+  placeholder?: string;
+  className?: string;
+  disabled?: boolean;
+  inDialog?: boolean;
 }
 
 export function DateTimePicker({
@@ -29,63 +30,66 @@ export function DateTimePicker({
   placeholder = "Pick a date and time",
   className,
   disabled = false,
+  inDialog = false,
 }: DateTimePickerProps) {
-  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(date)
+  const [selectedDate, setSelectedDate] = React.useState<Date | undefined>(
+    date
+  );
   const [timeValue, setTimeValue] = React.useState<string>(
     date ? format(date, "HH:mm") : "09:00"
-  )
-  const [isOpen, setIsOpen] = React.useState(false)
+  );
+  const [isOpen, setIsOpen] = React.useState(false);
 
   React.useEffect(() => {
-    setSelectedDate(date)
+    setSelectedDate(date);
     if (date) {
-      setTimeValue(format(date, "HH:mm"))
+      setTimeValue(format(date, "HH:mm"));
     }
-  }, [date])
+  }, [date]);
 
   const handleDateSelect = (newDate: Date | undefined) => {
     if (!newDate) {
-      setSelectedDate(undefined)
-      onDateChange?.(undefined)
-      return
+      setSelectedDate(undefined);
+      return;
     }
 
     // Combine the selected date with the current time
-    const [hours, minutes] = timeValue.split(":").map(Number)
-    const combinedDateTime = new Date(newDate)
-    combinedDateTime.setHours(hours, minutes, 0, 0)
+    const [hours, minutes] = timeValue.split(":").map(Number);
+    const combinedDateTime = new Date(newDate);
+    combinedDateTime.setHours(hours, minutes, 0, 0);
 
-    setSelectedDate(combinedDateTime)
-    onDateChange?.(combinedDateTime)
-  }
+    setSelectedDate(combinedDateTime);
+  };
 
   const handleTimeChange = (newTime: string) => {
-    setTimeValue(newTime)
+    setTimeValue(newTime);
 
-    if (!selectedDate) return
+    if (!selectedDate) return;
 
     // Update the time on the selected date
-    const [hours, minutes] = newTime.split(":").map(Number)
-    const updatedDateTime = new Date(selectedDate)
-    updatedDateTime.setHours(hours, minutes, 0, 0)
+    const [hours, minutes] = newTime.split(":").map(Number);
+    const updatedDateTime = new Date(selectedDate);
+    updatedDateTime.setHours(hours, minutes, 0, 0);
 
-    setSelectedDate(updatedDateTime)
-    onDateChange?.(updatedDateTime)
-  }
+    setSelectedDate(updatedDateTime);
+  };
 
   const handleClear = () => {
-    setSelectedDate(undefined)
-    setTimeValue("09:00")
-    onDateChange?.(undefined)
-    setIsOpen(false)
-  }
+    setSelectedDate(undefined);
+    setTimeValue("09:00");
+    onDateChange?.(undefined);
+    setIsOpen(false);
+  };
 
   const handleApply = () => {
-    setIsOpen(false)
-  }
+    if (selectedDate) {
+      onDateChange?.(selectedDate);
+    }
+    setIsOpen(false);
+  };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
+    <Popover open={isOpen} onOpenChange={setIsOpen} modal={true}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -104,12 +108,18 @@ export function DateTimePicker({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
+      <PopoverContent
+        className={cn("w-auto p-0", inDialog && "z-[200]")}
+        align="start"
+      >
         <div className="flex">
           <Calendar
             mode="single"
             selected={selectedDate}
             onSelect={handleDateSelect}
+            disabled={(date) =>
+              date < new Date(new Date().setHours(0, 0, 0, 0))
+            }
             initialFocus
           />
           <div className="border-l border-border p-3 space-y-3">
@@ -137,11 +147,7 @@ export function DateTimePicker({
               >
                 Clear
               </Button>
-              <Button
-                size="sm"
-                onClick={handleApply}
-                className="flex-1"
-              >
+              <Button size="sm" onClick={handleApply} className="flex-1">
                 Apply
               </Button>
             </div>
@@ -149,5 +155,5 @@ export function DateTimePicker({
         </div>
       </PopoverContent>
     </Popover>
-  )
+  );
 }
