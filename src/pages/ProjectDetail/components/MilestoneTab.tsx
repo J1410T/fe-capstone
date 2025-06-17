@@ -42,10 +42,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Card } from "@/components/ui";
 import { DatePicker } from "@/components/ui/date-picker";
-<<<<<<< HEAD
-=======
-
->>>>>>> 67359d288c4b00d171e2fb29d4c03a6ad52657b9
 
 const MilestoneTab: React.FC = () => {
   const { user } = useAuth();
@@ -629,10 +625,6 @@ const MilestoneTab: React.FC = () => {
                           ? milestoneDeadlineDate.toLocaleDateString()
                           : "None"}
                       </p>
-<<<<<<< HEAD
-=======
-
->>>>>>> 67359d288c4b00d171e2fb29d4c03a6ad52657b9
                     </div>
                   </div>
                   <DialogFooter>
