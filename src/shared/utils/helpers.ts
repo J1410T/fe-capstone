@@ -1,7 +1,14 @@
 /**
  * Collection of utility functions for common operations
+ * This file re-exports utilities from specialized modules for backward compatibility
  * @module helpers
  */
+
+// Re-export from specialized utility modules
+export * from "./date";
+export * from "./string";
+export * from "./validation";
+export * from "./status";
 
 /**
  * Creates a debounced version of a function that delays its execution
@@ -28,6 +35,7 @@ export const debounce = <T extends (...args: unknown[]) => unknown>(
     timeout = setTimeout(() => func(...args), wait);
   };
 };
+<<<<<<< Updated upstream
 
 /**
  * Formats a date into a human-readable string
@@ -72,3 +80,5 @@ export const truncateString = (
   if (str.length <= length) return str;
   return `${str.slice(0, length)}${ellipsis}`;
 };
+=======
+>>>>>>> Stashed changes

@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, X, File } from "lucide-react";
+import {
+  getStatusColor,
+  formatFileSize,
+  generateId,
+} from "@/shared/utils/helpers";
 import { FileUpload } from "./types";
 
 interface StatusBadgeProps {
@@ -11,29 +16,6 @@ interface StatusBadgeProps {
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({ status }) => {
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "approved":
-      case "completed":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "pending":
-      case "in progress":
-      case "processing":
-      case "under review":
-      case "submitted":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "rejected":
-      case "overdue":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "draft":
-      case "not started":
-      case "to do":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
-        return "bg-blue-100 text-blue-800 border-blue-200";
-    }
-  };
-
   return (
     <Badge variant="outline" className={getStatusColor(status)}>
       {status}
@@ -65,7 +47,7 @@ export const FileUploadComponent: React.FC<FileUploadProps> = ({
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(event.target.files || []);
     const newFiles: FileUpload[] = selectedFiles.map((file) => ({
-      id: `file_${Date.now()}_${Math.random()}`,
+      id: generateId(),
       name: file.name,
       size: file.size,
       type: file.type,
@@ -97,7 +79,7 @@ export const FileUploadComponent: React.FC<FileUploadProps> = ({
 
     const droppedFiles = Array.from(event.dataTransfer.files);
     const newFiles: FileUpload[] = droppedFiles.map((file) => ({
-      id: `file_${Date.now()}_${Math.random()}`,
+      id: generateId(),
       name: file.name,
       size: file.size,
       type: file.type,
@@ -108,13 +90,7 @@ export const FileUploadComponent: React.FC<FileUploadProps> = ({
     onFilesChange(updatedFiles);
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes === 0) return "0 Bytes";
-    const k = 1024;
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  };
+  // formatFileSize is now imported from shared utilities
 
   return (
     <div className="space-y-2">

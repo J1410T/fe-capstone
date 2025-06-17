@@ -1,17 +1,8 @@
 import { CheckCircle, Clock, AlertCircle } from "lucide-react";
+import { getStatusColorEmerald } from "@/shared/utils/status";
 
-export const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Completed":
-      return "bg-emerald-100 text-emerald-800 border-emerald-200";
-    case "In Progress":
-      return "bg-blue-100 text-blue-800 border-blue-200";
-    case "Pending":
-      return "bg-amber-100 text-amber-800 border-amber-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
-  }
-};
+// Use the shared status color function with emerald variant
+export const getStatusColor = getStatusColorEmerald;
 
 export const getStatusIcon = (status: string) => {
   switch (status) {

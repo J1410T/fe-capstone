@@ -1,4 +1,5 @@
 import { TimeLimit, PaymentSchedule, PaymentPhase } from "./types";
+<<<<<<< Updated upstream
 
 // Time and date utilities
 export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
@@ -37,6 +38,27 @@ export const getDaysUntilDeadline = (deadline: string): number => {
   const diffTime = deadlineDate.getTime() - today.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
+=======
+// Use centralized helpers for date, currency, file size, budget, and email
+import {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+  calculateBudgetUtilization,
+  validateEmail,
+  validateRequired,
+  validateNumber,
+  getStatusColor,
+  getCurrentQuarter,
+  isOverdue,
+  getDaysUntilDeadline,
+  calculateProgress,
+  validateFileUpload,
+} from "@/shared/utils/helpers";
+
+// Re-export utilities from shared helpers (these are now imported above)
+>>>>>>> Stashed changes
 
 // Project type and time limit validation
 export const getTimeLimit = (): TimeLimit => {
@@ -138,6 +160,7 @@ export const generatePaymentSchedule = (
   };
 };
 
+<<<<<<< Updated upstream
 // File validation utilities
 export const validateFileUpload = (
   file: File
@@ -221,6 +244,24 @@ export const validateNumber = (
 export const calculateProgress = (completed: number, total: number): number => {
   if (total === 0) return 0;
   return Math.round((completed / total) * 100);
+=======
+// Re-export commonly used utilities from shared helpers
+export {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+  calculateBudgetUtilization,
+  validateEmail,
+  validateRequired,
+  validateNumber,
+  getStatusColor,
+  getCurrentQuarter,
+  isOverdue,
+  getDaysUntilDeadline,
+  calculateProgress,
+  validateFileUpload,
+>>>>>>> Stashed changes
 };
 
 export const calculateMilestoneProgress = (
