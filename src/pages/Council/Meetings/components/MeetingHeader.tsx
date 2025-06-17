@@ -14,17 +14,14 @@ export const MeetingHeader: React.FC<MeetingHeaderProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div>
-      <Button
-        variant="ghost"
-        className="mb-2"
-        onClick={() => navigate("/council/meetings")}
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Meetings
+    <div className="flex items-center gap-4 ">
+      <Button variant="outline" onClick={() => navigate("/council/meetings")}>
+        <ArrowLeft className=" h-4 w-4" />
       </Button>
-      <h1 className="text-2xl font-bold tracking-tight">Meeting Minutes</h1>
-      <p className="text-muted-foreground">{description}</p>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Meeting Minutes</h1>
+        <p className="text-muted-foreground">{description}</p>
+      </div>
     </div>
   );
 };
