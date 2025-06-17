@@ -32,7 +32,8 @@ import {
 } from "lucide-react";
 import { Project, Milestone, ProgressReport } from "../shared/types";
 import { StatusBadge } from "../shared/components";
-import { formatDate, getCurrentQuarter, getTimeLimit } from "../shared/utils";
+import { formatDate } from "@/shared/utils/helpers";
+import { getCurrentQuarter, getTimeLimit } from "../shared/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "@/components/ui/loaders";
 

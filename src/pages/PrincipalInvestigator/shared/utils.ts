@@ -1,4 +1,13 @@
 import { TimeLimit, PaymentSchedule, PaymentPhase } from "./types";
+// Use centralized helpers for date, currency, file size, budget, and email
+import {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+  calculateBudgetUtilization,
+  validateEmail,
+} from "@/shared/utils/helpers";
 
 // Time and date utilities
 export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
@@ -7,24 +16,6 @@ export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
   if (month <= 6) return 2;
   if (month <= 9) return 3;
   return 4;
-};
-
-export const formatDate = (date: string | Date): string => {
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-export const formatDateTime = (date: string | Date): string => {
-  return new Date(date).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 };
 
 export const isOverdue = (dueDate: string): boolean => {
@@ -196,11 +187,6 @@ export const getStatusColor = (status: string): string => {
 };
 
 // Form validation utilities
-export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
 export const validateRequired = (value: string): boolean => {
   return value.trim().length > 0;
 };
@@ -215,6 +201,15 @@ export const validateNumber = (
   if (min !== undefined && num < min) return false;
   if (max !== undefined && num > max) return false;
   return true;
+};
+
+export {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+  calculateBudgetUtilization,
+  validateEmail,
 };
 
 // Progress calculation utilities

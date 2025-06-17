@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Search, Calendar as CalendarIcon, Clock, Video } from "lucide-react";
+import { formatDate } from "@/shared/utils/helpers";
 
 interface Meeting {
   id: number;
@@ -46,15 +47,6 @@ const UpcomingMeetingsTab: React.FC<UpcomingMeetingsTabProps> = ({
   onSearchChange,
   onJoinMeeting,
 }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   // Filter upcoming meetings
   const upcomingMeetings = meetings.filter(
     (meeting) =>

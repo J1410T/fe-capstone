@@ -1,54 +1,32 @@
 // Shared utilities for ProjectDetailPage components
 
-export const formatDate = (date: string | Date): string => {
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+// Use centralized helpers
+import {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+  calculateBudgetUtilization,
+  validateEmail,
+} from "@/shared/utils/helpers";
+
+export {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+  calculateBudgetUtilization,
+  validateEmail,
 };
 
-export const formatDateTime = (date: string | Date): string => {
-  return new Date(date).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
-};
-
-export const formatFileSize = (bytes: number): string => {
-  if (bytes === 0) return "0 Bytes";
-  const k = 1024;
-  const sizes = ["Bytes", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-};
-
-export const calculateBudgetUtilization = (
-  spent: number,
-  total: number
-): number => {
-  if (total === 0) return 0;
-  return Math.round((spent / total) * 100);
-};
-
+// Local helpers retained below
 export const getCategoryIcon = (category: string): string => {
   switch (category) {
     case "personnel":
       return "👥";
     case "equipment":
       return "🖥️";
-    case "travel":
-      return "✈️";
+
     case "materials":
       return "📦";
     case "other":
@@ -73,11 +51,6 @@ export const getCategoryColor = (category: string): string => {
     default:
       return "bg-gray-100 text-gray-800";
   }
-};
-
-export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
 };
 
 export const generateId = (): string => {

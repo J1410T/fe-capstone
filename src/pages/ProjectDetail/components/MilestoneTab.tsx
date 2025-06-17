@@ -37,7 +37,8 @@ import {
 } from "lucide-react";
 import { Milestone, Task, PIUser } from "../shared/types";
 import { StatusBadge } from "../shared/components";
-import { formatDate, calculateMilestoneProgress } from "../shared/utils";
+import { formatDate } from "@/shared/utils/helpers";
+import { calculateMilestoneProgress } from "../shared/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Card } from "@/components/ui";

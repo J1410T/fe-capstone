@@ -1,10 +1,5 @@
 import React, { useState } from "react";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   PendingApprovalsTab,
   CompletedApprovalsTab,
@@ -12,6 +7,7 @@ import {
   PendingApproval,
   CompletedApproval,
 } from "./components";
+import { formatDate } from "@/shared/utils/helpers";
 
 // Sample approval data
 const sampleApprovals: PendingApproval[] = [
@@ -122,12 +118,17 @@ const sampleCompletedApprovals: CompletedApproval[] = [
  */
 const ApprovalManagement: React.FC = () => {
   const [pendingApprovals, setPendingApprovals] = useState(sampleApprovals);
-  const [completedApprovals, setCompletedApprovals] = useState(sampleCompletedApprovals);
+  const [completedApprovals, setCompletedApprovals] = useState(
+    sampleCompletedApprovals
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [selectedApproval, setSelectedApproval] = useState<PendingApproval | null>(null);
-  const [approvalAction, setApprovalAction] = useState<"approve" | "reject" | null>(null);
+  const [selectedApproval, setSelectedApproval] =
+    useState<PendingApproval | null>(null);
+  const [approvalAction, setApprovalAction] = useState<
+    "approve" | "reject" | null
+  >(null);
   const [approvalComment, setApprovalComment] = useState("");
 
   // Filter pending approvals based on search term and filters
@@ -136,10 +137,11 @@ const ApprovalManagement: React.FC = () => {
       approval.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       approval.projectCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
       approval.submittedBy.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesType = typeFilter === "all" || approval.type === typeFilter;
-    const matchesPriority = priorityFilter === "all" || approval.priority === priorityFilter;
-    
+    const matchesPriority =
+      priorityFilter === "all" || approval.priority === priorityFilter;
+
     return matchesSearch && matchesType && matchesPriority;
   });
 
@@ -151,12 +153,6 @@ const ApprovalManagement: React.FC = () => {
       approval.submittedBy.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
-  };
 
   // Handle approval action
   const handleApprovalAction = () => {
@@ -176,7 +172,7 @@ const ApprovalManagement: React.FC = () => {
 
     setCompletedApprovals([completedApproval, ...completedApprovals]);
     setPendingApprovals(updatedPendingApprovals);
-    
+
     setSelectedApproval(null);
     setApprovalAction(null);
     setApprovalComment("");
@@ -217,7 +213,9 @@ const ApprovalManagement: React.FC = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Approval Management</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          Approval Management
+        </h1>
       </div>
 
       <Tabs defaultValue="pending">

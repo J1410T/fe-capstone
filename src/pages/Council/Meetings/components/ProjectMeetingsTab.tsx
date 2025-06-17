@@ -23,6 +23,7 @@ import {
   FileText,
   FolderOpen,
 } from "lucide-react";
+import { formatDate } from "@/shared/utils/helpers";
 
 interface Meeting {
   id: number;
@@ -53,15 +54,6 @@ const ProjectMeetingsTab: React.FC<ProjectMeetingsTabProps> = ({
   onViewMeeting,
   canViewDetails,
 }) => {
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "Completed":

@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
 import { UserRole } from "@/contexts/AuthContext";
+import { formatDate } from "@/shared/utils/helpers";
 
 interface User {
   id: string;
@@ -44,12 +45,6 @@ export const UserTable: React.FC<UserTableProps> = ({
   onResetPassword,
   onToggleStatus,
 }) => {
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString() + " " + date.toLocaleTimeString();
-  };
-
   return (
     <div className="rounded-md border">
       <Table>
@@ -103,7 +98,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                     <DropdownMenuItem onClick={() => onResetPassword(user)}>
                       Reset Password
                     </DropdownMenuItem>
-                    <DropdownMenuItem 
+                    <DropdownMenuItem
                       className="text-destructive"
                       onClick={() => onToggleStatus(user)}
                     >
