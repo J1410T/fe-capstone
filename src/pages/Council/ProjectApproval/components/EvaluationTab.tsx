@@ -14,6 +14,7 @@ import {
   Globe,
 } from "lucide-react";
 import { EvaluationData, TeamMember } from "../types";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 interface EvaluationTabProps {
   evaluationData: EvaluationData;
@@ -520,13 +521,27 @@ const EvaluationTab: React.FC<EvaluationTabProps> = ({
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-medium">Member {index + 1}</h4>
                 {isEditable && (
-                  <Button
-                    onClick={() => removeTeamMember(index)}
-                    variant="outline"
-                    size="sm"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+                  // <Button
+                  //   onClick={() => removeTeamMember(index)}
+                  //   variant="outline"
+                  //   size="sm"
+                  // >
+                  //   <Trash2 className="h-4 w-4" />
+                  // </Button>
+                  <ConfirmDialog
+                    itemName={member.name}
+                    onConfirm={() => removeTeamMember(index)}
+                    trigger={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => e.stopPropagation()}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    }
+                  />
                 )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

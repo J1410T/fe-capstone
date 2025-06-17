@@ -42,6 +42,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Card } from "@/components/ui";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 const MilestoneTab: React.FC = () => {
   const { user } = useAuth();
@@ -785,17 +786,22 @@ const MilestoneTab: React.FC = () => {
                               >
                                 <Edit className="w-3 h-3" />
                               </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeleteMilestone(milestone.id);
-                                }}
-                                className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </Button>
+                              <ConfirmDialog
+                                itemName={milestone.name}
+                                onConfirm={() =>
+                                  handleDeleteMilestone(milestone.id)
+                                }
+                                trigger={
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="text-red-600 hover:text-red-700"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                }
+                              />
                             </div>
                           )}
                         </div>
@@ -1104,19 +1110,25 @@ const MilestoneTab: React.FC = () => {
                                       >
                                         <Edit className="w-3 h-3" />
                                       </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() =>
+                                      <ConfirmDialog
+                                        itemName={task.title}
+                                        onConfirm={() =>
                                           handleDeleteTask(
                                             milestone.id,
                                             task.id
                                           )
                                         }
-                                        className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                                      >
-                                        <Trash2 className="w-3 h-3" />
-                                      </Button>
+                                        trigger={
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={(e) => e.stopPropagation()}
+                                            className="text-red-600 hover:text-red-700"
+                                          >
+                                            <Trash2 className="w-4 h-4" />
+                                          </Button>
+                                        }
+                                      />
                                     </div>
                                   )}
                                 </div>
