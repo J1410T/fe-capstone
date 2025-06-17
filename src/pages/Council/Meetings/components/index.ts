@@ -8,3 +8,5 @@ export * from "./ScoreSummary";
 export * from "./DocumentsCard";
 export * from "./ChairmanActionsCard";
 export * from "./MeetingDetailsCard";
+export { default as UpcomingMeetingsTab } from "./UpcomingMeetingsTab";
+export { default as ProjectMeetingsTab } from "./ProjectMeetingsTab";
