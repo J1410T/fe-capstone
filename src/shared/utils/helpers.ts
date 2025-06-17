@@ -35,8 +35,6 @@ export const debounce = <T extends (...args: unknown[]) => unknown>(
     timeout = setTimeout(() => func(...args), wait);
   };
 };
-<<<<<<< Updated upstream
-
 /**
  * Formats a date into a human-readable string
  *
@@ -80,5 +78,3 @@ export const truncateString = (
   if (str.length <= length) return str;
   return `${str.slice(0, length)}${ellipsis}`;
 };
-=======
->>>>>>> Stashed changes

@@ -1,15 +1,16 @@
-// Main UI component exports - only export existing components
-export { Button } from "./button";
-export { buttonVariants } from "./button-variants";
+/**
+ * UI Components barrel export
+ * Centralized exports for all Shadcn/UI components
+ */
 
-// Sidebar exports
+// Core UI components
+export { Button, buttonVariants } from "./button";
+export { Badge, badgeVariants } from "./badge";
+
+// Layout components
 export * from "./sidebar";
 
-// Badge exports
-export { Badge } from "./badge";
-export { badgeVariants } from "./badge-variants";
-
-// Form exports
+// Form components
 export * from "./form";
 export { useFormField } from "./form-hooks";
 
@@ -33,7 +34,9 @@ export * from "./popover";
 export * from "./command";
 export * from "./sheet";
 export * from "./tooltip";
+export * from "./accordion";
 export * from "./alert";
+export * from "./alert-dialog";
 export * from "./breadcrumb";
 export * from "./collapsible";
 export * from "./pagination";

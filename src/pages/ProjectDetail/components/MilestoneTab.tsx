@@ -1,48 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Plus,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { Button, Card, Accordion } from "@/components/ui";
+import { Plus, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { Milestone, Task, PIUser } from "../shared/types";
-import { StatusBadge } from "../shared/components";
-import { formatDate, calculateMilestoneProgress } from "../shared/utils";
-import { useAuth } from "@/contexts/AuthContext";
+import { calculateMilestoneProgress } from "@/shared/utils";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { Card } from "@/components/ui";
-import { DatePicker } from "@/components/ui/date-picker";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { MilestoneCard, MilestoneDialog, TaskDialog } from "./milestone";
 
 const MilestoneTab: React.FC = () => {
   const { user } = useAuth();
@@ -75,6 +38,39 @@ const MilestoneTab: React.FC = () => {
     null
   );
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  // Check if current user is the project leader
+  const isCurrentUserLeader =
+    user?.role === UserRole.PRINCIPAL_INVESTIGATOR ||
+    user?.role === UserRole.STAFF;
+
+  // Helper functions for form management
+  const resetMilestoneForm = () => {
+    setMilestoneForm({ name: "", description: "", deadline: "" });
+    setMilestoneDeadlineDate(undefined);
+    setEditingMilestone(null);
+  };
+
+  const resetTaskForm = () => {
+    setTaskForm({
+      title: "",
+      description: "",
+      assignedTo: "unassigned",
+      priority: "Medium",
+      dueDate: "",
+    });
+    setTaskDueDate(undefined);
+    setEditingTask(null);
+    setSelectedMilestone("");
+  };
+
+  const handleMilestoneFormChange = (field: string, value: string) => {
+    setMilestoneForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTaskFormChange = (field: string, value: string) => {
+    setTaskForm((prev) => ({ ...prev, [field]: value }));
+  };
 
   const loadMilestonesAndTasks = useCallback(async () => {
     setIsLoading(true);
@@ -210,6 +206,28 @@ const MilestoneTab: React.FC = () => {
     setTeamMembers(mockMembers);
   };
 
+  // Milestone handlers
+  const handleAddMilestone = () => {
+    resetMilestoneForm();
+    setShowMilestoneDialog(true);
+  };
+
+  const handleEditMilestone = (milestone: Milestone) => {
+    setEditingMilestone(milestone);
+    setMilestoneForm({
+      name: milestone.name,
+      description: milestone.description,
+      deadline: milestone.deadline,
+    });
+    setMilestoneDeadlineDate(new Date(milestone.deadline));
+    setShowMilestoneDialog(true);
+  };
+
+  const handleCloseMilestoneDialog = () => {
+    setShowMilestoneDialog(false);
+    resetMilestoneForm();
+  };
+
   const handleCreateMilestone = async () => {
     if (
       !milestoneForm.name ||
@@ -270,17 +288,6 @@ const MilestoneTab: React.FC = () => {
     }
   };
 
-  const handleEditMilestone = (milestone: Milestone) => {
-    setEditingMilestone(milestone);
-    setMilestoneForm({
-      name: milestone.name,
-      description: milestone.description,
-      deadline: milestone.deadline,
-    });
-    setMilestoneDeadlineDate(new Date(milestone.deadline));
-    setShowMilestoneDialog(true);
-  };
-
   const handleDeleteMilestone = async (milestoneId: string) => {
     try {
       setMilestones((prev) => prev.filter((m) => m.id !== milestoneId));
@@ -288,6 +295,18 @@ const MilestoneTab: React.FC = () => {
     } catch {
       toast.error("Failed to delete milestone");
     }
+  };
+
+  // Task handlers
+  const handleAddTask = (milestoneId: string) => {
+    setSelectedMilestone(milestoneId);
+    resetTaskForm();
+    setShowTaskDialog(true);
+  };
+
+  const handleCloseTaskDialog = () => {
+    setShowTaskDialog(false);
+    resetTaskForm();
   };
 
   const handleCreateTask = async () => {
@@ -482,196 +501,55 @@ const MilestoneTab: React.FC = () => {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return <CheckCircle className="w-4 h-4 text-green-600" />;
-      case "In Progress":
-        return <Clock className="w-4 h-4 text-blue-600" />;
-      case "Overdue":
-        return <AlertTriangle className="w-4 h-4 text-red-600" />;
-      default:
-        return <Clock className="w-4 h-4 text-gray-600" />;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "High":
-        return "bg-red-100 text-red-800";
-      case "Medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "Low":
-        return "bg-blue-100 text-blue-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const isCurrentUserLeader = true; // In real app, check user role
-
-  const resetMilestoneForm = () => {
-    setMilestoneForm({ name: "", description: "", deadline: "" });
-    setMilestoneDeadlineDate(undefined);
-    setEditingMilestone(null);
-  };
-
-  const resetTaskForm = () => {
-    setTaskForm({
-      title: "",
-      description: "",
-      assignedTo: "unassigned",
-      priority: "Medium",
-      dueDate: "",
-    });
-    setTaskDueDate(undefined);
-    setEditingTask(null);
-    setSelectedMilestone("");
-  };
+  // Statistics calculations
+  const completedMilestones = milestones.filter(
+    (m) => m.status === "Completed"
+  ).length;
+  const inProgressMilestones = milestones.filter(
+    (m) => m.status === "In Progress"
+  ).length;
+  const notStartedMilestones = milestones.filter(
+    (m) => m.status === "Not Started"
+  ).length;
+  const totalTasks = milestones.reduce((total, m) => total + m.tasks.length, 0);
 
   return (
     <Card>
-      <div className="p-4 sm:p-6 pb-0 sm:pb-6">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
-          <div className="flex-1 min-w-0">
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
+      {/* Header */}
+      <div className="p-6 border-b">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900">
               Project Milestones
             </h2>
-            <p className="text-sm sm:text-base mt-1">
+            <p className="text-gray-600 mt-1">
               Track progress and manage tasks for each milestone
             </p>
           </div>
           {isCurrentUserLeader && (
-            <div className="flex space-x-2 flex-shrink-0">
-              <Dialog
-                open={showMilestoneDialog}
-                onOpenChange={(open) => {
-                  setShowMilestoneDialog(open);
-                  if (!open) resetMilestoneForm();
-                }}
-              >
-                <DialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 cursor-pointer text-white border-0 text-base"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Add Milestone</span>
-                    <span className="sm:hidden">Add</span>
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="w-[95vw] max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="text-xl sm:text-2xl">
-                      {editingMilestone
-                        ? "Edit Milestone"
-                        : "Create New Milestone"}
-                    </DialogTitle>
-                    <DialogDescription className="text-base sm:text-lg">
-                      {editingMilestone
-                        ? "Update milestone details"
-                        : "Define a new milestone for your research project"}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="milestone-name" className="text-base">
-                        Milestone Name *
-                      </Label>
-                      <Input
-                        id="milestone-name"
-                        value={milestoneForm.name}
-                        onChange={(e) =>
-                          setMilestoneForm((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                        placeholder="Enter milestone name"
-                        className="text-base"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label
-                        htmlFor="milestone-description"
-                        className="text-base"
-                      >
-                        Description *
-                      </Label>
-                      <Textarea
-                        id="milestone-description"
-                        value={milestoneForm.description}
-                        onChange={(e) =>
-                          setMilestoneForm((prev) => ({
-                            ...prev,
-                            description: e.target.value,
-                          }))
-                        }
-                        placeholder="Describe the milestone objectives"
-                        rows={3}
-                        className="text-base"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-base">Deadline *</Label>
-                      <DatePicker
-                        date={milestoneDeadlineDate}
-                        onDateChange={setMilestoneDeadlineDate}
-                        placeholder="Select a date"
-                        disablePastDates={true}
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        Selected:{" "}
-                        {milestoneDeadlineDate
-                          ? milestoneDeadlineDate.toLocaleDateString()
-                          : "None"}
-                      </p>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setShowMilestoneDialog(false)}
-                      className="text-base"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleCreateMilestone}
-                      disabled={isLoading}
-                      className="text-base"
-                    >
-                      {isLoading
-                        ? editingMilestone
-                          ? "Updating..."
-                          : "Creating..."
-                        : editingMilestone
-                        ? "Update Milestone"
-                        : "Create Milestone"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+            <Button
+              onClick={handleAddMilestone}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Milestone
+            </Button>
           )}
         </div>
       </div>
 
-      <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 pt-0">
-        {/* Two Column Layout */}
+      {/* Content */}
+      <div className="p-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-          {/* Left Column - Overview Cards (Narrower) */}
+          {/* Statistics Cards */}
           <div className="lg:col-span-1">
             <div className="space-y-3">
               <div className="bg-green-50 rounded-lg p-3">
                 <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <div>
                     <p className="text-xl font-bold text-green-800">
-                      {
-                        milestones.filter((m) => m.status === "Completed")
-                          .length
-                      }
+                      {completedMilestones}
                     </p>
                     <p className="text-sm text-green-700">Completed</p>
                   </div>
@@ -679,13 +557,10 @@ const MilestoneTab: React.FC = () => {
               </div>
               <div className="bg-blue-50 rounded-lg p-3">
                 <div className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5 text-blue-600 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
+                  <Clock className="w-5 h-5 text-blue-600" />
+                  <div>
                     <p className="text-xl font-bold text-blue-800">
-                      {
-                        milestones.filter((m) => m.status === "In Progress")
-                          .length
-                      }
+                      {inProgressMilestones}
                     </p>
                     <p className="text-sm text-blue-700">In Progress</p>
                   </div>
@@ -693,27 +568,21 @@ const MilestoneTab: React.FC = () => {
               </div>
               <div className="bg-orange-50 rounded-lg p-3">
                 <div className="flex items-center space-x-2">
-                  <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
+                  <AlertTriangle className="w-5 h-5 text-orange-600" />
+                  <div>
                     <p className="text-xl font-bold text-orange-800">
-                      {
-                        milestones.filter((m) => m.status === "Not Started")
-                          .length
-                      }
+                      {notStartedMilestones}
                     </p>
                     <p className="text-sm text-orange-700">Not Started</p>
                   </div>
                 </div>
               </div>
-              <div className="bg-gray-50 rounded-lg p-3 border border-gray-200">
+              <div className="bg-gray-50 rounded-lg p-3 border">
                 <div className="flex items-center space-x-2">
-                  <Plus className="w-5 h-5 text-gray-600 flex-shrink-0" />
-                  <div className="min-w-0 flex-1">
+                  <Plus className="w-5 h-5 text-gray-600" />
+                  <div>
                     <p className="text-xl font-bold text-gray-800">
-                      {milestones.reduce(
-                        (total, m) => total + m.tasks.length,
-                        0
-                      )}
+                      {totalTasks}
                     </p>
                     <p className="text-sm text-gray-700">Total Tasks</p>
                   </div>
@@ -722,456 +591,61 @@ const MilestoneTab: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Column - Milestones and Tasks List (Wider) */}
+          {/* Milestones List */}
           <div className="lg:col-span-3">
-            <div className="bg-white rounded-lg">
-              <Accordion type="single" collapsible className="w-full">
-                {milestones.map((milestone) => (
-                  <AccordionItem
-                    key={milestone.id}
-                    value={milestone.id}
-                    className="border-0"
-                  >
-                    <AccordionTrigger className="hover:no-underline bg-blue-50 hover:bg-blue-100 rounded-lg px-4 py-3 mb-2">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between w-full mr-2 sm:mr-4 gap-3 sm:gap-4">
-                        <div className="flex items-center space-x-3 min-w-0 flex-1">
-                          {getStatusIcon(milestone.status)}
-                          <div className="text-left min-w-0 flex-1">
-                            <h3 className="font-semibold text-lg text-gray-900 truncate">
-                              {milestone.name}
-                            </h3>
-                            <p className="text-base text-gray-600">
-                              Due: {formatDate(milestone.deadline)} •{" "}
-                              {milestone.tasks.length} tasks
-                            </p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between sm:justify-end space-x-4 flex-shrink-0">
-                          <div className="text-left sm:text-right">
-                            <p className="text-base font-medium text-gray-700">
-                              {milestone.progress}% Complete
-                            </p>
-                            <div className="relative w-24 sm:w-32 h-2 bg-gradient-to-r from-gray-100 to-gray-200 rounded-full overflow-hidden shadow-inner">
-                              <div
-                                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ease-out ${
-                                  milestone.progress === 100
-                                    ? "bg-gradient-to-r from-emerald-400 to-emerald-600 shadow-lg shadow-emerald-200"
-                                    : milestone.progress >= 75
-                                    ? "bg-gradient-to-r from-blue-400 to-blue-600 shadow-lg shadow-blue-200"
-                                    : milestone.progress >= 50
-                                    ? "bg-gradient-to-r from-yellow-400 to-yellow-600 shadow-lg shadow-yellow-200"
-                                    : milestone.progress >= 25
-                                    ? "bg-gradient-to-r from-orange-400 to-orange-600 shadow-lg shadow-orange-200"
-                                    : "bg-gradient-to-r from-red-400 to-red-600 shadow-lg shadow-red-200"
-                                }`}
-                                style={{ width: `${milestone.progress}%` }}
-                              >
-                                {milestone.progress > 0 && (
-                                  <div className="absolute inset-0 bg-gradient-to-t from-white/20 to-transparent rounded-full"></div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
+            <Accordion type="single" collapsible className="w-full">
+              {milestones.map((milestone) => (
+                <MilestoneCard
+                  key={milestone.id}
+                  milestone={milestone}
+                  onEdit={handleEditMilestone}
+                  onDelete={handleDeleteMilestone}
+                  onAddTask={handleAddTask}
+                  onEditTask={handleEditTask}
+                  onDeleteTask={handleDeleteTask}
+                  onTaskStatusChange={handleTaskStatusChange}
+                  isLoading={isLoading}
+                />
+              ))}
+            </Accordion>
 
-                          {isCurrentUserLeader && (
-                            <div className="flex items-center space-x-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditMilestone(milestone);
-                                }}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                              <ConfirmDialog
-                                itemName={milestone.name}
-                                onConfirm={() =>
-                                  handleDeleteMilestone(milestone.id)
-                                }
-                                trigger={
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="text-red-600 hover:text-red-700"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                }
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-4 pt-4 px-4">
-                        <p className="text-base text-gray-600 bg-gray-50 p-3 rounded-lg">
-                          {milestone.description}
-                        </p>
-
-                        {/* Add Task Button */}
-                        {isCurrentUserLeader && (
-                          <Dialog
-                            open={showTaskDialog}
-                            onOpenChange={(open) => {
-                              setShowTaskDialog(open);
-                              if (!open) resetTaskForm();
-                            }}
-                          >
-                            <DialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  setSelectedMilestone(milestone.id)
-                                }
-                                className="border-0 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-base"
-                              >
-                                <Plus className="w-3 h-3 mr-1" />
-                                Add Task
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent className="w-[95vw] max-w-md sm:max-w-lg max-h-[90vh] overflow-y-auto">
-                              <DialogHeader>
-                                <DialogTitle className="text-xl sm:text-2xl">
-                                  {editingTask
-                                    ? "Edit Task"
-                                    : "Create New Task"}
-                                </DialogTitle>
-                                <DialogDescription className="text-base sm:text-lg">
-                                  {editingTask
-                                    ? `Update task in ${milestone.name}`
-                                    : `Add a new task to ${milestone.name}`}
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                <div className="space-y-2">
-                                  <Label
-                                    htmlFor="task-title"
-                                    className="text-base"
-                                  >
-                                    Task Title *
-                                  </Label>
-                                  <Input
-                                    id="task-title"
-                                    value={taskForm.title}
-                                    onChange={(e) =>
-                                      setTaskForm((prev) => ({
-                                        ...prev,
-                                        title: e.target.value,
-                                      }))
-                                    }
-                                    placeholder="Enter task title"
-                                    className="text-base"
-                                  />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label
-                                    htmlFor="task-description"
-                                    className="text-base"
-                                  >
-                                    Description *
-                                  </Label>
-                                  <Textarea
-                                    id="task-description"
-                                    value={taskForm.description}
-                                    onChange={(e) =>
-                                      setTaskForm((prev) => ({
-                                        ...prev,
-                                        description: e.target.value,
-                                      }))
-                                    }
-                                    placeholder="Describe the task"
-                                    rows={3}
-                                    className="text-base"
-                                  />
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                  <div className="space-y-2">
-                                    <Label
-                                      htmlFor="task-assignee"
-                                      className="text-base"
-                                    >
-                                      Assign To
-                                    </Label>
-                                    <Select
-                                      value={taskForm.assignedTo}
-                                      onValueChange={(value) =>
-                                        setTaskForm((prev) => ({
-                                          ...prev,
-                                          assignedTo: value,
-                                        }))
-                                      }
-                                    >
-                                      <SelectTrigger className="text-base">
-                                        <SelectValue placeholder="Select member" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem
-                                          value="unassigned"
-                                          className="text-base"
-                                        >
-                                          Unassigned
-                                        </SelectItem>
-                                        {teamMembers.map((member) => (
-                                          <SelectItem
-                                            key={member.id}
-                                            value={member.email}
-                                            className="text-base"
-                                          >
-                                            {member.name}
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <div className="space-y-2">
-                                    <Label
-                                      htmlFor="task-priority"
-                                      className="text-base"
-                                    >
-                                      Priority
-                                    </Label>
-                                    <Select
-                                      value={taskForm.priority}
-                                      onValueChange={(
-                                        value: "Low" | "Medium" | "High"
-                                      ) =>
-                                        setTaskForm((prev) => ({
-                                          ...prev,
-                                          priority: value,
-                                        }))
-                                      }
-                                    >
-                                      <SelectTrigger className="text-base">
-                                        <SelectValue />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem
-                                          value="Low"
-                                          className="text-base"
-                                        >
-                                          Low
-                                        </SelectItem>
-                                        <SelectItem
-                                          value="Medium"
-                                          className="text-base"
-                                        >
-                                          Medium
-                                        </SelectItem>
-                                        <SelectItem
-                                          value="High"
-                                          className="text-base"
-                                        >
-                                          High
-                                        </SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                </div>
-                                <div className="space-y-2">
-                                  <Label className="text-base">
-                                    Due Date *
-                                  </Label>
-                                  <DatePicker
-                                    date={taskDueDate}
-                                    onDateChange={setTaskDueDate}
-                                    placeholder="Select a date"
-                                    disablePastDates={true}
-                                  />
-                                  <p className="text-sm text-muted-foreground">
-                                    Selected:{" "}
-                                    {taskDueDate
-                                      ? taskDueDate.toLocaleDateString()
-                                      : "None"}
-                                  </p>
-                                </div>
-                              </div>
-                              <DialogFooter>
-                                <Button
-                                  variant="outline"
-                                  onClick={() => setShowTaskDialog(false)}
-                                  className="text-base"
-                                >
-                                  Cancel
-                                </Button>
-                                <Button
-                                  onClick={handleCreateTask}
-                                  disabled={isLoading}
-                                  className="text-base"
-                                >
-                                  {isLoading
-                                    ? editingTask
-                                      ? "Updating..."
-                                      : "Creating..."
-                                    : editingTask
-                                    ? "Update Task"
-                                    : "Create Task"}
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
-                        )}
-
-                        {/* Tasks List */}
-                        <div className="space-y-2 ml-6">
-                          {milestone.tasks.map((task) => (
-                            <div
-                              key={task.id}
-                              className="bg-gray-50 hover:bg-gray-100 rounded-lg p-3 sm:p-4 space-y-3 transition-colors"
-                            >
-                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                                <div className="space-y-1 min-w-0 flex-1">
-                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                    <h4 className="font-normal text-base sm:text-lg text-gray-800">
-                                      {task.title}
-                                    </h4>
-                                    <Badge
-                                      className={`${getPriorityColor(
-                                        task.priority
-                                      )} text-sm border-0`}
-                                    >
-                                      {task.priority}
-                                    </Badge>
-                                  </div>
-                                  <p className="text-sm sm:text-base text-gray-600">
-                                    {task.description}
-                                  </p>
-                                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-sm text-gray-500">
-                                    <span>Due: {formatDate(task.dueDate)}</span>
-                                    {task.assignedTo && (
-                                      <span className="truncate">
-                                        Assigned to:{" "}
-                                        {teamMembers.find(
-                                          (m) => m.email === task.assignedTo
-                                        )?.name || task.assignedTo}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-2 flex-shrink-0">
-                                  <Select
-                                    value={task.status}
-                                    onValueChange={(
-                                      value:
-                                        | "To Do"
-                                        | "In Progress"
-                                        | "Completed"
-                                    ) =>
-                                      handleTaskStatusChange(
-                                        milestone.id,
-                                        task.id,
-                                        value
-                                      )
-                                    }
-                                    disabled={
-                                      !isCurrentUserLeader &&
-                                      task.assignedTo !== user?.email
-                                    }
-                                  >
-                                    <SelectTrigger className="w-24 sm:w-32 text-sm">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem
-                                        value="To Do"
-                                        className="text-sm"
-                                      >
-                                        To Do
-                                      </SelectItem>
-                                      <SelectItem
-                                        value="In Progress"
-                                        className="text-sm"
-                                      >
-                                        In Progress
-                                      </SelectItem>
-                                      <SelectItem
-                                        value="Completed"
-                                        className="text-sm"
-                                      >
-                                        Completed
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <StatusBadge status={task.status} />
-                                  {isCurrentUserLeader && (
-                                    <div className="flex items-center space-x-1">
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() =>
-                                          handleEditTask(task, milestone.id)
-                                        }
-                                        className="h-8 w-8 p-0"
-                                      >
-                                        <Edit className="w-3 h-3" />
-                                      </Button>
-                                      <ConfirmDialog
-                                        itemName={task.title}
-                                        onConfirm={() =>
-                                          handleDeleteTask(
-                                            milestone.id,
-                                            task.id
-                                          )
-                                        }
-                                        trigger={
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="text-red-600 hover:text-red-700"
-                                          >
-                                            <Trash2 className="w-4 h-4" />
-                                          </Button>
-                                        }
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-
-                              {task.evaluation && (
-                                <div className="bg-green-50 rounded-lg p-2 sm:p-3 border-0">
-                                  <p className="text-sm sm:text-base text-green-800">
-                                    <strong>Evaluation:</strong>{" "}
-                                    {task.evaluation}
-                                  </p>
-                                  {task.evaluatedBy && (
-                                    <p className="text-xs sm:text-sm text-green-600 mt-1">
-                                      Evaluated by: {task.evaluatedBy}
-                                    </p>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          ))}
-
-                          {milestone.tasks.length === 0 && (
-                            <p className="text-gray-500 text-center py-4 ml-6 text-base">
-                              No tasks added to this milestone yet.
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-
-              {milestones.length === 0 && (
-                <p className="text-gray-500 text-center py-8 text-base">
+            {milestones.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <p>
                   No milestones created yet. Create your first milestone to
                   start tracking progress.
                 </p>
-              )}
-            </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <MilestoneDialog
+        isOpen={showMilestoneDialog}
+        onClose={handleCloseMilestoneDialog}
+        onSave={handleCreateMilestone}
+        isLoading={isLoading}
+        editingMilestone={editingMilestone}
+        form={milestoneForm}
+        onFormChange={handleMilestoneFormChange}
+        deadlineDate={milestoneDeadlineDate}
+        onDeadlineDateChange={setMilestoneDeadlineDate}
+      />
+
+      <TaskDialog
+        isOpen={showTaskDialog}
+        onClose={handleCloseTaskDialog}
+        onSave={handleCreateTask}
+        isLoading={isLoading}
+        editingTask={editingTask}
+        form={taskForm}
+        onFormChange={handleTaskFormChange}
+        dueDate={taskDueDate}
+        onDueDateChange={setTaskDueDate}
+        teamMembers={teamMembers}
+      />
     </Card>
   );
 };

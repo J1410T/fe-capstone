@@ -1,14 +1,15 @@
 import React, { useState } from "react";
 import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ConfirmDialogProps {
   trigger: React.ReactNode;
@@ -37,44 +38,41 @@ export const ConfirmDialog = ({
       : "This action cannot be undone.");
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger
         asChild
         onClick={(e) => {
           e.stopPropagation();
         }}
       >
         {trigger}
-      </DialogTrigger>
+      </AlertDialogTrigger>
 
-      <DialogContent
-        onClick={(e) => e.stopPropagation()}
-        className="max-w-lg rounded-lg p-6 bg-white shadow-lg border border-gray-200"
-      >
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-gray-900">
+      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="text-lg font-semibold text-gray-900">
             {title}
-          </DialogTitle>
-          <DialogDescription className="mt-2 text-sm text-gray-600">
+          </AlertDialogTitle>
+          <AlertDialogDescription className="mt-2 text-sm text-gray-600">
             {finalDescription}
-          </DialogDescription>
-        </DialogHeader>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
-        <DialogFooter className="mt-6 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setOpen(false)}>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setOpen(false)}>
             {cancelText}
-          </Button>
-          <Button
-            variant="destructive"
+          </AlertDialogCancel>
+          <AlertDialogAction
             onClick={() => {
               onConfirm();
               setOpen(false);
             }}
+            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
           >
             {confirmText}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };

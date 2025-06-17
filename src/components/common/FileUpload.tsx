@@ -2,12 +2,9 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, X, File } from "lucide-react";
+import { Upload, File, X } from "lucide-react";
 import { formatFileSize, generateId } from "@/shared/utils/helpers";
-import { FileUpload } from "./types";
-
-// Re-export the unified StatusBadge from common components
-export { StatusBadge } from "@/components/common/StatusBadge";
+import type { FileUpload } from "@/shared/utils/types";
 
 interface FileUploadProps {
   files: FileUpload[];
@@ -76,42 +73,43 @@ export const FileUploadComponent: React.FC<FileUploadProps> = ({
     onFilesChange(updatedFiles);
   };
 
-  // formatFileSize is now imported from shared utilities
-
   return (
-    <div className="space-y-2">
-      <Label>
-        {label} {required && <span className="text-red-500">*</span>}
-      </Label>
-
-      <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-          isDragOver
-            ? "border-primary bg-primary/5"
-            : "border-gray-300 hover:border-gray-400"
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-        <p className="text-sm text-gray-600 mb-2">{description}</p>
-        <Input
-          type="file"
-          multiple={maxFiles > 1}
-          accept={accept}
-          onChange={handleFileSelect}
-          className="hidden"
-          id="file-upload"
-        />
-        <Label htmlFor="file-upload" className="cursor-pointer">
-          <Button type="button" variant="outline" size="sm">
+    <div className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="file-upload">
+          {label} {required && <span className="text-red-500">*</span>}
+        </Label>
+        <div
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+            isDragOver
+              ? "border-blue-400 bg-blue-50"
+              : "border-gray-300 hover:border-gray-400"
+          }`}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          <Upload className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+          <p className="text-sm text-gray-600 mb-2">{description}</p>
+          <p className="text-xs text-gray-500 mb-4">
+            Maximum {maxFiles} files allowed
+          </p>
+          <Input
+            id="file-upload"
+            type="file"
+            multiple
+            accept={accept}
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => document.getElementById("file-upload")?.click()}
+          >
             Choose Files
           </Button>
-        </Label>
-        <p className="text-xs text-gray-500 mt-2">
-          Maximum {maxFiles} file{maxFiles > 1 ? "s" : ""}
-        </p>
+        </div>
       </div>
 
       {files.length > 0 && (
