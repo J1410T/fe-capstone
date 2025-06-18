@@ -28,7 +28,6 @@ interface ProjectHeaderProps {
 export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   title,
   status,
-  pi,
   showAllTabs,
   onToggleAllTabs,
   memberRole = "Member",
@@ -71,9 +70,6 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
               {getStatusIcon(status)}
               {status}
             </Badge>
-            <span className="text-sm text-muted-foreground">
-              Principal Investigator: {pi}
-            </span>
           </div>
         </div>
       </div>

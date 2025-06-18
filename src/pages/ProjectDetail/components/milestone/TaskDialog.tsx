@@ -144,6 +144,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
               onDateChange={onDueDateChange}
               placeholder="Select due date"
               disabled={isLoading}
+              inDialog={true}
+              disablePastDates={true}
             />
           </div>
         </div>
@@ -160,7 +162,12 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
           <Button
             type="button"
             onClick={onSave}
-            disabled={isLoading || !form.title || !form.description || !dueDate}
+            disabled={
+              isLoading ||
+              !form.title.trim() ||
+              !form.description.trim() ||
+              !dueDate
+            }
           >
             {isLoading ? "Saving..." : editingTask ? "Update" : "Create"}
           </Button>

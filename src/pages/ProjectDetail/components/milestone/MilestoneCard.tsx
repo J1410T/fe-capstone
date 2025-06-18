@@ -1,8 +1,6 @@
 import React from "react";
 import {
   Button,
-  Badge,
-  Progress,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
@@ -59,47 +57,34 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
     }
   };
 
-  const isOverdue =
-    new Date(milestone.deadline) < new Date() &&
-    milestone.status !== "Completed";
-
   return (
-    <AccordionItem value={milestone.id} className="border rounded-lg mb-4">
-      <AccordionTrigger className="px-6 py-4 hover:no-underline">
+    <AccordionItem
+      value={milestone.id}
+      className="border rounded-lg border-b border-gray-200"
+    >
+      <AccordionTrigger className="px-6 py-4 hover:no-underline border-b border-gray-200 data-[state=open]:border-b-0">
         <div className="flex items-center justify-between w-full mr-4">
           <div className="flex items-center space-x-4">
             {getStatusIcon(milestone.status)}
             <div className="text-left">
               <h3 className="font-semibold text-lg">{milestone.name}</h3>
               <p className="text-sm text-gray-600">{milestone.description}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                End Date: {formatDate(milestone.deadline)}
+              </p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <div className="text-right">
               <div className="flex items-center space-x-2">
                 <StatusBadge status={milestone.status} />
-                {isOverdue && (
-                  <Badge variant="destructive" className="text-xs">
-                    Overdue
-                  </Badge>
-                )}
               </div>
-              <p className="text-sm text-gray-500 mt-1">
-                Due: {formatDate(milestone.deadline)}
-              </p>
-            </div>
-            <div className="w-32">
-              <div className="flex items-center justify-between text-sm mb-1">
-                <span>Progress</span>
-                <span>{milestone.progress}%</span>
-              </div>
-              <Progress value={milestone.progress} className="h-2" />
             </div>
           </div>
         </div>
       </AccordionTrigger>
 
-      <AccordionContent className="px-6 pb-4">
+      <AccordionContent className="px-6 pb-4 border-b border-gray-200 rounded-lg">
         <div className="space-y-4">
           {/* Milestone Actions */}
           <div className="flex items-center justify-between border-b pb-4">

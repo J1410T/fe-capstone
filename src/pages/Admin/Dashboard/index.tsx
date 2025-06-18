@@ -32,11 +32,6 @@ const AdminDashboard: React.FC = () => {
     { name: "Staff", value: 5, color: "#ef4444" },
   ];
 
-  // const projectProgressData = [
-  //   { name: "On Track", value: 75, color: "#10b981" },
-  //   { name: "Delayed", value: 25, color: "#ef4444" },
-  // ];
-
   const monthlyProjectData = [
     { month: "Jan", projects: 5, budget: 50000 },
     { month: "Feb", projects: 7, budget: 70000 },

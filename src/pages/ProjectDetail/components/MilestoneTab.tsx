@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Card, Accordion } from "@/components/ui";
 import { Plus, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { Milestone, Task, PIUser } from "../shared/types";
@@ -15,6 +15,9 @@ const MilestoneTab: React.FC = () => {
   const [showMilestoneDialog, setShowMilestoneDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState<string>("");
+
+  // Use ref as backup to ensure milestone ID doesn't get lost
+  const selectedMilestoneRef = useRef<string>("");
 
   const [milestoneForm, setMilestoneForm] = useState({
     name: "",
@@ -51,7 +54,7 @@ const MilestoneTab: React.FC = () => {
     setEditingMilestone(null);
   };
 
-  const resetTaskForm = () => {
+  const resetTaskForm = (clearMilestone = true) => {
     setTaskForm({
       title: "",
       description: "",
@@ -61,7 +64,10 @@ const MilestoneTab: React.FC = () => {
     });
     setTaskDueDate(undefined);
     setEditingTask(null);
-    setSelectedMilestone("");
+    if (clearMilestone) {
+      setSelectedMilestone("");
+      selectedMilestoneRef.current = "";
+    }
   };
 
   const handleMilestoneFormChange = (field: string, value: string) => {
@@ -70,6 +76,18 @@ const MilestoneTab: React.FC = () => {
 
   const handleTaskFormChange = (field: string, value: string) => {
     setTaskForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTaskDueDateChange = (date: Date | undefined) => {
+    setTaskDueDate(date);
+    if (date) {
+      setTaskForm((prev) => ({
+        ...prev,
+        dueDate: date.toISOString().split("T")[0],
+      }));
+    } else {
+      setTaskForm((prev) => ({ ...prev, dueDate: "" }));
+    }
   };
 
   const loadMilestonesAndTasks = useCallback(async () => {
@@ -153,6 +171,42 @@ const MilestoneTab: React.FC = () => {
                 priority: "Medium",
                 dueDate: "2024-06-25",
                 createdAt: "2024-05-16T00:00:00Z",
+              },
+            ],
+          },
+          {
+            id: "3",
+            name: "Algorithm Development",
+            description: "Develop and test machine learning algorithms",
+            deadline: "2024-09-30",
+            status: "Completed",
+            progress: 100,
+            tasks: [
+              {
+                id: "1",
+                title: "Research paper collection",
+                description:
+                  "Collect relevant research papers from the last 5 years",
+                assignedTo: "john.smith@example.com",
+                status: "Completed",
+                priority: "High",
+                dueDate: "2024-03-15",
+                createdAt: "2024-01-15T00:00:00Z",
+                completedAt: "2024-03-14T00:00:00Z",
+                evaluatedBy: user?.email,
+                evaluation: "Excellent work on comprehensive paper collection",
+              },
+              {
+                id: "2",
+                title: "Literature analysis",
+                description:
+                  "Analyze and summarize key findings from collected papers",
+                assignedTo: "emily.chen@example.com",
+                status: "Completed",
+                priority: "High",
+                dueDate: "2024-03-30",
+                createdAt: "2024-03-16T00:00:00Z",
+                completedAt: "2024-03-28T00:00:00Z",
               },
             ],
           },
@@ -299,8 +353,10 @@ const MilestoneTab: React.FC = () => {
 
   // Task handlers
   const handleAddTask = (milestoneId: string) => {
+    console.log("Adding task to milestone:", milestoneId);
     setSelectedMilestone(milestoneId);
-    resetTaskForm();
+    selectedMilestoneRef.current = milestoneId; // Store in ref as backup
+    resetTaskForm(false); // Don't clear the milestone when adding a new task
     setShowTaskDialog(true);
   };
 
@@ -310,15 +366,37 @@ const MilestoneTab: React.FC = () => {
   };
 
   const handleCreateTask = async () => {
-    if (
-      !taskForm.title ||
-      !taskForm.description ||
-      !taskDueDate ||
-      !selectedMilestone
-    ) {
-      toast.error("Please fill in all required fields");
+    // Validate required fields
+    if (!taskForm.title.trim()) {
+      toast.error("Please enter a task title");
       return;
     }
+
+    if (!taskForm.description.trim()) {
+      toast.error("Please enter a task description");
+      return;
+    }
+
+    if (!taskDueDate) {
+      toast.error("Please select a due date");
+      return;
+    }
+
+    // Use ref as fallback if state is lost
+    const milestoneId = selectedMilestone || selectedMilestoneRef.current;
+
+    if (!milestoneId) {
+      console.error(
+        "No milestone selected. State:",
+        selectedMilestone,
+        "Ref:",
+        selectedMilestoneRef.current
+      );
+      toast.error("No milestone selected. Please try again.");
+      return;
+    }
+
+    console.log("Creating task for milestone:", milestoneId);
 
     setIsLoading(true);
     try {
@@ -328,7 +406,7 @@ const MilestoneTab: React.FC = () => {
           // Update existing task
           setMilestones((prev) =>
             prev.map((milestone) =>
-              milestone.id === selectedMilestone
+              milestone.id === milestoneId
                 ? {
                     ...milestone,
                     tasks: milestone.tasks.map((task) =>
@@ -372,8 +450,8 @@ const MilestoneTab: React.FC = () => {
           // Create new task
           const newTask: Task = {
             id: `task_${Date.now()}`,
-            title: taskForm.title,
-            description: taskForm.description,
+            title: taskForm.title.trim(),
+            description: taskForm.description.trim(),
             assignedTo:
               taskForm.assignedTo === "unassigned"
                 ? undefined
@@ -386,7 +464,7 @@ const MilestoneTab: React.FC = () => {
 
           setMilestones((prev) =>
             prev.map((milestone) =>
-              milestone.id === selectedMilestone
+              milestone.id === milestoneId
                 ? {
                     ...milestone,
                     tasks: [...milestone.tasks, newTask],
@@ -401,17 +479,9 @@ const MilestoneTab: React.FC = () => {
           toast.success("Task created successfully");
         }
 
-        setTaskForm({
-          title: "",
-          description: "",
-          assignedTo: "unassigned",
-          priority: "Medium",
-          dueDate: "",
-        });
-        setTaskDueDate(undefined);
-        setEditingTask(null);
+        // Reset form and close dialog
+        resetTaskForm();
         setShowTaskDialog(false);
-        setSelectedMilestone("");
         setIsLoading(false);
       }, 1000);
     } catch (error) {
@@ -424,6 +494,8 @@ const MilestoneTab: React.FC = () => {
   const handleEditTask = (task: Task, milestoneId: string) => {
     setEditingTask(task);
     setSelectedMilestone(milestoneId);
+    selectedMilestoneRef.current = milestoneId; // Store in ref as backup
+    const dueDate = new Date(task.dueDate);
     setTaskForm({
       title: task.title,
       description: task.description,
@@ -431,7 +503,7 @@ const MilestoneTab: React.FC = () => {
       priority: task.priority,
       dueDate: task.dueDate,
     });
-    setTaskDueDate(new Date(task.dueDate));
+    setTaskDueDate(dueDate);
     setShowTaskDialog(true);
   };
 
@@ -593,7 +665,7 @@ const MilestoneTab: React.FC = () => {
 
           {/* Milestones List */}
           <div className="lg:col-span-3">
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion type="single" collapsible className="w-full space-y-4">
               {milestones.map((milestone) => (
                 <MilestoneCard
                   key={milestone.id}
@@ -643,7 +715,7 @@ const MilestoneTab: React.FC = () => {
         form={taskForm}
         onFormChange={handleTaskFormChange}
         dueDate={taskDueDate}
-        onDueDateChange={setTaskDueDate}
+        onDueDateChange={handleTaskDueDateChange}
         teamMembers={teamMembers}
       />
     </Card>
