@@ -1,34 +1,20 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Search, FileText, Calendar, Clock } from "lucide-react";
+  EvaluationFilters,
+  EvaluationHeader,
+  EvaluationsList,
+} from "./components";
 
-// Mock data for evaluations
+// Mock data
 const evaluations = [
   {
     id: 1,
@@ -84,7 +70,6 @@ const PendingEvaluations: React.FC = () => {
   const [selectedType, setSelectedType] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
 
-  // Filter evaluations based on search term, type, and status
   const filteredEvaluations = evaluations.filter((evaluation) => {
     const matchesSearch = evaluation.projectTitle
       .toLowerCase()
@@ -106,14 +91,10 @@ const PendingEvaluations: React.FC = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Pending Evaluations
-        </h1>
-        <p className="text-muted-foreground">
-          Review and evaluate project proposals and milestone reports
-        </p>
-      </div>
+      <EvaluationHeader
+        title="Pending Evaluations"
+        description="Review and evaluate project proposals and milestone reports"
+      />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
@@ -122,7 +103,7 @@ const PendingEvaluations: React.FC = () => {
           <TabsTrigger value="milestone">Milestones</TabsTrigger>
         </TabsList>
 
-        <TabsContent value={activeTab} className="space-y-4">
+        <TabsContent value={activeTab}>
           <Card>
             <CardHeader>
               <CardTitle>Evaluation Requests</CardTitle>
@@ -131,125 +112,19 @@ const PendingEvaluations: React.FC = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex flex-col md:flex-row gap-4 mb-6">
-                <div className="relative flex-1">
-                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="search"
-                    placeholder="Search projects..."
-                    className="pl-8"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
-                </div>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <Select value={selectedType} onValueChange={setSelectedType}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Types</SelectItem>
-                      <SelectItem value="Proposal">Proposal</SelectItem>
-                      <SelectItem value="Milestone">Milestone</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select
-                    value={selectedStatus}
-                    onValueChange={setSelectedStatus}
-                  >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Statuses</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="In Progress">In Progress</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              <EvaluationFilters
+                searchTerm={searchTerm}
+                selectedType={selectedType}
+                selectedStatus={selectedStatus}
+                onSearchChange={setSearchTerm}
+                onTypeChange={setSelectedType}
+                onStatusChange={setSelectedStatus}
+              />
 
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Project Title</TableHead>
-                      <TableHead>Project Code</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Submitted Date</TableHead>
-                      <TableHead>Due Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredEvaluations.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center">
-                          No evaluations found.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      filteredEvaluations.map((evaluation) => (
-                        <TableRow key={evaluation.id}>
-                          <TableCell className="font-medium">
-                            {evaluation.projectTitle}
-                          </TableCell>
-                          <TableCell>{evaluation.projectCode}</TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={
-                                evaluation.type === "Proposal"
-                                  ? "bg-blue-100 text-blue-800 border-blue-200"
-                                  : "bg-purple-100 text-purple-800 border-purple-200"
-                              }
-                            >
-                              {evaluation.type}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              <Calendar className="mr-2 h-3 w-3 text-muted-foreground" />
-                              {evaluation.submittedDate}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center">
-                              <Clock className="mr-2 h-3 w-3 text-muted-foreground" />
-                              {evaluation.dueDate}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={
-                                evaluation.status === "Pending"
-                                  ? "bg-amber-100 text-amber-800 border-amber-200"
-                                  : "bg-emerald-100 text-emerald-800 border-emerald-200"
-                              }
-                            >
-                              {evaluation.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleViewEvaluation(evaluation.id)
-                              }
-                            >
-                              <FileText className="mr-2 h-3 w-3" />
-                              Evaluate
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
+              <EvaluationsList
+                evaluations={filteredEvaluations}
+                onViewEvaluation={handleViewEvaluation}
+              />
             </CardContent>
           </Card>
         </TabsContent>

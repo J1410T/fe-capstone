@@ -19,6 +19,7 @@ interface ConfirmDialogProps {
   confirmText?: string;
   cancelText?: string;
   itemName?: string;
+  variant?: "destructive" | "default";
 }
 
 export const ConfirmDialog = ({
@@ -29,6 +30,7 @@ export const ConfirmDialog = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   itemName,
+  variant = "destructive",
 }: ConfirmDialogProps) => {
   const [open, setOpen] = useState(false);
   const finalDescription =
@@ -36,6 +38,12 @@ export const ConfirmDialog = ({
     (itemName
       ? `Are you sure you want to delete "${itemName}"? This action cannot be undone.`
       : "This action cannot be undone.");
+
+  // Choose button color based on variant
+  const confirmClass =
+    variant === "destructive"
+      ? "bg-red-600 hover:bg-red-700 focus:ring-red-600"
+      : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-600";
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
@@ -67,7 +75,7 @@ export const ConfirmDialog = ({
               onConfirm();
               setOpen(false);
             }}
-            className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            className={confirmClass}
           >
             {confirmText}
           </AlertDialogAction>
