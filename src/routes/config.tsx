@@ -51,7 +51,6 @@ import ProjectDetail from "@/pages/ProjectDetail";
 import Meetings from "@/pages/Council/Meetings";
 import ProjectApproval from "../pages/Council/ProjectApproval";
 import FormRegister from "@/pages/FormRegister";
-import CalendarTest from "@/pages/CalendarTest";
 
 /**
  * Main application routes configuration
@@ -374,15 +373,6 @@ export const routes: RouteObject[] = [
       {
         path: "unauthorized",
         element: <Unauthorized />,
-      },
-      // Calendar Test page (for development/testing)
-      {
-        path: "calendar-test",
-        element: (
-          <AuthGuard>
-            <CalendarTest />
-          </AuthGuard>
-        ),
       },
       // Auth routes (login, register, etc.)
       {

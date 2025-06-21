@@ -11,7 +11,7 @@
 // export { default as DashboardPage } from "./DashboardPage";
 
 // Project pages
-export { default as ProjectDetailPage } from "./ProjectDetail";
+// export { default as ProjectDetailPage } from "./ProjectDetail";
 // export { default as ProjectListPage } from "./ProjectList";
 
 // User management pages (commented out until created)
@@ -21,7 +21,7 @@ export { default as ProjectDetailPage } from "./ProjectDetail";
 // export { default as TaskManagementPage } from "./TaskManagement";
 
 // Principal Investigator pages
-export { default as PrincipalInvestigatorPage } from "./PrincipalInvestigator";
+// export { default as PrincipalInvestigatorPage } from "./PrincipalInvestigator";
 
 // Host Institution pages (commented out until created)
 // export { default as HostInstitutionPage } from "./HostInstitution";
