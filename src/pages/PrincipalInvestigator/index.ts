@@ -9,4 +9,4 @@ export { default } from "./Dashboard";
 // Shared components and utilities
 export * from "./shared/types";
 export * from "./shared/utils";
-export { StatusBadge } from "./shared/components";
+// StatusBadge should be imported directly from @/components/common/StatusBadge

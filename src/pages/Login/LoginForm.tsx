@@ -16,12 +16,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { mockGoogleOAuthResponse } from "@/mocks/authMock";
-import { Input } from "@/components";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Globe, Shield } from "lucide-react";
+import { mockUserLogin } from "@/utils/mockAuth";
+import { LogIn, Shield } from "lucide-react";
 
 export function LoginForm({
   className,
@@ -33,15 +33,15 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const { login } = useAuth();
 
-  const handleGoogleLogin = () => {
+  const handleUserLogin = () => {
     if (!selectedRole) {
       toast.error("Please select a role to continue.");
       return;
     }
     setIsLoading(true);
-    // Simulate Google login
+    // Simulate user login with mock token
     setTimeout(() => {
-      login(mockGoogleOAuthResponse(selectedRole as UserRole).credential!);
+      login(mockUserLogin(selectedRole as UserRole).credential);
       setIsLoading(false);
     }, 1000);
   };
@@ -52,9 +52,9 @@ export function LoginForm({
       return;
     }
     setIsLoading(true);
-    // Simulate staff login (replace with real logic)
+    // Simulate staff login with mock token
     setTimeout(() => {
-      login("staff-mock-token");
+      login(mockUserLogin(UserRole.STAFF).credential);
       setIsLoading(false);
     }, 1000);
   };
@@ -72,22 +72,23 @@ export function LoginForm({
           <Tabs defaultValue="user" className="w-full">
             <TabsList className="w-full mb-6">
               <TabsTrigger value="user" className="flex-1">
-                User
+                User Login
               </TabsTrigger>
               <TabsTrigger value="staff" className="flex-1">
-                Staff
+                Staff Login
               </TabsTrigger>
             </TabsList>
+
             <TabsContent value="user">
               <div className="text-center mb-7">
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg mb-3">
-                  <Globe className="h-6 w-6 text-white" />
+                  <LogIn className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-1">
                   User Access
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Sign in with Google and select your role
+                  Select your role and login to continue
                 </p>
               </div>
               <form
@@ -126,20 +127,17 @@ export function LoginForm({
                 </div>
                 <Button
                   type="button"
-                  variant="outline"
-                  className="w-full h-12 text-base flex items-center justify-center gap-2"
-                  onClick={handleGoogleLogin}
+                  variant="default"
+                  className="w-full h-12 text-base bg-emerald-700 hover:bg-emerald-600 text-white flex items-center justify-center gap-2"
+                  onClick={handleUserLogin}
                   disabled={isLoading || !selectedRole}
                 >
-                  <img
-                    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                    alt="Google"
-                    className="w-5 h-5"
-                  />
-                  {isLoading ? "Logging in..." : "Login with Google"}
+                  <LogIn className="h-5 w-5" />
+                  {isLoading ? "Logging in..." : "Login"}
                 </Button>
               </form>
             </TabsContent>
+
             <TabsContent value="staff">
               <div className="text-center mb-6">
                 <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl shadow-lg mb-3">
@@ -175,7 +173,7 @@ export function LoginForm({
                 <Button
                   type="button"
                   variant="default"
-                  className="w-full h-12 text-base bg-emerald-700 hover:bg-emerald-600 text-white"
+                  className="w-full h-12 text-base bg-indigo-700 hover:bg-indigo-600 text-white"
                   onClick={handleStaffLogin}
                   disabled={isLoading}
                 >

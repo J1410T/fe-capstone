@@ -20,6 +20,13 @@ import {
 } from "@/components/ui/dialog";
 import { Calendar, User, Flag, Tag } from "lucide-react";
 import { DatePicker } from "../ui";
+import {
+  getInputClassName,
+  getTextareaClassName,
+  getSelectClassName,
+  UI_CONSTANTS,
+  getDialogClassName,
+} from "@/lib/ui-constants";
 
 interface Task {
   title: string;
@@ -105,10 +112,13 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
   // Sync selectedDueDate with formData.dueDate
   useEffect(() => {
-    if (formData.dueDate && !selectedDueDate) {
-      setSelectedDueDate(new Date(formData.dueDate));
+    if (selectedDueDate) {
+      setFormData((prev) => ({
+        ...prev,
+        dueDate: selectedDueDate.toISOString(),
+      }));
     }
-  }, [formData.dueDate, selectedDueDate]);
+  }, [selectedDueDate]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -121,7 +131,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       newErrors.description = "Task description is required";
     }
 
-    if (!formData.dueDate) {
+    if (!formData.dueDate && !selectedDueDate) {
       newErrors.dueDate = "Due date is required";
     }
 
@@ -155,7 +165,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         title: formData.title,
         description: formData.description,
         status: formData.status,
-        dueDate: new Date(formData.dueDate).toISOString(),
+        dueDate: selectedDueDate
+          ? selectedDueDate.toISOString()
+          : new Date(formData.dueDate).toISOString(),
         priority: formData.priority,
         projectTag: formData.projectTag,
         assignedTo,
@@ -189,48 +201,63 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] w-[95vw] max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className={`${getDialogClassName(
+          "large"
+        )} w-[95vw] max-h-[90vh] overflow-y-auto`}
+      >
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2 text-lg sm:text-xl">
-            <Tag className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+          <DialogTitle
+            className={`flex items-center space-x-2 ${UI_CONSTANTS.TYPOGRAPHY.cardTitle}`}
+          >
+            <Tag className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
             <span>Create New Task</span>
           </DialogTitle>
-          <DialogDescription className="text-sm sm:text-base">
+          <DialogDescription className={UI_CONSTANTS.TYPOGRAPHY.description}>
             Create a new task and assign it to a team member. Fill in all the
             required information below.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className={UI_CONSTANTS.SPACING.form}>
           {/* Task Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Task Title *</Label>
+          <div className={UI_CONSTANTS.SPACING.formField}>
+            <Label htmlFor="title" className={UI_CONSTANTS.TYPOGRAPHY.label}>
+              Task Title *
+            </Label>
             <Input
               id="title"
               placeholder="Enter task title..."
               value={formData.title}
               onChange={(e) => handleInputChange("title", e.target.value)}
-              className={errors.title ? "border-red-500" : ""}
+              className={getInputClassName(!!errors.title)}
             />
             {errors.title && (
-              <p className="text-sm text-red-500">{errors.title}</p>
+              <p className={UI_CONSTANTS.TYPOGRAPHY.error}>{errors.title}</p>
             )}
           </div>
 
           {/* Task Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+          <div className={UI_CONSTANTS.SPACING.formField}>
+            <Label
+              htmlFor="description"
+              className={UI_CONSTANTS.TYPOGRAPHY.label}
+            >
+              Description *
+            </Label>
             <Textarea
               id="description"
               placeholder="Describe the task in detail..."
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              className={`min-h-[100px] ${
-                errors.description ? "border-red-500" : ""
-              }`}
+              className={`min-h-[100px] ${getTextareaClassName(
+                !!errors.description
+              )}`}
             />
             {errors.description && (
-              <p className="text-sm text-red-500">{errors.description}</p>
+              <p className={UI_CONSTANTS.TYPOGRAPHY.error}>
+                {errors.description}
+              </p>
             )}
           </div>
 
@@ -248,6 +275,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                 placeholder="Select a date"
                 disablePastDates={true}
               />
+              {errors.dueDate && (
+                <p className="text-sm text-red-500">{errors.dueDate}</p>
+              )}
               <p className="text-sm text-muted-foreground">
                 Selected:{" "}
                 {selectedDueDate
@@ -290,7 +320,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                 }
               >
                 <SelectTrigger
-                  className={errors.projectTag ? "border-red-500" : ""}
+                  className={getSelectClassName(!!errors.projectTag)}
                 >
                   <SelectValue placeholder="Select project tag" />
                 </SelectTrigger>
@@ -320,7 +350,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                 }
               >
                 <SelectTrigger
-                  className={errors.assignedToId ? "border-red-500" : ""}
+                  className={getSelectClassName(!!errors.assignedToId)}
                 >
                   <SelectValue placeholder="Select team member" />
                 </SelectTrigger>

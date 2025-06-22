@@ -366,7 +366,7 @@ export const ProfessionalTaskBoard: React.FC = () => {
 
       {/* Kanban Board - Responsive with Column Wrapping */}
       <div className="flex-1 lg:overflow-x-auto kanban-container">
-        <div className="p-2 sm:p-4">
+        <div className="p-2 sm:p-4 flex justify-center">
           <DndContext
             sensors={sensors}
             collisionDetection={closestCorners}
@@ -374,7 +374,7 @@ export const ProfessionalTaskBoard: React.FC = () => {
             onDragEnd={handleDragEnd}
           >
             {/* Responsive Grid: Mobile(1col) -> Tablet(2col) -> Desktop(4col flex) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:gap-4 gap-3 lg:items-start lg:justify-center lg:min-w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:gap-4 gap-3 lg:items-start lg:justify-center max-w-7xl w-full">
               {TASK_STATUSES.map((status) => (
                 <div
                   key={status}

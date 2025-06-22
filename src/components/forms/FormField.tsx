@@ -12,6 +12,12 @@ import {
 import { DatePicker } from "@/components/ui/date-picker";
 import { cn } from "@/lib/utils";
 import { type BaseFormProps, type SelectOption } from "@/components/types";
+import {
+  getInputClassName,
+  getSelectClassName,
+  getTextareaClassName,
+  UI_CONSTANTS,
+} from "@/lib/ui-constants";
 
 type InputType = "text" | "email" | "password" | "number";
 
@@ -72,7 +78,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
             onChange={(e) => props.onChange(e.target.value)}
             placeholder={props.placeholder}
             disabled={disabled}
-            className={cn(error && "border-red-500")}
+            className={cn(getInputClassName(!!error))}
           />
         );
 
@@ -84,7 +90,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
             placeholder={props.placeholder}
             rows={props.rows || 3}
             disabled={disabled}
-            className={cn(error && "border-red-500")}
+            className={cn(getTextareaClassName(!!error))}
           />
         );
 
@@ -95,7 +101,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
             onValueChange={props.onChange}
             disabled={disabled}
           >
-            <SelectTrigger className={cn(error && "border-red-500")}>
+            <SelectTrigger className={cn(getSelectClassName(!!error))}>
               <SelectValue placeholder={props.placeholder} />
             </SelectTrigger>
             <SelectContent>
@@ -116,7 +122,7 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
             placeholder={props.placeholder}
             disabled={disabled}
             disablePastDates={props.disablePastDates}
-            className={cn(error && "border-red-500")}
+            className={cn(getInputClassName(!!error))}
           />
         );
 
@@ -126,16 +132,18 @@ export const FormField: React.FC<FormFieldProps> = (props) => {
   };
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn(UI_CONSTANTS.SPACING.formField, className)}>
       {label && (
-        <Label className="text-sm font-medium">
+        <Label className={UI_CONSTANTS.TYPOGRAPHY.label}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </Label>
       )}
       {renderField()}
-      {description && <p className="text-xs text-gray-500">{description}</p>}
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      {description && (
+        <p className={UI_CONSTANTS.TYPOGRAPHY.helper}>{description}</p>
+      )}
+      {error && <p className={UI_CONSTANTS.TYPOGRAPHY.error}>{error}</p>}
     </div>
   );
 };

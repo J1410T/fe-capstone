@@ -14,7 +14,7 @@ import {
   Plus,
 } from "lucide-react";
 import { Milestone, Task } from "../../shared/types";
-import { StatusBadge } from "../../shared/components";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import { formatDate } from "../../shared/utils";
 import { TaskCard } from "./TaskCard";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";

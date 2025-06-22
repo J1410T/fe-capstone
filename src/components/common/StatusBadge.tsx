@@ -1,24 +1,74 @@
 import React from "react";
-import { Badge, type BadgeProps } from "@/components/ui/badge";
-import { getStatusColor } from "@/shared/utils/helpers";
-import {
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  AlertCircle,
-  XCircle,
-} from "lucide-react";
-import {
-  type ComponentSize,
-  type StatusType,
-  type BaseComponentProps,
-} from "@/components/types";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
+import { getStatusBadgeClassName } from "@/lib/ui-constants";
 
-interface StatusBadgeProps extends Omit<BaseComponentProps, "children"> {
-  status: string | StatusType;
-  variant?: BadgeProps["variant"];
-  showIcon?: boolean;
-  size?: ComponentSize;
+// Status type mapping - can be extended as needed
+export type StatusType =
+  | "success"
+  | "approved"
+  | "completed"
+  | "active"
+  | "warning"
+  | "pending"
+  | "in-progress"
+  | "review"
+  | "error"
+  | "rejected"
+  | "failed"
+  | "overdue"
+  | "info"
+  | "draft"
+  | "submitted"
+  | "neutral"
+  | "inactive"
+  | "not-started";
+
+// Map status strings to our standardized status types
+const getStatusType = (
+  status: string
+): "success" | "warning" | "error" | "info" | "neutral" => {
+  const normalizedStatus = status.toLowerCase().replace(/[_\s]/g, "-");
+
+  switch (normalizedStatus) {
+    case "approved":
+    case "completed":
+    case "complete":
+    case "active":
+    case "success":
+      return "success";
+
+    case "pending":
+    case "in-progress":
+    case "review":
+    case "under-review":
+    case "warning":
+      return "warning";
+
+    case "rejected":
+    case "failed":
+    case "error":
+    case "overdue":
+      return "error";
+
+    case "draft":
+    case "submitted":
+    case "info":
+      return "info";
+
+    case "inactive":
+    case "not-started":
+    case "neutral":
+    default:
+      return "neutral";
+  }
+};
+
+interface StatusBadgeProps {
+  status: string;
+  size?: "sm" | "md" | "lg";
+  variant?: "default" | "outline" | "secondary";
+  className?: string;
 }
 
 /**
@@ -27,67 +77,29 @@ interface StatusBadgeProps extends Omit<BaseComponentProps, "children"> {
  */
 export const StatusBadge: React.FC<StatusBadgeProps> = ({
   status,
-  variant = "outline",
-  className = "",
-  showIcon = false,
   size = "md",
+  variant = "default",
+  className,
 }) => {
-  const colorClass = getStatusColor(status);
-
-  const getStatusIcon = () => {
-    if (!showIcon) return null;
-
-    const normalizedStatus = status.toLowerCase();
-    const iconSize =
-      size === "sm" ? "h-3 w-3" : size === "lg" ? "h-5 w-5" : "h-4 w-4";
-
-    if (
-      normalizedStatus.includes("completed") ||
-      normalizedStatus.includes("complete")
-    ) {
-      return <CheckCircle className={`${iconSize} mr-1`} />;
-    }
-    if (
-      normalizedStatus.includes("progress") ||
-      normalizedStatus.includes("processing")
-    ) {
-      return <Clock className={`${iconSize} mr-1`} />;
-    }
-    if (
-      normalizedStatus.includes("pending") ||
-      normalizedStatus.includes("waiting")
-    ) {
-      return <AlertCircle className={`${iconSize} mr-1`} />;
-    }
-    if (
-      normalizedStatus.includes("overdue") ||
-      normalizedStatus.includes("late")
-    ) {
-      return <AlertTriangle className={`${iconSize} mr-1`} />;
-    }
-    if (
-      normalizedStatus.includes("cancelled") ||
-      normalizedStatus.includes("rejected") ||
-      normalizedStatus.includes("failed")
-    ) {
-      return <XCircle className={`${iconSize} mr-1`} />;
-    }
-
-    return null;
-  };
+  const statusType = getStatusType(status);
+  const baseClassName = getStatusBadgeClassName(statusType);
 
   const sizeClasses = {
     sm: "text-xs px-2 py-0.5",
-    md: "text-sm px-2.5 py-0.5",
-    lg: "text-base px-3 py-1",
+    md: "text-sm px-2.5 py-1",
+    lg: "text-base px-3 py-1.5",
   };
 
   return (
     <Badge
       variant={variant}
-      className={`${colorClass} ${sizeClasses[size]} ${className} inline-flex items-center`}
+      className={cn(
+        baseClassName,
+        sizeClasses[size],
+        "font-medium border rounded-full",
+        className
+      )}
     >
-      {getStatusIcon()}
       {status}
     </Badge>
   );

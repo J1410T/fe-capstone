@@ -1,7 +1,6 @@
-// import { jwtDecode } from "jwt-decode";
 import { UserRole } from "@/contexts/AuthContext";
 
-// Mock JWT token generator
+// Mock JWT token generator for testing without backend
 export const generateMockToken = (role: UserRole = UserRole.MEMBER) => {
   // Create a mock payload
   const payload = {
@@ -27,8 +26,8 @@ export const generateMockToken = (role: UserRole = UserRole.MEMBER) => {
   return `${encodedHeader}.${encodedPayload}.${signature}`;
 };
 
-// Mock Google OAuth response
-export const mockGoogleOAuthResponse = (role: UserRole = UserRole.MEMBER) => {
+// Mock login responses
+export const mockUserLogin = (role: UserRole) => {
   return {
     credential: generateMockToken(role),
   };

@@ -1,2 +1,2 @@
-export { FileUpload } from './FileUpload';
-export { StatusBadge } from './StatusBadge';
+export { FileUpload } from "./FileUpload";
+// StatusBadge should be imported directly from @/components/common/StatusBadge
