@@ -1,5 +1,4 @@
-import { TimeLimit, PaymentSchedule, PaymentPhase } from "./types";
-// Use centralized helpers for date, currency, file size, budget, and email
+// Utilities for Principal Investigator features
 import {
   formatDate,
   formatDateTime,
@@ -7,17 +6,30 @@ import {
   formatFileSize,
   calculateBudgetUtilization,
   validateEmail,
-  validateRequired,
-  validateNumber,
-  getStatusColor,
-  getCurrentQuarter,
-  isOverdue,
-  getDaysUntilDeadline,
-  calculateProgress,
-  validateFileUpload,
 } from "@/shared/utils/helpers";
-=======
-} from "@/shared/utils/helpers";
+
+// Types for PI-specific functionality
+interface TimeLimit {
+  quarter: 1 | 2 | 3 | 4;
+  allowedProjectTypes: string[];
+  deadline: string;
+  isActive: boolean;
+}
+
+interface PaymentPhase {
+  phase: number;
+  percentage: number;
+  amount: number;
+  dueDate: string;
+  status: "Pending" | "Paid" | "Overdue";
+}
+
+interface PaymentSchedule {
+  projectType: "Basic" | "Application";
+  schedule: PaymentPhase[];
+  totalAmount: number;
+  paidAmount: number;
+}
 
 // Time and date utilities
 export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
@@ -38,7 +50,6 @@ export const getDaysUntilDeadline = (deadline: string): number => {
   const diffTime = deadlineDate.getTime() - today.getTime();
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
->>>>>>> main-backup
 
 // Project type and time limit validation
 export const getTimeLimit = (): TimeLimit => {
@@ -140,8 +151,6 @@ export const generatePaymentSchedule = (
   };
 };
 
-// Re-export commonly used utilities from shared helpers
-=======
 // File validation utilities
 export const validateFileUpload = (
   file: File
@@ -216,32 +225,13 @@ export const validateNumber = (
   return true;
 };
 
->>>>>>> main-backup
-export {
-  formatDate,
-  formatDateTime,
-  formatCurrency,
-  formatFileSize,
-  calculateBudgetUtilization,
-  validateEmail,
-  validateRequired,
-  validateNumber,
-  getStatusColor,
-  getCurrentQuarter,
-  isOverdue,
-  getDaysUntilDeadline,
-  calculateProgress,
-  validateFileUpload,
-=======
-};
-
 // Progress calculation utilities
 export const calculateProgress = (completed: number, total: number): number => {
   if (total === 0) return 0;
   return Math.round((completed / total) * 100);
->>>>>>> main-backup
 };
 
+// Milestone progress calculation
 export const calculateMilestoneProgress = (
   tasks: { status: string }[]
 ): number => {
@@ -250,4 +240,14 @@ export const calculateMilestoneProgress = (
     (task) => task.status === "Completed"
   ).length;
   return calculateProgress(completedTasks, tasks.length);
+};
+
+// Re-export utilities from shared helpers
+export {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+  calculateBudgetUtilization,
+  validateEmail,
 };

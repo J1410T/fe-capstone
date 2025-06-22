@@ -5,9 +5,7 @@ import { Milestone, Task, PIUser } from "../shared/types";
 import { calculateMilestoneProgress } from "@/shared/utils";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { MilestoneCard, MilestoneDialog, TaskDialog } from "./milestone";
-=======
-import { StatusBadge } from "../shared/components";
+import { MilestoneCard, MilestoneDialog, TaskDialog } from "./milestone";import { StatusBadge } from "../shared/components";
 import { formatDate } from "@/shared/utils/helpers";
 import { calculateMilestoneProgress } from "../shared/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,8 +13,6 @@ import { toast } from "sonner";
 import { Card } from "@/components/ui";
 import { DatePicker } from "@/components/ui/date-picker";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
->>>>>>> main-backup
-
 const MilestoneTab: React.FC = () => {
   const { user } = useAuth();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -693,47 +689,9 @@ const MilestoneTab: React.FC = () => {
 
             {milestones.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                <p>
-=======
-                          {isCurrentUserLeader && (
-                            <div className="flex items-center space-x-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditMilestone(milestone);
-                                }}
-                                className="h-8 w-8 p-0"
-                              >
-                                <Edit className="w-3 h-3" />
-                              </Button>
-                              <ConfirmDialog
-                                itemName={milestone.name}
-                                onConfirm={() =>
-                                  handleDeleteMilestone(milestone.id)
-                                }
-                                trigger={
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="text-red-600 hover:text-red-700"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                }
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-4 pt-4 px-4">
-                        <p className="text-base text-gray-600 bg-gray-50 p-3 rounded-lg">
-                          {milestone.description}
-                        </p>
+                <p>No milestones found for this project. {isCurrentUserLeader && "Click 'Add Milestone' to create the first milestone."}</p>
+              </div>
+            )}
 
                         {/* Add Task Button */}
                         {isCurrentUserLeader && (
@@ -1084,14 +1042,7 @@ const MilestoneTab: React.FC = () => {
                 ))}
               </Accordion>
 
-              {milestones.length === 0 && (
-                <p className="text-gray-500 text-center py-8 text-base">
->>>>>>> main-backup
-                  No milestones created yet. Create your first milestone to
-                  start tracking progress.
-                </p>
-              </div>
-            )}
+            }
           </div>
         </div>
       </div>

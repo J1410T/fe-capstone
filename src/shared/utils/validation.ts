@@ -4,10 +4,8 @@
  * @module validation
  */
 
-// ============================================================================
-// EMAIL VALIDATION
-// ============================================================================
-
+//// EMAIL VALIDATION
+//
 /**
  * Validates an email address format
  * @param {string} email - The email to validate
@@ -20,10 +18,8 @@ export const validateEmail = (email: string): boolean => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 };
 
-// ============================================================================
-// FIELD VALIDATION
-// ============================================================================
-
+//// FIELD VALIDATION
+//
 /**
  * Validates that a required field has a value
  * @param {string} value - The value to validate
@@ -70,10 +66,8 @@ export const validatePhone = (phone: string): boolean => {
   return /^[+]?[1-9][\d]{0,15}$/.test(phone.replace(/[\s\-()]/g, ""));
 };
 
-// ============================================================================
-// FILE VALIDATION
-// ============================================================================
-
+//// FILE VALIDATION
+//
 /**
  * Validates file upload constraints
  * @param {File} file - The file to validate
@@ -114,10 +108,8 @@ export const validateFileUpload = (
   return { isValid: true };
 };
 
-// ============================================================================
-// DATE VALIDATION
-// ============================================================================
-
+//// DATE VALIDATION
+//
 /**
  * Validates that a date is not in the past
  * @param {string | Date} date - The date to validate
@@ -146,10 +138,8 @@ export const validatePastDate = (date: string | Date): boolean => {
   return inputDate <= today;
 };
 
-// ============================================================================
-// FORM VALIDATION HELPERS
-// ============================================================================
-
+//// FORM VALIDATION HELPERS
+//
 /**
  * Validates a form field and returns an error message if invalid
  * @param {string} value - The field value
@@ -220,10 +210,8 @@ export const validateForm = (
   return errors;
 };
 
-// ============================================================================
-// UTILITY VALIDATION FUNCTIONS
-// ============================================================================
-
+//// UTILITY VALIDATION FUNCTIONS
+//
 /**
  * Checks if a string is a valid URL
  * @param {string} url - The URL to validate

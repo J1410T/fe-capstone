@@ -4,10 +4,8 @@
  * @module status
  */
 
-// ============================================================================
-// STATUS COLOR UTILITIES
-// ============================================================================
-
+//// STATUS COLOR UTILITIES
+//
 /**
  * Get status color classes for badges and UI elements
  * Supports various status types across different contexts
@@ -95,10 +93,8 @@ export const getStatusColorEmerald = (status: string): string => {
   }
 };
 
-// ============================================================================
-// CATEGORY COLOR UTILITIES
-// ============================================================================
-
+//// CATEGORY COLOR UTILITIES
+//
 /**
  * Get category color classes for different project/budget categories
  *
@@ -185,10 +181,8 @@ export const getCategoryIcon = (category: string): string => {
   }
 };
 
-// ============================================================================
-// PRIORITY COLOR UTILITIES
-// ============================================================================
-
+//// PRIORITY COLOR UTILITIES
+//
 /**
  * Get priority configuration with colors and styling
  *
@@ -245,10 +239,8 @@ export const getPriorityConfig = (priority: string) => {
   }
 };
 
-// ============================================================================
-// REPORT STATUS UTILITIES
-// ============================================================================
-
+//// REPORT STATUS UTILITIES
+//
 /**
  * Get report status color classes
  *

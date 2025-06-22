@@ -30,9 +30,6 @@ export const MeetingHeader: React.FC<MeetingHeaderProps> = ({
   return (
     <div className="flex items-center gap-4 ">
       <Button variant="outline" onClick={handleBack}>
-=======
-      <Button variant="outline" onClick={() => navigate("/council/meetings")}>
->>>>>>> main-backup
         <ArrowLeft className=" h-4 w-4" />
       </Button>
       <div>

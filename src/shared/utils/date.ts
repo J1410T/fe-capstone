@@ -4,10 +4,8 @@
  * @module date
  */
 
-// ============================================================================
-// DATE FORMATTING
-// ============================================================================
-
+//// DATE FORMATTING
+//
 /**
  * Formats a date into a human-readable string
  *
@@ -54,10 +52,8 @@ export const formatDateTime = (
   return d.toLocaleString("en-US", options);
 };
 
-// ============================================================================
-// DATE CALCULATIONS
-// ============================================================================
-
+//// DATE CALCULATIONS
+//
 /**
  * Checks if a date is overdue (past the current date)
  * @param {string} dueDate - The due date to check
@@ -99,10 +95,8 @@ export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
   return 4;
 };
 
-// ============================================================================
-// DATE SORTING AND FILTERING
-// ============================================================================
-
+//// DATE SORTING AND FILTERING
+//
 /**
  * Sorts an array of items by date property
  * @param {T[]} items - Array of items with date property
@@ -143,10 +137,8 @@ export const filterByDateRange = <T extends { date: string }>(
   });
 };
 
-// ============================================================================
-// DATE UTILITIES FOR BUSINESS LOGIC
-// ============================================================================
-
+//// DATE UTILITIES FOR BUSINESS LOGIC
+//
 /**
  * Gets time limit information based on current quarter
  * @returns {object} Time limit configuration
@@ -194,10 +186,8 @@ export const canCreateProjectType = (
   );
 };
 
-// ============================================================================
-// DATE CONVERSION UTILITIES
-// ============================================================================
-
+//// DATE CONVERSION UTILITIES
+//
 /**
  * Converts a date to ISO string format (YYYY-MM-DD)
  * @param {Date | string} date - The date to convert
@@ -238,10 +228,8 @@ export const addDays = (date: Date | string, days: number): Date => {
   return d;
 };
 
-// ============================================================================
-// DATE COMPARISON UTILITIES
-// ============================================================================
-
+//// DATE COMPARISON UTILITIES
+//
 /**
  * Checks if two dates are the same day
  * @param {Date | string} date1 - First date

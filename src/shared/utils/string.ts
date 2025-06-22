@@ -4,10 +4,8 @@
  * @module string
  */
 
-// ============================================================================
-// STRING MANIPULATION
-// ============================================================================
-
+//// STRING MANIPULATION
+//
 /**
  * Truncates a string to a specified length and adds an ellipsis
  *
@@ -94,10 +92,8 @@ export const normalizeWhitespace = (str: string): string => {
   return str.trim().replace(/\s+/g, " ");
 };
 
-// ============================================================================
-// ID GENERATION
-// ============================================================================
-
+//// ID GENERATION
+//
 /**
  * Generates a unique ID using timestamp and random string
  * @returns {string} A unique identifier
@@ -157,10 +153,8 @@ export const getInitials = (name: string, maxInitials = 2): string => {
     .toUpperCase();
 };
 
-// ============================================================================
-// STRING SEARCH AND FILTERING
-// ============================================================================
-
+//// STRING SEARCH AND FILTERING
+//
 /**
  * Searches for items based on multiple searchable fields
  * @param {T[]} items - Array of items to search
@@ -223,10 +217,8 @@ export const highlightText = (
   return text.replace(regex, `<span class="${highlightClass}">$1</span>`);
 };
 
-// ============================================================================
-// STRING FORMATTING
-// ============================================================================
-
+//// STRING FORMATTING
+//
 /**
  * Formats a number as currency (USD by default)
  * @param {number} amount - The amount to format
@@ -280,10 +272,8 @@ export const formatPhoneNumber = (phone: string): string => {
   return phone; // Return original if can't format
 };
 
-// ============================================================================
-// STRING VALIDATION HELPERS
-// ============================================================================
-
+//// STRING VALIDATION HELPERS
+//
 /**
  * Checks if a string contains only alphanumeric characters
  * @param {string} str - The string to check
@@ -318,10 +308,8 @@ export const textToSlug = (text: string): string => {
     .replace(/^-+|-+$/g, ""); // Remove leading/trailing hyphens
 };
 
-// ============================================================================
-// UTILITY FUNCTIONS
-// ============================================================================
-
+//// UTILITY FUNCTIONS
+//
 /**
  * Calculates budget utilization as a percentage
  * @param {number} spent - Amount spent
