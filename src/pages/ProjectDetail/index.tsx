@@ -360,11 +360,6 @@ function ProjectDetail() {
                   email: string;
                 }>
               }
-              showEditingButtons={
-                user?.role === UserRole.PRINCIPAL_INVESTIGATOR
-                  ? showAllTabs
-                  : false
-              }
             />
           </TabsContent>
         )}

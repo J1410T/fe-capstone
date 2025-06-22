@@ -35,13 +35,7 @@ import ScheduleMeeting from "@/pages/Council/Meetings/ScheduleMeeting";
 import MeetingMinutes from "@/pages/Council/Meetings/MeetingMinutes";
 import ApprovalInterface from "@/pages/Council/Approvals";
 
-// Admin Pages
-import AdminDashboard from "@/pages/Admin/Dashboard";
-import UserManagement from "@/pages/Admin/Users";
-import SystemConfig from "@/pages/Admin/System/Config";
-// import SystemLogs from "@/pages/Admin/System/Logs"; // TODO: Create SystemLogs component
-import ApprovalManagement from "@/pages/Admin/Approvals";
-import AdminComingSoon from "@/pages/Admin/ComingSoon";
+// Admin Pages - simplified to use general coming soon
 
 // General Coming Soon
 import GeneralComingSoon from "@/pages/ComingSoon";
@@ -86,7 +80,7 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      // Staff routes with sidebar
+      // Staff routes with sidebar - simplified layout only
       {
         path: "staff",
         element: (
@@ -96,69 +90,12 @@ export const routes: RouteObject[] = [
         ),
         children: [
           {
-            path: "dashboard",
-            element: <AdminDashboard />,
-          },
-          // User Management
-          {
-            path: "users",
-            element: <UserManagement />,
+            index: true,
+            element: <GeneralComingSoon />,
           },
           {
-            path: "users/roles",
-            element: <AdminComingSoon />,
-          },
-          // Projects
-          {
-            path: "projects",
-            element: <ProjectsList />,
-          },
-          {
-            path: "projects/create",
-            element: <AdminComingSoon />,
-          },
-          {
-            path: "projects/templates",
-            element: <AdminComingSoon />,
-          },
-          {
-            path: "projects/recent",
-            element: <AdminComingSoon />,
-          },
-          {
-            path: "projects/stats",
-            element: <AdminComingSoon />,
-          },
-          // System Configuration
-          {
-            path: "system/config",
-            element: <SystemConfig />,
-          },
-          {
-            path: "system/logs",
-            element: <AdminComingSoon />, // TODO: Replace with <SystemLogs /> when component is created
-          },
-          {
-            path: "system/backup",
-            element: <AdminComingSoon />,
-          },
-          // Approvals
-          {
-            path: "approvals/pending",
-            element: <ApprovalManagement />,
-          },
-          {
-            path: "approvals/budget",
-            element: <AdminComingSoon />,
-          },
-          {
-            path: "approvals/templates",
-            element: <AdminComingSoon />,
-          },
-          // Security
-          {
-            path: "security",
-            element: <AdminComingSoon />,
+            path: "*",
+            element: <GeneralComingSoon />,
           },
         ],
       },

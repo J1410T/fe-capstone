@@ -1,5 +1,4 @@
-import { TimeLimit, PaymentSchedule, PaymentPhase } from "./types";
-// Use centralized helpers for date, currency, file size, budget, and email
+// Utilities for Principal Investigator features
 import {
   formatDate,
   formatDateTime,
@@ -8,6 +7,29 @@ import {
   calculateBudgetUtilization,
   validateEmail,
 } from "@/shared/utils/helpers";
+
+// Types for PI-specific functionality
+interface TimeLimit {
+  quarter: 1 | 2 | 3 | 4;
+  allowedProjectTypes: string[];
+  deadline: string;
+  isActive: boolean;
+}
+
+interface PaymentPhase {
+  phase: number;
+  percentage: number;
+  amount: number;
+  dueDate: string;
+  status: "Pending" | "Paid" | "Overdue";
+}
+
+interface PaymentSchedule {
+  projectType: "Basic" | "Application";
+  schedule: PaymentPhase[];
+  totalAmount: number;
+  paidAmount: number;
+}
 
 // Time and date utilities
 export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
@@ -203,21 +225,13 @@ export const validateNumber = (
   return true;
 };
 
-export {
-  formatDate,
-  formatDateTime,
-  formatCurrency,
-  formatFileSize,
-  calculateBudgetUtilization,
-  validateEmail,
-};
-
 // Progress calculation utilities
 export const calculateProgress = (completed: number, total: number): number => {
   if (total === 0) return 0;
   return Math.round((completed / total) * 100);
 };
 
+// Milestone progress calculation
 export const calculateMilestoneProgress = (
   tasks: { status: string }[]
 ): number => {
@@ -226,4 +240,14 @@ export const calculateMilestoneProgress = (
     (task) => task.status === "Completed"
   ).length;
   return calculateProgress(completedTasks, tasks.length);
+};
+
+// Re-export utilities from shared helpers
+export {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+  calculateBudgetUtilization,
+  validateEmail,
 };

@@ -142,7 +142,7 @@ const ProgressTab: React.FC = () => {
           </div>
           <Button
             onClick={handleCreateForm}
-            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto text-sm sm:text-base"
+            className=" hover:var(--secondary) w-full sm:w-auto text-sm sm:text-base var(--primary)"
           >
             <Plus className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Create Form</span>

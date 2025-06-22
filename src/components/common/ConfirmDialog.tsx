@@ -1,14 +1,16 @@
 import React, { useState } from "react";
 import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { UI_CONSTANTS } from "@/lib/ui-constants";
 
 interface ConfirmDialogProps {
   trigger: React.ReactNode;
@@ -18,6 +20,7 @@ interface ConfirmDialogProps {
   confirmText?: string;
   cancelText?: string;
   itemName?: string;
+  variant?: "destructive" | "default";
 }
 
 export const ConfirmDialog = ({
@@ -28,6 +31,7 @@ export const ConfirmDialog = ({
   confirmText = "Confirm",
   cancelText = "Cancel",
   itemName,
+  variant = "destructive",
 }: ConfirmDialogProps) => {
   const [open, setOpen] = useState(false);
   const finalDescription =
@@ -36,45 +40,50 @@ export const ConfirmDialog = ({
       ? `Are you sure you want to delete "${itemName}"? This action cannot be undone.`
       : "This action cannot be undone.");
 
+  // Choose button color based on variant
+  const confirmClass =
+    variant === "destructive"
+      ? UI_CONSTANTS.BUTTONS.danger
+      : UI_CONSTANTS.BUTTONS.primary;
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger
         asChild
         onClick={(e) => {
           e.stopPropagation();
         }}
       >
         {trigger}
-      </DialogTrigger>
+      </AlertDialogTrigger>
 
-      <DialogContent
-        onClick={(e) => e.stopPropagation()}
-        className="max-w-lg rounded-lg p-6 bg-white shadow-lg border border-gray-200"
-      >
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-gray-900">
+      <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+        <AlertDialogHeader>
+          <AlertDialogTitle className={UI_CONSTANTS.TYPOGRAPHY.cardTitle}>
             {title}
-          </DialogTitle>
-          <DialogDescription className="mt-2 text-sm text-gray-600">
+          </AlertDialogTitle>
+          <AlertDialogDescription
+            className={UI_CONSTANTS.TYPOGRAPHY.description}
+          >
             {finalDescription}
-          </DialogDescription>
-        </DialogHeader>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
 
-        <DialogFooter className="mt-6 flex justify-end gap-2">
-          <Button variant="ghost" onClick={() => setOpen(false)}>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => setOpen(false)}>
             {cancelText}
-          </Button>
-          <Button
-            variant="destructive"
+          </AlertDialogCancel>
+          <AlertDialogAction
             onClick={() => {
               onConfirm();
               setOpen(false);
             }}
+            className={`${confirmClass} text-white`}
           >
             {confirmText}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };

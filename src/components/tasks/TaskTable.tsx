@@ -12,35 +12,34 @@ import {
   Header,
   Cell,
 } from "@tanstack/react-table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Button,
+  Input,
+  Badge,
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui";
 import {
-  // Plus,
   Search,
-  // Filter, // Unused import
   Edit,
   Eye,
   Calendar,
-  // Flag,
-  // User, // Unused import
   ChevronLeft,
   ChevronRight,
   ArrowUpDown,
@@ -49,6 +48,7 @@ import {
   X,
 } from "lucide-react";
 import { format, parseISO, isAfter } from "date-fns";
+import { getPriorityConfig as getPriorityConfigShared } from "@/shared/utils/status";
 
 // Task interface for the table
 interface Task {
@@ -108,18 +108,10 @@ export const TaskTable: React.FC<TaskTableProps> = ({
     });
   }, [tasks]);
 
-  // Get priority configuration
+  // Get priority configuration from shared utilities
   const getPriorityConfig = (priority: string) => {
-    switch (priority) {
-      case "High":
-        return { color: "bg-red-100 text-red-700", icon: "" };
-      case "Medium":
-        return { color: "bg-yellow-100 text-yellow-700", icon: "" };
-      case "Low":
-        return { color: "bg-blue-100 text-blue-700", icon: "" };
-      default:
-        return { color: "bg-slate-100 text-slate-700", icon: "" };
-    }
+    const config = getPriorityConfigShared(priority);
+    return { color: config.badgeColor, icon: config.icon };
   };
 
   // Get status configuration

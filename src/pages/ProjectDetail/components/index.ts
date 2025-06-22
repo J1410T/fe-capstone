@@ -1,5 +1,4 @@
 export * from "./ProjectHeader";
-export * from "./ProjectProgress";
 export * from "./OverviewTab";
 export * from "./TeamTab";
 export { default as BudgetTab } from "./BudgetTab";

@@ -7,8 +7,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { StatusBadge } from "@/components/common/StatusBadge";
 import {
   Accordion,
   AccordionContent,
@@ -23,8 +23,6 @@ import {
   FileText,
   FolderOpen,
 } from "lucide-react";
-import { formatDate } from "@/shared/utils/helpers";
-
 interface Meeting {
   id: number;
   title: string;
@@ -54,45 +52,18 @@ const ProjectMeetingsTab: React.FC<ProjectMeetingsTabProps> = ({
   onViewMeeting,
   canViewDetails,
 }) => {
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  // Use the unified StatusBadge component instead of inline implementation
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-green-50 text-green-700 border-green-200"
-          >
-            Completed
-          </Badge>
-        );
-      case "Canceled":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-red-50 text-red-700 border-red-200"
-          >
-            Canceled
-          </Badge>
-        );
-      case "Upcoming":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-blue-50 text-blue-700 border-blue-200"
-          >
-            Upcoming
-          </Badge>
-        );
-      default:
-        return (
-          <Badge
-            variant="outline"
-            className="bg-gray-50 text-gray-700 border-gray-200"
-          >
-            {status}
-          </Badge>
-        );
-    }
+    return <StatusBadge status={status} variant="outline" />;
   };
 
   const renderActionButtons = (meeting: Meeting) => {
