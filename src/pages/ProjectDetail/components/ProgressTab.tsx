@@ -35,7 +35,8 @@ import {
   XCircle,
 } from "lucide-react";
 import { ProgressReport } from "../shared/types";
-import { formatDateTime } from "../shared/utils";
+import { formatDateTime } from "@/shared/utils/helpers";
+import { getStatusColor } from "../shared/utils";
 import { UserRole, useAuth } from "@/contexts/AuthContext";
 
 const ProgressTab: React.FC = () => {
@@ -124,22 +125,6 @@ const ProgressTab: React.FC = () => {
         return <FileText className="w-4 h-4 text-blue-600" />;
       default:
         return <FileText className="w-4 h-4 text-gray-600" />;
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "approved":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "processing":
-      case "submitted":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "rejected":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "draft":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
-        return "bg-blue-100 text-blue-800 border-blue-200";
     }
   };
 

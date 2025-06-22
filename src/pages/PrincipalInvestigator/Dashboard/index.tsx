@@ -33,6 +33,11 @@ import {
 import { Project, Milestone, ProgressReport } from "../shared/types";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { formatDate, getCurrentQuarter, getTimeLimit } from "../shared/utils";
+=======
+import { StatusBadge } from "../shared/components";
+import { formatDate } from "@/shared/utils/helpers";
+import { getCurrentQuarter, getTimeLimit } from "../shared/utils";
+>>>>>>> main-backup
 import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "@/components/ui/loaders";
 

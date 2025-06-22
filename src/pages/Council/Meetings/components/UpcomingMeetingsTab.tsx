@@ -18,6 +18,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Search, Calendar as CalendarIcon, Clock, Video } from "lucide-react";
+=======
+import { formatDate } from "@/shared/utils/helpers";
+>>>>>>> main-backup
 
 interface Meeting {
   id: number;

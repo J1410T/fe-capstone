@@ -59,6 +59,87 @@ export const formatDate = (
 };
 
 /**
+ * Formats a date and time into a human-readable string
+ * @param {Date | string} date - The date to format
+ * @param {Intl.DateTimeFormatOptions} [options] - Optional formatting options
+ * @returns {string} The formatted date and time string
+ * @example
+ * const date = new Date('2024-03-15T14:30:00');
+ * const formatted = formatDateTime(date); // "March 15, 2024, 2:30 PM"
+ */
+export const formatDateTime = (
+  date: Date | string,
+  options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }
+): string => {
+  const d = new Date(date);
+  return d.toLocaleString("en-US", options);
+};
+
+/**
+ * Formats a number as currency (USD by default)
+ * @param {number} amount - The amount to format
+ * @param {string} [currency='USD'] - The currency code
+ * @returns {string} The formatted currency string
+ * @example
+ * formatCurrency(1234.56) // "$1,234.56"
+ */
+export const formatCurrency = (amount: number, currency = "USD"): string => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(amount);
+};
+
+/**
+ * Formats a file size in bytes into a human-readable string
+ * @param {number} bytes - The file size in bytes
+ * @returns {string} The formatted file size
+ * @example
+ * formatFileSize(2048) // "2 KB"
+ */
+export const formatFileSize = (bytes: number): string => {
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+};
+
+/**
+ * Calculates budget utilization as a percentage
+ * @param {number} spent - Amount spent
+ * @param {number} total - Total budget
+ * @returns {number} Utilization percentage (0-100)
+ * @example
+ * calculateBudgetUtilization(500, 1000) // 50
+ */
+export const calculateBudgetUtilization = (
+  spent: number,
+  total: number
+): number => {
+  if (!total || total === 0) return 0;
+  return Math.round((spent / total) * 100);
+};
+
+/**
+ * Validates an email address format
+ * @param {string} email - The email to validate
+ * @returns {boolean} True if valid, false otherwise
+ * @example
+ * validateEmail('test@example.com') // true
+ */
+export const validateEmail = (email: string): boolean => {
+  // Simple email regex
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+/**
  * Truncates a string to a specified length and adds an ellipsis
  *
  * @param {string} str - The string to truncate

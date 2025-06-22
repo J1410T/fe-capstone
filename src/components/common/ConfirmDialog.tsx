@@ -10,6 +10,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { UI_CONSTANTS } from "@/lib/ui-constants";
 
 interface ConfirmDialogProps {
   trigger: React.ReactNode;
@@ -42,8 +43,8 @@ export const ConfirmDialog = ({
   // Choose button color based on variant
   const confirmClass =
     variant === "destructive"
-      ? "bg-red-600 hover:bg-red-700 focus:ring-red-600"
-      : "bg-blue-600 hover:bg-blue-700 focus:ring-blue-600";
+      ? UI_CONSTANTS.BUTTONS.danger
+      : UI_CONSTANTS.BUTTONS.primary;
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
@@ -58,10 +59,12 @@ export const ConfirmDialog = ({
 
       <AlertDialogContent onClick={(e) => e.stopPropagation()}>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-lg font-semibold text-gray-900">
+          <AlertDialogTitle className={UI_CONSTANTS.TYPOGRAPHY.cardTitle}>
             {title}
           </AlertDialogTitle>
-          <AlertDialogDescription className="mt-2 text-sm text-gray-600">
+          <AlertDialogDescription
+            className={UI_CONSTANTS.TYPOGRAPHY.description}
+          >
             {finalDescription}
           </AlertDialogDescription>
         </AlertDialogHeader>
@@ -75,7 +78,7 @@ export const ConfirmDialog = ({
               onConfirm();
               setOpen(false);
             }}
-            className={confirmClass}
+            className={`${confirmClass} text-white`}
           >
             {confirmText}
           </AlertDialogAction>

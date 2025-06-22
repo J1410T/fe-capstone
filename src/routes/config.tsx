@@ -1,49 +1,51 @@
-import AuthGuard from "../components/auth/AuthGuard";
-import AuthLayout from "../layouts/AuthLayout";
-import MainLayout from "../layouts/StaffLayout";
+import AuthGuard from "@/components/auth/AuthGuard";
+import AuthLayout from "@/layouts/AuthLayout";
+import MainLayout from "@/layouts/StaffLayout";
 import { Unauthorized } from "./Unauthorized";
 import { Navigate, RouteObject, Outlet } from "react-router-dom";
-import ErrorBoundaryPage from "../pages/ErrorBoundaryPage";
+import ErrorBoundaryPage from "@/pages/ErrorBoundaryPage";
 import { authRoutes } from "./auth";
-import { UserRole } from "../contexts/AuthContext";
-import { AuthProvider } from "../contexts/AuthContext";
-import UserLayout from "../layouts/UserLayout";
+import { UserRole } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import UserLayout from "@/layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
+
+// General Pages
+import ProjectsList from "@/pages/ProjectsList";
+import ProjectDetail from "@/pages/ProjectDetail";
 
 // Member Pages
 import UserTaskManagement from "@/pages/TaskManagement";
-import MemberDashboard from "../pages/Member/Dashboard";
+import MemberDashboard from "@/pages/Member/Dashboard";
 
 // Other Pages
-import Profile from "../pages/Profile";
-import Settings from "../pages/Settings";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
 
 // Host Institution Pages
-import RegisterProject from "../pages/HostInstitution/RegisterProject";
-import ProjectsList from "../pages/HostInstitution/ProjectsList";
-import MyProjects from "../pages/HostInstitution/MyProjects";
-import ProjectHistory from "../pages/HostInstitution/ProjectHistory";
+import RegisterProject from "@/pages/HostInstitution/RegisterProject";
+import MyProjects from "@/pages/HostInstitution/MyProjects";
+import ProjectHistory from "@/pages/HostInstitution/ProjectHistory";
 
 // Council Pages
-import PendingEvaluations from "../pages/Council/Evaluations";
-import EvaluationDetail from "../pages/Council/Evaluations/EvaluationDetail";
-import EvaluationForm from "../pages/Council/Evaluations/EvaluationForm";
-import ScheduleMeeting from "../pages/Council/Meetings/ScheduleMeeting";
-import MeetingMinutes from "../pages/Council/Meetings/MeetingMinutes";
-import ApprovalInterface from "../pages/Council/Approvals";
+import PendingEvaluations from "@/pages/Council/Evaluations";
+import EvaluationDetail from "@/pages/Council/Evaluations/EvaluationDetail";
+import EvaluationForm from "@/pages/Council/Evaluations/EvaluationForm";
+import ScheduleMeeting from "@/pages/Council/Meetings/ScheduleMeeting";
+import MeetingMinutes from "@/pages/Council/Meetings/MeetingMinutes";
+import ApprovalInterface from "@/pages/Council/Approvals";
 
-// Admin Pages - removed unused imports
+// Admin Pages - simplified to use general coming soon
 
 // General Coming Soon
-import GeneralComingSoon from "../pages/ComingSoon";
+import GeneralComingSoon from "@/pages/ComingSoon";
 
 // Principal Investigator Pages
 import PIProfile from "@/pages/PrincipalInvestigator/Profile";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
 import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
-import ProjectDetail from "@/pages/ProjectDetail";
 import Meetings from "@/pages/Council/Meetings";
-import ProjectApproval from "../pages/Council/ProjectApproval";
+import ProjectApproval from "@/pages/Council/ProjectApproval";
 import FormRegister from "@/pages/FormRegister";
 
 /**

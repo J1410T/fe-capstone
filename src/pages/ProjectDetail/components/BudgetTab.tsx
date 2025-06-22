@@ -24,6 +24,12 @@ import {
   PieChart,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
+import { formatDate } from "@/shared/utils/helpers";
+import {
+  getCategoryIcon,
+  getCategoryColor,
+  getStatusColor,
+} from "../shared/utils";
 
 // Local types
 interface BudgetData {
@@ -51,56 +57,8 @@ interface ExpenseItem {
 }
 
 // Utility functions
-const formatDate = (date: string): string => {
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const getCategoryIcon = (category: string) => {
-  switch (category) {
-    case "personnel":
-      return "👥";
-    case "equipment":
-      return "🖥️";
-    case "materials":
-      return "📦";
-    case "other":
-      return "📋";
-    default:
-      return "💰";
-  }
-};
-
-const getCategoryColor = (category: string) => {
-  switch (category) {
-    case "personnel":
-      return "bg-blue-100 text-blue-800";
-    case "equipment":
-      return "bg-purple-100 text-purple-800";
-    case "materials":
-      return "bg-orange-100 text-orange-800";
-    case "other":
-      return "bg-gray-100 text-gray-800";
-    default:
-      return "bg-gray-100 text-gray-800";
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "Approved":
-      return "bg-green-100 text-green-800 border-green-200";
-    case "Pending":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
-    case "Rejected":
-      return "bg-red-100 text-red-800 border-red-200";
-    default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
-  }
-};
+// Only keep getCategoryIcon, getCategoryColor, getStatusColor as local helpers
+// Removed local helper function definitions
 
 const BudgetTab: React.FC = () => {
   const [budget, setBudget] = useState<BudgetData | null>(null);
