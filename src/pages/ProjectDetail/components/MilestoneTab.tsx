@@ -2,17 +2,11 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Button, Card, Accordion } from "@/components/ui";
 import { Plus, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { Milestone, Task, PIUser } from "../shared/types";
-import { calculateMilestoneProgress } from "@/shared/utils";
+import { calculateMilestoneProgress } from "../shared/utils";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { MilestoneCard, MilestoneDialog, TaskDialog } from "./milestone";import { StatusBadge } from "../shared/components";
-import { formatDate } from "@/shared/utils/helpers";
-import { calculateMilestoneProgress } from "../shared/utils";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
-import { Card } from "@/components/ui";
-import { DatePicker } from "@/components/ui/date-picker";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { MilestoneCard, MilestoneDialog, TaskDialog } from "./milestone";
+
 const MilestoneTab: React.FC = () => {
   const { user } = useAuth();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
@@ -689,11 +683,13 @@ const MilestoneTab: React.FC = () => {
 
             {milestones.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                <p>No milestones found for this project. {isCurrentUserLeader && "Click 'Add Milestone' to create the first milestone."}</p>
+                <p>
+                  No milestones found for this project.{" "}
+                  {isCurrentUserLeader &&
+                    "Click 'Add Milestone' to create the first milestone."}
+                </p>
               </div>
             )}
-
-          </div>
           </div>
         </div>
       </div>
