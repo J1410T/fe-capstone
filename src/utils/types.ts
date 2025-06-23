@@ -1,5 +1,5 @@
 /**
- * Shared utility types
+ * Consolidated utility types
  * Common type definitions used across utility functions
  */
 
@@ -13,51 +13,59 @@ export interface FileUpload {
 }
 
 // Status types
-export type StatusType = 
-  | "completed" 
-  | "complete" 
-  | "approved" 
-  | "paid" 
-  | "active" 
+export type StatusType =
+  | "completed"
+  | "complete"
+  | "approved"
+  | "paid"
+  | "active"
   | "success"
-  | "in progress" 
-  | "processing" 
-  | "under review" 
+  | "in progress"
+  | "processing"
+  | "under review"
   | "submitted"
-  | "pending" 
-  | "draft" 
-  | "not started" 
+  | "pending"
+  | "draft"
+  | "not started"
   | "to do"
-  | "on hold" 
-  | "suspended" 
+  | "on hold"
+  | "suspended"
   | "incomplete"
-  | "overdue" 
-  | "rejected" 
-  | "cancelled" 
-  | "missing" 
+  | "overdue"
+  | "rejected"
+  | "cancelled"
+  | "missing"
   | "failed"
-  | "disabled" 
+  | "disabled"
   | "inactive";
 
 // Priority types
-export type PriorityType = "high" | "urgent" | "critical" | "medium" | "normal" | "moderate" | "low" | "minor";
+export type PriorityType =
+  | "high"
+  | "urgent"
+  | "critical"
+  | "medium"
+  | "normal"
+  | "moderate"
+  | "low"
+  | "minor";
 
 // Category types
-export type CategoryType = 
-  | "personnel" 
-  | "staff" 
+export type CategoryType =
+  | "personnel"
+  | "staff"
   | "team"
-  | "equipment" 
-  | "hardware" 
+  | "equipment"
+  | "hardware"
   | "tools"
-  | "travel" 
-  | "transportation" 
+  | "travel"
+  | "transportation"
   | "trip"
-  | "materials" 
-  | "supplies" 
+  | "materials"
+  | "supplies"
   | "resources"
-  | "other" 
-  | "miscellaneous" 
+  | "other"
+  | "miscellaneous"
   | "misc";
 
 // Validation rule types

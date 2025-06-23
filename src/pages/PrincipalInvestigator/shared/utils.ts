@@ -6,7 +6,7 @@ import {
   formatFileSize,
   calculateBudgetUtilization,
   validateEmail,
-} from "@/shared/utils/helpers";
+} from "@/utils";
 
 // Types for PI-specific functionality
 interface TimeLimit {

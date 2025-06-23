@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 
 interface FormSectionProps {
   title?: string;
@@ -36,9 +36,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
         {title && (
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         )}
-        {description && (
-          <p className="text-sm text-gray-600">{description}</p>
-        )}
+        {description && <p className="text-sm text-gray-600">{description}</p>}
       </div>
     );
 
@@ -51,9 +49,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
         >
           <div className="flex items-center justify-between">
             {headerContent}
-            <span className="text-gray-400">
-              {isExpanded ? "−" : "+"}
-            </span>
+            <span className="text-gray-400">{isExpanded ? "−" : "+"}</span>
           </div>
         </button>
       );
@@ -76,9 +72,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
               <CardTitle>{renderHeader()}</CardTitle>
             </CardHeader>
           )}
-          <CardContent className="space-y-4">
-            {renderContent()}
-          </CardContent>
+          <CardContent className="space-y-4">{renderContent()}</CardContent>
         </Card>
       );
 

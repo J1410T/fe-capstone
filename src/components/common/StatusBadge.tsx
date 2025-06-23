@@ -1,6 +1,6 @@
 import React from "react";
 import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { getStatusBadgeClassName } from "@/lib/ui-constants";
 
 // Status type mapping - can be extended as needed

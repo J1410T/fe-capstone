@@ -1,3 +1,8 @@
+/**
+ * Permission utility functions
+ * Role-based access control utilities
+ */
+
 import { UserRole } from "@/contexts/AuthContext";
 
 /**

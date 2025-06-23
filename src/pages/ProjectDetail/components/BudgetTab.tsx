@@ -24,7 +24,7 @@ import {
   PieChart,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
-import { formatDate } from "@/shared/utils/helpers";
+import { formatDate } from "@/utils";
 import {
   getCategoryIcon,
   getCategoryColor,

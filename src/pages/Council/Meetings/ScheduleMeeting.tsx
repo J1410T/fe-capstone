@@ -39,7 +39,7 @@ import {
   X,
 } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 
 interface MeetingFormData {
   title: string;

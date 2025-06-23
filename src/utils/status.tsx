@@ -1,20 +1,20 @@
 /**
  * Status and badge utility functions
  * Consolidated from multiple files across the codebase
- * @module status
  */
 
-//// STATUS COLOR UTILITIES
-//
+import React from "react";
+import {
+  CheckCircle,
+  Clock,
+  AlertCircle,
+  XCircle,
+  AlertTriangle,
+} from "lucide-react";
+
 /**
  * Get status color classes for badges and UI elements
  * Supports various status types across different contexts
- *
- * @param {string} status - The status to get colors for
- * @returns {string} Tailwind CSS classes for the status
- *
- * @example
- * getStatusColor('completed') // "bg-green-100 text-green-800 border-green-200"
  */
 export const getStatusColor = (status: string): string => {
   const normalizedStatus = status.toLowerCase().trim();
@@ -70,8 +70,6 @@ export const getStatusColor = (status: string): string => {
 
 /**
  * Get emerald-based status colors (legacy support)
- * @param {string} status - The status to get colors for
- * @returns {string} Tailwind CSS classes with emerald colors
  */
 export const getStatusColorEmerald = (status: string): string => {
   const normalizedStatus = status.toLowerCase().trim();
@@ -93,16 +91,36 @@ export const getStatusColorEmerald = (status: string): string => {
   }
 };
 
-//// CATEGORY COLOR UTILITIES
-//
+/**
+ * Get status icon component
+ */
+export const getStatusIcon = (status: string): React.ReactElement | null => {
+  const normalizedStatus = status.toLowerCase().trim();
+
+  switch (normalizedStatus) {
+    case "completed":
+    case "complete":
+    case "approved":
+      return <CheckCircle className="h-4 w-4 mr-1" />;
+    case "in progress":
+    case "processing":
+      return <Clock className="h-4 w-4 mr-1" />;
+    case "pending":
+    case "draft":
+      return <AlertCircle className="h-4 w-4 mr-1" />;
+    case "suspended":
+    case "rejected":
+      return <XCircle className="h-4 w-4 mr-1" />;
+    case "incomplete":
+    case "missing":
+      return <AlertTriangle className="h-4 w-4 mr-1" />;
+    default:
+      return null;
+  }
+};
+
 /**
  * Get category color classes for different project/budget categories
- *
- * @param {string} category - The category to get colors for
- * @returns {string} Tailwind CSS classes for the category
- *
- * @example
- * getCategoryColor('personnel') // "bg-blue-100 text-blue-800"
  */
 export const getCategoryColor = (category: string): string => {
   const normalizedCategory = category.toLowerCase().trim();
@@ -140,12 +158,6 @@ export const getCategoryColor = (category: string): string => {
 
 /**
  * Get category icon emoji for different categories
- *
- * @param {string} category - The category to get icon for
- * @returns {string} Emoji icon for the category
- *
- * @example
- * getCategoryIcon('personnel') // "👥"
  */
 export const getCategoryIcon = (category: string): string => {
   const normalizedCategory = category.toLowerCase().trim();
@@ -181,16 +193,8 @@ export const getCategoryIcon = (category: string): string => {
   }
 };
 
-//// PRIORITY COLOR UTILITIES
-//
 /**
  * Get priority configuration with colors and styling
- *
- * @param {string} priority - The priority level
- * @returns {object} Configuration object with color classes
- *
- * @example
- * getPriorityConfig('high') // { color: "text-red-600", bgColor: "bg-red-50", ... }
  */
 export const getPriorityConfig = (priority: string) => {
   const normalizedPriority = priority.toLowerCase().trim();
@@ -198,72 +202,72 @@ export const getPriorityConfig = (priority: string) => {
   switch (normalizedPriority) {
     case "high":
     case "urgent":
-    case "critical":
       return {
         color: "text-red-600",
         bgColor: "bg-red-50",
         borderColor: "border-red-200",
-        badgeColor: "bg-red-100 text-red-700",
-        icon: "🔴",
+        badgeColor: "bg-red-100 text-red-800",
       };
 
     case "medium":
     case "normal":
-    case "moderate":
       return {
-        color: "text-amber-600",
-        bgColor: "bg-amber-50",
-        borderColor: "border-amber-200",
-        badgeColor: "bg-yellow-100 text-yellow-700",
-        icon: "🟡",
+        color: "text-yellow-600",
+        bgColor: "bg-yellow-50",
+        borderColor: "border-yellow-200",
+        badgeColor: "bg-yellow-100 text-yellow-800",
       };
 
     case "low":
-    case "minor":
       return {
-        color: "text-blue-600",
-        bgColor: "bg-blue-50",
-        borderColor: "border-blue-200",
-        badgeColor: "bg-blue-100 text-blue-700",
-        icon: "🔵",
+        color: "text-green-600",
+        bgColor: "bg-green-50",
+        borderColor: "border-green-200",
+        badgeColor: "bg-green-100 text-green-800",
       };
 
     default:
       return {
-        color: "text-slate-600",
-        bgColor: "bg-slate-50",
-        borderColor: "border-slate-200",
-        badgeColor: "bg-slate-100 text-slate-700",
-        icon: "⚪",
+        color: "text-gray-600",
+        bgColor: "bg-gray-50",
+        borderColor: "border-gray-200",
+        badgeColor: "bg-gray-100 text-gray-800",
       };
   }
 };
 
-//// REPORT STATUS UTILITIES
-//
 /**
- * Get report status color classes
- *
- * @param {string} reports - The report status
- * @returns {string} Tailwind CSS classes for the report status
+ * Get report status color
  */
 export const getReportColor = (reports: string): string => {
   const normalizedReports = reports.toLowerCase().trim();
 
   switch (normalizedReports) {
     case "complete":
-    case "completed":
-      return "bg-emerald-100 text-emerald-800 border-emerald-200";
-
+      return "bg-green-100 text-green-800";
     case "incomplete":
-    case "partial":
-      return "bg-amber-100 text-amber-800 border-amber-200";
-
+      return "bg-yellow-100 text-yellow-800";
     case "missing":
-    case "not submitted":
-      return "bg-red-100 text-red-800 border-red-200";
-
+      return "bg-red-100 text-red-800";
     default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
+      return "bg-gray-100 text-gray-800";
+  }
+};
+
+/**
+ * Get report status icon
+ */
+export const getReportIcon = (reports: string): React.ReactElement | null => {
+  const normalizedReports = reports.toLowerCase().trim();
+
+  switch (normalizedReports) {
+    case "complete":
+      return <CheckCircle className="h-4 w-4" />;
+    case "incomplete":
+      return <AlertTriangle className="h-4 w-4" />;
+    case "missing":
+      return <XCircle className="h-4 w-4" />;
+    default:
+      return null;
   }
 };

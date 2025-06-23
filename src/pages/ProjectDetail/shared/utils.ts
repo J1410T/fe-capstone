@@ -13,11 +13,8 @@ import {
   getStatusColor,
   generateId,
   isOverdue,
-  sortByDate,
-  filterByStatus,
-  searchItems,
   calculateMilestoneProgress,
-} from "@/shared/utils/helpers";
+} from "@/utils";
 
 export {
   formatDate,
@@ -31,9 +28,6 @@ export {
   getStatusColor,
   generateId,
   isOverdue,
-  sortByDate,
-  filterByStatus,
-  searchItems,
   calculateMilestoneProgress,
 };
 

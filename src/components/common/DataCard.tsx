@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "./StatusBadge";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { type LucideIcon } from "lucide-react";
 import {
   type ComponentAction,

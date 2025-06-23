@@ -35,7 +35,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { ProgressReport } from "../shared/types";
-import { formatDateTime } from "@/shared/utils/helpers";
+import { formatDateTime } from "@/utils";
 import { getStatusColor } from "../shared/utils";
 import { UserRole, useAuth } from "@/contexts/AuthContext";
 

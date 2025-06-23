@@ -4,7 +4,7 @@
  */
 
 // Core utilities
-export { cn } from "./utils";
+export { cn } from "@/utils";
 
 // API utilities (commented out until created)
 // export * from "./api";

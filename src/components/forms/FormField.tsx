@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/ui/date-picker";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { type BaseFormProps, type SelectOption } from "@/components/types";
 import {
   getInputClassName,

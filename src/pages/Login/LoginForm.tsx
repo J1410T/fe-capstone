@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { mockUserLogin } from "@/utils/mockAuth";
+import { mockUserLogin } from "@/utils";
 import { LogIn, Shield } from "lucide-react";
 
 export function LoginForm({
@@ -41,7 +41,7 @@ export function LoginForm({
     setIsLoading(true);
     // Simulate user login with mock token
     setTimeout(() => {
-      login(mockUserLogin(selectedRole as UserRole).credential);
+      login(mockUserLogin(selectedRole as UserRole).credential.token);
       setIsLoading(false);
     }, 1000);
   };
@@ -54,7 +54,7 @@ export function LoginForm({
     setIsLoading(true);
     // Simulate staff login with mock token
     setTimeout(() => {
-      login(mockUserLogin(UserRole.STAFF).credential);
+      login(mockUserLogin(UserRole.STAFF).credential.token);
       setIsLoading(false);
     }, 1000);
   };

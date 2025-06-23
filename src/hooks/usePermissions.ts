@@ -6,7 +6,7 @@ import {
   canViewSensitiveInfo,
   filterProjectData,
   PERMISSIONS,
-} from "@/utils/permissions";
+} from "@/utils";
 
 /**
  * Custom hook for permission checking

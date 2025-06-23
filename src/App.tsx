@@ -3,6 +3,7 @@ import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { initializeTheme } from "@/lib/theme-script";
 import { Toaster } from "sonner";
 import { routes } from "./routes/config";
+import { QueryProvider } from "./contexts/QueryProvider";
 
 // Create browser router
 const router = createBrowserRouter(routes);
@@ -18,10 +19,10 @@ function App(): React.ReactElement {
   }, []);
 
   return (
-    <>
+    <QueryProvider>
       <RouterProvider router={router} />
       <Toaster position="top-right" richColors closeButton />
-    </>
+    </QueryProvider>
   );
 }
 
