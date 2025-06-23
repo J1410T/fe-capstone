@@ -26,7 +26,17 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({
 
   // React to path or navigation type changes
   useEffect(() => {
-    // 1. Start loading when URL or navigationType changes
+    // Check if this is a role switch navigation (using replace)
+    const isRoleSwitch = navigationType === "REPLACE";
+
+    if (isRoleSwitch) {
+      // For role switching, don't show loading - just update content immediately
+      setContent(children);
+      setIsLoading(false);
+      return;
+    }
+
+    // For normal navigation, show loading
     startLoading();
 
     // 2. Prepare content in memory but don't display yet

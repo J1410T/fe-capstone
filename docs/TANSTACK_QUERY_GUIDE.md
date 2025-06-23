@@ -113,7 +113,8 @@ src/
 ├── lib/
 │   └── react-query.ts         # Query client configuration
 └── examples/
-    └── QueryExample.tsx       # Usage examples
+    └── components/
+        └── PostsExample.tsx  # Usage examples
 ```
 
 This implementation provides a solid foundation for efficient data management in the SRPM application. 

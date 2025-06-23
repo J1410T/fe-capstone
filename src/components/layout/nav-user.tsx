@@ -4,6 +4,7 @@ import {
   ChevronsUpDown,
   CreditCard,
   LogOut,
+  User,
   // Sparkles,
 } from "lucide-react";
 
@@ -24,6 +25,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export function NavUser({
   user,
@@ -35,7 +37,26 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
-  const { logout } = useAuth();
+  const { logout, user: authUser } = useAuth();
+  const navigate = useNavigate();
+
+  const handleProfileClick = () => {
+    // Navigate to role-specific profile page
+    if (authUser?.role === "Principal Investigator") {
+      navigate("/pi/profile");
+    } else if (authUser?.role === "Member") {
+      navigate("/member/profile");
+    } else if (authUser?.role === "Host Institution") {
+      navigate("/host/profile");
+    } else if (authUser?.role === "Appraisal council") {
+      navigate("/council/profile");
+    } else if (authUser?.role === "Staff") {
+      navigate("/staff/profile");
+    } else {
+      // Fallback to member profile for unknown roles
+      navigate("/member/profile");
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -76,7 +97,12 @@ export function NavUser({
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuGroup></DropdownMenuGroup>
+            <DropdownMenuGroup>
+              <DropdownMenuItem onClick={handleProfileClick}>
+                <User />
+                Profile
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
             <DropdownMenuGroup>
               <DropdownMenuItem>
                 <BadgeCheck />

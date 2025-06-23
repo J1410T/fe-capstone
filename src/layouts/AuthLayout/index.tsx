@@ -1,16 +1,13 @@
 import { Outlet } from "react-router-dom";
-import { LoadingProvider } from "@/contexts/LoadingContext";
 
 /**
- * Layout dành cho các trang xác thực như đăng nhập, đăng ký, quên mật khẩu
+ * Auth layout for login/register pages
  * Sử dụng LoadingProvider để quản lý loading khi chuyển trang
  */
-export const AuthLayout = () => {
+export default function AuthLayout() {
   return (
-    <LoadingProvider>
+    <div className="min-h-screen bg-gray-50">
       <Outlet />
-    </LoadingProvider>
+    </div>
   );
-};
-
-export default AuthLayout;
+}

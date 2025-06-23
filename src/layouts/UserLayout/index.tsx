@@ -1,6 +1,6 @@
 import FlexibleHeader from "@/components/layout/header";
-import { LoadingProvider } from "@/contexts/LoadingContext";
 import { Outlet, useLocation } from "react-router-dom";
+import AuthGuard from "@/components/auth/AuthGuard";
 
 function UserLayout() {
   const location = useLocation();
@@ -8,7 +8,7 @@ function UserLayout() {
   const isTasksPage = location.pathname === "/member/tasks";
 
   return (
-    <LoadingProvider>
+    <AuthGuard>
       <div className="min-h-screen bg-gray-50">
         <FlexibleHeader />
         <main className="pt-16">
@@ -23,7 +23,7 @@ function UserLayout() {
           )}
         </main>
       </div>
-    </LoadingProvider>
+    </AuthGuard>
   );
 }
 

@@ -18,6 +18,9 @@ import {
   Camera,
   Shield,
   Clock,
+  Star,
+  Award,
+  BookOpen,
 } from "lucide-react";
 import { format } from "date-fns";
 import { validateEmail, validateRequired } from "@/utils";
@@ -37,6 +40,9 @@ const mockUser = {
   bio: "Passionate full-stack developer with 5+ years of experience in React, Node.js, and cloud technologies. Love building scalable applications and mentoring junior developers.",
   skills: ["React", "TypeScript", "Node.js", "Python", "AWS", "Docker"],
   isLeader: true,
+  projectsCompleted: 42,
+  rating: 4.8,
+  certifications: ["AWS Certified", "React Professional", "Node.js Expert"],
 };
 
 const Profile: React.FC = () => {
@@ -117,23 +123,72 @@ const Profile: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-4xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-                Profile
-              </h1>
-              <p className="text-sm text-slate-600 mt-1">
-                Manage your personal information and account settings
-              </p>
+    <div className="min-h-screen bg-gray-50">
+      {/* Clean Header */}
+      <div className="relative bg-gradient-to-r from-emerald-600 to-teal-600 overflow-hidden">
+        <div className="absolute inset-0 bg-black/5"></div>
+        <div className="relative max-w-6xl mx-auto px-6 py-12">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center gap-6">
+              {/* Clean Avatar */}
+              <div className="relative">
+                <Avatar className="w-32 h-32 border-4 border-white shadow-xl">
+                  <AvatarImage src={user.avatar} alt={user.name} />
+                  <AvatarFallback className="bg-emerald-500 text-white text-4xl font-bold">
+                    {user.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                {isEditing && (
+                  <Button
+                    size="sm"
+                    className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full p-0 bg-white hover:bg-gray-50 text-gray-700 shadow-lg border-2 border-white"
+                  >
+                    <Camera className="w-5 h-5" />
+                  </Button>
+                )}
+              </div>
+
+              {/* User Info */}
+              <div className="text-white">
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-4xl font-bold tracking-tight">
+                    {user.name}
+                  </h1>
+                  {user.isLeader && (
+                    <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+                      <Shield className="w-4 h-4 mr-1" />
+                      Leader
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-xl text-white/90 mb-2">
+                  {user.role} • {user.department}
+                </p>
+                <div className="flex items-center gap-4 text-white/80">
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 fill-current" />
+                    <span className="font-medium">{user.rating}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Award className="w-4 h-4" />
+                    <span>{user.projectsCompleted} Projects</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    <span>{user.location}</span>
+                  </div>
+                </div>
+              </div>
             </div>
+
+            {/* Action Button */}
             {!isEditing && (
               <Button
                 onClick={() => setIsEditing(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-white text-emerald-600 hover:bg-gray-50 border border-white shadow-lg font-medium"
               >
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Profile
@@ -144,287 +199,345 @@ const Profile: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-6 py-6 space-y-6">
-        {/* Profile Header Card */}
-        <Card className="border-slate-200">
-          <CardContent className="p-6">
-            <div className="flex items-start space-x-6">
-              {/* Avatar */}
-              <div className="relative">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className="bg-slate-100 text-slate-600 text-2xl">
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                {isEditing && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full p-0 border-slate-300"
-                  >
-                    <Camera className="w-4 h-4" />
-                  </Button>
-                )}
-              </div>
-
-              {/* User Info */}
-              <div className="flex-1">
-                <div className="flex items-center space-x-3 mb-2">
-                  <h2 className="text-2xl font-semibold text-slate-900">
-                    {user.name}
-                  </h2>
-                  {user.isLeader && (
-                    <Badge className="bg-blue-100 text-blue-700">
-                      <Shield className="w-3 h-3 mr-1" />
-                      Leader
-                    </Badge>
-                  )}
+      <div className="max-w-6xl mx-auto px-6 py-8 -mt-6 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Stats & Skills */}
+          <div className="space-y-6">
+            {/* Quick Stats */}
+            <Card className="border-0 shadow-lg bg-white">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
+                  <Award className="w-5 h-5 text-emerald-600" />
+                  Quick Stats
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <span className="text-gray-600 font-medium">
+                    Projects Completed
+                  </span>
+                  <span className="font-bold text-emerald-600 text-lg">
+                    {user.projectsCompleted}
+                  </span>
                 </div>
-                <p className="text-slate-600 mb-1">
-                  {user.role} • {user.department}
-                </p>
-                <p className="text-sm text-slate-500 mb-4">{user.email}</p>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <span className="text-gray-600 font-medium">
+                    Average Rating
+                  </span>
+                  <div className="flex items-center gap-1">
+                    <Star className="w-4 h-4 text-amber-400 fill-current" />
+                    <span className="font-bold text-gray-800 text-lg">
+                      {user.rating}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <span className="text-gray-600 font-medium">
+                    Member Since
+                  </span>
+                  <span className="font-bold text-gray-800">
+                    {format(new Date(user.joinDate), "MMM yyyy")}
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
 
-                {/* Skills */}
+            {/* Skills */}
+            <Card className="border-0 shadow-lg bg-white">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
+                  <BookOpen className="w-5 h-5 text-emerald-600" />
+                  Skills & Expertise
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
                 <div className="flex flex-wrap gap-2">
                   {user.skills.map((skill, index) => (
                     <Badge
                       key={index}
-                      variant="secondary"
-                      className="bg-slate-100 text-slate-700"
+                      className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 px-3 py-1.5"
                     >
                       {skill}
                     </Badge>
                   ))}
                 </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Personal Information */}
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-slate-900">
-              Personal Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Name */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">
-                Full Name
-              </Label>
-              {isEditing ? (
-                <div>
-                  <Input
-                    value={editData.name}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    className={`${
-                      errors.name
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                    }`}
-                  />
-                  {errors.name && (
-                    <p className="text-sm text-red-600 mt-1">{errors.name}</p>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
-                  <User className="w-4 h-4 text-slate-500" />
-                  <span className="text-slate-700">{user.name}</span>
-                </div>
-              )}
-            </div>
+            {/* Certifications */}
+            <Card className="border-0 shadow-lg bg-white">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
+                  <Award className="w-5 h-5 text-emerald-600" />
+                  Certifications
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {user.certifications.map((cert, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
+                  >
+                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                      <Award className="w-4 h-4 text-emerald-600" />
+                    </div>
+                    <span className="font-medium text-gray-700">{cert}</span>
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
 
-            {/* Email */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">
-                Email Address
-              </Label>
-              {isEditing ? (
-                <div>
-                  <Input
-                    type="email"
-                    value={editData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    className={`${
-                      errors.email
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                    }`}
-                  />
-                  {errors.email && (
-                    <p className="text-sm text-red-600 mt-1">{errors.email}</p>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
-                  <Mail className="w-4 h-4 text-slate-500" />
-                  <span className="text-slate-700">{user.email}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Phone */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">
-                Phone Number
-              </Label>
-              {isEditing ? (
-                <div>
-                  <Input
-                    type="tel"
-                    value={editData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    placeholder="+1 (555) 123-4567"
-                    className={`${
-                      errors.phone
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                    }`}
-                  />
-                  {errors.phone && (
-                    <p className="text-sm text-red-600 mt-1">{errors.phone}</p>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
-                  <Phone className="w-4 h-4 text-slate-500" />
-                  <span className="text-slate-700">{user.phone}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Location */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">
-                Location
-              </Label>
-              {isEditing ? (
-                <Input
-                  value={editData.location}
-                  onChange={(e) =>
-                    handleInputChange("location", e.target.value)
-                  }
-                  placeholder="City, State/Country"
-                  className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                />
-              ) : (
-                <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
-                  <MapPin className="w-4 h-4 text-slate-500" />
-                  <span className="text-slate-700">{user.location}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Bio */}
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">Bio</Label>
-              {isEditing ? (
-                <textarea
-                  value={editData.bio}
-                  onChange={(e) => handleInputChange("bio", e.target.value)}
-                  placeholder="Tell us about yourself..."
-                  rows={4}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                />
-              ) : (
-                <div className="p-3 bg-slate-50 rounded-lg">
-                  <p className="text-slate-700 text-sm leading-relaxed">
-                    {user.bio}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Edit Actions */}
-            {isEditing && (
-              <div className="flex gap-2 pt-4 border-t border-slate-200">
-                <Button
-                  onClick={handleSave}
-                  disabled={isLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  <Save className="w-4 h-4 mr-2" />
-                  {isLoading ? "Saving..." : "Save Changes"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={handleCancel}
-                  disabled={isLoading}
-                  className="border-slate-300 text-slate-700 hover:bg-slate-50"
-                >
-                  <X className="w-4 h-4 mr-2" />
-                  Cancel
-                </Button>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Account Information */}
-        <Card className="border-slate-200">
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold text-slate-900">
-              Account Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-700">
-                  Member Since
-                </Label>
-                <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
-                  <Calendar className="w-4 h-4 text-slate-500" />
-                  <span className="text-slate-700">
-                    {format(new Date(user.joinDate), "MMMM dd, yyyy")}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-slate-700">
-                  Last Login
-                </Label>
-                <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
-                  <Clock className="w-4 h-4 text-slate-500" />
-                  <span className="text-slate-700">
-                    {format(
-                      new Date(user.lastLogin),
-                      "MMM dd, yyyy 'at' HH:mm"
+          {/* Right Column - Main Info */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Personal Information */}
+            <Card className="border-0 shadow-lg bg-white">
+              <CardHeader className="bg-gray-50 rounded-t-lg border-b border-gray-100">
+                <CardTitle className="text-xl font-bold text-gray-800">
+                  Personal Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Name */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <User className="w-4 h-4 text-emerald-600" />
+                      Full Name
+                    </Label>
+                    {isEditing ? (
+                      <div>
+                        <Input
+                          value={editData.name}
+                          onChange={(e) =>
+                            handleInputChange("name", e.target.value)
+                          }
+                          className={`transition-all duration-200 ${
+                            errors.name
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50"
+                              : "border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                          }`}
+                        />
+                        {errors.name && (
+                          <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                            <X className="w-3 h-3" />
+                            {errors.name}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <span className="text-gray-800 font-medium">
+                          {user.name}
+                        </span>
+                      </div>
                     )}
-                  </span>
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-emerald-600" />
+                      Email Address
+                    </Label>
+                    {isEditing ? (
+                      <div>
+                        <Input
+                          type="email"
+                          value={editData.email}
+                          onChange={(e) =>
+                            handleInputChange("email", e.target.value)
+                          }
+                          className={`transition-all duration-200 ${
+                            errors.email
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50"
+                              : "border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                          }`}
+                        />
+                        {errors.email && (
+                          <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                            <X className="w-3 h-3" />
+                            {errors.email}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <span className="text-gray-800 font-medium">
+                          {user.email}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Phone */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-emerald-600" />
+                      Phone Number
+                    </Label>
+                    {isEditing ? (
+                      <div>
+                        <Input
+                          type="tel"
+                          value={editData.phone}
+                          onChange={(e) =>
+                            handleInputChange("phone", e.target.value)
+                          }
+                          placeholder="+1 (555) 123-4567"
+                          className={`transition-all duration-200 ${
+                            errors.phone
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50"
+                              : "border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                          }`}
+                        />
+                        {errors.phone && (
+                          <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                            <X className="w-3 h-3" />
+                            {errors.phone}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <span className="text-gray-800 font-medium">
+                          {user.phone}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Location */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-emerald-600" />
+                      Location
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        value={editData.location}
+                        onChange={(e) =>
+                          handleInputChange("location", e.target.value)
+                        }
+                        placeholder="City, State/Country"
+                        className="border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white transition-all duration-200"
+                      />
+                    ) : (
+                      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <span className="text-gray-800 font-medium">
+                          {user.location}
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <Separator className="bg-slate-200" />
+                {/* Bio */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-gray-700">
+                    About Me
+                  </Label>
+                  {isEditing ? (
+                    <textarea
+                      value={editData.bio}
+                      onChange={(e) => handleInputChange("bio", e.target.value)}
+                      placeholder="Tell us about yourself..."
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 resize-none bg-white transition-all duration-200"
+                    />
+                  ) : (
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
+                      <p className="text-gray-700 leading-relaxed">
+                        {user.bio}
+                      </p>
+                    </div>
+                  )}
+                </div>
 
-            <div className="space-y-2">
-              <Label className="text-sm font-medium text-slate-700">
-                Account Type
-              </Label>
-              <div className="flex items-center space-x-2 p-3 bg-slate-50 rounded-lg">
-                <Shield className="w-4 h-4 text-slate-500" />
-                <span className="text-slate-700">
-                  {user.isLeader ? "Leader Account" : "Member Account"}
-                </span>
-                {user.isLeader && (
-                  <Badge className="bg-blue-100 text-blue-700 ml-2">
-                    Full Access
-                  </Badge>
+                {/* Edit Actions */}
+                {isEditing && (
+                  <div className="flex gap-3 pt-6 border-t border-gray-200">
+                    <Button
+                      onClick={handleSave}
+                      disabled={isLoading}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg flex-1 sm:flex-none"
+                    >
+                      <Save className="w-4 h-4 mr-2" />
+                      {isLoading ? "Saving..." : "Save Changes"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={handleCancel}
+                      disabled={isLoading}
+                      className="border-gray-300 text-gray-700 hover:bg-gray-50 flex-1 sm:flex-none"
+                    >
+                      <X className="w-4 h-4 mr-2" />
+                      Cancel
+                    </Button>
+                  </div>
                 )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+
+            {/* Account Activity */}
+            <Card className="border-0 shadow-lg bg-white">
+              <CardHeader className="bg-gray-50 rounded-t-lg border-b border-gray-100">
+                <CardTitle className="text-xl font-bold text-gray-800">
+                  Account Activity
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-emerald-600" />
+                      Member Since
+                    </Label>
+                    <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                      <span className="text-gray-800 font-medium">
+                        {format(new Date(user.joinDate), "MMMM dd, yyyy")}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-emerald-600" />
+                      Last Login
+                    </Label>
+                    <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                      <span className="text-gray-800 font-medium">
+                        {format(
+                          new Date(user.lastLogin),
+                          "MMM dd, yyyy 'at' HH:mm"
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator className="my-6 bg-gray-200" />
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-emerald-600" />
+                    Account Type
+                  </Label>
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+                    <span className="text-gray-800 font-medium">
+                      {user.isLeader ? "Leader Account" : "Member Account"}
+                    </span>
+                    {user.isLeader && (
+                      <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        Full Access
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

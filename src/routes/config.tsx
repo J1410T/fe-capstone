@@ -1,6 +1,6 @@
 import AuthGuard from "@/components/auth/AuthGuard";
 import AuthLayout from "@/layouts/AuthLayout";
-import MainLayout from "@/layouts/StaffLayout";
+import StaffLayout from "@/layouts/StaffLayout";
 import { Unauthorized } from "./Unauthorized";
 import { Navigate, RouteObject, Outlet } from "react-router-dom";
 import ErrorBoundaryPage from "@/pages/ErrorBoundaryPage";
@@ -20,7 +20,6 @@ import MemberDashboard from "@/pages/Member/Dashboard";
 
 // Other Pages
 import Profile from "@/pages/Profile";
-import Settings from "@/pages/Settings";
 
 // Host Institution Pages
 import RegisterProject from "@/pages/HostInstitution/RegisterProject";
@@ -85,13 +84,17 @@ export const routes: RouteObject[] = [
         path: "staff",
         element: (
           <AuthGuard requiredRoles={[UserRole.STAFF]}>
-            <MainLayout />
+            <StaffLayout />
           </AuthGuard>
         ),
         children: [
           {
             index: true,
             element: <GeneralComingSoon />,
+          },
+          {
+            path: "profile",
+            element: <Profile />,
           },
           {
             path: "*",
@@ -131,10 +134,7 @@ export const routes: RouteObject[] = [
             path: "profile",
             element: <Profile />,
           },
-          {
-            path: "settings",
-            element: <Settings />,
-          },
+
           {
             path: "notifications",
             element: <GeneralComingSoon />,
@@ -191,6 +191,10 @@ export const routes: RouteObject[] = [
           {
             path: "history",
             element: <ProjectHistory />,
+          },
+          {
+            path: "profile",
+            element: <Profile />,
           },
           {
             path: "forms/*",
@@ -250,6 +254,10 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId",
             element: <ProjectDetail />,
+          },
+          {
+            path: "profile",
+            element: <Profile />,
           },
         ],
       },
