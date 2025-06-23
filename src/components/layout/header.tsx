@@ -17,10 +17,16 @@ import {
   FolderOpen,
   Calendar,
   CheckSquare,
+  BellRing,
+  Clock,
+  MessageSquare,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import RoleSwitcher from "./RoleSwitcher";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,6 +42,55 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+
+// Mock notifications data
+const mockNotifications = [
+  {
+    id: 1,
+    title: "Project Update Required",
+    message: "Your quarterly report for ML Research Project is due in 3 days.",
+    type: "reminder" as const,
+    time: "2 hours ago",
+    read: false,
+    icon: FileText,
+  },
+  {
+    id: 2,
+    title: "New Team Member Added",
+    message: "Sarah Johnson has been added to your Engineering Project team.",
+    type: "info" as const,
+    time: "4 hours ago",
+    read: false,
+    icon: User,
+  },
+  {
+    id: 3,
+    title: "Meeting Scheduled",
+    message: "Project review meeting scheduled for tomorrow at 2:00 PM.",
+    type: "meeting" as const,
+    time: "6 hours ago",
+    read: true,
+    icon: Calendar,
+  },
+  {
+    id: 4,
+    title: "Task Completed",
+    message: "Data analysis task has been marked as completed by John Doe.",
+    type: "success" as const,
+    time: "1 day ago",
+    read: true,
+    icon: CheckCircle,
+  },
+  {
+    id: 5,
+    title: "Budget Alert",
+    message: "Project budget has reached 80% utilization threshold.",
+    type: "warning" as const,
+    time: "2 days ago",
+    read: false,
+    icon: AlertTriangle,
+  },
+];
 
 // Define menu items for each role
 const menuItemsByRole = {
@@ -88,6 +143,7 @@ function FlexibleHeader() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [notifications, setNotifications] = useState(mockNotifications);
 
   // Get menu items based on user role
   const menuItems = user?.role
@@ -111,6 +167,47 @@ function FlexibleHeader() {
       navigate("/member/profile");
     }
     setIsOpen(false);
+  };
+
+  const markAsRead = (notificationId: number) => {
+    setNotifications((prev) =>
+      prev.map((notification) =>
+        notification.id === notificationId
+          ? { ...notification, read: true }
+          : notification
+      )
+    );
+  };
+
+  const markAllAsRead = () => {
+    setNotifications((prev) =>
+      prev.map((notification) => ({ ...notification, read: true }))
+    );
+  };
+
+  const removeNotification = (notificationId: number) => {
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== notificationId)
+    );
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  const getNotificationTypeColor = (type: string) => {
+    switch (type) {
+      case "reminder":
+        return "text-blue-600 bg-blue-50";
+      case "info":
+        return "text-emerald-600 bg-emerald-50";
+      case "meeting":
+        return "text-purple-600 bg-purple-50";
+      case "success":
+        return "text-green-600 bg-green-50";
+      case "warning":
+        return "text-amber-600 bg-amber-50";
+      default:
+        return "text-gray-600 bg-gray-50";
+    }
   };
 
   return (
@@ -147,11 +244,113 @@ function FlexibleHeader() {
 
         {/* Right (Desktop) */}
         <div className="hidden lg:flex items-center gap-4">
-          {/* Notification Icon */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full transform translate-x-1/2 -translate-y-1/2"></span>
-          </Button>
+          {/* Notifications Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center text-xs bg-red-500 text-white border-2 border-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-80" align="end" forceMount>
+              <DropdownMenuLabel className="flex items-center justify-between py-3">
+                <span className="font-semibold">Notifications</span>
+                {unreadCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={markAllAsRead}
+                    className="h-auto p-1 text-xs text-emerald-600 hover:text-emerald-700"
+                  >
+                    Mark all read
+                  </Button>
+                )}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <div className="max-h-96 overflow-y-auto">
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-center text-gray-500">
+                    <BellRing className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">No notifications</p>
+                  </div>
+                ) : (
+                  notifications.map((notification) => {
+                    const IconComponent = notification.icon;
+                    return (
+                      <DropdownMenuItem
+                        key={notification.id}
+                        className="p-0 focus:bg-gray-50"
+                        onClick={() => markAsRead(notification.id)}
+                      >
+                        <div
+                          className={`w-full p-3 ${
+                            !notification.read ? "bg-blue-50/50" : ""
+                          } hover:bg-gray-50 transition-colors`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`p-2 rounded-full ${getNotificationTypeColor(
+                                notification.type
+                              )}`}
+                            >
+                              <IconComponent className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4
+                                  className={`text-sm font-medium text-gray-900 ${
+                                    !notification.read ? "font-semibold" : ""
+                                  }`}
+                                >
+                                  {notification.title}
+                                </h4>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    removeNotification(notification.id);
+                                  }}
+                                  className="h-auto p-1 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600"
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                              <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                                {notification.message}
+                              </p>
+                              <div className="flex items-center gap-1 mt-2">
+                                <Clock className="w-3 h-3 text-gray-400" />
+                                <span className="text-xs text-gray-400">
+                                  {notification.time}
+                                </span>
+                                {!notification.read && (
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full ml-auto"></div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    );
+                  })
+                )}
+              </div>
+              {notifications.length > 0 && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="p-3 text-center text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 font-medium">
+                    <MessageSquare className="w-4 h-4 mr-2" />
+                    View all notifications
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* User Dropdown */}
           <DropdownMenu>
@@ -233,6 +432,71 @@ function FlexibleHeader() {
                 <div className="text-xs text-muted-foreground">
                   {user?.role || "Member"}
                 </div>
+              </div>
+            </div>
+
+            {/* Notifications - Mobile */}
+            <div className="border-b border-gray-200 pb-3 mb-3">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-semibold text-gray-900">
+                  Notifications
+                </span>
+                {unreadCount > 0 && (
+                  <Badge className="bg-red-500 text-white">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </Badge>
+                )}
+              </div>
+              <div className="max-h-60 overflow-y-auto space-y-2">
+                {notifications.slice(0, 3).map((notification) => {
+                  const IconComponent = notification.icon;
+                  return (
+                    <div
+                      key={notification.id}
+                      className={`p-3 rounded-lg border ${
+                        !notification.read
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-gray-50 border-gray-200"
+                      }`}
+                      onClick={() => markAsRead(notification.id)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <div
+                          className={`p-1 rounded-full ${getNotificationTypeColor(
+                            notification.type
+                          )}`}
+                        >
+                          <IconComponent className="w-3 h-3" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4
+                            className={`text-sm ${
+                              !notification.read
+                                ? "font-semibold"
+                                : "font-medium"
+                            } text-gray-900`}
+                          >
+                            {notification.title}
+                          </h4>
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                            {notification.message}
+                          </p>
+                          <span className="text-xs text-gray-400 mt-1 block">
+                            {notification.time}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {notifications.length > 3 && (
+                  <Button
+                    variant="ghost"
+                    className="w-full text-emerald-600 hover:text-emerald-700 text-sm"
+                  >
+                    View all {notifications.length} notifications
+                  </Button>
+                )}
               </div>
             </div>
 
