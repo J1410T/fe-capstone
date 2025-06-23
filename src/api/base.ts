@@ -11,23 +11,15 @@ import { env } from "@/config/env";
  */
 export function getToken(): string | null {
   try {
-    const tokenData = localStorage.getItem("auth_token");
-    if (tokenData) {
-      const { token, expiry } = JSON.parse(tokenData);
-      // Check if token is expired
-      if (expiry && expiry > Date.now()) {
-        return token;
-      }
+    // Use accessToken as the primary token storage
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      return token;
     }
-    // Fallback to accessToken for backward compatibility with older versions
-    const fallbackToken = localStorage.getItem("accessToken");
-    if (fallbackToken) {
-      console.warn("Using fallback token from 'accessToken'. Consider migrating to 'auth_token'.");
-    }
-    return fallbackToken;
+    return null;
   } catch (error) {
     console.error("Error getting token:", error);
-    return null; // Return null if an error occurs
+    return null;
   }
 }
 
@@ -184,32 +176,10 @@ export const api = {
     // Đối với API `/auth/me`, kiểm tra phiên đăng nhập trước khi gọi API
     if (endpoint === "/auth/me") {
       const isLoggedIn = sessionStorage.getItem("isLoggedIn") === "true";
-      const savedUser = localStorage.getItem("auth_user");
 
       // Nếu không có token hoặc phiên đăng nhập, không cần gọi API
       if (!token || !isLoggedIn) {
         return Promise.reject(new Error("Authentication failed"));
-      }
-
-      // Nếu đã có thông tin user trong localStorage, kiểm tra xem token có hợp lệ không
-      // bằng cách lấy thời gian hết hạn
-      try {
-        const tokenData = localStorage.getItem("auth_token");
-        if (tokenData) {
-          const { expiry } = JSON.parse(tokenData);
-
-          // Nếu token còn hạn và đã có user, trả về dữ liệu từ localStorage để tránh request mạng
-          if (expiry && expiry > Date.now() && savedUser) {
-            return {
-              data: { user: JSON.parse(savedUser) },
-              success: true,
-              message: "User info retrieved from cache",
-              timestamp: new Date().toISOString(),
-            } as unknown as TData;
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing cached auth data", error);
       }
     }
 

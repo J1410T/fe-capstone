@@ -133,8 +133,6 @@ export const useLogout = () => {
       // Clear tokens
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("auth_user");
       sessionStorage.removeItem("isLoggedIn");
 
       // Clear all cached data
@@ -148,8 +146,6 @@ export const useLogout = () => {
       // Still clear local data even if API call fails
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-      localStorage.removeItem("auth_token");
-      localStorage.removeItem("auth_user");
       sessionStorage.removeItem("isLoggedIn");
       queryClient.clear();
       navigate("/auth/login");

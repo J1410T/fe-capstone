@@ -31,6 +31,29 @@ interface PaymentSchedule {
   paidAmount: number;
 }
 
+// Types for PI-specific functionality
+interface TimeLimit {
+  quarter: 1 | 2 | 3 | 4;
+  allowedProjectTypes: string[];
+  deadline: string;
+  isActive: boolean;
+}
+
+interface PaymentPhase {
+  phase: number;
+  percentage: number;
+  amount: number;
+  dueDate: string;
+  status: "Pending" | "Paid" | "Overdue";
+}
+
+interface PaymentSchedule {
+  projectType: "Basic" | "Application";
+  schedule: PaymentPhase[];
+  totalAmount: number;
+  paidAmount: number;
+}
+
 // Time and date utilities
 export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
   const month = new Date().getMonth() + 1;

@@ -3,8 +3,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Upload, File, X } from "lucide-react";
+<<<<<<< HEAD
 import { formatFileSize, generateId } from "@/utils";
 import type { FileUpload } from "@/utils/types";
+=======
+import { formatFileSize, generateId } from "@/shared/utils/helpers";
+import type { FileUpload } from "@/shared/utils/types";
+>>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
 
 interface FileUploadProps {
   files: FileUpload[];

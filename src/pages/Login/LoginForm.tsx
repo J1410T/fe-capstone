@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { cn } from "@/utils";
+import { cn } from "@/lib/ui-constants";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -18,45 +18,55 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { UserRole } from "@/contexts/AuthContext";
+import { useLogin } from "@/hooks/queries/useAuth";
 import { toast } from "sonner";
-import { mockUserLogin } from "@/utils";
 import { LogIn, Shield } from "lucide-react";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { login } = useAuth();
+  const loginMutation = useLogin();
 
-  const handleUserLogin = () => {
+  const handleUserLogin = async () => {
     if (!selectedRole) {
       toast.error("Please select a role to continue.");
       return;
     }
-    setIsLoading(true);
-    // Simulate user login with mock token
-    setTimeout(() => {
-      login(mockUserLogin(selectedRole as UserRole).credential.token);
-      setIsLoading(false);
-    }, 1000);
+
+    // For demo purposes, using mock credentials based on role
+    const mockCredentials = {
+      [UserRole.MEMBER]: { email: "member@test.com", password: "password" },
+      [UserRole.APPRAISAL_COUNCIL]: {
+        email: "council@test.com",
+        password: "password",
+      },
+      [UserRole.HOST_INSTITUTION]: {
+        email: "host@test.com",
+        password: "password",
+      },
+      [UserRole.PRINCIPAL_INVESTIGATOR]: {
+        email: "pi@test.com",
+        password: "password",
+      },
+      [UserRole.STAFF]: { email: "staff@test.com", password: "password" },
+    };
+
+    const credentials = mockCredentials[selectedRole as UserRole];
+    loginMutation.mutate(credentials);
   };
 
-  const handleStaffLogin = () => {
+  const handleStaffLogin = async () => {
     if (!email || !password) {
       toast.error("Please enter both email and password.");
       return;
     }
-    setIsLoading(true);
-    // Simulate staff login with mock token
-    setTimeout(() => {
-      login(mockUserLogin(UserRole.STAFF).credential.token);
-      setIsLoading(false);
-    }, 1000);
+
+    loginMutation.mutate({ email, password });
   };
 
   return (
@@ -130,10 +140,10 @@ export function LoginForm({
                   variant="default"
                   className="w-full h-12 text-base bg-emerald-700 hover:bg-emerald-600 text-white flex items-center justify-center gap-2"
                   onClick={handleUserLogin}
-                  disabled={isLoading || !selectedRole}
+                  disabled={loginMutation.isPending || !selectedRole}
                 >
                   <LogIn className="h-5 w-5" />
-                  {isLoading ? "Logging in..." : "Login"}
+                  {loginMutation.isPending ? "Logging in..." : "Login"}
                 </Button>
               </form>
             </TabsContent>
@@ -160,14 +170,14 @@ export function LoginForm({
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    disabled={isLoading}
+                    disabled={loginMutation.isPending}
                   />
                   <Input
                     type="password"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    disabled={isLoading}
+                    disabled={loginMutation.isPending}
                   />
                 </div>
                 <Button
@@ -175,9 +185,9 @@ export function LoginForm({
                   variant="default"
                   className="w-full h-12 text-base bg-indigo-700 hover:bg-indigo-600 text-white"
                   onClick={handleStaffLogin}
-                  disabled={isLoading}
+                  disabled={loginMutation.isPending}
                 >
-                  {isLoading ? "Logging in..." : "Login"}
+                  {loginMutation.isPending ? "Logging in..." : "Login"}
                 </Button>
               </form>
             </TabsContent>
