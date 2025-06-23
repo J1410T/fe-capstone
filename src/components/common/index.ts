@@ -18,4 +18,3 @@ export { FileUploadComponent as FileUpload } from "./FileUpload";
 
 // Data display components
 export { DataCard, UnifiedDataCard } from "./DataCard";
-export * from "./data-table";
