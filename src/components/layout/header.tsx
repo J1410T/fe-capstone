@@ -11,8 +11,6 @@ import {
   Bell,
   Menu as MenuIcon,
   User,
-  // Users,
-  Settings,
   LogOut,
   Home,
   LayoutDashboard,
@@ -20,6 +18,7 @@ import {
   Calendar,
   CheckSquare,
 } from "lucide-react";
+import RoleSwitcher from "./RoleSwitcher";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -95,6 +94,25 @@ function FlexibleHeader() {
     ? menuItemsByRole[user.role]
     : menuItemsByRole[UserRole.MEMBER];
 
+  const handleProfileClick = () => {
+    // Navigate to role-specific profile page
+    if (user?.role === "Principal Investigator") {
+      navigate("/pi/profile");
+    } else if (user?.role === "Member") {
+      navigate("/member/profile");
+    } else if (user?.role === "Host Institution") {
+      navigate("/host/profile");
+    } else if (user?.role === "Appraisal council") {
+      navigate("/council/profile");
+    } else if (user?.role === "Staff") {
+      navigate("/staff/profile");
+    } else {
+      // Fallback to member profile for unknown roles
+      navigate("/member/profile");
+    }
+    setIsOpen(false);
+  };
+
   return (
     <header className="w-full border-b border-gray-200 bg-white fixed top-0 left-0 right-0 z-20 h-16">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-full flex items-center justify-between">
@@ -162,18 +180,12 @@ function FlexibleHeader() {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link to="/profile">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </Link>
+              <DropdownMenuItem onClick={handleProfileClick}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
               </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/settings">
-                  <Settings className="mr-2 h-4 w-4" />
-                  <span>Settings</span>
-                </Link>
-              </DropdownMenuItem>
+
+              <RoleSwitcher />
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />
@@ -224,6 +236,14 @@ function FlexibleHeader() {
               </div>
             </div>
 
+            {/* Role Switcher - Mobile */}
+            <div className="border-b border-gray-200 pb-3 mb-3">
+              <RoleSwitcher
+                variant="mobile"
+                onRoleChange={() => setIsOpen(false)}
+              />
+            </div>
+
             <div className="py-4">
               <div className="space-y-1">
                 {menuItems.map((item, index) => (
@@ -243,24 +263,10 @@ function FlexibleHeader() {
                 <Button
                   variant="ghost"
                   className="w-full justify-start"
-                  onClick={() => {
-                    navigate("/profile");
-                    setIsOpen(false);
-                  }}
+                  onClick={handleProfileClick}
                 >
                   <User className="mr-2 h-4 w-4" />
                   Profile
-                </Button>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => {
-                    navigate("/settings");
-                    setIsOpen(false);
-                  }}
-                >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
                 </Button>
                 <Button
                   variant="ghost"

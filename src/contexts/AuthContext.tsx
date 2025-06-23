@@ -135,6 +135,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return user?.role === role;
   };
 
+  // Switch user role
+  const switchRole = async (newRole: UserRole): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      // In production, this would:
+      // 1. Call API to verify user has permission for this role
+      // 2. Get new JWT token with updated role
+      // 3. Update user state
+
+      // For now, simulate the role switch
+      const updatedUser = { ...user, role: newRole };
+
+      // Update user state with new role
+      setUser(updatedUser);
+
+      // Store the current role in localStorage for persistence
+      localStorage.setItem("currentRole", newRole);
+
+      // Show success notification
+      toast.success(`Switched to ${newRole} role`);
+
+      return true;
+    } catch (error) {
+      console.error("Failed to switch role:", error);
+      toast.error("Failed to switch role");
+      return false;
+    }
+  };
+
   // Context value
   const value = {
     user,
@@ -143,6 +173,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     logout,
     hasRole,
+    switchRole,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

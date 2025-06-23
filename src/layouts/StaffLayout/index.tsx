@@ -1,59 +1,32 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
-import { LoadingProvider } from "@/contexts/LoadingContext";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
-import {
-  SidebarProvider,
-  SidebarInset,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-// import { useAuth } from "@/contexts/AuthContext";
+import FlexibleHeader from "@/components/layout/header";
+import AuthGuard from "@/components/auth/AuthGuard";
+import { Outlet, useLocation } from "react-router-dom";
 
 /**
- * Main layout with sidebar for staff users
+ * Staff layout with sidebar for staff users
  */
-export const MainLayout: React.FC = () => {
-  return (
-    <LoadingProvider>
-      <div>
-        <SidebarProvider>
-          <AppSidebar />
-          <SidebarInset>
-            <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-              <div className="flex items-center gap-2 px-4">
-                <SidebarTrigger className="-ml-1" />
-                <Separator orientation="vertical" className="mr-2 h-4" />
-                <Breadcrumb>
-                  <BreadcrumbList>
-                    <BreadcrumbItem>
-                      <BreadcrumbLink href="/">Home</BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      <BreadcrumbPage>Dashboard</BreadcrumbPage>
-                    </BreadcrumbItem>
-                  </BreadcrumbList>
-                </Breadcrumb>
-              </div>
-              <div className="ml-auto flex items-center gap-2 px-4"></div>
-            </header>
-            <main className="flex-1 overflow-auto p-4">
-              <Outlet />
-            </main>
-          </SidebarInset>
-        </SidebarProvider>
-      </div>
-    </LoadingProvider>
-  );
-};
+function StaffLayout() {
+  const location = useLocation();
+  const hideHeader = location.pathname === "/login";
 
-export default MainLayout;
+  return (
+    <AuthGuard>
+      <SidebarProvider>
+        <AppSidebar />
+        <main className="flex flex-col flex-1 overflow-hidden">
+          {!hideHeader && <FlexibleHeader />}
+          <div className="flex-1 overflow-auto">
+            <div className="container mx-auto px-6 py-6">
+              <Outlet />
+            </div>
+          </div>
+        </main>
+      </SidebarProvider>
+    </AuthGuard>
+  );
+}
+
+export default StaffLayout;
