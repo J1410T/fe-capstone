@@ -1,12 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-<<<<<<< HEAD
 import { cn } from "@/utils";
-=======
-import { cn } from "@/lib/utils";
->>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
-
 interface FormSectionProps {
   title?: string;
   description?: string;
@@ -40,14 +35,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
         {title && (
           <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         )}
-<<<<<<< HEAD
-        {description && <p className="text-sm text-gray-600">{description}</p>}
-=======
-        {description && (
-          <p className="text-sm text-gray-600">{description}</p>
-        )}
->>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
-      </div>
+        {description && <p className="text-sm text-gray-600">{description}</p>}      </div>
     );
 
     if (collapsible) {
@@ -59,14 +47,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
         >
           <div className="flex items-center justify-between">
             {headerContent}
-<<<<<<< HEAD
-            <span className="text-gray-400">{isExpanded ? "−" : "+"}</span>
-=======
-            <span className="text-gray-400">
-              {isExpanded ? "−" : "+"}
-            </span>
->>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
-          </div>
+            <span className="text-gray-400">{isExpanded ? "−" : "+"}</span>          </div>
         </button>
       );
     }
@@ -88,14 +69,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
               <CardTitle>{renderHeader()}</CardTitle>
             </CardHeader>
           )}
-<<<<<<< HEAD
-          <CardContent className="space-y-4">{renderContent()}</CardContent>
-=======
-          <CardContent className="space-y-4">
-            {renderContent()}
-          </CardContent>
->>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
-        </Card>
+          <CardContent className="space-y-4">{renderContent()}</CardContent>        </Card>
       );
 
     case "bordered":

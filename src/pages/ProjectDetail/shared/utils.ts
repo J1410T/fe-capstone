@@ -13,17 +13,8 @@ import {
   getStatusColor,
   generateId,
   isOverdue,
-<<<<<<< HEAD
   calculateMilestoneProgress,
 } from "@/utils";
-=======
-  sortByDate,
-  filterByStatus,
-  searchItems,
-  calculateMilestoneProgress,
-} from "@/shared/utils/helpers";
->>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
-
 export {
   formatDate,
   formatDateTime,
@@ -36,12 +27,6 @@ export {
   getStatusColor,
   generateId,
   isOverdue,
-<<<<<<< HEAD
-=======
-  sortByDate,
-  filterByStatus,
-  searchItems,
->>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
   calculateMilestoneProgress,
 };
 

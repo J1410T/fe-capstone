@@ -20,12 +20,7 @@ import {
   Clock,
 } from "lucide-react";
 import { format } from "date-fns";
-<<<<<<< HEAD
 import { validateEmail, validateRequired } from "@/utils";
-=======
-import { validateForm as validateFormFields } from "@/shared/utils/validation";
->>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
-
 // Mock user data
 const mockUser = {
   id: "user1",
@@ -57,7 +52,6 @@ const Profile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = (): boolean => {
-<<<<<<< HEAD
     const newErrors: { [key: string]: string } = {};
 
     // Validate name
@@ -79,24 +73,6 @@ const Profile: React.FC = () => {
         newErrors.phone = "Please enter a valid phone number";
       }
     }
-=======
-    const validationRules = {
-      name: { required: true },
-      email: { required: true, email: true },
-      phone: {
-        pattern: /^[+]?[1-9][\d]{0,15}$/,
-        customMessage: "Please enter a valid phone number",
-      },
-    };
-
-    const formData = {
-      name: editData.name,
-      email: editData.email,
-      phone: editData.phone?.replace(/[\s\-()]/g, "") || "",
-    };
->>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
-
-    const newErrors = validateFormFields(formData, validationRules);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };

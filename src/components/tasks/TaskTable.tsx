@@ -48,12 +48,7 @@ import {
   X,
 } from "lucide-react";
 import { format, parseISO, isAfter } from "date-fns";
-<<<<<<< HEAD
 import { getPriorityConfig as getPriorityConfigShared } from "@/utils";
-=======
-import { getPriorityConfig as getPriorityConfigShared } from "@/shared/utils/status";
->>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
-
 // Task interface for the table
 interface Task {
   id: string;
@@ -115,7 +110,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   // Get priority configuration from shared utilities
   const getPriorityConfig = (priority: string) => {
     const config = getPriorityConfigShared(priority);
-<<<<<<< HEAD
     const normalizedPriority = priority.toLowerCase().trim();
 
     // Add icon based on priority
@@ -136,11 +130,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         icon = "⚪";
     }
 
-    return { color: config.badgeColor, icon };
-=======
-    return { color: config.badgeColor, icon: config.icon };
->>>>>>> e2eea07370f2f74e9ee2bf9e8b1500b8ad014cf9
-  };
+    return { color: config.badgeColor, icon };  };
 
   // Get status configuration
   const getStatusConfig = (status: string) => {
