@@ -1,4 +1,3 @@
-import React from "react";
 import FlexibleHeader from "@/components/layout/header";
 import { Outlet, useLocation } from "react-router-dom";
 import AuthGuard from "@/components/auth/AuthGuard";
