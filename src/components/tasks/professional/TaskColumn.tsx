@@ -86,19 +86,21 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
     >
       {/* Column Header */}
       <div
-        className={`${config.headerColor} px-4 py-3 rounded-t-lg border-b ${config.borderColor} flex-shrink-0`}
+        className={`${config.headerColor} px-3 sm:px-4 py-2 sm:py-3 rounded-t-lg border-b ${config.borderColor} flex-shrink-0`}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Icon className={`w-4 h-4 ${config.textColor}`} />
+          <div className="flex items-center space-x-1 sm:space-x-2 min-w-0 flex-1">
+            <Icon
+              className={`w-3 h-3 sm:w-4 sm:h-4 ${config.textColor} flex-shrink-0`}
+            />
             <h3
-              className={`font-semibold text-sm ${config.textColor} whitespace-nowrap`}
+              className={`font-semibold text-xs sm:text-sm ${config.textColor} truncate`}
             >
               {status}
             </h3>
           </div>
           <span
-            className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.badgeColor}`}
+            className={`inline-flex items-center px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${config.badgeColor} flex-shrink-0 ml-1`}
           >
             {tasks.length}
           </span>
@@ -106,19 +108,19 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
       </div>
 
       {/* Column Content */}
-      <div className="p-3 min-h-[150px] flex-1">
+      <div className="p-2 sm:p-3 min-h-[120px] sm:min-h-[150px] flex-1">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-slate-400">
-              <Icon className="w-8 h-8 mb-2 opacity-50" />
-              <p className="text-sm text-center">
+            <div className="flex flex-col items-center justify-center py-6 sm:py-8 text-slate-400">
+              <Icon className="w-6 h-6 sm:w-8 sm:h-8 mb-2 opacity-50" />
+              <p className="text-xs sm:text-sm text-center">
                 No {status.toLowerCase()} tasks
                 <br />
                 <span className="text-xs">Drag tasks here</span>
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {tasks.map((task) => (
                 <TaskCard key={task.id} task={task} onClick={onTaskClick} />
               ))}

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +19,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Calendar, User, Flag, Tag } from "lucide-react";
+import { DatePicker } from "../ui";
+import {
+  getInputClassName,
+  getTextareaClassName,
+  getSelectClassName,
+  UI_CONSTANTS,
+  getDialogClassName,
+} from "@/lib/ui-constants";
 
 interface Task {
   title: string;
@@ -96,8 +104,21 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     projectTag: "",
     assignedToId: "",
   });
+  const [selectedDueDate, setSelectedDueDate] = useState<Date | undefined>(
+    formData.dueDate ? new Date(formData.dueDate) : undefined
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sync selectedDueDate with formData.dueDate
+  useEffect(() => {
+    if (selectedDueDate) {
+      setFormData((prev) => ({
+        ...prev,
+        dueDate: selectedDueDate.toISOString(),
+      }));
+    }
+  }, [selectedDueDate]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -110,7 +131,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       newErrors.description = "Task description is required";
     }
 
-    if (!formData.dueDate) {
+    if (!formData.dueDate && !selectedDueDate) {
       newErrors.dueDate = "Due date is required";
     }
 
@@ -128,21 +149,25 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
-    
+
     // Simulate API call
     setTimeout(() => {
-      const assignedTo = mockTeamMembers.find(member => member.id === formData.assignedToId);
+      const assignedTo = mockTeamMembers.find(
+        (member) => member.id === formData.assignedToId
+      );
       if (!assignedTo) return;
 
       const newTask = {
         title: formData.title,
         description: formData.description,
         status: formData.status,
-        dueDate: new Date(formData.dueDate).toISOString(),
+        dueDate: selectedDueDate
+          ? selectedDueDate.toISOString()
+          : new Date(formData.dueDate).toISOString(),
         priority: formData.priority,
         projectTag: formData.projectTag,
         assignedTo,
@@ -151,7 +176,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       onCreate(newTask);
       setIsLoading(false);
       onOpenChange(false);
-      
+
       // Reset form
       setFormData({
         title: "",
@@ -162,79 +187,103 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
         projectTag: "",
         assignedToId: "",
       });
+      setSelectedDueDate(undefined);
       setErrors({});
     }, 1000);
   };
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: "" }));
+      setErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent
+        className={`${getDialogClassName(
+          "large"
+        )} w-[95vw] max-h-[90vh] overflow-y-auto`}
+      >
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
-            <Tag className="w-5 h-5 text-blue-600" />
+          <DialogTitle
+            className={`flex items-center space-x-2 ${UI_CONSTANTS.TYPOGRAPHY.cardTitle}`}
+          >
+            <Tag className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600" />
             <span>Create New Task</span>
           </DialogTitle>
-          <DialogDescription>
-            Create a new task and assign it to a team member. Fill in all the required information below.
+          <DialogDescription className={UI_CONSTANTS.TYPOGRAPHY.description}>
+            Create a new task and assign it to a team member. Fill in all the
+            required information below.
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className={UI_CONSTANTS.SPACING.form}>
           {/* Task Title */}
-          <div className="space-y-2">
-            <Label htmlFor="title">Task Title *</Label>
+          <div className={UI_CONSTANTS.SPACING.formField}>
+            <Label htmlFor="title" className={UI_CONSTANTS.TYPOGRAPHY.label}>
+              Task Title *
+            </Label>
             <Input
               id="title"
               placeholder="Enter task title..."
               value={formData.title}
               onChange={(e) => handleInputChange("title", e.target.value)}
-              className={errors.title ? "border-red-500" : ""}
+              className={getInputClassName(!!errors.title)}
             />
             {errors.title && (
-              <p className="text-sm text-red-500">{errors.title}</p>
+              <p className={UI_CONSTANTS.TYPOGRAPHY.error}>{errors.title}</p>
             )}
           </div>
 
           {/* Task Description */}
-          <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+          <div className={UI_CONSTANTS.SPACING.formField}>
+            <Label
+              htmlFor="description"
+              className={UI_CONSTANTS.TYPOGRAPHY.label}
+            >
+              Description *
+            </Label>
             <Textarea
               id="description"
               placeholder="Describe the task in detail..."
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              className={`min-h-[100px] ${errors.description ? "border-red-500" : ""}`}
+              className={`min-h-[100px] ${getTextareaClassName(
+                !!errors.description
+              )}`}
             />
             {errors.description && (
-              <p className="text-sm text-red-500">{errors.description}</p>
+              <p className={UI_CONSTANTS.TYPOGRAPHY.error}>
+                {errors.description}
+              </p>
             )}
           </div>
 
-          {/* Form Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Form Grid - Responsive */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* Due Date */}
             <div className="space-y-2">
-              <Label htmlFor="dueDate" className="flex items-center space-x-1">
+              <Label className="flex items-center space-x-1">
                 <Calendar className="w-4 h-4" />
                 <span>Due Date *</span>
               </Label>
-              <Input
-                id="dueDate"
-                type="datetime-local"
-                value={formData.dueDate}
-                onChange={(e) => handleInputChange("dueDate", e.target.value)}
-                className={errors.dueDate ? "border-red-500" : ""}
+              <DatePicker
+                date={selectedDueDate}
+                onDateChange={setSelectedDueDate}
+                placeholder="Select a date"
+                disablePastDates={true}
               />
               {errors.dueDate && (
                 <p className="text-sm text-red-500">{errors.dueDate}</p>
               )}
+              <p className="text-sm text-muted-foreground">
+                Selected:{" "}
+                {selectedDueDate
+                  ? selectedDueDate.toLocaleDateString()
+                  : "None"}
+              </p>
             </div>
 
             {/* Priority */}
@@ -251,9 +300,9 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Low">🔵 Low</SelectItem>
-                  <SelectItem value="Medium">🟡 Medium</SelectItem>
-                  <SelectItem value="High">🔴 High</SelectItem>
+                  <SelectItem value="Low">Low</SelectItem>
+                  <SelectItem value="Medium">Medium</SelectItem>
+                  <SelectItem value="High">High</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -266,9 +315,13 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               </Label>
               <Select
                 value={formData.projectTag}
-                onValueChange={(value) => handleInputChange("projectTag", value)}
+                onValueChange={(value) =>
+                  handleInputChange("projectTag", value)
+                }
               >
-                <SelectTrigger className={errors.projectTag ? "border-red-500" : ""}>
+                <SelectTrigger
+                  className={getSelectClassName(!!errors.projectTag)}
+                >
                   <SelectValue placeholder="Select project tag" />
                 </SelectTrigger>
                 <SelectContent>
@@ -292,9 +345,13 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               </Label>
               <Select
                 value={formData.assignedToId}
-                onValueChange={(value) => handleInputChange("assignedToId", value)}
+                onValueChange={(value) =>
+                  handleInputChange("assignedToId", value)
+                }
               >
-                <SelectTrigger className={errors.assignedToId ? "border-red-500" : ""}>
+                <SelectTrigger
+                  className={getSelectClassName(!!errors.assignedToId)}
+                >
                   <SelectValue placeholder="Select team member" />
                 </SelectTrigger>
                 <SelectContent>
@@ -303,7 +360,10 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                       <div className="flex items-center space-x-2">
                         <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-xs font-medium text-blue-600">
-                            {member.name.split(" ").map(n => n[0]).join("")}
+                            {member.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
                           </span>
                         </div>
                         <span>{member.name}</span>

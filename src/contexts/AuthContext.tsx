@@ -106,8 +106,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Staff users go to staff dashboard with sidebar
           navigate("/staff/dashboard");
         } else if (userRole === UserRole.PRINCIPAL_INVESTIGATOR) {
-          // Principal Investigators go to PI dashboard
-          navigate("/pi/dashboard");
+          // Principal Investigators go to home page
+          navigate("/home");
         } else {
           // All other users go to member home page
           navigate("/home");

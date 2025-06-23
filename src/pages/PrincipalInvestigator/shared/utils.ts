@@ -1,4 +1,35 @@
-import { TimeLimit, PaymentSchedule, PaymentPhase } from "./types";
+// Utilities for Principal Investigator features
+import {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+  calculateBudgetUtilization,
+  validateEmail,
+} from "@/utils";
+
+// Types for PI-specific functionality
+interface TimeLimit {
+  quarter: 1 | 2 | 3 | 4;
+  allowedProjectTypes: string[];
+  deadline: string;
+  isActive: boolean;
+}
+
+interface PaymentPhase {
+  phase: number;
+  percentage: number;
+  amount: number;
+  dueDate: string;
+  status: "Pending" | "Paid" | "Overdue";
+}
+
+interface PaymentSchedule {
+  projectType: "Basic" | "Application";
+  schedule: PaymentPhase[];
+  totalAmount: number;
+  paidAmount: number;
+}
 
 // Time and date utilities
 export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
@@ -7,24 +38,6 @@ export const getCurrentQuarter = (): 1 | 2 | 3 | 4 => {
   if (month <= 6) return 2;
   if (month <= 9) return 3;
   return 4;
-};
-
-export const formatDate = (date: string | Date): string => {
-  return new Date(date).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-export const formatDateTime = (date: string | Date): string => {
-  return new Date(date).toLocaleString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
 };
 
 export const isOverdue = (dueDate: string): boolean => {
@@ -196,11 +209,6 @@ export const getStatusColor = (status: string): string => {
 };
 
 // Form validation utilities
-export const validateEmail = (email: string): boolean => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
-
 export const validateRequired = (value: string): boolean => {
   return value.trim().length > 0;
 };
@@ -223,6 +231,7 @@ export const calculateProgress = (completed: number, total: number): number => {
   return Math.round((completed / total) * 100);
 };
 
+// Milestone progress calculation
 export const calculateMilestoneProgress = (
   tasks: { status: string }[]
 ): number => {
@@ -231,4 +240,14 @@ export const calculateMilestoneProgress = (
     (task) => task.status === "Completed"
   ).length;
   return calculateProgress(completedTasks, tasks.length);
+};
+
+// Re-export utilities from shared helpers
+export {
+  formatDate,
+  formatDateTime,
+  formatCurrency,
+  formatFileSize,
+  calculateBudgetUtilization,
+  validateEmail,
 };

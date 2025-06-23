@@ -19,6 +19,8 @@ import {
 } from "@/components/ui/select";
 import { CreateTaskData, TaskPriority } from "@/types/task";
 import { User, UserRole } from "@/contexts/AuthContext";
+import { DatePicker } from "@/components/ui";
+
 // Removed unused import
 
 interface TaskFormModalProps {
@@ -49,6 +51,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
   });
 
   const [errors, setErrors] = useState<Partial<CreateTaskData>>({});
+  const [selectedDueDate, setSelectedDueDate] = useState<Date | undefined>();
 
   // Reset form when dialog opens/closes
   useEffect(() => {
@@ -60,6 +63,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
         assigneeId: currentUser.id,
         dueDate: "",
       });
+      setSelectedDueDate(undefined);
       setErrors({});
     }
   }, [open, currentUser.id]);
@@ -118,7 +122,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
     currentUser.role === UserRole.STAFF;
 
   // Get minimum date (today)
-  const today = new Date().toISOString().split("T")[0];
+  // const today = new Date().toISOString().split("T")[0];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -196,10 +200,10 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
                     <div className="flex items-center space-x-2">
                       <span className="text-sm">
                         {priority === "High"
-                          ? "🔴"
+                          ? ""
                           : priority === "Medium"
-                          ? "🟡"
-                          : "🔵"}
+                          ? ""
+                          : ""}
                       </span>
                       <span>{priority} Priority</span>
                     </div>
@@ -269,27 +273,19 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
 
           {/* Due Date */}
           <div className="space-y-2">
-            <Label
-              htmlFor="dueDate"
-              className="text-sm font-medium text-slate-700"
-            >
+            <Label className="text-sm font-medium text-slate-700">
               Due Date *
             </Label>
-            <Input
-              id="dueDate"
-              type="date"
-              min={today}
-              value={formData.dueDate}
-              onChange={(e) => handleInputChange("dueDate", e.target.value)}
-              className={`${
-                errors.dueDate
-                  ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                  : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-              }`}
+            <DatePicker
+              date={selectedDueDate}
+              onDateChange={setSelectedDueDate}
+              placeholder="Select a date"
+              disablePastDates={true}
             />
-            {errors.dueDate && (
-              <p className="text-sm text-red-600">{errors.dueDate}</p>
-            )}
+            <p className="text-sm text-muted-foreground">
+              Selected:{" "}
+              {selectedDueDate ? selectedDueDate.toLocaleDateString() : "None"}
+            </p>
           </div>
         </form>
 

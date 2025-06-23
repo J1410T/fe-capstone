@@ -16,15 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 import { Clock, CheckCircle } from "lucide-react";
 
 interface Applicant {
@@ -134,32 +126,19 @@ export const ApplicantsList: React.FC<ApplicantsListProps> = ({
                           >
                             View Profile
                           </Button>
-                          <Dialog>
-                            <DialogTrigger asChild>
+                          <ConfirmDialog
+                            trigger={
                               <Button size="sm">
                                 <CheckCircle className="mr-1 h-3 w-3" />
                                 Approve
                               </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader>
-                                <DialogTitle>
-                                  Approve Principal Investigator
-                                </DialogTitle>
-                                <DialogDescription>
-                                  Are you sure you want to approve{" "}
-                                  {applicant.name} as the Principal
-                                  Investigator? This action cannot be undone.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <DialogFooter>
-                                <Button variant="outline">Cancel</Button>
-                                <Button onClick={() => onApprove(applicant.id)}>
-                                  Confirm Approval
-                                </Button>
-                              </DialogFooter>
-                            </DialogContent>
-                          </Dialog>
+                            }
+                            title="Approve Principal Investigator"
+                            description={`Are you sure you want to approve ${applicant.name} as the Principal Investigator? This action cannot be undone.`}
+                            confirmText="Confirm Approval"
+                            onConfirm={() => onApprove(applicant.id)}
+                            variant="default"
+                          />
                         </div>
                       </TableCell>
                     </TableRow>

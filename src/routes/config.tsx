@@ -1,63 +1,52 @@
-import AuthGuard from "../components/auth/AuthGuard";
-import AuthLayout from "../layouts/AuthLayout";
-import MainLayout from "../layouts/StaffLayout";
+import AuthGuard from "@/components/auth/AuthGuard";
+import AuthLayout from "@/layouts/AuthLayout";
+import MainLayout from "@/layouts/StaffLayout";
 import { Unauthorized } from "./Unauthorized";
 import { Navigate, RouteObject, Outlet } from "react-router-dom";
-import ErrorBoundaryPage from "../pages/ErrorBoundaryPage";
+import ErrorBoundaryPage from "@/pages/ErrorBoundaryPage";
 import { authRoutes } from "./auth";
-import { UserRole } from "../contexts/AuthContext";
-import { AuthProvider } from "../contexts/AuthContext";
-import UserLayout from "../layouts/UserLayout";
+import { UserRole } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import UserLayout from "@/layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
 
+// General Pages
+import ProjectsList from "@/pages/ProjectsList";
+import ProjectDetail from "@/pages/ProjectDetail";
+
 // Member Pages
-import ProjectListing from "../pages/Member/ProjectListing";
-import MemberProjectDetails from "../pages/Member/ProjectDetails";
-import UserTaskManagement from "../pages/UserTaskManagement";
-import MemberDashboard from "../pages/Member/Dashboard";
+import UserTaskManagement from "@/pages/TaskManagement";
+import MemberDashboard from "@/pages/Member/Dashboard";
 
 // Other Pages
-import Profile from "../pages/Profile";
-import Settings from "../pages/Settings";
+import Profile from "@/pages/Profile";
+import Settings from "@/pages/Settings";
 
 // Host Institution Pages
-import RegisterProject from "../pages/HostInstitution/RegisterProject";
-import ProjectsList from "../pages/HostInstitution/ProjectsList";
-import MyProjects from "../pages/HostInstitution/MyProjects";
-import ProjectDetails from "../pages/HostInstitution/ProjectDetails";
-import ProjectHistory from "../pages/HostInstitution/ProjectHistory";
+import RegisterProject from "@/pages/HostInstitution/RegisterProject";
+import MyProjects from "@/pages/HostInstitution/MyProjects";
+import ProjectHistory from "@/pages/HostInstitution/ProjectHistory";
 
 // Council Pages
-import CouncilPIApproval from "../pages/Council/PIApproval";
-import PendingEvaluations from "../pages/Council/Evaluations";
-import EvaluationDetail from "../pages/Council/Evaluations/EvaluationDetail";
-import EvaluationForm from "../pages/Council/Evaluations/EvaluationForm";
-import CouncilMeetings from "../pages/Council/Meetings";
-import ScheduleMeeting from "../pages/Council/Meetings/ScheduleMeeting";
-import MeetingMinutes from "../pages/Council/Meetings/MeetingMinutes";
-import ApprovalInterface from "../pages/Council/Approvals";
+import PendingEvaluations from "@/pages/Council/Evaluations";
+import EvaluationDetail from "@/pages/Council/Evaluations/EvaluationDetail";
+import EvaluationForm from "@/pages/Council/Evaluations/EvaluationForm";
+import ScheduleMeeting from "@/pages/Council/Meetings/ScheduleMeeting";
+import MeetingMinutes from "@/pages/Council/Meetings/MeetingMinutes";
+import ApprovalInterface from "@/pages/Council/Approvals";
 
-// Admin Pages
-import AdminDashboard from "../pages/Admin/Dashboard";
-import UserManagement from "../pages/Admin/Users";
-import SystemConfig from "../pages/Admin/System/Config";
-// import SystemLogs from "../pages/Admin/System/Logs"; // TODO: Create SystemLogs component
-import ApprovalManagement from "../pages/Admin/Approvals";
-import AdminComingSoon from "../pages/Admin/ComingSoon";
+// Admin Pages - simplified to use general coming soon
 
 // General Coming Soon
-import GeneralComingSoon from "../pages/ComingSoon";
-import PiProjectDetail from "@/pages/PrincipalInvestigator/PiProjectDetail";
+import GeneralComingSoon from "@/pages/ComingSoon";
 
 // Principal Investigator Pages
 import PIProfile from "@/pages/PrincipalInvestigator/Profile";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
-import ResearchGroup from "@/pages/PrincipalInvestigator/ResearchGroup";
-import Milestones from "@/pages/PrincipalInvestigator/Milestones";
-import ProgressReports from "@/pages/PrincipalInvestigator/ProgressReports";
-import Budget from "@/pages/PrincipalInvestigator/Budget";
 import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
-import Meetings from "@/pages/PrincipalInvestigator/Meetings";
+import Meetings from "@/pages/Council/Meetings";
+import ProjectApproval from "@/pages/Council/ProjectApproval";
+import FormRegister from "@/pages/FormRegister";
 
 /**
  * Main application routes configuration
@@ -91,7 +80,7 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      // Staff routes with sidebar
+      // Staff routes with sidebar - simplified layout only
       {
         path: "staff",
         element: (
@@ -101,76 +90,19 @@ export const routes: RouteObject[] = [
         ),
         children: [
           {
-            path: "dashboard",
-            element: <AdminDashboard />,
-          },
-          // User Management
-          {
-            path: "users",
-            element: <UserManagement />,
+            index: true,
+            element: <GeneralComingSoon />,
           },
           {
-            path: "users/roles",
-            element: <AdminComingSoon />,
-          },
-          // Projects
-          {
-            path: "projects",
-            element: <ProjectsList />,
-          },
-          {
-            path: "projects/create",
-            element: <AdminComingSoon />,
-          },
-          {
-            path: "projects/templates",
-            element: <AdminComingSoon />,
-          },
-          {
-            path: "projects/recent",
-            element: <AdminComingSoon />,
-          },
-          {
-            path: "projects/stats",
-            element: <AdminComingSoon />,
-          },
-          // System Configuration
-          {
-            path: "system/config",
-            element: <SystemConfig />,
-          },
-          {
-            path: "system/logs",
-            element: <AdminComingSoon />, // TODO: Replace with <SystemLogs /> when component is created
-          },
-          {
-            path: "system/backup",
-            element: <AdminComingSoon />,
-          },
-          // Approvals
-          {
-            path: "approvals/pending",
-            element: <ApprovalManagement />,
-          },
-          {
-            path: "approvals/budget",
-            element: <AdminComingSoon />,
-          },
-          {
-            path: "approvals/templates",
-            element: <AdminComingSoon />,
-          },
-          // Security
-          {
-            path: "security",
-            element: <AdminComingSoon />,
+            path: "*",
+            element: <GeneralComingSoon />,
           },
         ],
       },
       {
         path: "member",
         element: (
-          <AuthGuard>
+          <AuthGuard requiredRoles={[UserRole.MEMBER]}>
             <UserLayout />
           </AuthGuard>
         ),
@@ -181,11 +113,11 @@ export const routes: RouteObject[] = [
           },
           {
             path: "projects",
-            element: <ProjectListing />,
+            element: <ProjectsList />,
           },
           {
             path: "project/:projectId",
-            element: <MemberProjectDetails />,
+            element: <ProjectDetail />,
           },
           {
             path: "tasks",
@@ -208,8 +140,12 @@ export const routes: RouteObject[] = [
             element: <GeneralComingSoon />,
           },
           {
-            path: "forms/*",
-            element: <GeneralComingSoon />,
+            path: "forms",
+            element: <FormRegister />,
+          },
+          {
+            path: "my-projects",
+            element: <ProjectDetail />,
           },
           // Add more member routes here
         ],
@@ -250,7 +186,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "project/:projectId",
-            element: <ProjectDetails />,
+            element: <ProjectDetail />,
           },
           {
             path: "history",
@@ -280,8 +216,8 @@ export const routes: RouteObject[] = [
             element: <Navigate to="/council/evaluations" replace />,
           },
           {
-            path: "pi-approval",
-            element: <CouncilPIApproval />,
+            path: "project-approval",
+            element: <ProjectApproval />,
           },
           {
             path: "evaluations",
@@ -297,7 +233,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "meetings",
-            element: <CouncilMeetings />,
+            element: <Meetings />,
           },
           {
             path: "meetings/schedule",
@@ -310,6 +246,10 @@ export const routes: RouteObject[] = [
           {
             path: "approvals",
             element: <ApprovalInterface />,
+          },
+          {
+            path: "project/:projectId",
+            element: <ProjectDetail />,
           },
         ],
       },
@@ -332,31 +272,15 @@ export const routes: RouteObject[] = [
           },
           {
             path: "project/:projectId",
-            element: <PiProjectDetail />,
+            element: <ProjectDetail />,
           },
           {
-            path: "project-registration",
+            path: "project-enroll-form",
             element: <ProjectRegistration />,
           },
           {
             path: "profile",
             element: <PIProfile />,
-          },
-          {
-            path: "research-group",
-            element: <ResearchGroup />,
-          },
-          {
-            path: "milestones",
-            element: <Milestones />,
-          },
-          {
-            path: "progress-reports",
-            element: <ProgressReports />,
-          },
-          {
-            path: "budget",
-            element: <Budget />,
           },
           {
             path: "dashboard",
@@ -365,6 +289,22 @@ export const routes: RouteObject[] = [
           {
             path: "meetings",
             element: <Meetings />,
+          },
+          {
+            path: "meetings/schedule",
+            element: <ScheduleMeeting />,
+          },
+          {
+            path: "meeting/:id",
+            element: <MeetingMinutes />,
+          },
+          {
+            path: "forms",
+            element: <FormRegister />,
+          },
+          {
+            path: "my-projects",
+            element: <MyProjects />,
           },
         ],
       },

@@ -47,7 +47,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     } else if (user?.role === UserRole.HOST_INSTITUTION) {
       return <Navigate to="/host/dashboard" replace />;
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
-      return <Navigate to="/pi/dashboard" replace />;
+      return <Navigate to="/home" replace />;
     } else {
       return <Navigate to="/home" replace />;
     }
@@ -58,7 +58,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     if (user?.role === UserRole.STAFF) {
       return <Navigate to="/staff/dashboard" replace />;
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
-      return <Navigate to="/pi/dashboard" replace />;
+      return <Navigate to="/home" replace />;
     } else {
       return <Navigate to="/home" replace />;
     }
@@ -88,6 +88,14 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     location.pathname.startsWith("/pi")
   ) {
     return <Navigate to="/home" replace />;
+  }
+
+  // Redirect non-member users to unauthorized page if they try to access member routes
+  if (
+    user?.role !== UserRole.MEMBER &&
+    location.pathname.startsWith("/member")
+  ) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   // Render children if authenticated and has required role

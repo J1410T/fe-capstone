@@ -40,7 +40,8 @@ const proposalCriteria = [
   {
     id: 1,
     name: "Scientific Merit",
-    description: "Evaluate the scientific quality and innovation of the proposal",
+    description:
+      "Evaluate the scientific quality and innovation of the proposal",
     maxScore: 10,
   },
   {
@@ -52,19 +53,22 @@ const proposalCriteria = [
   {
     id: 3,
     name: "Feasibility",
-    description: "Evaluate if the project can be completed with the proposed resources and timeline",
+    description:
+      "Evaluate if the project can be completed with the proposed resources and timeline",
     maxScore: 10,
   },
   {
     id: 4,
     name: "Impact",
-    description: "Assess the potential scientific and societal impact of the research",
+    description:
+      "Assess the potential scientific and societal impact of the research",
     maxScore: 10,
   },
   {
     id: 5,
     name: "Budget Appropriateness",
-    description: "Evaluate if the requested budget is justified and appropriate",
+    description:
+      "Evaluate if the requested budget is justified and appropriate",
     maxScore: 10,
   },
 ];
@@ -92,13 +96,15 @@ const milestoneCriteria = [
   {
     id: 4,
     name: "Adherence to Timeline",
-    description: "Assess if the project is on track according to the proposed timeline",
+    description:
+      "Assess if the project is on track according to the proposed timeline",
     maxScore: 10,
   },
   {
     id: 5,
     name: "Future Plan",
-    description: "Evaluate the quality and feasibility of the plan for the next phase",
+    description:
+      "Evaluate the quality and feasibility of the plan for the next phase",
     maxScore: 10,
   },
 ];
@@ -106,16 +112,17 @@ const milestoneCriteria = [
 const EvaluationForm: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
+
   // In a real application, you would fetch the evaluation details based on the ID
   const evaluation = evaluationDetails;
-  
+
   // Determine which criteria to use based on evaluation type
-  const criteria = evaluation.type === "Proposal" ? proposalCriteria : milestoneCriteria;
-  
+  const criteria =
+    evaluation.type === "Proposal" ? proposalCriteria : milestoneCriteria;
+
   // State for form values
   const [scores, setScores] = useState<Record<number, number>>(
-    Object.fromEntries(criteria.map(c => [c.id, 5]))
+    Object.fromEntries(criteria.map((c) => [c.id, 5]))
   );
   const [comments, setComments] = useState<string>("");
   const [recommendation, setRecommendation] = useState<string>("approve");
@@ -123,15 +130,18 @@ const EvaluationForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Calculate total score
-  const totalScore = Object.values(scores).reduce((sum, score) => sum + score, 0);
+  const totalScore = Object.values(scores).reduce(
+    (sum, score) => sum + score,
+    0
+  );
   const maxPossibleScore = criteria.length * 10;
   const scorePercentage = Math.round((totalScore / maxPossibleScore) * 100);
 
   // Handle score change
   const handleScoreChange = (criteriaId: number, value: number[]) => {
-    setScores(prev => ({
+    setScores((prev) => ({
       ...prev,
-      [criteriaId]: value[0]
+      [criteriaId]: value[0],
     }));
   };
 
@@ -158,31 +168,31 @@ const EvaluationForm: React.FC = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div>
+      <div className="flex gap-4 items-center">
         <Button
-          variant="ghost"
-          className="mb-2"
+          variant="outline"
           onClick={() => navigate(`/council/evaluation/${id}`)}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Project Details
+          <ArrowLeft className=" h-4 w-4" />
         </Button>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Evaluation Form: {evaluation.projectTitle}
-        </h1>
-        <div className="flex items-center gap-2 text-muted-foreground">
-          <span>{evaluation.projectCode}</span>
-          <span>•</span>
-          <Badge
-            variant="outline"
-            className={
-              evaluation.type === "Proposal"
-                ? "bg-blue-100 text-blue-800 border-blue-200"
-                : "bg-purple-100 text-purple-800 border-purple-200"
-            }
-          >
-            {evaluation.type}
-          </Badge>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">
+            Evaluation Form: {evaluation.projectTitle}
+          </h1>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <span>{evaluation.projectCode}</span>
+            <span>•</span>
+            <Badge
+              variant="outline"
+              className={
+                evaluation.type === "Proposal"
+                  ? "bg-blue-100 text-blue-800 border-blue-200"
+                  : "bg-purple-100 text-purple-800 border-purple-200"
+              }
+            >
+              {evaluation.type}
+            </Badge>
+          </div>
         </div>
       </div>
 
@@ -197,7 +207,10 @@ const EvaluationForm: React.FC = () => {
           {criteria.map((criterion) => (
             <div key={criterion.id} className="space-y-2">
               <div className="flex justify-between items-center">
-                <Label htmlFor={`criterion-${criterion.id}`} className="font-medium">
+                <Label
+                  htmlFor={`criterion-${criterion.id}`}
+                  className="font-medium"
+                >
                   {criterion.name}
                 </Label>
                 <span className="text-sm font-medium">
@@ -213,7 +226,9 @@ const EvaluationForm: React.FC = () => {
                 max={10}
                 step={1}
                 value={[scores[criterion.id]]}
-                onValueChange={(value) => handleScoreChange(criterion.id, value)}
+                onValueChange={(value) =>
+                  handleScoreChange(criterion.id, value)
+                }
               />
             </div>
           ))}
@@ -241,19 +256,21 @@ const EvaluationForm: React.FC = () => {
               Recommendation
             </Label>
             <p className="text-sm text-muted-foreground mb-2">
-              Select your final recommendation for this {evaluation.type.toLowerCase()}
+              Select your final recommendation for this{" "}
+              {evaluation.type.toLowerCase()}
             </p>
-            <Select
-              value={recommendation}
-              onValueChange={setRecommendation}
-            >
+            <Select value={recommendation} onValueChange={setRecommendation}>
               <SelectTrigger id="recommendation">
                 <SelectValue placeholder="Select recommendation" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="approve">Approve</SelectItem>
-                <SelectItem value="approve_with_revisions">Approve with Revisions</SelectItem>
-                <SelectItem value="revise_and_resubmit">Revise and Resubmit</SelectItem>
+                <SelectItem value="approve_with_revisions">
+                  Approve with Revisions
+                </SelectItem>
+                <SelectItem value="revise_and_resubmit">
+                  Revise and Resubmit
+                </SelectItem>
                 <SelectItem value="reject">Reject</SelectItem>
               </SelectContent>
             </Select>
@@ -263,8 +280,13 @@ const EvaluationForm: React.FC = () => {
           <div className="text-center sm:text-left">
             <p className="text-sm font-medium">Total Score</p>
             <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold">{totalScore}/{maxPossibleScore}</span>
-              <Badge variant="outline" className="bg-blue-100 text-blue-800 border-blue-200">
+              <span className="text-2xl font-bold">
+                {totalScore}/{maxPossibleScore}
+              </span>
+              <Badge
+                variant="outline"
+                className="bg-blue-100 text-blue-800 border-blue-200"
+              >
                 {scorePercentage}%
               </Badge>
             </div>

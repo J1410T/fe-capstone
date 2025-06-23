@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar, Edit, X, Save } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { DatePicker } from "@/components/ui/date-picker";
 
 // Task interface
 interface Task {
@@ -58,10 +59,12 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<Task>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [selectedDueDate, setSelectedDueDate] = useState<Date | undefined>();
 
   useEffect(() => {
     if (task) {
       setEditData(task);
+      setSelectedDueDate(task.dueDate ? parseISO(task.dueDate) : undefined);
       setErrors({});
       setIsEditing(false);
     }
@@ -73,13 +76,13 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   const getPriorityConfig = (priority: string) => {
     switch (priority) {
       case "High":
-        return { color: "bg-red-100 text-red-700", icon: "🔴" };
+        return { color: "bg-red-100 text-red-700", icon: "" };
       case "Medium":
-        return { color: "bg-yellow-100 text-yellow-700", icon: "🟡" };
+        return { color: "bg-yellow-100 text-yellow-700", icon: "" };
       case "Low":
-        return { color: "bg-blue-100 text-blue-700", icon: "🔵" };
+        return { color: "bg-blue-100 text-blue-700", icon: "" };
       default:
-        return { color: "bg-slate-100 text-slate-700", icon: "⚪" };
+        return { color: "bg-slate-100 text-slate-700", icon: "" };
     }
   };
 
@@ -141,6 +144,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   const handleCancel = () => {
     setEditData(task);
+    setSelectedDueDate(task.dueDate ? parseISO(task.dueDate) : undefined);
     setErrors({});
     setIsEditing(false);
   };
@@ -150,12 +154,12 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto w-[95vw] sm:w-full">
         <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-slate-900">
+          <DialogTitle className="text-lg sm:text-xl font-semibold text-slate-900">
             Task Details
           </DialogTitle>
-          <DialogDescription className="text-slate-600">
+          <DialogDescription className="text-sm sm:text-base text-slate-600">
             {isEditing
               ? "Edit task information"
               : "View task details and make changes"}
@@ -260,9 +264,9 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Low">🔵 Low</SelectItem>
-                    <SelectItem value="Medium">🟡 Medium</SelectItem>
-                    <SelectItem value="High">🔴 High</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
                   </SelectContent>
                 </Select>
               ) : (
@@ -279,17 +283,18 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               </label>
               {isEditing ? (
                 <div>
-                  <Input
-                    type="date"
-                    value={
-                      editData.dueDate ? editData.dueDate.split("T")[0] : ""
-                    }
-                    onChange={(e) =>
+                  <DatePicker
+                    date={selectedDueDate}
+                    onDateChange={(date) => {
+                      setSelectedDueDate(date);
                       handleInputChange(
                         "dueDate",
-                        e.target.value + "T17:00:00Z"
-                      )
-                    }
+                        date ? date.toISOString() : ""
+                      );
+                    }}
+                    placeholder="Select due date"
+                    disablePastDates={true}
+                    inDialog={true}
                     className={`${
                       errors.dueDate
                         ? "border-red-300 focus:border-red-500 focus:ring-red-500"

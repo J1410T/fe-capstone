@@ -20,6 +20,7 @@ import {
   Clock,
 } from "lucide-react";
 import { format } from "date-fns";
+import { validateEmail, validateRequired } from "@/utils";
 
 // Mock user data
 const mockUser = {
@@ -52,23 +53,26 @@ const Profile: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
+    const newErrors: { [key: string]: string } = {};
 
-    if (!editData.name.trim()) {
+    // Validate name
+    if (!validateRequired(editData.name)) {
       newErrors.name = "Name is required";
     }
 
-    if (!editData.email.trim()) {
+    // Validate email
+    if (!validateRequired(editData.email)) {
       newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editData.email)) {
+    } else if (!validateEmail(editData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
 
-    if (
-      editData.phone &&
-      !/^[+]?[1-9][\d]{0,15}$/.test(editData.phone.replace(/[\s\-()]/g, ""))
-    ) {
-      newErrors.phone = "Please enter a valid phone number";
+    // Validate phone (optional)
+    if (editData.phone && editData.phone.length > 0) {
+      const cleanPhone = editData.phone.replace(/[\s\-()]/g, "");
+      if (!/^[+]?[1-9][\d]{0,15}$/.test(cleanPhone)) {
+        newErrors.phone = "Please enter a valid phone number";
+      }
     }
 
     setErrors(newErrors);

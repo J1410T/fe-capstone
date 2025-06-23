@@ -39,7 +39,7 @@ import {
   X,
 } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn } from "@/utils";
 
 interface MeetingFormData {
   title: string;
@@ -133,14 +133,9 @@ const ScheduleMeeting: React.FC = () => {
 
   return (
     <div className="container mx-auto py-6 space-y-6">
-      <div className="flex items-center gap-4">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate("/council/meetings")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Meetings
+      <div className="flex items-center gap-4 mx-16">
+        <Button variant="outline" onClick={() => navigate("/council/meetings")}>
+          <ArrowLeft className=" h-4 w-4" />
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight">
@@ -152,8 +147,8 @@ const ScheduleMeeting: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex justify-center">
-        <Card className="w-full max-w-4xl mx-auto">
+      <div className="flex justify-center w-full">
+        <Card className="w-[95%] md:w-[88%]">
           <CardHeader>
             <CardTitle>Meeting Details</CardTitle>
             <CardDescription>
@@ -218,9 +213,9 @@ const ScheduleMeeting: React.FC = () => {
                       <Calendar
                         mode="single"
                         selected={formData.date}
-                        onSelect={(date) =>
-                          setFormData((prev) => ({ ...prev, date }))
-                        }
+                        onSelect={(date) => {
+                          setFormData((prev) => ({ ...prev, date }));
+                        }}
                         disabled={(date) =>
                           date < new Date(new Date().setHours(0, 0, 0, 0))
                         }

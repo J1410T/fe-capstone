@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "@/components/ui/loaders";
 import {
@@ -13,12 +13,8 @@ import {
   Landmark,
   Microscope,
 } from "lucide-react";
-import {
-  ProgressSteps,
-  ProjectInfoForm,
-  ResearchDetailsForm,
-  ReviewForm,
-} from "./components";
+import { ProgressSteps, ProjectInfoForm, ReviewForm } from "./components";
+import { toast } from "sonner";
 
 // Research fields with icons
 const researchFields = [
@@ -34,7 +30,13 @@ const researchFields = [
   { id: "other", name: "Other", icon: Microscope },
 ];
 
-// No mock data needed for projects list
+export interface ProjectFormData {
+  title: string;
+  field: string;
+  type: string;
+  target: string;
+  overview: string;
+}
 
 const RegisterProject: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -42,53 +44,70 @@ const RegisterProject: React.FC = () => {
   const navigate = useNavigate();
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<ProjectFormData>({
     title: "",
     field: "",
-    startDate: "",
-    endDate: "",
-    budget: "",
-    manager: "",
-    institution: "",
-    department: "",
-    description: "",
-    objectives: "",
-    methodology: "",
-    expectedOutcomes: "",
+    type: "",
+    target: "",
+    overview: "",
   });
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    },
+    []
+  );
 
-  const handleSelectChange = (name: string, value: string) => {
+  const handleSelectChange = useCallback((name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  }, []);
 
-  const handleNextStep = () => {
+  const handleNextStep = useCallback(() => {
+    // Validate form before proceeding
+    if (currentStep === 1) {
+      if (!formData.title.trim()) {
+        toast.error("Project title is required");
+        return;
+      }
+      if (!formData.field) {
+        toast.error("Research field is required");
+        return;
+      }
+      if (!formData.type) {
+        toast.error("Project type is required");
+        return;
+      }
+    }
     setCurrentStep((prev) => prev + 1);
-  };
+  }, [currentStep, formData]);
 
-  const handlePrevStep = () => {
+  const handlePrevStep = useCallback(() => {
     setCurrentStep((prev) => prev - 1);
-  };
+  }, []);
 
-  const handleRegisterProject = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle form submission
-    setIsLoading(true);
+  const handleRegisterProject = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Navigate to my projects page after successful registration
-      navigate("/host/my-projects");
-      // Show success message
-    }, 1500);
-  };
+      // Final validation
+      if (!formData.title.trim() || !formData.field || !formData.type) {
+        toast.error("Please fill all required fields");
+        return;
+      }
+
+      setIsLoading(true);
+
+      // Simulate API call
+      setTimeout(() => {
+        setIsLoading(false);
+        toast.success("Project registered successfully");
+        navigate("/host/history");
+      }, 1500);
+    },
+    [formData, navigate]
+  );
 
   if (isLoading) {
     return <Loading />;
@@ -111,7 +130,6 @@ const RegisterProject: React.FC = () => {
         <ProgressSteps currentStep={currentStep} />
 
         <form onSubmit={handleRegisterProject}>
-          {/* Step 1: Project Information */}
           {currentStep === 1 && (
             <ProjectInfoForm
               formData={formData}
@@ -122,18 +140,7 @@ const RegisterProject: React.FC = () => {
             />
           )}
 
-          {/* Step 2: Research Details */}
           {currentStep === 2 && (
-            <ResearchDetailsForm
-              formData={formData}
-              onInputChange={handleInputChange}
-              onNextStep={handleNextStep}
-              onPrevStep={handlePrevStep}
-            />
-          )}
-
-          {/* Step 3: Review & Submit */}
-          {currentStep === 3 && (
             <ReviewForm
               formData={formData}
               researchFields={researchFields}
