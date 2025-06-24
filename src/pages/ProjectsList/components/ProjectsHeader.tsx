@@ -81,10 +81,13 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="Active">Active</SelectItem>
-            <SelectItem value="Pending">Pending</SelectItem>
-            <SelectItem value="On Hold">On Hold</SelectItem>
-            <SelectItem value="Completed">Completed</SelectItem>
+            <SelectItem value="Draft">Draft</SelectItem>
+            <SelectItem value="Created">Created</SelectItem>
+            <SelectItem value="Submitted">Submitted</SelectItem>
+            <SelectItem value="Approved">Approved</SelectItem>
+            <SelectItem value="In Progress">In Progress</SelectItem>
+            <SelectItem value="Done">Done</SelectItem>
+            <SelectItem value="Deleted">Deleted</SelectItem>
           </SelectContent>
         </Select>
         {/* Sort By */}
