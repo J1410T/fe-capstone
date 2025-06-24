@@ -18,9 +18,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Edit, X, Save } from "lucide-react";
+import { Calendar, Edit, X, Save, Trash2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { DatePicker } from "@/components/ui/date-picker";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 // Task interface
 interface Task {
@@ -46,6 +47,7 @@ interface TaskDetailModalProps {
   onOpenChange: (open: boolean) => void;
   task: Task | null;
   onUpdate?: (task: Task) => void;
+  onDelete?: (taskId: string) => void;
   isLeader?: boolean;
 }
 
@@ -54,6 +56,7 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   onOpenChange,
   task,
   onUpdate,
+  onDelete,
   isLeader = true,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -147,6 +150,10 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     setSelectedDueDate(task.dueDate ? parseISO(task.dueDate) : undefined);
     setErrors({});
     setIsEditing(false);
+  };
+
+  const handleEditClick = () => {
+    setIsEditing(true);
   };
 
   const priorityConfig = getPriorityConfig(task.priority);
@@ -387,45 +394,76 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-200">
-          {isEditing ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                className="border-slate-300 text-slate-700 hover:bg-slate-50"
-              >
-                <X className="w-4 h-4 mr-2" />
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Save className="w-4 h-4 mr-2" />
-                Save Changes
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-                className="border-slate-300 text-slate-700 hover:bg-slate-50"
-              >
-                Close
-              </Button>
-              {isLeader && (
+        <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+          {/* Delete Button - Left Side */}
+          {!isEditing && isLeader && onDelete && (
+            <ConfirmDialog
+              trigger={
                 <Button
-                  onClick={() => setIsEditing(true)}
+                  variant="outline"
+                  className="border-red-300 text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete Task
+                </Button>
+              }
+              onConfirm={() => onDelete(task.id)}
+              title="Delete Task"
+              description={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
+              confirmText="Delete"
+              cancelText="Cancel"
+              variant="destructive"
+            />
+          )}
+
+          {/* Main Action Buttons - Right Side */}
+          <div className="flex items-center space-x-3">
+            {isEditing ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleCancel}
+                  className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleSave}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Task
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
                 </Button>
-              )}
-            </>
-          )}
+              </>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => onOpenChange(false)}
+                  className="border-slate-300 text-slate-700 hover:bg-slate-50"
+                >
+                  Close
+                </Button>
+                {isLeader && (
+                  <ConfirmDialog
+                    trigger={
+                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                        <Edit className="w-4 h-4 mr-2" />
+                        Edit Task
+                      </Button>
+                    }
+                    onConfirm={handleEditClick}
+                    title="Edit Task"
+                    description={`Are you sure you want to edit "${task.title}"?`}
+                    confirmText="Edit"
+                    cancelText="Cancel"
+                    variant="default"
+                  />
+                )}
+              </>
+            )}
+          </div>
         </div>
       </DialogContent>
     </Dialog>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import {
   TaskTable,
   TaskDetailModal,
@@ -7,6 +7,13 @@ import {
   CreateTaskModal,
 } from "@/components/tasks";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { toast } from "sonner";
 import {
@@ -18,6 +25,23 @@ import {
   Filter,
 } from "lucide-react";
 
+// Project and Milestone interfaces
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  status: "Active" | "Completed" | "On Hold";
+}
+
+interface Milestone {
+  id: string;
+  name: string;
+  description: string;
+  projectId: string;
+  deadline: string;
+  status: "Not Started" | "In Progress" | "Completed" | "Overdue";
+}
+
 // Unified Task interface
 interface Task {
   id: string;
@@ -27,6 +51,8 @@ interface Task {
   dueDate: string;
   priority: "Low" | "Medium" | "High";
   projectTag: string;
+  projectId: string;
+  milestoneId: string;
   assignedTo: {
     id: string;
     name: string;
@@ -36,6 +62,86 @@ interface Task {
   createdAt: string;
   updatedAt: string;
 }
+
+// Mock data for projects
+const mockProjects: Project[] = [
+  {
+    id: "1",
+    name: "Machine Learning Research",
+    description: "AI algorithms for medical diagnosis",
+    status: "Active",
+  },
+  {
+    id: "2",
+    name: "Web Application Development",
+    description: "Full-stack web application project",
+    status: "Active",
+  },
+  {
+    id: "3",
+    name: "Data Analytics Platform",
+    description: "Business intelligence and analytics",
+    status: "Active",
+  },
+  {
+    id: "4",
+    name: "New Project Setup",
+    description: "Project in planning phase with no milestones yet",
+    status: "Active",
+  },
+];
+
+// Mock data for milestones
+const mockMilestones: Milestone[] = [
+  {
+    id: "1",
+    name: "Phase 1: Research & Planning",
+    description: "Initial research and project planning",
+    projectId: "1",
+    deadline: "2024-03-31",
+    status: "Completed",
+  },
+  {
+    id: "2",
+    name: "Phase 2: Development",
+    description: "Core development phase",
+    projectId: "1",
+    deadline: "2024-06-30",
+    status: "In Progress",
+  },
+  {
+    id: "3",
+    name: "Phase 3: Testing",
+    description: "Testing and quality assurance",
+    projectId: "1",
+    deadline: "2024-09-30",
+    status: "Not Started",
+  },
+  {
+    id: "4",
+    name: "Frontend Development",
+    description: "User interface development",
+    projectId: "2",
+    deadline: "2024-04-30",
+    status: "In Progress",
+  },
+  {
+    id: "5",
+    name: "Backend Development",
+    description: "Server-side development",
+    projectId: "2",
+    deadline: "2024-05-31",
+    status: "Not Started",
+  },
+  {
+    id: "6",
+    name: "Data Collection",
+    description: "Gathering and preparing data",
+    projectId: "3",
+    deadline: "2024-07-31",
+    status: "In Progress",
+  },
+];
 
 // Enhanced mock data with more variety
 const mockTasks: Task[] = [
@@ -48,6 +154,8 @@ const mockTasks: Task[] = [
     dueDate: "2024-02-15T17:00:00Z",
     priority: "High",
     projectTag: "Backend API",
+    projectId: "1",
+    milestoneId: "2",
     assignedTo: {
       id: "user1",
       name: "Sarah Chen",
@@ -65,6 +173,8 @@ const mockTasks: Task[] = [
     dueDate: "2024-01-30T17:00:00Z",
     priority: "Medium",
     projectTag: "Frontend",
+    projectId: "2",
+    milestoneId: "4",
     assignedTo: {
       id: "user2",
       name: "Michael Rodriguez",
@@ -82,6 +192,8 @@ const mockTasks: Task[] = [
     dueDate: "2024-01-20T17:00:00Z",
     priority: "High",
     projectTag: "Database",
+    projectId: "3",
+    milestoneId: "6",
     assignedTo: {
       id: "user3",
       name: "Emily Johnson",
@@ -99,6 +211,8 @@ const mockTasks: Task[] = [
     dueDate: "2024-02-20T17:00:00Z",
     priority: "Low",
     projectTag: "Documentation",
+    projectId: "1",
+    milestoneId: "3",
     assignedTo: {
       id: "user1",
       name: "Sarah Chen",
@@ -116,6 +230,8 @@ const mockTasks: Task[] = [
     dueDate: "2024-02-10T17:00:00Z",
     priority: "Medium",
     projectTag: "Performance",
+    projectId: "2",
+    milestoneId: "5",
     assignedTo: {
       id: "user2",
       name: "Michael Rodriguez",
@@ -134,6 +250,8 @@ const mockTasks: Task[] = [
     dueDate: "2024-02-25T17:00:00Z",
     priority: "Medium",
     projectTag: "Mobile",
+    projectId: "2",
+    milestoneId: "4",
     assignedTo: {
       id: "user4",
       name: "David Kim",
@@ -146,30 +264,105 @@ const mockTasks: Task[] = [
 ];
 
 const UserTaskManagement: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>(mockTasks);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  // const [isLoading] = useState(false); // Removed unused variable
   const [activeView, setActiveView] = useState<"table" | "kanban">("table");
+  const [selectedProjectId, setSelectedProjectId] = useState<string>(
+    mockProjects[0]?.id || ""
+  );
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string>(() => {
+    const firstProject = mockProjects[0];
+    if (firstProject) {
+      const firstMilestone = mockMilestones.find(
+        (m) => m.projectId === firstProject.id
+      );
+      return firstMilestone?.id || "no-milestones";
+    }
+    return "no-milestones";
+  });
+  // Add a refresh trigger to force re-render when tasks change
+  const [, forceUpdate] = useState(0);
+  const triggerRefresh = () => forceUpdate((prev) => prev + 1);
 
   // Role-based permissions (can be made dynamic based on user context)
   const isLeader = true;
 
-  // Task event handlers
-  const handleTaskEdit = (task: Task) => {
-    setSelectedTask(task);
-    setIsDetailModalOpen(true);
+  // Filter milestones based on selected project
+  const filteredMilestones = useMemo(() => {
+    if (!selectedProjectId) return [];
+    return mockMilestones.filter(
+      (milestone) => milestone.projectId === selectedProjectId
+    );
+  }, [selectedProjectId]);
+
+  // Filter tasks based on selected project and milestone
+  const getFilteredTasks = () => {
+    let filtered = mockTasks;
+
+    if (selectedProjectId) {
+      filtered = filtered.filter(
+        (task) => task.projectId === selectedProjectId
+      );
+    }
+
+    if (selectedMilestoneId && selectedMilestoneId !== "no-milestones") {
+      filtered = filtered.filter(
+        (task) => task.milestoneId === selectedMilestoneId
+      );
+    }
+
+    return filtered;
   };
 
-  const handleTaskView = (task: Task) => {
-    setSelectedTask(task);
-    setIsDetailModalOpen(true);
+  const filteredTasks = getFilteredTasks();
+
+  // Convert extended Task to component-compatible Task
+  const convertTaskForComponents = (
+    task: Task
+  ): Omit<Task, "projectId" | "milestoneId"> => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { projectId, milestoneId, ...componentTask } = task;
+    return componentTask;
   };
 
-  const handleTaskClick = (task: Task) => {
-    setSelectedTask(task);
-    setIsDetailModalOpen(true);
+  // Convert tasks for components
+  const tasksForComponents = useMemo(() => {
+    return filteredTasks.map(convertTaskForComponents);
+  }, [filteredTasks]);
+
+  // Task event handlers - these handle component-compatible tasks
+  const handleTaskEdit = (
+    componentTask: Omit<Task, "projectId" | "milestoneId">
+  ) => {
+    // Find the full task from our mock data
+    const fullTask = mockTasks.find((t: Task) => t.id === componentTask.id);
+    if (fullTask) {
+      setSelectedTask(fullTask);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  const handleTaskView = (
+    componentTask: Omit<Task, "projectId" | "milestoneId">
+  ) => {
+    // Find the full task from our mock data
+    const fullTask = mockTasks.find((t: Task) => t.id === componentTask.id);
+    if (fullTask) {
+      setSelectedTask(fullTask);
+      setIsDetailModalOpen(true);
+    }
+  };
+
+  const handleTaskClick = (
+    componentTask: Omit<Task, "projectId" | "milestoneId">
+  ) => {
+    // Find the full task from our mock data
+    const fullTask = mockTasks.find((t: Task) => t.id === componentTask.id);
+    if (fullTask) {
+      setSelectedTask(fullTask);
+      setIsDetailModalOpen(true);
+    }
   };
 
   const handleCreateTaskClick = () => {
@@ -178,16 +371,38 @@ const UserTaskManagement: React.FC = () => {
 
   // Task creation handler
   const handleCreateTaskSubmit = (
-    newTask: Omit<Task, "id" | "createdAt" | "updatedAt">
+    newTask: Omit<
+      Task,
+      "id" | "createdAt" | "updatedAt" | "projectId" | "milestoneId"
+    >
   ) => {
+    // Ensure project and milestone are selected
+    if (
+      !selectedProjectId ||
+      !selectedMilestoneId ||
+      selectedMilestoneId === "no-milestones"
+    ) {
+      toast.error(
+        "Please select both a project and milestone before creating a task."
+      );
+      return;
+    }
+
     const task: Task = {
       ...newTask,
       id: Date.now().toString(),
+      projectId: selectedProjectId,
+      milestoneId: selectedMilestoneId,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    setTasks((prev) => [task, ...prev]);
+
+    // Add to the original mock data
+    mockTasks.unshift(task);
     setIsCreateModalOpen(false);
+
+    // Trigger refresh to update filtered tasks
+    triggerRefresh();
 
     // Show success toast
     toast.success("Task created successfully!", {
@@ -195,20 +410,39 @@ const UserTaskManagement: React.FC = () => {
     });
   };
 
-  // Task update handler
-  const handleUpdateTask = (updatedTask: Task) => {
-    const previousTask = tasks.find((task) => task.id === updatedTask.id);
+  // Task update handler - handles component-compatible tasks
+  const handleUpdateTask = (
+    componentUpdatedTask: Omit<Task, "projectId" | "milestoneId">
+  ) => {
+    // Find the original task to preserve projectId and milestoneId
+    const originalTask = mockTasks.find(
+      (task: Task) => task.id === componentUpdatedTask.id
+    );
+    if (!originalTask) return;
+
+    const updatedTask: Task = {
+      ...componentUpdatedTask,
+      projectId: originalTask.projectId,
+      milestoneId: originalTask.milestoneId,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const previousTask = mockTasks.find(
+      (task: Task) => task.id === updatedTask.id
+    );
     const statusChanged =
       previousTask && previousTask.status !== updatedTask.status;
 
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === updatedTask.id
-          ? { ...updatedTask, updatedAt: new Date().toISOString() }
-          : task
-      )
-    );
+    // Update the original mock data
+    const taskIndex = mockTasks.findIndex((t: Task) => t.id === updatedTask.id);
+    if (taskIndex !== -1) {
+      mockTasks[taskIndex] = updatedTask;
+    }
+
     setSelectedTask(updatedTask);
+
+    // Trigger refresh to update filtered tasks
+    triggerRefresh();
 
     // Show appropriate toast based on what changed
     if (statusChanged) {
@@ -222,13 +456,43 @@ const UserTaskManagement: React.FC = () => {
     }
   };
 
+  // Task delete handler
+  const handleDeleteTask = (taskId: string) => {
+    // Remove from mock data
+    const taskIndex = mockTasks.findIndex((t: Task) => t.id === taskId);
+    const taskToDelete = mockTasks[taskIndex];
+
+    if (taskIndex !== -1) {
+      mockTasks.splice(taskIndex, 1);
+    }
+
+    // Close modal if the deleted task was selected
+    if (selectedTask?.id === taskId) {
+      setSelectedTask(null);
+      setIsDetailModalOpen(false);
+    }
+
+    // Trigger refresh to update filtered tasks
+    triggerRefresh();
+
+    // Show success toast
+    toast.success("Task deleted successfully!", {
+      description: `"${
+        taskToDelete?.title || "Task"
+      }" has been removed from your task list.`,
+    });
+  };
+
   // Calculate task statistics
   const taskStats = {
-    total: tasks.length,
-    notStarted: tasks.filter((t) => t.status === "Not Started").length,
-    inProgress: tasks.filter((t) => t.status === "In Progress").length,
-    completed: tasks.filter((t) => t.status === "Complete").length,
-    overdue: tasks.filter((t) => {
+    total: filteredTasks.length,
+    notStarted: filteredTasks.filter((t: Task) => t.status === "Not Started")
+      .length,
+    inProgress: filteredTasks.filter((t: Task) => t.status === "In Progress")
+      .length,
+    completed: filteredTasks.filter((t: Task) => t.status === "Complete")
+      .length,
+    overdue: filteredTasks.filter((t: Task) => {
       if (t.status === "Complete") return false;
       return new Date() > new Date(t.dueDate);
     }).length,
@@ -236,12 +500,12 @@ const UserTaskManagement: React.FC = () => {
 
   // Get unique team members for statistics
   const teamMembers = Array.from(
-    new Set(tasks.map((task) => task.assignedTo.id))
+    new Set(filteredTasks.map((task: Task) => task.assignedTo.id))
   ).length;
 
   // Get unique project tags
   const projectTags = Array.from(
-    new Set(tasks.map((task) => task.projectTag))
+    new Set(filteredTasks.map((task: Task) => task.projectTag))
   ).length;
 
   return (
@@ -268,13 +532,84 @@ const UserTaskManagement: React.FC = () => {
                 <div className="flex-shrink-0">
                   <Button
                     onClick={handleCreateTaskClick}
-                    className="bg-emerald-600 hover:bg-emerald -700 cursor-pointer text-white flex items-center space-x-2 w-full sm:w-auto"
+                    className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer text-white flex items-center space-x-2 w-full sm:w-auto"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Create Task</span>
                   </Button>
                 </div>
               )}
+            </div>
+
+            {/* Project and Milestone Selection */}
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Select Project
+                </label>
+                <Select
+                  value={selectedProjectId}
+                  onValueChange={(value) => {
+                    setSelectedProjectId(value);
+                    // Reset milestone to first milestone of selected project
+                    const firstMilestone = mockMilestones.find(
+                      (m) => m.projectId === value
+                    );
+                    setSelectedMilestoneId(
+                      firstMilestone?.id || "no-milestones"
+                    );
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choose a project..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {mockProjects.map((project) => (
+                      <SelectItem key={project.id} value={project.id}>
+                        {project.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Select Milestone
+                </label>
+                <Select
+                  value={selectedMilestoneId}
+                  onValueChange={setSelectedMilestoneId}
+                  disabled={
+                    !selectedProjectId || filteredMilestones.length === 0
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue
+                      placeholder={
+                        !selectedProjectId
+                          ? "Select a project first..."
+                          : filteredMilestones.length === 0
+                          ? "None - No milestones available"
+                          : "Choose a milestone..."
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filteredMilestones.length === 0 ? (
+                      <SelectItem value="no-milestones" disabled>
+                        No milestones available
+                      </SelectItem>
+                    ) : (
+                      filteredMilestones.map((milestone) => (
+                        <SelectItem key={milestone.id} value={milestone.id}>
+                          {milestone.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {/* Controls Section */}
@@ -344,7 +679,7 @@ const UserTaskManagement: React.FC = () => {
             {/* Table View */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
               <TaskTable
-                tasks={tasks}
+                tasks={tasksForComponents}
                 onTaskEdit={handleTaskEdit}
                 onTaskView={handleTaskView}
                 onTaskClick={handleTaskClick}
@@ -357,7 +692,7 @@ const UserTaskManagement: React.FC = () => {
           /* Kanban View - Responsive */
           <div className="min-h-screen">
             <SharedTaskBoard
-              tasks={tasks}
+              tasks={tasksForComponents}
               onTaskUpdate={handleUpdateTask}
               onTaskClick={handleTaskClick}
               isLeader={isLeader}
@@ -371,8 +706,9 @@ const UserTaskManagement: React.FC = () => {
       <TaskDetailModal
         open={isDetailModalOpen}
         onOpenChange={setIsDetailModalOpen}
-        task={selectedTask}
+        task={selectedTask ? convertTaskForComponents(selectedTask) : null}
         onUpdate={handleUpdateTask}
+        onDelete={handleDeleteTask}
         isLeader={isLeader}
       />
 
