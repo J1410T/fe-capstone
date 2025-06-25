@@ -695,7 +695,6 @@ const UserTaskManagement: React.FC = () => {
               tasks={tasksForComponents}
               onTaskUpdate={handleUpdateTask}
               onTaskClick={handleTaskClick}
-              isLeader={isLeader}
             />
           </div>
         )}
