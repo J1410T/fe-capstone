@@ -15,7 +15,14 @@ interface Project {
   teamMembers: number;
   manager: string;
   progress: number;
-  status: "Active" | "Completed" | "Pending" | "On Hold";
+  status:
+    | "Draft"
+    | "Created"
+    | "Submitted"
+    | "Approved"
+    | "In Progress"
+    | "Done"
+    | "Deleted";
   year: string;
 }
 
@@ -26,7 +33,15 @@ type SortOption =
   | "z-a"
   | "progress-high"
   | "progress-low";
-type StatusFilter = "all" | "Active" | "Completed" | "Pending" | "On Hold";
+type StatusFilter =
+  | "all"
+  | "Draft"
+  | "Created"
+  | "Submitted"
+  | "Approved"
+  | "In Progress"
+  | "Done"
+  | "Deleted";
 type FieldFilter = "all" | string;
 
 // Mock data for projects
@@ -41,7 +56,7 @@ const mockProjects: Project[] = [
     teamMembers: 8,
     manager: "Dr. Sarah Johnson",
     progress: 75,
-    status: "Active",
+    status: "Approved",
     year: "2024",
   },
   {
@@ -54,7 +69,7 @@ const mockProjects: Project[] = [
     teamMembers: 5,
     manager: "Prof. Michael Chen",
     progress: 45,
-    status: "Active",
+    status: "In Progress",
     year: "2020",
   },
   {
@@ -67,7 +82,7 @@ const mockProjects: Project[] = [
     teamMembers: 12,
     manager: "Dr. Emily Rodriguez",
     progress: 90,
-    status: "Completed",
+    status: "Done",
     year: "2024",
   },
   {
@@ -79,7 +94,7 @@ const mockProjects: Project[] = [
     teamMembers: 6,
     manager: "Dr. James Wilson",
     progress: 30,
-    status: "Pending",
+    status: "Submitted",
     year: "2022",
   },
   {
@@ -92,7 +107,7 @@ const mockProjects: Project[] = [
     teamMembers: 9,
     manager: "Prof. Lisa Anderson",
     progress: 60,
-    status: "Active",
+    status: "Created",
     year: "2024",
   },
   {
@@ -105,7 +120,7 @@ const mockProjects: Project[] = [
     teamMembers: 7,
     manager: "Dr. Robert Kim",
     progress: 85,
-    status: "Active",
+    status: "Draft",
     year: "2021",
   },
   {
@@ -117,7 +132,7 @@ const mockProjects: Project[] = [
     teamMembers: 15,
     manager: "Dr. Maria Garcia",
     progress: 25,
-    status: "On Hold",
+    status: "Deleted",
     year: "2024",
   },
   {
@@ -129,7 +144,7 @@ const mockProjects: Project[] = [
     teamMembers: 4,
     manager: "Prof. David Lee",
     progress: 100,
-    status: "Completed",
+    status: "Done",
     year: "2023",
   },
 ];

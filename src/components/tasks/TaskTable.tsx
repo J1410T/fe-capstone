@@ -575,163 +575,77 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         </CardContent>
       </Card>
 
-      {/* Task Statistics - Responsive */}
-      {/* <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
-        <Card className="border-slate-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">
-                  Total Tasks
-                </p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {filteredTasks.length}
-                </p>
-              </div>
-              <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
-                <Flag className="w-4 h-4 text-slate-600" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">
-                  Not Started
-                </p>
-                <p className="text-2xl font-bold text-slate-900">
-                  {
-                    filteredTasks.filter((t) => t.status === "Not Started")
-                      .length
-                  }
-                </p>
-              </div>
-              <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-slate-400 rounded-full"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">
-                  In Progress
-                </p>
-                <p className="text-2xl font-bold text-blue-900">
-                  {
-                    filteredTasks.filter((t) => t.status === "In Progress")
-                      .length
-                  }
-                </p>
-              </div>
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Complete</p>
-                <p className="text-2xl font-bold text-green-900">
-                  {filteredTasks.filter((t) => t.status === "Complete").length}
-                </p>
-              </div>
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-slate-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600">Overdue</p>
-                <p className="text-2xl font-bold text-red-900">
-                  {filteredTasks.filter((t) => t.status === "Overdue").length}
-                </p>
-              </div>
-              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div> */}
-
       {/* Task Table */}
       <Card className="border-slate-200">
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-slate-200">
-                  {table.getHeaderGroups().map((headerGroup) =>
-                    headerGroup.headers.map((header: Header<Task, unknown>) => (
-                      <TableHead
-                        key={header.id}
-                        className="bg-slate-50 text-slate-700 font-semibold"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row: Row<Task>) => (
-                    <TableRow
-                      key={row.id}
-                      className="hover:bg-slate-50 border-slate-200 cursor-pointer"
-                      onClick={() => onTaskClick && onTaskClick(row.original)}
-                    >
-                      {row
-                        .getVisibleCells()
-                        .map((cell: Cell<Task, unknown>) => (
-                          <TableCell key={cell.id} className="py-4">
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </TableCell>
-                        ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      <div className="flex flex-col items-center justify-center text-slate-500">
-                        <Search className="w-8 h-8 mb-2 opacity-50" />
-                        <p>No tasks found</p>
-                        <p className="text-sm">
-                          Try adjusting your search or filter criteria
-                        </p>
-                      </div>
-                    </TableCell>
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-[600px]">
+              {" "}
+              {/* Đảm bảo bảng không bị bóp quá nhỏ */}
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-slate-200">
+                    {table.getHeaderGroups().map((headerGroup) =>
+                      headerGroup.headers.map(
+                        (header: Header<Task, unknown>) => (
+                          <TableHead
+                            key={header.id}
+                            className="bg-slate-50 text-slate-700 font-semibold text-sm sm:text-base px-4 py-3 whitespace-nowrap"
+                          >
+                            {header.isPlaceholder
+                              ? null
+                              : flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                          </TableHead>
+                        )
+                      )
+                    )}
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {table.getRowModel().rows?.length ? (
+                    table.getRowModel().rows.map((row: Row<Task>) => (
+                      <TableRow
+                        key={row.id}
+                        className="hover:bg-slate-50 border-slate-200 cursor-pointer"
+                        onClick={() => onTaskClick && onTaskClick(row.original)}
+                      >
+                        {row
+                          .getVisibleCells()
+                          .map((cell: Cell<Task, unknown>) => (
+                            <TableCell
+                              key={cell.id}
+                              className="py-3 px-4 text-sm sm:text-base break-words max-w-[200px] whitespace-nowrap"
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </TableCell>
+                          ))}
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell
+                        colSpan={columns.length}
+                        className="h-24 text-center"
+                      >
+                        <div className="flex flex-col items-center justify-center text-slate-500 px-4">
+                          <Search className="w-8 h-8 mb-2 opacity-50" />
+                          <p>No tasks found</p>
+                          <p className="text-sm">
+                            Try adjusting your search or filter criteria
+                          </p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -787,7 +701,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                       onClick={() => table.setPageIndex(page - 1)}
                       className={
                         current === page
-                          ? "bg-blue-600 text-white"
+                          ? "var(--secondary) text-white"
                           : "border-slate-300 text-slate-700 hover:bg-slate-50"
                       }
                     >

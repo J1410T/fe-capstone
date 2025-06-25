@@ -390,7 +390,7 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             <Button
               type="submit"
               disabled={isLoading}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="var(--primary) hover:var(--secondary)"
             >
               {isLoading ? "Creating..." : "Create Task"}
             </Button>
