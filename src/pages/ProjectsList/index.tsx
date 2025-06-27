@@ -34,15 +34,7 @@ type SortOption =
   | "z-a"
   | "progress-high"
   | "progress-low";
-type StatusFilter =
-  | "all"
-  | "Draft"
-  | "Created"
-  | "Submitted"
-  | "Approved"
-  | "In Progress"
-  | "Done"
-  | "Deleted";
+type StatusFilter = "all" | "Created" | "Done";
 type FieldFilter = "all" | string;
 
 // Mock data for projects

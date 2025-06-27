@@ -42,6 +42,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   const { user } = useAuth();
 
+  // Only show projects with "done" or "created" status
+  const allowedStatuses = ["done", "created"];
+  if (!allowedStatuses.includes(status.toLowerCase())) {
+    return null;
+  }
+
   // Determine the correct route based on user role
   const getProjectDetailRoute = () => {
     if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
@@ -92,6 +98,14 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     }
   };
 
+  // Transform status display text
+  const getDisplayStatus = (status: string) => {
+    if (status.toLowerCase() === "created") {
+      return "Open";
+    }
+    return status;
+  };
+
   return (
     <Card className="group h-full flex flex-col bg-white border border-gray-200/80 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1">
       {/* Compact Header Section */}
@@ -105,7 +119,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             <Badge
               className={`${statusColorClass} text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0`}
             >
-              {status}
+              {getDisplayStatus(status)}
             </Badge>
           </div>
 
