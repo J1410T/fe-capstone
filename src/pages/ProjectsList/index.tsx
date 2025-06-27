@@ -23,6 +23,7 @@ interface Project {
     | "In Progress"
     | "Done"
     | "Deleted";
+  type: "Application" | "Fundamental" | "Technology";
   year: string;
 }
 
@@ -33,15 +34,7 @@ type SortOption =
   | "z-a"
   | "progress-high"
   | "progress-low";
-type StatusFilter =
-  | "all"
-  | "Draft"
-  | "Created"
-  | "Submitted"
-  | "Approved"
-  | "In Progress"
-  | "Done"
-  | "Deleted";
+type StatusFilter = "all" | "Created" | "Done";
 type FieldFilter = "all" | string;
 
 // Mock data for projects
@@ -57,6 +50,7 @@ const mockProjects: Project[] = [
     manager: "Dr. Sarah Johnson",
     progress: 75,
     status: "Approved",
+    type: "Application",
     year: "2024",
   },
   {
@@ -70,6 +64,7 @@ const mockProjects: Project[] = [
     manager: "Prof. Michael Chen",
     progress: 45,
     status: "In Progress",
+    type: "Fundamental",
     year: "2020",
   },
   {
@@ -83,6 +78,7 @@ const mockProjects: Project[] = [
     manager: "Dr. Emily Rodriguez",
     progress: 90,
     status: "Done",
+    type: "Application",
     year: "2024",
   },
   {
@@ -95,6 +91,7 @@ const mockProjects: Project[] = [
     manager: "Dr. James Wilson",
     progress: 30,
     status: "Submitted",
+    type: "Technology",
     year: "2022",
   },
   {
@@ -108,6 +105,7 @@ const mockProjects: Project[] = [
     manager: "Prof. Lisa Anderson",
     progress: 60,
     status: "Created",
+    type: "Fundamental",
     year: "2024",
   },
   {
@@ -121,6 +119,7 @@ const mockProjects: Project[] = [
     manager: "Dr. Robert Kim",
     progress: 85,
     status: "Draft",
+    type: "Technology",
     year: "2021",
   },
   {
@@ -133,6 +132,7 @@ const mockProjects: Project[] = [
     manager: "Dr. Maria Garcia",
     progress: 25,
     status: "Deleted",
+    type: "Application",
     year: "2024",
   },
   {
@@ -145,6 +145,7 @@ const mockProjects: Project[] = [
     manager: "Prof. David Lee",
     progress: 100,
     status: "Done",
+    type: "Application",
     year: "2023",
   },
 ];
@@ -287,13 +288,11 @@ const ProjectsList: React.FC = () => {
                 key={project.id}
                 id={project.id}
                 title={project.title}
+                status={project.status}
+                type={project.type}
+                category={project.category}
                 description={project.description}
                 progress={project.progress}
-                status={project.status}
-                manager={project.manager}
-                category={project.category}
-                year={project.year}
-                teamMembers={project.teamMembers}
                 onViewDetails={handleViewDetails}
                 getStatusColor={getStatusColor}
               />

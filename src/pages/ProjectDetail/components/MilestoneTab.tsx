@@ -1,32 +1,19 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Button, Card, Accordion } from "@/components/ui";
-import { Plus, CheckCircle, Clock, AlertTriangle } from "lucide-react";
+import { Card, Accordion } from "@/components/ui";
+import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { Milestone, Task, PIUser } from "../shared/types";
 import { calculateMilestoneProgress } from "../shared/utils";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { MilestoneCard, MilestoneDialog, TaskDialog } from "./milestone";
+import { MilestoneCard, TaskDialog } from "./milestone";
 
 const MilestoneTab: React.FC = () => {
   const { user } = useAuth();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [teamMembers, setTeamMembers] = useState<PIUser[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [showMilestoneDialog, setShowMilestoneDialog] = useState(false);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState<string>("");
-
-  // Use ref as backup to ensure milestone ID doesn't get lost
   const selectedMilestoneRef = useRef<string>("");
-
-  const [milestoneForm, setMilestoneForm] = useState({
-    name: "",
-    description: "",
-    deadline: "",
-  });
-  const [milestoneDeadlineDate, setMilestoneDeadlineDate] = useState<
-    Date | undefined
-  >();
 
   const [taskForm, setTaskForm] = useState({
     title: "",
@@ -36,24 +23,12 @@ const MilestoneTab: React.FC = () => {
     dueDate: "",
   });
   const [taskDueDate, setTaskDueDate] = useState<Date | undefined>();
-
-  const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(
-    null
-  );
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
-  // Check if current user is the project leader
-  const isCurrentUserLeader =
-    user?.role === UserRole.PRINCIPAL_INVESTIGATOR ||
-    user?.role === UserRole.STAFF;
+  // Check if current user is PI (can add tasks)
+  const isPI = user?.role === UserRole.PRINCIPAL_INVESTIGATOR;
 
   // Helper functions for form management
-  const resetMilestoneForm = () => {
-    setMilestoneForm({ name: "", description: "", deadline: "" });
-    setMilestoneDeadlineDate(undefined);
-    setEditingMilestone(null);
-  };
-
   const resetTaskForm = (clearMilestone = true) => {
     setTaskForm({
       title: "",
@@ -68,10 +43,6 @@ const MilestoneTab: React.FC = () => {
       setSelectedMilestone("");
       selectedMilestoneRef.current = "";
     }
-  };
-
-  const handleMilestoneFormChange = (field: string, value: string) => {
-    setMilestoneForm((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleTaskFormChange = (field: string, value: string) => {
@@ -91,7 +62,6 @@ const MilestoneTab: React.FC = () => {
   };
 
   const loadMilestonesAndTasks = useCallback(async () => {
-    setIsLoading(true);
     try {
       // Simulate API call
       setTimeout(() => {
@@ -116,7 +86,7 @@ const MilestoneTab: React.FC = () => {
                 dueDate: "2024-03-15",
                 createdAt: "2024-01-15T00:00:00Z",
                 completedAt: "2024-03-14T00:00:00Z",
-                evaluatedBy: user?.email,
+                evaluatedBy: "admin@example.com",
                 evaluation: "Excellent work on comprehensive paper collection",
               },
               {
@@ -183,30 +153,28 @@ const MilestoneTab: React.FC = () => {
             progress: 100,
             tasks: [
               {
-                id: "1",
-                title: "Research paper collection",
-                description:
-                  "Collect relevant research papers from the last 5 years",
+                id: "6",
+                title: "Algorithm design",
+                description: "Design machine learning algorithms",
                 assignedTo: "john.smith@example.com",
                 status: "Completed",
                 priority: "High",
-                dueDate: "2024-03-15",
-                createdAt: "2024-01-15T00:00:00Z",
-                completedAt: "2024-03-14T00:00:00Z",
-                evaluatedBy: user?.email,
-                evaluation: "Excellent work on comprehensive paper collection",
+                dueDate: "2024-08-15",
+                createdAt: "2024-07-01T00:00:00Z",
+                completedAt: "2024-08-10T00:00:00Z",
+                evaluatedBy: "admin@example.com",
+                evaluation: "Excellent algorithm design and implementation",
               },
               {
-                id: "2",
-                title: "Literature analysis",
-                description:
-                  "Analyze and summarize key findings from collected papers",
+                id: "7",
+                title: "Algorithm testing",
+                description: "Test and validate algorithm performance",
                 assignedTo: "emily.chen@example.com",
                 status: "Completed",
                 priority: "High",
-                dueDate: "2024-03-30",
-                createdAt: "2024-03-16T00:00:00Z",
-                completedAt: "2024-03-28T00:00:00Z",
+                dueDate: "2024-09-15",
+                createdAt: "2024-08-16T00:00:00Z",
+                completedAt: "2024-09-10T00:00:00Z",
               },
             ],
           },
@@ -219,13 +187,11 @@ const MilestoneTab: React.FC = () => {
         }));
 
         setMilestones(milestonesWithProgress);
-        setIsLoading(false);
       }, 1000);
     } catch (error) {
       console.error("Error loading milestones:", error);
-      setIsLoading(false);
     }
-  }, [user?.email]);
+  }, []);
 
   useEffect(() => {
     loadMilestonesAndTasks();
@@ -260,103 +226,17 @@ const MilestoneTab: React.FC = () => {
     setTeamMembers(mockMembers);
   };
 
-  // Milestone handlers
-  const handleAddMilestone = () => {
-    resetMilestoneForm();
-    setShowMilestoneDialog(true);
-  };
-
-  const handleEditMilestone = (milestone: Milestone) => {
-    setEditingMilestone(milestone);
-    setMilestoneForm({
-      name: milestone.name,
-      description: milestone.description,
-      deadline: milestone.deadline,
-    });
-    setMilestoneDeadlineDate(new Date(milestone.deadline));
-    setShowMilestoneDialog(true);
-  };
-
-  const handleCloseMilestoneDialog = () => {
-    setShowMilestoneDialog(false);
-    resetMilestoneForm();
-  };
-
-  const handleCreateMilestone = async () => {
-    if (
-      !milestoneForm.name ||
-      !milestoneForm.description ||
-      !milestoneDeadlineDate
-    ) {
-      toast.error("Please fill in all required fields");
+  // Task handlers
+  const handleAddTask = (milestoneId: string) => {
+    if (!isPI) {
+      toast.error("Only Principal Investigators can add tasks");
       return;
     }
 
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      setTimeout(() => {
-        if (editingMilestone) {
-          // Update existing milestone
-          setMilestones((prev) =>
-            prev.map((m) =>
-              m.id === editingMilestone.id
-                ? {
-                    ...m,
-                    name: milestoneForm.name,
-                    description: milestoneForm.description,
-                    deadline: milestoneDeadlineDate!
-                      .toISOString()
-                      .split("T")[0],
-                  }
-                : m
-            )
-          );
-          toast.success("Milestone updated successfully");
-        } else {
-          // Create new milestone
-          const newMilestone: Milestone = {
-            id: `milestone_${Date.now()}`,
-            name: milestoneForm.name,
-            description: milestoneForm.description,
-            deadline: milestoneDeadlineDate!.toISOString().split("T")[0],
-            status: "Not Started",
-            progress: 0,
-            tasks: [],
-          };
-
-          setMilestones((prev) => [...prev, newMilestone]);
-          toast.success("Milestone created successfully");
-        }
-
-        setMilestoneForm({ name: "", description: "", deadline: "" });
-        setMilestoneDeadlineDate(undefined);
-        setEditingMilestone(null);
-        setShowMilestoneDialog(false);
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error("Error saving milestone:", error);
-      toast.error("Failed to save milestone");
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteMilestone = async (milestoneId: string) => {
-    try {
-      setMilestones((prev) => prev.filter((m) => m.id !== milestoneId));
-      toast.success("Milestone deleted successfully");
-    } catch {
-      toast.error("Failed to delete milestone");
-    }
-  };
-
-  // Task handlers
-  const handleAddTask = (milestoneId: string) => {
     console.log("Adding task to milestone:", milestoneId);
     setSelectedMilestone(milestoneId);
-    selectedMilestoneRef.current = milestoneId; // Store in ref as backup
-    resetTaskForm(false); // Don't clear the milestone when adding a new task
+    selectedMilestoneRef.current = milestoneId;
+    resetTaskForm(false);
     setShowTaskDialog(true);
   };
 
@@ -382,194 +262,54 @@ const MilestoneTab: React.FC = () => {
       return;
     }
 
-    // Use ref as fallback if state is lost
     const milestoneId = selectedMilestone || selectedMilestoneRef.current;
 
     if (!milestoneId) {
-      console.error(
-        "No milestone selected. State:",
-        selectedMilestone,
-        "Ref:",
-        selectedMilestoneRef.current
-      );
       toast.error("No milestone selected. Please try again.");
       return;
     }
 
-    console.log("Creating task for milestone:", milestoneId);
-
-    setIsLoading(true);
     try {
       // Simulate API call
       setTimeout(() => {
-        if (editingTask) {
-          // Update existing task
-          setMilestones((prev) =>
-            prev.map((milestone) =>
-              milestone.id === milestoneId
-                ? {
-                    ...milestone,
-                    tasks: milestone.tasks.map((task) =>
-                      task.id === editingTask.id
-                        ? {
-                            ...task,
-                            title: taskForm.title,
-                            description: taskForm.description,
-                            assignedTo:
-                              taskForm.assignedTo === "unassigned"
-                                ? undefined
-                                : taskForm.assignedTo,
-                            priority: taskForm.priority,
-                            dueDate: taskDueDate!.toISOString().split("T")[0],
-                          }
-                        : task
-                    ),
-                    progress: calculateMilestoneProgress(
-                      milestone.tasks.map((task) =>
-                        task.id === editingTask.id
-                          ? {
-                              ...task,
-                              title: taskForm.title,
-                              description: taskForm.description,
-                              assignedTo:
-                                taskForm.assignedTo === "unassigned"
-                                  ? undefined
-                                  : taskForm.assignedTo,
-                              priority: taskForm.priority,
-                              dueDate: taskDueDate!.toISOString().split("T")[0],
-                            }
-                          : task
-                      )
-                    ),
-                  }
-                : milestone
-            )
-          );
-          toast.success("Task updated successfully");
-        } else {
-          // Create new task
-          const newTask: Task = {
-            id: `task_${Date.now()}`,
-            title: taskForm.title.trim(),
-            description: taskForm.description.trim(),
-            assignedTo:
-              taskForm.assignedTo === "unassigned"
-                ? undefined
-                : taskForm.assignedTo,
-            status: "To Do",
-            priority: taskForm.priority,
-            dueDate: taskDueDate!.toISOString().split("T")[0],
-            createdAt: new Date().toISOString(),
-          };
+        // Create new task
+        const newTask: Task = {
+          id: `task_${Date.now()}`,
+          title: taskForm.title.trim(),
+          description: taskForm.description.trim(),
+          assignedTo:
+            taskForm.assignedTo === "unassigned"
+              ? undefined
+              : taskForm.assignedTo,
+          status: "To Do",
+          priority: taskForm.priority,
+          dueDate: taskDueDate!.toISOString().split("T")[0],
+          createdAt: new Date().toISOString(),
+        };
 
-          setMilestones((prev) =>
-            prev.map((milestone) =>
-              milestone.id === milestoneId
-                ? {
-                    ...milestone,
-                    tasks: [...milestone.tasks, newTask],
-                    progress: calculateMilestoneProgress([
-                      ...milestone.tasks,
-                      newTask,
-                    ]),
-                  }
-                : milestone
-            )
-          );
-          toast.success("Task created successfully");
-        }
-
-        // Reset form and close dialog
-        resetTaskForm();
-        setShowTaskDialog(false);
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error("Error saving task:", error);
-      toast.error("Failed to save task");
-      setIsLoading(false);
-    }
-  };
-
-  const handleEditTask = (task: Task, milestoneId: string) => {
-    setEditingTask(task);
-    setSelectedMilestone(milestoneId);
-    selectedMilestoneRef.current = milestoneId; // Store in ref as backup
-    const dueDate = new Date(task.dueDate);
-    setTaskForm({
-      title: task.title,
-      description: task.description,
-      assignedTo: task.assignedTo || "unassigned",
-      priority: task.priority,
-      dueDate: task.dueDate,
-    });
-    setTaskDueDate(dueDate);
-    setShowTaskDialog(true);
-  };
-
-  const handleDeleteTask = async (milestoneId: string, taskId: string) => {
-    try {
-      setMilestones((prev) =>
-        prev.map((milestone) =>
-          milestone.id === milestoneId
-            ? {
-                ...milestone,
-                tasks: milestone.tasks.filter((task) => task.id !== taskId),
-                progress: calculateMilestoneProgress(
-                  milestone.tasks.filter((task) => task.id !== taskId)
-                ),
-              }
-            : milestone
-        )
-      );
-      toast.success("Task deleted successfully");
-    } catch {
-      toast.error("Failed to delete task");
-    }
-  };
-
-  const handleTaskStatusChange = async (
-    milestoneId: string,
-    taskId: string,
-    newStatus: Task["status"]
-  ) => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      setTimeout(() => {
         setMilestones((prev) =>
           prev.map((milestone) =>
             milestone.id === milestoneId
               ? {
                   ...milestone,
-                  tasks: milestone.tasks.map((task) =>
-                    task.id === taskId
-                      ? {
-                          ...task,
-                          status: newStatus,
-                          completedAt:
-                            newStatus === "Completed"
-                              ? new Date().toISOString()
-                              : undefined,
-                        }
-                      : task
-                  ),
-                  progress: calculateMilestoneProgress(
-                    milestone.tasks.map((task) =>
-                      task.id === taskId ? { ...task, status: newStatus } : task
-                    )
-                  ),
+                  tasks: [...milestone.tasks, newTask],
+                  progress: calculateMilestoneProgress([
+                    ...milestone.tasks,
+                    newTask,
+                  ]),
                 }
               : milestone
           )
         );
-        toast.success("Task status updated");
-        setIsLoading(false);
-      }, 500);
+        toast.success("Task created successfully");
+
+        // Reset form and close dialog
+        resetTaskForm();
+        setShowTaskDialog(false);
+      }, 1000);
     } catch (error) {
-      console.error("Error updating task status:", error);
-      toast.error("Failed to update task status");
-      setIsLoading(false);
+      console.error("Error saving task:", error);
+      toast.error("Failed to save task");
     }
   };
 
@@ -595,18 +335,10 @@ const MilestoneTab: React.FC = () => {
               Project Milestones
             </h2>
             <p className="text-gray-600 mt-1">
-              Track progress and manage tasks for each milestone
+              View project milestones and task progress
+              {isPI && " - You can add tasks as Principal Investigator"}
             </p>
           </div>
-          {isCurrentUserLeader && (
-            <Button
-              onClick={handleAddMilestone}
-              className="bg-emerald-600 hover:bg-emerald-700"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Milestone
-            </Button>
-          )}
         </div>
       </div>
 
@@ -651,7 +383,7 @@ const MilestoneTab: React.FC = () => {
               </div>
               <div className="bg-gray-50 rounded-lg p-3 border">
                 <div className="flex items-center space-x-2">
-                  <Plus className="w-5 h-5 text-gray-600" />
+                  <CheckCircle className="w-5 h-5 text-gray-600" />
                   <div>
                     <p className="text-xl font-bold text-gray-800">
                       {totalTasks}
@@ -670,48 +402,26 @@ const MilestoneTab: React.FC = () => {
                 <MilestoneCard
                   key={milestone.id}
                   milestone={milestone}
-                  onEdit={handleEditMilestone}
-                  onDelete={handleDeleteMilestone}
-                  onAddTask={handleAddTask}
-                  onEditTask={handleEditTask}
-                  onDeleteTask={handleDeleteTask}
-                  onTaskStatusChange={handleTaskStatusChange}
-                  isLoading={isLoading}
+                  onAddTask={isPI ? handleAddTask : undefined}
                 />
               ))}
             </Accordion>
 
             {milestones.length === 0 && (
               <div className="text-center py-8 text-gray-500">
-                <p>
-                  No milestones found for this project.{" "}
-                  {isCurrentUserLeader &&
-                    "Click 'Add Milestone' to create the first milestone."}
-                </p>
+                <p>No milestones found for this project.</p>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* Dialogs */}
-      <MilestoneDialog
-        isOpen={showMilestoneDialog}
-        onClose={handleCloseMilestoneDialog}
-        onSave={handleCreateMilestone}
-        isLoading={isLoading}
-        editingMilestone={editingMilestone}
-        form={milestoneForm}
-        onFormChange={handleMilestoneFormChange}
-        deadlineDate={milestoneDeadlineDate}
-        onDeadlineDateChange={setMilestoneDeadlineDate}
-      />
-
+      {/* Task Dialog */}
       <TaskDialog
         isOpen={showTaskDialog}
         onClose={handleCloseTaskDialog}
         onSave={handleCreateTask}
-        isLoading={isLoading}
+        isLoading={false}
         editingTask={editingTask}
         form={taskForm}
         onFormChange={handleTaskFormChange}

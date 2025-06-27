@@ -5,44 +5,20 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui";
-import {
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  Edit,
-  Trash2,
-  Plus,
-} from "lucide-react";
-import { Milestone, Task } from "../../shared/types";
+import { CheckCircle, Clock, AlertTriangle, Plus } from "lucide-react";
+import { Milestone } from "../../shared/types";
 import { StatusBadge } from "@/components/common/StatusBadge";
 import { formatDate } from "../../shared/utils";
 import { TaskCard } from "./TaskCard";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 interface MilestoneCardProps {
   milestone: Milestone;
-  onEdit: (milestone: Milestone) => void;
-  onDelete: (milestoneId: string) => void;
-  onAddTask: (milestoneId: string) => void;
-  onEditTask: (task: Task, milestoneId: string) => void;
-  onDeleteTask: (milestoneId: string, taskId: string) => void;
-  onTaskStatusChange: (
-    milestoneId: string,
-    taskId: string,
-    status: Task["status"]
-  ) => void;
-  isLoading: boolean;
+  onAddTask?: (milestoneId: string) => void;
 }
 
 export const MilestoneCard: React.FC<MilestoneCardProps> = ({
   milestone,
-  onEdit,
-  onDelete,
   onAddTask,
-  onEditTask,
-  onDeleteTask,
-  onTaskStatusChange,
-  isLoading,
 }) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -86,44 +62,19 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
 
       <AccordionContent className="px-6 pb-4 border-b border-gray-200 rounded-lg">
         <div className="space-y-4">
-          {/* Milestone Actions */}
-          <div className="flex items-center justify-between border-b pb-4">
-            <div className="flex items-center space-x-2">
+          {/* Add Task Button - Only show if onAddTask is provided (PI user) */}
+          {onAddTask && (
+            <div className="flex justify-end border-b pb-4">
               <Button
-                variant="outline"
+                onClick={() => onAddTask(milestone.id)}
                 size="sm"
-                onClick={() => onEdit(milestone)}
-                disabled={isLoading}
+                className="bg-blue-600 hover:bg-blue-700"
               >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit Milestone
+                <Plus className="w-4 h-4 mr-2" />
+                Add Task
               </Button>
-              <ConfirmDialog
-                title="Delete Milestone"
-                description="Are you sure you want to delete this milestone? This action cannot be undone."
-                onConfirm={() => onDelete(milestone.id)}
-                trigger={
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isLoading}
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
-                }
-              />
             </div>
-            <Button
-              onClick={() => onAddTask(milestone.id)}
-              size="sm"
-              disabled={isLoading}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Task
-            </Button>
-          </div>
+          )}
 
           {/* Tasks List */}
           <div className="space-y-3">
@@ -133,20 +84,16 @@ export const MilestoneCard: React.FC<MilestoneCardProps> = ({
             {milestone.tasks.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                <p>No tasks yet. Add a task to get started.</p>
+                <p>
+                  {onAddTask
+                    ? "No tasks yet. Click 'Add Task' to create the first task."
+                    : "No tasks available for this milestone."}
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
                 {milestone.tasks.map((task) => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    milestoneId={milestone.id}
-                    onEdit={onEditTask}
-                    onDelete={onDeleteTask}
-                    onStatusChange={onTaskStatusChange}
-                    isLoading={isLoading}
-                  />
+                  <TaskCard key={task.id} task={task} />
                 ))}
               </div>
             )}
