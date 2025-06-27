@@ -11,7 +11,8 @@ const projects = [
     teamMembers: 8,
     manager: "Dr. Sarah Johnson",
     progress: 75,
-    status: "Active",
+    status: "In Progress",
+    type: "Application",
   },
   {
     id: "2",
@@ -23,7 +24,8 @@ const projects = [
     teamMembers: 6,
     manager: "Prof. Michael Chen",
     progress: 45,
-    status: "Active",
+    status: "In Progress",
+    type: "Fundamental",
   },
   {
     id: "3",
@@ -34,7 +36,8 @@ const projects = [
     teamMembers: 12,
     manager: "Dr. Emily Rodriguez",
     progress: 60,
-    status: "Completed",
+    status: "Done",
+    type: "Application",
   },
   {
     id: "4",
@@ -45,7 +48,8 @@ const projects = [
     teamMembers: 5,
     manager: "Dr. James Wilson",
     progress: 30,
-    status: "Active",
+    status: "In Progress",
+    type: "Technology",
   },
   {
     id: "5",
@@ -57,7 +61,8 @@ const projects = [
     teamMembers: 10,
     manager: "Prof. Lisa Thompson",
     progress: 85,
-    status: "Active",
+    status: "In Progress",
+    type: "Technology",
   },
   {
     id: "6",
@@ -69,7 +74,8 @@ const projects = [
     teamMembers: 7,
     manager: "Dr. Robert Brown",
     progress: 50,
-    status: "Completed",
+    status: "Done",
+    type: "Fundamental",
   },
 ];
 

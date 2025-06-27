@@ -1,23 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Users,
-  Briefcase,
-  Calendar,
-  ChevronRight,
-  DollarSign,
-  User,
-} from "lucide-react";
+import { Building2, Tag, ArrowRight } from "lucide-react";
 
 interface ProjectCardProps {
   // Common fields
@@ -26,7 +13,7 @@ interface ProjectCardProps {
   progress: number;
   status: string;
 
-  // Optional fields for different use cases
+  // Optional fields for different use cases (kept for backward compatibility)
   category?: string;
   description?: string;
   updatedAt?: string;
@@ -36,6 +23,7 @@ interface ProjectCardProps {
   department?: string;
   year?: string;
   budget?: string;
+  type?: string; // Added for project type (Application/Fundamental)
 
   // Callback functions
   onViewDetails?: (projectId: string | number) => void;
@@ -45,17 +33,10 @@ interface ProjectCardProps {
 const ProjectCard: React.FC<ProjectCardProps> = ({
   id,
   title,
-  progress,
   status,
+  type,
   category,
   description,
-  updatedAt,
-  teamMembers,
-  manager,
-  pi,
-  department,
-  year,
-  budget,
   onViewDetails,
   getStatusColor,
 }) => {
@@ -70,8 +51,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     } else if (user?.role === UserRole.APPRAISAL_COUNCIL) {
       return `/council/project/${id}`;
     } else {
-      // Default to member project details for other roles
-      return `/member/project/${id}`;
+      // Default to regular project details
+      return `/project/${id}`;
     }
   };
 
@@ -79,15 +60,25 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   const defaultGetStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "active":
-        return "text-emerald-700 border-emerald-200 bg-emerald-50";
+      case "in progress":
+        return "bg-emerald-100 text-emerald-800 border-emerald-300 ring-1 ring-emerald-200";
       case "completed":
-        return "text-indigo-700 border-indigo-200 bg-indigo-50";
+      case "done":
+        return "bg-blue-100 text-blue-800 border-blue-300 ring-1 ring-blue-200";
       case "pending":
-        return "text-yellow-700 border-yellow-200 bg-yellow-50";
+        return "bg-amber-100 text-amber-800 border-amber-300 ring-1 ring-amber-200";
       case "on hold":
-        return "text-orange-700 border-orange-200 bg-orange-50";
+        return "bg-orange-100 text-orange-800 border-orange-300 ring-1 ring-orange-200";
+      case "approved":
+        return "bg-green-100 text-green-800 border-green-300 ring-1 ring-green-200";
+      case "submitted":
+        return "bg-indigo-100 text-indigo-800 border-indigo-300 ring-1 ring-indigo-200";
+      case "created":
+        return "bg-purple-100 text-purple-800 border-purple-300 ring-1 ring-purple-200";
+      case "draft":
+        return "bg-gray-100 text-gray-800 border-gray-300 ring-1 ring-gray-200";
       default:
-        return "text-gray-700 border-gray-200 bg-gray-50";
+        return "bg-slate-100 text-slate-800 border-slate-300 ring-1 ring-slate-200";
     }
   };
 
@@ -102,113 +93,88 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   };
 
   return (
-    <Card className="h-full flex flex-col hover:shadow-md transition-shadow duration-300">
-      <CardHeader className="pb-3">
-        <div className="flex justify-between items-start gap-2">
-          <CardTitle className="text-lg leading-tight">{title}</CardTitle>
-          <Badge variant="outline" className={statusColorClass}>
-            {status}
-          </Badge>
+    <Card className="group h-full flex flex-col bg-white border border-gray-200/80 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1">
+      {/* Compact Header Section */}
+      <CardHeader className="p-4 pb-2">
+        <div className="space-y-2">
+          {/* Title and Status Row */}
+          <div className="flex items-start justify-between gap-2">
+            <CardTitle className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug flex-1 group-hover:text-emerald-900 transition-colors">
+              {title}
+            </CardTitle>
+            <Badge
+              className={`${statusColorClass} text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0`}
+            >
+              {status}
+            </Badge>
+          </div>
+
+          {/* Metadata Tags */}
+          {(category || type) && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {category && (
+                <div className="flex items-center gap-1 bg-gray-50 rounded-md px-2 py-1">
+                  <Building2 className="h-3 w-3 text-gray-500" />
+                  <span className="text-xs font-medium text-gray-700">
+                    {category}
+                  </span>
+                </div>
+              )}
+              {type && (
+                <div className="flex items-center gap-1 bg-emerald-50 rounded-md px-2 py-1">
+                  <Tag className="h-3 w-3 text-emerald-600" />
+                  <span className="text-xs font-medium text-emerald-700">
+                    {type}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        {category && (
-          <Badge
-            variant="secondary"
-            className="w-fit text-xs bg-emerald-100 text-emerald-800 hover:bg-emerald-100"
-          >
-            {category}
-          </Badge>
-        )}
       </CardHeader>
 
-      <CardContent className="flex-1 space-y-4">
+      {/* Compact Content Section */}
+      <CardContent className="p-4 pt-0 flex-1 flex flex-col">
         {description && (
-          <p className="text-sm text-muted-foreground line-clamp-2">
-            {description}
-          </p>
+          <div className="mb-3 flex-1">
+            <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">
+              {description}
+            </p>
+          </div>
         )}
 
-        <div className="space-y-3">
-          {/* PI or Manager */}
-          {(pi || manager) && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <User className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span>{pi ? `PI: ${pi}` : `Manager: ${manager}`}</span>
-            </div>
+        {/* Action Button */}
+        <div className="flex justify-end mt-auto">
+          {onViewDetails ? (
+            <Button
+              onClick={handleViewDetails}
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 h-7 text-xs group/btn"
+            >
+              View Details
+              <ArrowRight className="ml-1 h-3 w-3 group-hover/btn:translate-x-0.5 transition-transform" />
+            </Button>
+          ) : (
+            <Link to={getProjectDetailRoute()}>
+              <Button
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1.5 h-7 text-xs group/btn"
+              >
+                View Details
+                <ArrowRight className="ml-1 h-3 w-3 group-hover/btn:translate-x-0.5 transition-transform" />
+              </Button>
+            </Link>
           )}
-
-          {/* Department */}
-          {department && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Briefcase className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span>Department: {department}</span>
-            </div>
-          )}
-
-          {/* Team Members */}
-          {teamMembers && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Users className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span>{teamMembers} team members</span>
-            </div>
-          )}
-
-          {/* Year or Updated Date */}
-          {(year || updatedAt) && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <Calendar className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span>{year ? `Year: ${year}` : `Updated ${updatedAt}`}</span>
-            </div>
-          )}
-
-          {/* Budget */}
-          {budget && (
-            <div className="flex items-center text-sm text-muted-foreground">
-              <DollarSign className="mr-2 h-4 w-4 flex-shrink-0" />
-              <span>Budget: {budget}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Progress Bar */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium">Progress</span>
-            <span className="text-sm text-muted-foreground">{progress}%</span>
-          </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-emerald-600 transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
         </div>
       </CardContent>
 
-      <CardFooter className="pt-0">
-        {onViewDetails ? (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleViewDetails}
-            className="w-full"
-          >
-            View Details
-            <ChevronRight className="ml-1 h-4 w-4" />
-          </Button>
-        ) : (
-          <Link to={getProjectDetailRoute()} className="w-full">
-            <Button variant="outline" size="sm" className="w-full">
-              View Details
-              <ChevronRight className="ml-1 h-4 w-4" />
-            </Button>
-          </Link>
-        )}
-      </CardFooter>
+      {/* Subtle border accent */}
+      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-blue-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
     </Card>
   );
 };
 
-// Backward compatibility - keep the old interface
+// Backward compatibility - keep the old interface but use new formal layout
 interface UserProjectCardProps {
   id: string;
   category: string;
@@ -219,11 +185,12 @@ interface UserProjectCardProps {
   manager: string;
   progress: number;
   status: string;
+  type?: string;
 }
 
 const UserProjectCard: React.FC<UserProjectCardProps> = (props) => {
   return <ProjectCard {...props} />;
 };
 
-export default UserProjectCard;
-export { ProjectCard };
+export default ProjectCard;
+export { UserProjectCard };

@@ -5,5 +5,4 @@
 
 export { MilestoneCard } from "./MilestoneCard";
 export { TaskCard } from "./TaskCard";
-export { MilestoneDialog } from "./MilestoneDialog";
 export { TaskDialog } from "./TaskDialog";
