@@ -48,13 +48,17 @@ export interface Project {
   id: string;
   title: string;
   description: string;
-  pi: string;
-  department: string;
-  year: string;
   status: string;
+  principalInvestigatorId?: string;
+  principalInvestigator?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  team: TeamMember[];
+  year: string;
   progress: number;
   budget: Budget;
-  team: TeamMember[];
   objectives: string[];
   timeline: {
     start: string;
@@ -87,6 +91,19 @@ export interface Project {
     date: string;
     status: string;
   }>;
+}
+
+export interface ProjectMembership {
+  projectId: string;
+  userId: string;
+  role: "Principal" | "Member";
+  joinedAt: string;
+}
+
+export interface EnrollProjectData {
+  projectId: string;
+  role: "Principal" | "Member";
+  message?: string;
 }
 
 export type MemberRole =

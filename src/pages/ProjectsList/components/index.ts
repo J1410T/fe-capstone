@@ -1,3 +1,3 @@
 export * from "./ProjectsHeader";
-export { ProjectCard } from "@/components/layout/project-card";
+export { default as ProjectCard } from "@/components/layout/project-card";
 export * from "./ProjectsPagination";
