@@ -19,18 +19,18 @@ export const FORM_TYPES: Record<
   BM3: {
     id: "BM3",
     title: "Project summary report",
-    roles: [UserRole.PRINCIPAL_INVESTIGATOR, UserRole.MEMBER],
+    roles: [UserRole.PRINCIPAL_INVESTIGATOR, UserRole.RESEARCHER],
   },
   BM4: {
     id: "BM4",
     title: "Report on the progress of the scientific research topic",
-    roles: [UserRole.MEMBER],
+    roles: [UserRole.RESEARCHER],
   },
   BM5: {
     id: "BM5",
     title:
       "Proposed changes during the implementation of the scientific research topic",
-    roles: [UserRole.MEMBER],
+    roles: [UserRole.RESEARCHER],
   },
 };
 

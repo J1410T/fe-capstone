@@ -12,7 +12,7 @@ interface Project {
   title: string;
   description: string;
   updatedAt: string;
-  teamMembers: number;
+  teamRESEARCHERs: number;
   manager: string;
   progress: number;
   status:
@@ -46,7 +46,7 @@ const mockProjects: Project[] = [
     description:
       "Analyzing the effects of climate change on coastal ecosystems",
     updatedAt: "2 days ago",
-    teamMembers: 8,
+    teamRESEARCHERs: 8,
     manager: "Dr. Sarah Johnson",
     progress: 75,
     status: "Approved",
@@ -60,7 +60,7 @@ const mockProjects: Project[] = [
     description:
       "Developing machine learning algorithms for big data processing",
     updatedAt: "1 week ago",
-    teamMembers: 5,
+    teamRESEARCHERs: 5,
     manager: "Prof. Michael Chen",
     progress: 45,
     status: "In Progress",
@@ -74,7 +74,7 @@ const mockProjects: Project[] = [
     description:
       "Investigating new approaches to combat antibiotic-resistant bacteria",
     updatedAt: "3 days ago",
-    teamMembers: 12,
+    teamRESEARCHERs: 12,
     manager: "Dr. Emily Rodriguez",
     progress: 90,
     status: "Done",
@@ -87,7 +87,7 @@ const mockProjects: Project[] = [
     title: "Natural Language Processing",
     description: "Building advanced NLP models for multilingual text analysis",
     updatedAt: "5 days ago",
-    teamMembers: 6,
+    teamRESEARCHERs: 6,
     manager: "Dr. James Wilson",
     progress: 30,
     status: "Submitted",
@@ -101,7 +101,7 @@ const mockProjects: Project[] = [
     description:
       "Researching eco-friendly alternatives to traditional materials",
     updatedAt: "1 day ago",
-    teamMembers: 9,
+    teamRESEARCHERs: 9,
     manager: "Prof. Lisa Anderson",
     progress: 60,
     status: "Created",
@@ -115,7 +115,7 @@ const mockProjects: Project[] = [
     description:
       "Designing efficient solar panel systems for urban environments",
     updatedAt: "4 days ago",
-    teamMembers: 7,
+    teamRESEARCHERs: 7,
     manager: "Dr. Robert Kim",
     progress: 85,
     status: "Draft",
@@ -128,7 +128,7 @@ const mockProjects: Project[] = [
     title: "Cancer Treatment Innovation",
     description: "Developing targeted therapies for rare cancer types",
     updatedAt: "2 weeks ago",
-    teamMembers: 15,
+    teamRESEARCHERs: 15,
     manager: "Dr. Maria Garcia",
     progress: 25,
     status: "Deleted",
@@ -141,7 +141,7 @@ const mockProjects: Project[] = [
     title: "Market Analysis Platform",
     description: "Creating tools for real-time market trend analysis",
     updatedAt: "6 days ago",
-    teamMembers: 4,
+    teamRESEARCHERs: 4,
     manager: "Prof. David Lee",
     progress: 100,
     status: "Done",
@@ -251,8 +251,8 @@ const ProjectsList: React.FC = () => {
       } else if (user?.role === UserRole.HOST_INSTITUTION) {
         navigate(`/host/project/${projectId}`);
       } else {
-        // Default to member project details for other roles
-        navigate(`/member/project/${projectId}`);
+        // Default to RESEARCHER project details for other roles
+        navigate(`/RESEARCHER/project/${projectId}`);
       }
     },
     [navigate, user?.role]

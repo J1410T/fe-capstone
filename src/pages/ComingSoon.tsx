@@ -20,7 +20,7 @@ const GeneralComingSoon: React.FC = () => {
       case UserRole.APPRAISAL_COUNCIL:
         return "/council/evaluations";
       case UserRole.PRINCIPAL_INVESTIGATOR:
-      case UserRole.MEMBER:
+      case UserRole.RESEARCHER:
       default:
         return "/home";
     }
@@ -156,13 +156,13 @@ const GeneralComingSoon: React.FC = () => {
       };
     }
 
-    // Member pages
-    if (path.includes("/member/")) {
+    // RESEARCHER pages
+    if (path.includes("/researcher/")) {
       if (path.includes("/projects")) {
         return {
           title: "My Projects",
           description:
-            "The member projects interface is being developed. You'll be able to view and manage your project participation here.",
+            "The researcher projects interface is being developed. You'll be able to view and manage your project participation here.",
           estimatedTime: "Next update",
         };
       }
@@ -175,9 +175,9 @@ const GeneralComingSoon: React.FC = () => {
         };
       }
       return {
-        title: "Member Feature",
+        title: "RESEARCHER Feature",
         description:
-          "This member feature is currently under development and will be available soon.",
+          "This RESEARCHER feature is currently under development and will be available soon.",
         estimatedTime: "Next update",
       };
     }

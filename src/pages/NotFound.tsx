@@ -18,7 +18,7 @@ const NotFound: React.FC = () => {
       case UserRole.APPRAISAL_COUNCIL:
         return "/council/evaluations";
       case UserRole.PRINCIPAL_INVESTIGATOR:
-      case UserRole.MEMBER:
+      case UserRole.RESEARCHER:
       default:
         return "/home";
     }

@@ -252,7 +252,7 @@ const EvaluationDetail: React.FC = () => {
             <CardHeader>
               <CardTitle>Research Team</CardTitle>
               <CardDescription>
-                Members involved in this research project
+                Researchers involved in this research project
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -265,13 +265,13 @@ const EvaluationDetail: React.FC = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {evaluation.team.map((member, index) => (
+                  {evaluation.team.map((researcher, index) => (
                     <TableRow key={index}>
                       <TableCell className="font-medium">
-                        {member.name}
+                        {researcher.name}
                       </TableCell>
-                      <TableCell>{member.role}</TableCell>
-                      <TableCell>{member.institution}</TableCell>
+                      <TableCell>{researcher.role}</TableCell>
+                      <TableCell>{researcher.institution}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

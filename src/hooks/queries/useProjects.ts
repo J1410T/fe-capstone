@@ -19,14 +19,14 @@ export interface Project {
   updatedAt: string;
   pi: string;
   budget?: number;
-  team?: TeamMember[];
+  team?: TeamResearcher[];
   progress?: number;
   category?: string;
   manager?: string;
   year?: string;
 }
 
-export interface TeamMember {
+export interface TeamResearcher {
   id: string;
   name: string;
   email: string;
@@ -131,7 +131,8 @@ export const useProjectBudget = (projectId: string, enabled = true) => {
 export const useProjectTeam = (projectId: string, enabled = true) => {
   return useQuery({
     queryKey: queryKeys.projects.team(projectId),
-    queryFn: () => queryApi.get<TeamMember[]>(`/projects/${projectId}/team`),
+    queryFn: () =>
+      queryApi.get<TeamResearcher[]>(`/projects/${projectId}/team`),
     enabled: enabled && !!projectId,
     throwOnError: true,
   });
@@ -226,59 +227,59 @@ export const useDeleteProject = () => {
 };
 
 /**
- * Hook to add team member to project
+ * Hook to add team RESEARCHER to project
  */
-export const useAddTeamMember = () => {
+export const useAddTeamRESEARCHER = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
       projectId,
-      memberId,
+      ResearcherId,
     }: {
       projectId: string;
-      memberId: string;
-    }) => queryApi.post(`/projects/${projectId}/team`, { memberId }),
+      ResearcherId: string;
+    }) => queryApi.post(`/projects/${projectId}/team`, { ResearcherId }),
     onSuccess: (_, variables) => {
       // Invalidate project team cache
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.team(variables.projectId),
       });
 
-      toast.success("Team member added successfully!");
+      toast.success("Team RESEARCHER added successfully!");
     },
     onError: (error) => {
-      console.error("Failed to add team member:", error);
-      toast.error("Failed to add team member");
+      console.error("Failed to add team RESEARCHER:", error);
+      toast.error("Failed to add team RESEARCHER");
     },
   });
 };
 
 /**
- * Hook to remove team member from project
+ * Hook to remove team RESEARCHER from project
  */
-export const useRemoveTeamMember = () => {
+export const useRemoveTeamResearcher = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: ({
       projectId,
-      memberId,
+      ResearcherId,
     }: {
       projectId: string;
-      memberId: string;
-    }) => queryApi.delete(`/projects/${projectId}/team/${memberId}`),
+      ResearcherId: string;
+    }) => queryApi.delete(`/projects/${projectId}/team/${ResearcherId}`),
     onSuccess: (_, variables) => {
       // Invalidate project team cache
       queryClient.invalidateQueries({
         queryKey: queryKeys.projects.team(variables.projectId),
       });
 
-      toast.success("Team member removed successfully!");
+      toast.success("Team RESEARCHER removed successfully!");
     },
     onError: (error) => {
-      console.error("Failed to remove team member:", error);
-      toast.error("Failed to remove team member");
+      console.error("Failed to remove team RESEARCHER:", error);
+      toast.error("Failed to remove team RESEARCHER");
     },
   });
 };

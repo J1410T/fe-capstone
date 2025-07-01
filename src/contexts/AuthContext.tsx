@@ -109,7 +109,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           // Principal Investigators go to home page
           navigate("/home");
         } else {
-          // All other users go to member home page
+          // All other users go to RESEARCHER home page
           navigate("/home");
         }
       } else {

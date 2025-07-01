@@ -58,7 +58,7 @@ const mockNotifications = [
   },
   {
     id: 2,
-    title: "New Team Member Added",
+    title: "New Team RESEARCHER Added",
     message: "Sarah Johnson has been added to your Engineering Project team.",
     type: "info" as const,
     time: "4 hours ago",
@@ -96,13 +96,13 @@ const mockNotifications = [
 
 // Define menu items for each role
 const menuItemsByRole = {
-  [UserRole.MEMBER]: [
+  [UserRole.RESEARCHER]: [
     { name: "Home", path: "/home", icon: Home },
-    { name: "Dashboard", path: "/member/dashboard", icon: LayoutDashboard },
-    { name: "Projects", path: "/member/projects", icon: FolderOpen },
-    { name: "Tasks", path: "/member/tasks", icon: ClipboardList },
-    { name: "Milestones", path: "/member/milestones", icon: ClipboardList },
-    { name: "My Projects", path: "/member/my-projects", icon: Briefcase },
+    { name: "Dashboard", path: "/researcher/dashboard", icon: LayoutDashboard },
+    { name: "Projects", path: "/researcher/projects", icon: FolderOpen },
+    { name: "Tasks", path: "/researcher/tasks", icon: ClipboardList },
+    { name: "Milestones", path: "/researcher/milestones", icon: ClipboardList },
+    { name: "My Projects", path: "/researcher/my-projects", icon: Briefcase },
   ],
   [UserRole.HOST_INSTITUTION]: [
     { name: "Home", path: "/home", icon: Home },
@@ -150,14 +150,14 @@ function Header() {
   // Get menu items based on user role
   const menuItems = user?.role
     ? menuItemsByRole[user.role]
-    : menuItemsByRole[UserRole.MEMBER];
+    : menuItemsByRole[UserRole.RESEARCHER];
 
   const handleProfileClick = () => {
     // Navigate to role-specific profile page
     if (user?.role === "Principal Investigator") {
       navigate("/pi/profile");
-    } else if (user?.role === "Member") {
-      navigate("/member/profile");
+    } else if (user?.role === "RESEARCHER") {
+      navigate("/researcher/profile");
     } else if (user?.role === "Host Institution") {
       navigate("/host/profile");
     } else if (user?.role === "Appraisal council") {
@@ -165,8 +165,8 @@ function Header() {
     } else if (user?.role === "Staff") {
       navigate("/staff/profile");
     } else {
-      // Fallback to member profile for unknown roles
-      navigate("/member/profile");
+      // Fallback to RESEARCHER profile for unknown roles
+      navigate("/researcher/profile");
     }
     setIsOpen(false);
   };
@@ -397,7 +397,7 @@ function Header() {
                     variant="secondary"
                     className="w-fit text-xs font-medium"
                   >
-                    {user?.role || "Member"}
+                    {user?.role || "RESEARCHER"}
                   </Badge>
                 </div>
               </DropdownMenuLabel>
@@ -474,7 +474,7 @@ function Header() {
                       variant="secondary"
                       className="mt-1 w-fit text-xs font-medium"
                     >
-                      {user?.role || "Member"}
+                      {user?.role || "RESEARCHER"}
                     </Badge>
                   </div>
                 </div>

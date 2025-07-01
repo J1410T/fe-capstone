@@ -25,7 +25,7 @@ export const ChairmanActionsCard: React.FC = () => {
         </Button>
         <Button className="w-full" variant="outline">
           <Users className="mr-2 h-4 w-4" />
-          Notify All Members
+          Notify All Researchers
         </Button>
         <Button className="w-full">
           <CheckCircle className="mr-2 h-4 w-4" />

@@ -108,8 +108,8 @@ const ProgressTab: React.FC = () => {
   const handleCreateForm = () => {
     if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       navigate("/pi/forms");
-    } else if (user?.role === UserRole.MEMBER) {
-      navigate("/member/forms");
+    } else if (user?.role === UserRole.RESEARCHER) {
+      navigate("/RESEARCHER/forms");
     }
   };
 

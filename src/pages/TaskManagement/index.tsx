@@ -498,8 +498,8 @@ const UserTaskManagement: React.FC = () => {
     }).length,
   };
 
-  // Get unique team members for statistics
-  const teamMembers = Array.from(
+  // Get unique team RESEARCHERs for statistics
+  const teamRESEARCHERs = Array.from(
     new Set(filteredTasks.map((task: Task) => task.assignedTo.id))
   ).length;
 
@@ -625,7 +625,7 @@ const UserTaskManagement: React.FC = () => {
                 <div className="flex items-center space-x-1 sm:space-x-2">
                   <Users className="w-4 h-4 text-slate-400" />
                   <span className="text-slate-600 text-xs sm:text-sm">
-                    {teamMembers} Members
+                    {teamRESEARCHERs} RESEARCHERs
                   </span>
                 </div>
                 <div className="flex items-center space-x-1 sm:space-x-2">
@@ -670,7 +670,7 @@ const UserTaskManagement: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
               <TaskStatsCards
                 stats={taskStats}
-                teamMembers={teamMembers}
+                teamRESEARCHERs={teamRESEARCHERs}
                 projectTags={projectTags}
                 showExtendedStats={true}
               />

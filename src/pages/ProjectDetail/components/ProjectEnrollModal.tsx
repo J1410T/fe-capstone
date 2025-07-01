@@ -16,7 +16,10 @@ import { UserPlus, User, Crown } from "lucide-react";
 interface ProjectEnrollModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onEnroll: (data: { role: "Principal" | "Member"; message?: string }) => void;
+  onEnroll: (data: {
+    role: "Principal" | "RESEARCHER";
+    message?: string;
+  }) => void;
   projectTitle: string;
   isLoading?: boolean;
 }
@@ -28,8 +31,8 @@ export const ProjectEnrollModal: React.FC<ProjectEnrollModalProps> = ({
   projectTitle,
   isLoading = false,
 }) => {
-  const [selectedRole, setSelectedRole] = useState<"Principal" | "Member">(
-    "Member"
+  const [selectedRole, setSelectedRole] = useState<"Principal" | "Researcher">(
+    "Researcher"
   );
   const [message, setMessage] = useState("");
 
@@ -43,7 +46,7 @@ export const ProjectEnrollModal: React.FC<ProjectEnrollModalProps> = ({
 
   const handleClose = () => {
     if (!isLoading) {
-      setSelectedRole("Member");
+      setSelectedRole("RESEARCHER");
       setMessage("");
       onClose();
     }
@@ -69,30 +72,30 @@ export const ProjectEnrollModal: React.FC<ProjectEnrollModalProps> = ({
               <div className="mt-2 space-y-2">
                 <div
                   className={`flex items-center space-x-3 p-3 rounded-lg border cursor-pointer hover:bg-gray-50 ${
-                    selectedRole === "Member"
+                    selectedRole === "RESEARCHER"
                       ? "border-blue-500 bg-blue-50"
                       : ""
                   }`}
-                  onClick={() => setSelectedRole("Member")}
+                  onClick={() => setSelectedRole("RESEARCHER")}
                 >
                   <input
                     type="radio"
                     name="role"
-                    value="Member"
-                    checked={selectedRole === "Member"}
-                    onChange={() => setSelectedRole("Member")}
+                    value="RESEARCHER"
+                    checked={selectedRole === "RESEARCHER"}
+                    onChange={() => setSelectedRole("RESEARCHER")}
                     className="h-4 w-4 text-blue-600"
                   />
                   <Label className="flex items-center gap-2 cursor-pointer flex-1">
                     <User className="h-4 w-4 text-blue-600" />
                     <div>
-                      <div className="font-medium">Member</div>
+                      <div className="font-medium">RESEARCHER</div>
                       <div className="text-sm text-gray-600">
-                        Regular team member with access to project resources
+                        Regular team RESEARCHER with access to project resources
                       </div>
                     </div>
                     <Badge variant="secondary" className="ml-auto">
-                      Member
+                      RESEARCHER
                     </Badge>
                   </Label>
                 </div>

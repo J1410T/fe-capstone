@@ -112,7 +112,9 @@ export function LoginForm({
                       <SelectValue placeholder="Choose your role..." />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={UserRole.MEMBER}>Member</SelectItem>
+                      <SelectItem value={UserRole.RESEARCHER}>
+                        Researcher
+                      </SelectItem>
                       <SelectItem value={UserRole.APPRAISAL_COUNCIL}>
                         Appraisal Council
                       </SelectItem>

@@ -72,7 +72,7 @@ const generateProjectData = (
         },
         {
           name: "Carol Davis",
-          role: "Member",
+          role: "Researcher",
           department: "Mathematics",
           email: "carol.davis@example.com",
         },
@@ -98,7 +98,7 @@ const generateProjectData = (
         },
         {
           name: "Mike Taylor",
-          role: "Member",
+          role: "Researcher",
           department: "Engineering",
           email: "mike.taylor@example.com",
         },
@@ -106,7 +106,7 @@ const generateProjectData = (
     },
     4: {
       title: "Artificial Intelligence in Education",
-      pi: "Dr. Maria Garcia", // User has access as team member
+      pi: "Dr. Maria Garcia", // User has access as team RESEARCHER
       status: "Done",
       type: "Application",
       team: [
@@ -118,7 +118,7 @@ const generateProjectData = (
         },
         {
           name: userName || "Test User",
-          role: "Member",
+          role: "Researcher",
           department: "Computer Science",
           email: userEmail || "testuser@example.com",
         },
@@ -180,7 +180,7 @@ const generateProjectData = (
       {
         id: 2,
         title: "Development and analysis",
-        assignee: project.team[1]?.name || "Team Member",
+        assignee: project.team[1]?.name || "Team Researcher",
         dueDate: "August 30, 2023",
         status: "In Progress",
         priority: "High",
@@ -199,7 +199,7 @@ const generateProjectData = (
         id: 2,
         name: "Research Protocol",
         type: "DOCX",
-        uploadedBy: project.team[1]?.name || "Team Member",
+        uploadedBy: project.team[1]?.name || "Team Researcher",
         uploadDate: "March 10, 2023",
         size: "1.8 MB",
       },
@@ -231,8 +231,8 @@ function ProjectDetail() {
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [enrollLoading, setEnrollLoading] = useState(false);
 
-  // Check if user owns or is a member of the project
-  const isOwnerOrMember = () => {
+  // Check if user owns or is a Researcher of the project
+  const isOwnerOrResearcher = () => {
     if (!user || !project) {
       console.log("❌ No user or no project data");
       return false;
@@ -261,26 +261,26 @@ function ProjectDetail() {
       return true;
     }
 
-    // Check if user is a team member (by email match)
-    const teamMemberMatch = project.team.find(
-      (member: {
+    // Check if user is a team RESEARCHER (by email match)
+    const teamResearcherMatch = project.team.find(
+      (researcher: {
         name: string;
         role: string;
         department: string;
         email: string;
       }) => {
-        const emailMatch = member.email === user.email;
+        const emailMatch = researcher.email === user.email;
         console.log(
-          `Team member check: "${member.email}" === "${user.email}" = ${emailMatch}`
+          `Team RESEARCHER check: "${researcher.email}" === "${user.email}" = ${emailMatch}`
         );
         return emailMatch;
       }
     );
 
-    if (teamMemberMatch) {
+    if (teamResearcherMatch) {
       console.log(
-        "✅ User is team member - granting access:",
-        teamMemberMatch.name
+        "✅ User is team RESEARCHER - granting access:",
+        teamResearcherMatch.name
       );
       return true;
     }
@@ -289,7 +289,7 @@ function ProjectDetail() {
     return false;
   };
 
-  const hasProjectAccess = isOwnerOrMember();
+  const hasProjectAccess = isOwnerOrResearcher();
 
   useEffect(() => {
     // Simulate API call to fetch project details
@@ -317,7 +317,7 @@ function ProjectDetail() {
   }, [projectId, user?.email, user?.name]);
 
   const handleEnrollProject = async (data: {
-    role: "Principal" | "Member";
+    role: "Principal" | "Researcher";
     message?: string;
   }) => {
     setEnrollLoading(true);
@@ -329,7 +329,7 @@ function ProjectDetail() {
       await new Promise((resolve) => setTimeout(resolve, 2000));
 
       setShowEnrollModal(false);
-      // Refresh project data to show updated membership
+      // Refresh project data to show updated RESEARCHERship
       // In real app, refetch project data here
     } catch (error) {
       console.error("Failed to enroll in project:", error);
@@ -345,9 +345,9 @@ function ProjectDetail() {
     // All users can view overview
     const baseTabs = ["overview"];
 
-    // Only members/owners can see additional tabs
+    // Only RESEARCHERs/owners can see additional tabs
     if (hasProjectAccess) {
-      // Always show milestones, documents, and budget for project members
+      // Always show milestones, documents, and budget for project RESEARCHERs
       baseTabs.push("milestones", "documents", "budget");
 
       // Only show team tab when project status is "Done"
@@ -372,7 +372,7 @@ function ProjectDetail() {
 
   const visibleTabs = getVisibleTabs();
 
-  // Show Enroll Project button for users who are not already members
+  // Show Enroll Project button for users who are not already RESEARCHERs
   const shouldShowEnrollButton = Boolean(user && !hasProjectAccess);
 
   if (isLoading) {
@@ -469,7 +469,7 @@ function ProjectDetail() {
                 project.team as Array<{
                   name: string;
                   role:
-                    | "Member"
+                    | "Researcher"
                     | "Leader"
                     | "Secretary"
                     | "Principal Investigator";

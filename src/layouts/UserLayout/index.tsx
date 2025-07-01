@@ -5,7 +5,7 @@ import AuthGuard from "@/components/auth/AuthGuard";
 function UserLayout() {
   const location = useLocation();
   const isHomePage = location.pathname === "/home";
-  const isTasksPage = location.pathname === "/member/tasks";
+  const isTasksPage = location.pathname === "/researcher/tasks";
 
   return (
     <AuthGuard>

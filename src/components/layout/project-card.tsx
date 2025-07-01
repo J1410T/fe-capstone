@@ -17,7 +17,7 @@ interface ProjectCardProps {
   category?: string;
   description?: string;
   updatedAt?: string;
-  teamMembers?: number;
+  teamResearchers?: number;
   manager?: string;
   pi?: string;
   department?: string;
@@ -195,7 +195,7 @@ interface UserProjectCardProps {
   title: string;
   description: string;
   updatedAt: string;
-  teamMembers: number;
+  teamResearchers: number;
   manager: string;
   progress: number;
   status: string;

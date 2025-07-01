@@ -44,8 +44,8 @@ export function NavUser({
     // Navigate to role-specific profile page
     if (authUser?.role === "Principal Investigator") {
       navigate("/pi/profile");
-    } else if (authUser?.role === "Member") {
-      navigate("/member/profile");
+    } else if (authUser?.role === "RESEARCHER") {
+      navigate("/researcher/profile");
     } else if (authUser?.role === "Host Institution") {
       navigate("/host/profile");
     } else if (authUser?.role === "Appraisal council") {
@@ -53,8 +53,8 @@ export function NavUser({
     } else if (authUser?.role === "Staff") {
       navigate("/staff/profile");
     } else {
-      // Fallback to member profile for unknown roles
-      navigate("/member/profile");
+      // Fallback to RESEARCHER profile for unknown roles
+      navigate("/researcher/profile");
     }
   };
 

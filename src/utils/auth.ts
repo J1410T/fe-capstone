@@ -18,7 +18,10 @@ export const mockAuth = {
 
     // Mock user data based on email
     const mockUsers = {
-      "member@test.com": { role: UserRole.MEMBER, name: "Test Member" },
+      "RESEARCHER@test.com": {
+        role: UserRole.RESEARCHER,
+        name: "Test RESEARCHER",
+      },
       "pi@test.com": { role: UserRole.PRINCIPAL_INVESTIGATOR, name: "Test PI" },
       "host@test.com": { role: UserRole.HOST_INSTITUTION, name: "Test Host" },
       "council@test.com": {
@@ -155,7 +158,7 @@ export const sessionUtils = {
   clearAll: (): void => {
     tokenUtils.remove();
     sessionUtils.clearUser();
-    localStorage.removeItem("remember-me");
+    localStorage.removeItem("reRESEARCHER-me");
   },
 };
 
@@ -182,7 +185,7 @@ export const roleUtils = {
    */
   getRoleDisplayName: (role: UserRole): string => {
     const roleNames = {
-      [UserRole.MEMBER]: "Member",
+      [UserRole.RESEARCHER]: "RESEARCHER",
       [UserRole.PRINCIPAL_INVESTIGATOR]: "Principal Investigator",
       [UserRole.HOST_INSTITUTION]: "Host Institution",
       [UserRole.APPRAISAL_COUNCIL]: "Appraisal Council",
@@ -197,7 +200,7 @@ export const roleUtils = {
    */
   getRoleColor: (role: UserRole): string => {
     const roleColors = {
-      [UserRole.MEMBER]: "bg-blue-100 text-blue-800",
+      [UserRole.RESEARCHER]: "bg-blue-100 text-blue-800",
       [UserRole.PRINCIPAL_INVESTIGATOR]: "bg-green-100 text-green-800",
       [UserRole.HOST_INSTITUTION]: "bg-purple-100 text-purple-800",
       [UserRole.APPRAISAL_COUNCIL]: "bg-orange-100 text-orange-800",
@@ -243,18 +246,18 @@ const generateMockJWT = (payload: Record<string, unknown>): string => {
  */
 export const mockUserLogin = (role: UserRole) => {
   const mockCredentials = {
-    [UserRole.MEMBER]: {
+    [UserRole.RESEARCHER]: {
       credential: {
-        email: "member@test.com",
+        email: "RESEARCHER@test.com",
         password: "password",
-        role: UserRole.MEMBER,
-        name: "Test Member",
+        role: UserRole.RESEARCHER,
+        name: "Test RESEARCHER",
         token: generateMockJWT({
-          sub: "member-123",
-          name: "Test Member",
-          email: "member@test.com",
+          sub: "RESEARCHER-123",
+          name: "Test RESEARCHER",
+          email: "RESEARCHER@test.com",
           picture: "",
-          role: UserRole.MEMBER,
+          role: UserRole.RESEARCHER,
         }),
       },
     },
@@ -320,7 +323,7 @@ export const mockUserLogin = (role: UserRole) => {
     },
   };
 
-  return mockCredentials[role] || mockCredentials[UserRole.MEMBER];
+  return mockCredentials[role] || mockCredentials[UserRole.RESEARCHER];
 };
 
 /**

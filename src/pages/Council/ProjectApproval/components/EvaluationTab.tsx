@@ -13,7 +13,7 @@ import {
   Trash2,
   Globe,
 } from "lucide-react";
-import { EvaluationData, TeamMember } from "../types";
+import { EvaluationData, TeamResearcher } from "../types";
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 interface EvaluationTabProps {
@@ -67,25 +67,25 @@ const EvaluationTab: React.FC<EvaluationTabProps> = ({
     });
   };
 
-  const handleTeamMemberChange = (
+  const handleTeamResearcherChange = (
     index: number,
     field: string,
     value: string
   ) => {
-    const updatedMembers = [...evaluationData.teamMembers];
-    updatedMembers[index] = {
-      ...updatedMembers[index],
+    const updatedResearchers = [...evaluationData.teamResearchers];
+    updatedResearchers[index] = {
+      ...updatedResearchers[index],
       [field]: value,
     };
     onDataChange({
       ...evaluationData,
-      teamMembers: updatedMembers,
+      teamResearchers: updatedResearchers,
     });
   };
 
-  const addTeamMember = () => {
-    if (evaluationData.teamMembers.length < 10) {
-      const newMember: TeamMember = {
+  const addTeamResearcher = () => {
+    if (evaluationData.teamResearchers.length < 10) {
+      const newResearcher: TeamResearcher = {
         name: "",
         academicTitle: "",
         workUnit: "",
@@ -94,18 +94,18 @@ const EvaluationTab: React.FC<EvaluationTabProps> = ({
       };
       onDataChange({
         ...evaluationData,
-        teamMembers: [...evaluationData.teamMembers, newMember],
+        teamResearchers: [...evaluationData.teamResearchers, newResearcher],
       });
     }
   };
 
-  const removeTeamMember = (index: number) => {
-    const updatedMembers = evaluationData.teamMembers.filter(
+  const removeTeamResearcher = (index: number) => {
+    const updatedResearchers = evaluationData.teamResearchers.filter(
       (_, i) => i !== index
     );
     onDataChange({
       ...evaluationData,
-      teamMembers: updatedMembers,
+      teamResearchers: updatedResearchers,
     });
   };
 
@@ -493,44 +493,44 @@ const EvaluationTab: React.FC<EvaluationTabProps> = ({
         </CardContent>
       </Card>
 
-      {/* Team Members */}
+      {/* Team RESEARCHERs */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="h-5 w-5" />
-            Team Members
+            Team Researchers
             <span className="text-sm text-muted-foreground ml-2">
-              ({evaluationData.teamMembers.length}/10)
+              ({evaluationData.teamResearchers.length}/10)
             </span>
           </CardTitle>
-          {isEditable && evaluationData.teamMembers.length < 10 && (
+          {isEditable && evaluationData.teamResearchers.length < 10 && (
             <Button
-              onClick={addTeamMember}
+              onClick={addTeamResearcher}
               variant="outline"
               size="sm"
               className="ml-auto"
             >
               <Plus className="h-4 w-4 mr-2" />
-              Add Member
+              Add Researcher
             </Button>
           )}
         </CardHeader>
         <CardContent className="space-y-4">
-          {evaluationData.teamMembers.map((member, index) => (
+          {evaluationData.teamResearchers.map((researcher, index) => (
             <div key={index} className="border rounded-lg p-4">
               <div className="flex items-center justify-between mb-3">
-                <h4 className="font-medium">Member {index + 1}</h4>
+                <h4 className="font-medium">RESEARCHER {index + 1}</h4>
                 {isEditable && (
                   // <Button
-                  //   onClick={() => removeTeamMember(index)}
+                  //   onClick={() => removeTeamRESEARCHER(index)}
                   //   variant="outline"
                   //   size="sm"
                   // >
                   //   <Trash2 className="h-4 w-4" />
                   // </Button>
                   <ConfirmDialog
-                    itemName={member.name}
-                    onConfirm={() => removeTeamMember(index)}
+                    itemName={researcher.name}
+                    onConfirm={() => removeTeamResearcher(index)}
                     trigger={
                       <Button
                         variant="ghost"
@@ -546,26 +546,26 @@ const EvaluationTab: React.FC<EvaluationTabProps> = ({
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor={`memberName-${index}`}>Name</Label>
+                  <Label htmlFor={`ResearcherName-${index}`}>Name</Label>
                   <Input
-                    id={`memberName-${index}`}
-                    value={member.name}
+                    id={`ResearcherName-${index}`}
+                    value={researcher.name}
                     onChange={(e) =>
-                      handleTeamMemberChange(index, "name", e.target.value)
+                      handleTeamResearcherChange(index, "name", e.target.value)
                     }
                     disabled={!isEditable}
                     placeholder="Enter name"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`memberAcademicTitle-${index}`}>
+                  <Label htmlFor={`RESEARCHERAcademicTitle-${index}`}>
                     Academic Title
                   </Label>
                   <Input
-                    id={`memberAcademicTitle-${index}`}
-                    value={member.academicTitle}
+                    id={`ResearcherAcademicTitle-${index}`}
+                    value={researcher.academicTitle}
                     onChange={(e) =>
-                      handleTeamMemberChange(
+                      handleTeamResearcherChange(
                         index,
                         "academicTitle",
                         e.target.value
@@ -576,26 +576,32 @@ const EvaluationTab: React.FC<EvaluationTabProps> = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`memberWorkUnit-${index}`}>Work Unit</Label>
+                  <Label htmlFor={`ResearcherWorkUnit-${index}`}>
+                    Work Unit
+                  </Label>
                   <Input
-                    id={`memberWorkUnit-${index}`}
-                    value={member.workUnit}
+                    id={`ResearcherWorkUnit-${index}`}
+                    value={researcher.workUnit}
                     onChange={(e) =>
-                      handleTeamMemberChange(index, "workUnit", e.target.value)
+                      handleTeamResearcherChange(
+                        index,
+                        "workUnit",
+                        e.target.value
+                      )
                     }
                     disabled={!isEditable}
                     placeholder="Enter work unit"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`memberContribution-${index}`}>
+                  <Label htmlFor={`ResearcherContribution-${index}`}>
                     Contribution
                   </Label>
                   <Input
-                    id={`memberContribution-${index}`}
-                    value={member.contribution}
+                    id={`ResearcherContribution-${index}`}
+                    value={researcher.contribution}
                     onChange={(e) =>
-                      handleTeamMemberChange(
+                      handleTeamResearcherChange(
                         index,
                         "contribution",
                         e.target.value
@@ -606,14 +612,14 @@ const EvaluationTab: React.FC<EvaluationTabProps> = ({
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor={`memberWorkDuration-${index}`}>
+                  <Label htmlFor={`ResearcherWorkDuration-${index}`}>
                     Work Duration
                   </Label>
                   <Input
-                    id={`memberWorkDuration-${index}`}
-                    value={member.workDuration}
+                    id={`ResearcherWorkDuration-${index}`}
+                    value={researcher.workDuration}
                     onChange={(e) =>
-                      handleTeamMemberChange(
+                      handleTeamResearcherChange(
                         index,
                         "workDuration",
                         e.target.value
@@ -626,9 +632,9 @@ const EvaluationTab: React.FC<EvaluationTabProps> = ({
               </div>
             </div>
           ))}
-          {evaluationData.teamMembers.length === 0 && (
+          {evaluationData.teamResearchers.length === 0 && (
             <div className="text-center py-8 text-muted-foreground">
-              No team members added yet.
+              No team Researchers added yet.
             </div>
           )}
         </CardContent>

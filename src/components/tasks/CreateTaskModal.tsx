@@ -49,8 +49,8 @@ interface CreateTaskModalProps {
   onCreate: (task: Omit<Task, "id" | "createdAt" | "updatedAt">) => void;
 }
 
-// Mock team members data
-const mockTeamMembers = [
+// Mock team RESEARCHERs data
+const mockTeamResearchers = [
   {
     id: "user1",
     name: "Sarah Chen",
@@ -156,8 +156,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
     // Simulate API call
     setTimeout(() => {
-      const assignedTo = mockTeamMembers.find(
-        (member) => member.id === formData.assignedToId
+      const assignedTo = mockTeamResearchers.find(
+        (researcher) => researcher.id === formData.assignedToId
       );
       if (!assignedTo) return;
 
@@ -214,8 +214,8 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
             <span>Create New Task</span>
           </DialogTitle>
           <DialogDescription className={UI_CONSTANTS.TYPOGRAPHY.description}>
-            Create a new task and assign it to a team member. Fill in all the
-            required information below.
+            Create a new task and assign it to a team researcher. Fill in all
+            the required information below.
           </DialogDescription>
         </DialogHeader>
 
@@ -352,21 +352,21 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
                 <SelectTrigger
                   className={getSelectClassName(!!errors.assignedToId)}
                 >
-                  <SelectValue placeholder="Select team member" />
+                  <SelectValue placeholder="Select team RESEARCHER" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockTeamMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
+                  {mockTeamResearchers.map((researcher) => (
+                    <SelectItem key={researcher.id} value={researcher.id}>
                       <div className="flex items-center space-x-2">
                         <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-xs font-medium text-blue-600">
-                            {member.name
+                            {researcher.name
                               .split(" ")
                               .map((n) => n[0])
                               .join("")}
                           </span>
                         </div>
-                        <span>{member.name}</span>
+                        <span>{researcher.name}</span>
                       </div>
                     </SelectItem>
                   ))}

@@ -21,9 +21,9 @@ const meetingData = {
   type: "Proposal",
   attendees: [
     { id: 1, name: "Dr. Robert Chen", role: "Chairman", present: true },
-    { id: 2, name: "Dr. Emily Johnson", role: "Member", present: true },
-    { id: 3, name: "Dr. Michael Smith", role: "Member", present: true },
-    { id: 4, name: "Dr. Sarah Williams", role: "Member", present: false },
+    { id: 2, name: "Dr. Emily Johnson", role: "Researcher", present: true },
+    { id: 3, name: "Dr. Michael Smith", role: "Researcher", present: true },
+    { id: 4, name: "Dr. Sarah Williams", role: "Researcher", present: false },
     { id: 5, name: "AI-Bot", role: "Automated Evaluator", present: true },
   ],
   evaluations: [

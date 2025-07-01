@@ -33,7 +33,7 @@ const mockTasks: Task[] = [
       id: "user1",
       name: "Sarah Chen",
       email: "sarah.chen@company.com",
-      role: UserRole.MEMBER,
+      role: UserRole.RESEARCHER,
       avatar: "",
     },
     createdAt: "2024-01-15T10:00:00Z",
@@ -69,7 +69,7 @@ const mockTasks: Task[] = [
       id: "user3",
       name: "Emily Johnson",
       email: "emily.johnson@company.com",
-      role: UserRole.MEMBER,
+      role: UserRole.RESEARCHER,
       avatar: "",
     },
     createdAt: "2024-01-05T08:00:00Z",
@@ -86,7 +86,7 @@ const mockTasks: Task[] = [
       id: "user1",
       name: "Sarah Chen",
       email: "sarah.chen@company.com",
-      role: UserRole.MEMBER,
+      role: UserRole.RESEARCHER,
       avatar: "",
     },
     createdAt: "2024-01-01T10:00:00Z",
@@ -113,12 +113,12 @@ const mockTasks: Task[] = [
   },
 ];
 
-const mockTeamMembers = [
+const mockTeamResearchers = [
   {
     id: "user1",
     name: "Sarah Chen",
     email: "sarah.chen@company.com",
-    role: UserRole.MEMBER,
+    role: UserRole.RESEARCHER,
     avatar: "",
   },
   {
@@ -132,7 +132,7 @@ const mockTeamMembers = [
     id: "user3",
     name: "Emily Johnson",
     email: "emily.johnson@company.com",
-    role: UserRole.MEMBER,
+    role: UserRole.RESEARCHER,
     avatar: "",
   },
 ];
@@ -246,8 +246,8 @@ export const ProfessionalTaskBoard: React.FC = () => {
 
     // Simulate API call
     setTimeout(() => {
-      const assignee = mockTeamMembers.find(
-        (member) => member.id === data.assigneeId
+      const assignee = mockTeamResearchers.find(
+        (researcher) => researcher.id === data.assigneeId
       );
       if (!assignee) return;
 
@@ -279,8 +279,8 @@ export const ProfessionalTaskBoard: React.FC = () => {
         prev.map((task) => {
           if (task.id === taskId) {
             const assignee = data.assigneeId
-              ? mockTeamMembers.find(
-                  (member) => member.id === data.assigneeId
+              ? mockTeamResearchers.find(
+                  (researcher) => researcher.id === data.assigneeId
                 ) || task.assignee
               : task.assignee;
 
@@ -406,7 +406,7 @@ export const ProfessionalTaskBoard: React.FC = () => {
         onOpenChange={setIsCreateModalOpen}
         onSubmit={handleCreateTask}
         currentUser={user}
-        teamMembers={mockTeamMembers}
+        teamResearchers={mockTeamResearchers}
         isLoading={isLoading}
       />
 
@@ -416,7 +416,7 @@ export const ProfessionalTaskBoard: React.FC = () => {
         onOpenChange={setIsDetailDrawerOpen}
         task={selectedTask}
         currentUser={user}
-        teamMembers={mockTeamMembers}
+        teamResearchers={mockTeamResearchers}
         onUpdate={handleUpdateTask}
         isLoading={isLoading}
       />

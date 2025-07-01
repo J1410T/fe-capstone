@@ -28,7 +28,7 @@ interface TaskFormModalProps {
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: CreateTaskData) => void;
   currentUser: User;
-  teamMembers: User[];
+  teamResearchers: User[];
   isLoading?: boolean;
 }
 
@@ -39,7 +39,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
   onOpenChange,
   onSubmit,
   currentUser,
-  teamMembers,
+  teamResearchers,
   isLoading = false,
 }) => {
   const [formData, setFormData] = useState<CreateTaskData>({
@@ -234,24 +234,24 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
               <SelectContent>
                 {isLeader ? (
                   // Leaders can assign to anyone
-                  teamMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
+                  teamResearchers.map((researcher) => (
+                    <SelectItem key={researcher.id} value={researcher.id}>
                       <div className="flex items-center space-x-2">
                         <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-medium text-slate-600">
-                          {member.name
+                          {researcher.name
                             .split(" ")
                             .map((n: string) => n[0])
                             .join("")}
                         </div>
-                        <span>{member.name}</span>
+                        <span>{researcher.name}</span>
                         <span className="text-xs text-slate-500">
-                          ({member.role})
+                          ({researcher.role})
                         </span>
                       </div>
                     </SelectItem>
                   ))
                 ) : (
-                  // Members can only assign to themselves
+                  // RESEARCHERs can only assign to themselves
                   <SelectItem value={currentUser.id}>
                     <div className="flex items-center space-x-2">
                       <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-medium text-slate-600">

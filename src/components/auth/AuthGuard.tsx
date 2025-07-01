@@ -64,17 +64,17 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     }
   }
 
-  // Redirect non-staff users to member home if they try to access staff dashboard
+  // Redirect non-staff users to RESEARCHER home if they try to access staff dashboard
   if (user?.role !== UserRole.STAFF && location.pathname.startsWith("/staff")) {
     return <Navigate to="/home" replace />;
   }
 
-  // Redirect staff users to admin dashboard if they try to access member home
+  // Redirect staff users to admin dashboard if they try to access RESEARCHER home
   if (user?.role === UserRole.STAFF && location.pathname === "/home") {
     return <Navigate to="/staff/dashboard" replace />;
   }
 
-  // Redirect non-host users to member home if they try to access host dashboard
+  // Redirect non-host users to RESEARCHER home if they try to access host dashboard
   if (
     user?.role !== UserRole.HOST_INSTITUTION &&
     location.pathname.startsWith("/host")
@@ -82,7 +82,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     return <Navigate to="/home" replace />;
   }
 
-  // Redirect non-PI users to member home if they try to access PI dashboard
+  // Redirect non-PI users to RESEARCHER home if they try to access PI dashboard
   if (
     user?.role !== UserRole.PRINCIPAL_INVESTIGATOR &&
     location.pathname.startsWith("/pi")
@@ -90,10 +90,10 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     return <Navigate to="/home" replace />;
   }
 
-  // Redirect non-member users to unauthorized page if they try to access member routes
+  // Redirect non-RESEARCHER users to unauthorized page if they try to access RESEARCHER routes
   if (
-    user?.role !== UserRole.MEMBER &&
-    location.pathname.startsWith("/member")
+    user?.role !== UserRole.RESEARCHER &&
+    location.pathname.startsWith("/researcher")
   ) {
     return <Navigate to="/unauthorized" replace />;
   }

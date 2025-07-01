@@ -24,10 +24,10 @@ import { toast } from "sonner";
 
 // Role configurations with icons and routes
 const roleConfig = {
-  [UserRole.MEMBER]: {
-    label: "Member",
+  [UserRole.RESEARCHER]: {
+    label: "Researcher",
     icon: User,
-    description: "General member access",
+    description: "General RESEARCHER access",
     defaultRoute: "/home",
     color: "bg-blue-100 text-blue-800",
   },
@@ -63,7 +63,7 @@ const roleConfig = {
 
 // Available roles for switching (excluding Staff - staff cannot switch roles)
 const availableRoles = [
-  UserRole.MEMBER,
+  UserRole.RESEARCHER,
   UserRole.PRINCIPAL_INVESTIGATOR,
   UserRole.HOST_INSTITUTION,
   UserRole.APPRAISAL_COUNCIL,
