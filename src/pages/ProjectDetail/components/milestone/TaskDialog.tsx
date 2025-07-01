@@ -35,7 +35,7 @@ interface TaskDialogProps {
   onFormChange: (field: string, value: string) => void;
   dueDate: Date | undefined;
   onDueDateChange: (date: Date | undefined) => void;
-  teamRESEARCHERs: PIUser[];
+  teamResearchers: PIUser[];
 }
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({
@@ -48,7 +48,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
   onFormChange,
   dueDate,
   onDueDateChange,
-  teamRESEARCHERs,
+  teamResearchers,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -105,7 +105,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="unassigned">Unassigned</SelectItem>
-                  {teamRESEARCHERs.map((RESEARCHER) => (
+                  {teamResearchers.map((RESEARCHER) => (
                     <SelectItem key={RESEARCHER.id} value={RESEARCHER.email}>
                       {RESEARCHER.name}
                     </SelectItem>

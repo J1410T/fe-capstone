@@ -44,7 +44,7 @@ export function NavUser({
     // Navigate to role-specific profile page
     if (authUser?.role === "Principal Investigator") {
       navigate("/pi/profile");
-    } else if (authUser?.role === "RESEARCHER") {
+    } else if (authUser?.role === "Researcher") {
       navigate("/researcher/profile");
     } else if (authUser?.role === "Host Institution") {
       navigate("/host/profile");

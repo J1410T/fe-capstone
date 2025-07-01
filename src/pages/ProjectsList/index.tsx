@@ -12,7 +12,7 @@ interface Project {
   title: string;
   description: string;
   updatedAt: string;
-  teamRESEARCHERs: number;
+  teamResearchers: number; // ✅ đã đổi tên field
   manager: string;
   progress: number;
   status:
@@ -46,7 +46,7 @@ const mockProjects: Project[] = [
     description:
       "Analyzing the effects of climate change on coastal ecosystems",
     updatedAt: "2 days ago",
-    teamRESEARCHERs: 8,
+    teamResearchers: 8,
     manager: "Dr. Sarah Johnson",
     progress: 75,
     status: "Approved",
@@ -60,7 +60,7 @@ const mockProjects: Project[] = [
     description:
       "Developing machine learning algorithms for big data processing",
     updatedAt: "1 week ago",
-    teamRESEARCHERs: 5,
+    teamResearchers: 5,
     manager: "Prof. Michael Chen",
     progress: 45,
     status: "In Progress",
@@ -74,7 +74,7 @@ const mockProjects: Project[] = [
     description:
       "Investigating new approaches to combat antibiotic-resistant bacteria",
     updatedAt: "3 days ago",
-    teamRESEARCHERs: 12,
+    teamResearchers: 12,
     manager: "Dr. Emily Rodriguez",
     progress: 90,
     status: "Done",
@@ -87,7 +87,7 @@ const mockProjects: Project[] = [
     title: "Natural Language Processing",
     description: "Building advanced NLP models for multilingual text analysis",
     updatedAt: "5 days ago",
-    teamRESEARCHERs: 6,
+    teamResearchers: 6,
     manager: "Dr. James Wilson",
     progress: 30,
     status: "Submitted",
@@ -101,7 +101,7 @@ const mockProjects: Project[] = [
     description:
       "Researching eco-friendly alternatives to traditional materials",
     updatedAt: "1 day ago",
-    teamRESEARCHERs: 9,
+    teamResearchers: 9,
     manager: "Prof. Lisa Anderson",
     progress: 60,
     status: "Created",
@@ -115,7 +115,7 @@ const mockProjects: Project[] = [
     description:
       "Designing efficient solar panel systems for urban environments",
     updatedAt: "4 days ago",
-    teamRESEARCHERs: 7,
+    teamResearchers: 7,
     manager: "Dr. Robert Kim",
     progress: 85,
     status: "Draft",
@@ -128,7 +128,7 @@ const mockProjects: Project[] = [
     title: "Cancer Treatment Innovation",
     description: "Developing targeted therapies for rare cancer types",
     updatedAt: "2 weeks ago",
-    teamRESEARCHERs: 15,
+    teamResearchers: 15,
     manager: "Dr. Maria Garcia",
     progress: 25,
     status: "Deleted",
@@ -141,7 +141,7 @@ const mockProjects: Project[] = [
     title: "Market Analysis Platform",
     description: "Creating tools for real-time market trend analysis",
     updatedAt: "6 days ago",
-    teamRESEARCHERs: 4,
+    teamResearchers: 4,
     manager: "Prof. David Lee",
     progress: 100,
     status: "Done",
@@ -164,11 +164,9 @@ const ProjectsList: React.FC = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(6);
 
-  // Filter projects based on search term, status, and department
   const filteredProjects = useMemo(() => {
     let filtered = [...projects];
 
-    // Apply search filter
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(
@@ -179,21 +177,18 @@ const ProjectsList: React.FC = () => {
       );
     }
 
-    // Apply field filter
     if (selectedField !== "all") {
       filtered = filtered.filter(
         (project) => project.category === selectedField
       );
     }
 
-    // Apply status filter
     if (selectedStatus !== "all") {
       filtered = filtered.filter(
         (project) => project.status === selectedStatus
       );
     }
 
-    // Apply sorting
     filtered.sort((a, b) => {
       switch (selectedSort) {
         case "latest":
@@ -216,15 +211,14 @@ const ProjectsList: React.FC = () => {
     return filtered;
   }, [projects, searchTerm, selectedField, selectedStatus, selectedSort]);
 
-  // Handlers
   const handleFieldChange = useCallback((value: string) => {
     setSelectedField(value as FieldFilter);
-    setCurrentPage(1); // Reset to first page when filter changes
+    setCurrentPage(1);
   }, []);
 
   const handleStatusChange = useCallback((value: string) => {
     setSelectedStatus(value as StatusFilter);
-    setCurrentPage(1); // Reset to first page when filter changes
+    setCurrentPage(1);
   }, []);
 
   const handleSortChange = useCallback((value: string) => {
@@ -233,10 +227,9 @@ const ProjectsList: React.FC = () => {
 
   const handleSearchChange = useCallback((value: string) => {
     setSearchTerm(value);
-    setCurrentPage(1); // Reset to first page when search changes
+    setCurrentPage(1);
   }, []);
 
-  // Calculate pagination
   const totalPages = Math.ceil(filteredProjects.length / pageSize);
   const paginatedProjects = filteredProjects.slice(
     (currentPage - 1) * pageSize,
@@ -245,14 +238,13 @@ const ProjectsList: React.FC = () => {
 
   const handleViewDetails = useCallback(
     (projectId: string | number) => {
-      // Navigate to project details page based on user role
       if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
         navigate(`/pi/project/${projectId}`);
       } else if (user?.role === UserRole.HOST_INSTITUTION) {
         navigate(`/host/project/${projectId}`);
       } else {
-        // Default to RESEARCHER project details for other roles
-        navigate(`/RESEARCHER/project/${projectId}`);
+        // ✅ fix URL path
+        navigate(`/researcher/project/${projectId}`);
       }
     },
     [navigate, user?.role]
@@ -260,12 +252,11 @@ const ProjectsList: React.FC = () => {
 
   const handlePageSizeChange = useCallback((size: number) => {
     setPageSize(size);
-    setCurrentPage(1); // Reset to first page when page size changes
+    setCurrentPage(1);
   }, []);
 
   return (
     <div className="space-y-6">
-      {/* Header with search and filters */}
       <ProjectsHeader
         searchTerm={searchTerm}
         onSearchChange={handleSearchChange}
@@ -281,7 +272,6 @@ const ProjectsList: React.FC = () => {
         <Loading />
       ) : (
         <>
-          {/* Projects Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {paginatedProjects.map((project) => (
               <ProjectCard
@@ -299,7 +289,6 @@ const ProjectsList: React.FC = () => {
             ))}
           </div>
 
-          {/* No results message */}
           {filteredProjects.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10">
               <h3 className="text-lg font-medium">No projects found</h3>
@@ -309,7 +298,6 @@ const ProjectsList: React.FC = () => {
             </div>
           )}
 
-          {/* Pagination */}
           {filteredProjects.length > 0 && (
             <ProjectsPagination
               currentPage={currentPage}

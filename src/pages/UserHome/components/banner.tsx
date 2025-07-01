@@ -19,7 +19,7 @@ const features: Feature[] = [
     icon: <FaUsers className="text-emerald-700 text-2xl" />,
     title: "Team Collaboration",
     description:
-      "Add team RESEARCHERs, assign roles, and collaborate effectively with integrated communication tools.",
+      "Add team Researchers, assign roles, and collaborate effectively with integrated communication tools.",
   },
   {
     icon: <FaChartBar className="text-emerald-700 text-2xl" />,

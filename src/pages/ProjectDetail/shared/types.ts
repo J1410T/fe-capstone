@@ -1,10 +1,10 @@
 // Shared types for ProjectDetailPage components
 
-export interface TeamRESEARCHER {
+export interface TeamResearcher {
   id: string;
   name: string;
   email: string;
-  role: "RESEARCHER" | "Leader" | "Secretary";
+  role: "Researcher" | "Leader" | "Secretary";
   department: string;
   avatar?: string;
   joinedAt: string;
@@ -55,7 +55,7 @@ export interface Project {
     name: string;
     email: string;
   };
-  team: TeamRESEARCHER[];
+  team: TeamResearcher[];
   year: string;
   progress: number;
   budget: Budget;
@@ -93,34 +93,34 @@ export interface Project {
   }>;
 }
 
-export interface ProjectRESEARCHERship {
+export interface ProjectMembership {
   projectId: string;
   userId: string;
-  role: "Principal" | "RESEARCHER";
+  role: "Principal" | "Researcher";
   joinedAt: string;
 }
 
 export interface EnrollProjectData {
   projectId: string;
-  role: "Principal" | "RESEARCHER";
+  role: "Principal" | "Researcher";
   message?: string;
 }
 
-export type RESEARCHERRole =
-  | "RESEARCHER"
+export type ResearcherRole =
+  | "Researcher"
   | "Leader"
   | "Secretary"
   | "Principal Investigator";
 
-export interface AddRESEARCHERFormData {
+export interface AddResearcherFormData {
   email: string;
-  role: RESEARCHERRole;
+  role: ResearcherRole;
 }
 
 export interface RoleChangeConfirmation {
-  currentRESEARCHER?: TeamRESEARCHER;
-  newRole: RESEARCHERRole;
-  targetRESEARCHER: TeamRESEARCHER;
+  currentResearcher?: TeamResearcher;
+  newRole: ResearcherRole;
+  targetResearcher: TeamResearcher;
 }
 
 // Milestone and Task types

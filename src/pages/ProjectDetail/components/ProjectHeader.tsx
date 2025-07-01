@@ -28,7 +28,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
       case UserRole.HOST_INSTITUTION:
         return "/host/my-projects";
       case UserRole.RESEARCHER:
-        return "/RESEARCHER/projects";
+        return "/researcher/projects";
       case UserRole.APPRAISAL_COUNCIL:
         return "/council/projects";
       default:
@@ -51,7 +51,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
             </Badge>
             {hasAccess && (
               <Badge variant="secondary" className="ml-2">
-                RESEARCHER
+                Researcher
               </Badge>
             )}
           </div>

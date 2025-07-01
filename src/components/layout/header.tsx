@@ -156,7 +156,7 @@ function Header() {
     // Navigate to role-specific profile page
     if (user?.role === "Principal Investigator") {
       navigate("/pi/profile");
-    } else if (user?.role === "RESEARCHER") {
+    } else if (user?.role === "Researcher") {
       navigate("/researcher/profile");
     } else if (user?.role === "Host Institution") {
       navigate("/host/profile");

@@ -18,9 +18,9 @@ export const mockAuth = {
 
     // Mock user data based on email
     const mockUsers = {
-      "RESEARCHER@test.com": {
+      "researcher@test.com": {
         role: UserRole.RESEARCHER,
-        name: "Test RESEARCHER",
+        name: "Test Researcher",
       },
       "pi@test.com": { role: UserRole.PRINCIPAL_INVESTIGATOR, name: "Test PI" },
       "host@test.com": { role: UserRole.HOST_INSTITUTION, name: "Test Host" },
@@ -158,7 +158,7 @@ export const sessionUtils = {
   clearAll: (): void => {
     tokenUtils.remove();
     sessionUtils.clearUser();
-    localStorage.removeItem("reRESEARCHER-me");
+    localStorage.removeItem("researcher-me");
   },
 };
 
@@ -185,7 +185,7 @@ export const roleUtils = {
    */
   getRoleDisplayName: (role: UserRole): string => {
     const roleNames = {
-      [UserRole.RESEARCHER]: "RESEARCHER",
+      [UserRole.RESEARCHER]: "Researcher",
       [UserRole.PRINCIPAL_INVESTIGATOR]: "Principal Investigator",
       [UserRole.HOST_INSTITUTION]: "Host Institution",
       [UserRole.APPRAISAL_COUNCIL]: "Appraisal Council",
@@ -248,14 +248,14 @@ export const mockUserLogin = (role: UserRole) => {
   const mockCredentials = {
     [UserRole.RESEARCHER]: {
       credential: {
-        email: "RESEARCHER@test.com",
+        email: "researcher@test.com",
         password: "password",
         role: UserRole.RESEARCHER,
         name: "Test RESEARCHER",
         token: generateMockJWT({
           sub: "RESEARCHER-123",
           name: "Test RESEARCHER",
-          email: "RESEARCHER@test.com",
+          email: "researcher@test.com",
           picture: "",
           role: UserRole.RESEARCHER,
         }),

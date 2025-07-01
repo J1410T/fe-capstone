@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart3, CheckSquare, TrendingUp, DollarSign } from "lucide-react";
 import { DashboardOverview } from "./components/DashboardOverview";
 import { RecentTaskList } from "./components/RecentTaskList";
 import { AnalyticsCharts } from "./components/AnalyticsCharts";
 import { FundingRequestList } from "./components/FundingRequestList";
-import { BarChart3, CheckSquare, TrendingUp, DollarSign } from "lucide-react";
 
-const RESEARCHERDashboard: React.FC = () => {
+const ResearcherDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
@@ -17,7 +17,7 @@ const RESEARCHERDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-                RESEARCHER Dashboard
+                Researcher Dashboard
               </h1>
               <p className="text-sm text-slate-600 mt-1">
                 Manage your tasks, track progress, and monitor funding requests
@@ -94,4 +94,4 @@ const RESEARCHERDashboard: React.FC = () => {
   );
 };
 
-export default RESEARCHERDashboard;
+export default ResearcherDashboard;

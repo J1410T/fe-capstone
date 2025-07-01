@@ -16,7 +16,7 @@ import ProjectDetail from "@/pages/ProjectDetail";
 
 // RESEARCHER Pages
 import UserTaskManagement from "@/pages/TaskManagement";
-import RESEARCHERDashboard from "@/pages/Researcher/Dashboard";
+import ResearcherDashboard from "@/pages/Researcher/Dashboard";
 
 // Other Pages
 import Profile from "@/pages/Profile";
@@ -106,7 +106,7 @@ export const routes: RouteObject[] = [
         ],
       },
       {
-        path: "RESEARCHER",
+        path: "researcher",
         element: (
           <AuthGuard requiredRoles={[UserRole.RESEARCHER]}>
             <UserLayout />
@@ -131,7 +131,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "dashboard",
-            element: <RESEARCHERDashboard />,
+            element: <ResearcherDashboard />,
           },
           {
             path: "profile",
