@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -44,6 +44,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
+import { useAuthResponse } from "@/hooks/queries";
+import Cookies from "js-cookie";
 
 // Mock notifications data
 const mockNotifications = [
@@ -146,6 +148,14 @@ function Header() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(mockNotifications);
+  const googleResponseQuery = useAuthResponse();
+  const sessionId = Cookies.get("sessionId");
+
+  useEffect(() => {
+    console.log("Google response data:", googleResponseQuery.status);
+  }, [googleResponseQuery.status]);
+
+  console.log("sessionId", sessionId);
 
   // Get menu items based on user role
   const menuItems = user?.role

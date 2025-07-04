@@ -4,7 +4,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { queryApi } from "@/api/query-client";
+import { queryApi } from "@/services/query-client";
 import { queryKeys } from "@/lib/react-query";
 
 // Types

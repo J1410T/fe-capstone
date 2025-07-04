@@ -2,7 +2,7 @@
  * Enhanced API client for TanStack Query
  */
 
-import { api, type QueryParams } from "./base";
+import { api, type QueryParams } from "../services/base";
 import { ApiError } from "@/lib/react-query";
 
 /**
