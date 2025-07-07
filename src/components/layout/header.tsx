@@ -44,8 +44,10 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { useAuthResponse } from "@/hooks/queries";
-import Cookies from "js-cookie";
+// import { useAuthResponse } from "@/hooks/queries";
+import { axiosClient } from "@/services/api";
+import { GoogleAuthResponse } from "@/types/auth";
+// import Cookies from "js-cookie";
 
 // Mock notifications data
 const mockNotifications = [
@@ -148,14 +150,20 @@ function Header() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(mockNotifications);
-  const googleResponseQuery = useAuthResponse();
-  const sessionId = Cookies.get("sessionId");
+  // const googleResponseQuery = useAuthResponse();
+  const [data, setData] = useState({});
 
   useEffect(() => {
-    console.log("Google response data:", googleResponseQuery.status);
-  }, [googleResponseQuery.status]);
+    const GoogleAuthResponse = async () => {
+      const res = await axiosClient.get<GoogleAuthResponse>("/auth/session");
+      setData(res.data);
+    };
 
-  console.log("sessionId", sessionId);
+    GoogleAuthResponse();
+    console.log("response Data", data);
+  }, [data]);
+
+  // console.log("sessionId", sessionId);
 
   // Get menu items based on user role
   const menuItems = user?.role
