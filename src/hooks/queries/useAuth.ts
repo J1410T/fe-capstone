@@ -1,15 +1,13 @@
 import { getGoogleAuthResponse } from "@/services/resources/auth";
 import { useQuery } from "@tanstack/react-query";
-import Cookies from "js-cookie";
 
-export function useAuthResponse() {
-  const sessionId = Cookies.get("sessionId");
-  console.log("useAuthResponse: sessionId", sessionId);
+export function useAuthResponse(token: string | undefined) {
   return useQuery({
     queryKey: ["auth-response"],
-    queryFn: getGoogleAuthResponse,
+    queryFn: () => getGoogleAuthResponse(token!),
+    enabled: !!token,
+    staleTime: 1000 * 60 * 60 * 5, // 5 hours
+    refetchOnMount: false,
     refetchOnWindowFocus: false,
-    enabled: !!sessionId,
-    retry: false,
   });
 }

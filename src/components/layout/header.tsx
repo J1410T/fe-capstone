@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -45,8 +45,9 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 // import { useAuthResponse } from "@/hooks/queries";
-import { axiosClient } from "@/services/api";
-import { GoogleAuthResponse } from "@/types/auth";
+// import { axiosClient } from "@/services/api";
+// // import { GoogleAuthResponse } from "@/types/auth";
+// import { ProjectDetail } from "@/types/project";
 // import Cookies from "js-cookie";
 
 // Mock notifications data
@@ -151,18 +152,19 @@ function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(mockNotifications);
   // const googleResponseQuery = useAuthResponse();
-  const [data, setData] = useState({});
+  // const [data, setData] = useState({});
 
-  useEffect(() => {
-    const GoogleAuthResponse = async () => {
-      const res = await axiosClient.get<GoogleAuthResponse>("/auth/session");
-      setData(res.data);
-    };
+  // useEffect(() => {
+  //   const GoogleAuthResponse = async () => {
+  //     const res = await axiosClient.get<ProjectDetail>(
+  //       "/project/00541722-ed20-44fc-95e6-0a4b1b9daf37"
+  //     );
+  //     setData(res.data);
+  //   };
 
-    GoogleAuthResponse();
-    console.log("response Data", data);
-  }, [data]);
-
+  //   GoogleAuthResponse();
+  // }, []);
+  // console.log("response Data", data);
   // console.log("sessionId", sessionId);
 
   // Get menu items based on user role

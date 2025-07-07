@@ -14,7 +14,8 @@ import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { mockUserLogin } from "@/utils";
 import { LogIn, Shield } from "lucide-react";
-import { env } from "@/config/env";
+import GoogleAuthentication from "./components/GoogleAuthentication";
+// import { env } from "@/config/env";
 
 export function LoginForm({
   className,
@@ -25,48 +26,17 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const { login } = useAuth();
 
-  // Handle Google response data
-  // useEffect(() => {
-  //   if (googleResponseQuery.isSuccess && googleResponseQuery.data) {
-  //     const authData = googleResponseQuery.data;
+  // const handleGoogleLogin = () => {
+  //   setIsLoading(true);
 
-  //     // Transform the response to match your auth context expectations
-  //     const transformedData = {
-  //       token: authData.token,
-  //       fullName: authData["full-name"],
-  //       avatarUrl: authData["avatar-url"],
-  //       email: authData.email,
-  //       role: authData["selected-role"],
-  //       roles: authData.roles,
-  //     };
-
-  //     login(transformedData.token);
+  //   setTimeout(() => {
+  //     login(mockUserLogin(UserRole.RESEARCHER).credential.token);
   //     setIsLoading(false);
-  //   }
-
-  //   if (googleResponseQuery.isError) {
-  //     toast.error("Failed to authenticate with Google. Please try again.");
-  //     setIsLoading(false);
-  //   }
-  // }, [
-  //   googleResponseQuery.isSuccess,
-  //   googleResponseQuery.data,
-  //   googleResponseQuery.isError,
-  //   login,
-  // ]);
-
-  const handleGoogleLogin = () => {
-    setIsLoading(true);
-    const returnUrl = encodeURIComponent(`http://localhost:5173/home`);
-    const googleLoginUrl = `${env.API_SERVER}${env.API_BASE_URL}/auth/google-login?returnUrl=${returnUrl}&role=Researcher`;
-
-    window.location.href = googleLoginUrl;
-
-    setTimeout(() => {
-      login(mockUserLogin(UserRole.RESEARCHER).credential.token);
-      setIsLoading(false);
-    }, 1000);
-  };
+  //     console.log("Login successful");
+  //     console.log("Role: ", UserRole.RESEARCHER);
+  //   }, 1000);
+  //   console.log("Role: ", UserRole.RESEARCHER);
+  // };
 
   const handleStaffLogin = () => {
     if (!email || !password) {
@@ -115,7 +85,7 @@ export function LoginForm({
                     Use your FPTU Google account to access the system
                   </p>
                 </div>
-                <Button
+                {/* <Button
                   type="button"
                   variant="default"
                   className="w-full h-12 text-base bg-emerald-700 hover:bg-emerald-600 text-white flex items-center justify-center gap-2"
@@ -124,7 +94,8 @@ export function LoginForm({
                 >
                   <LogIn className="h-5 w-5" />
                   {isLoading ? "Redirecting..." : "Login with Google"}
-                </Button>
+                </Button> */}
+                <GoogleAuthentication />
               </div>
             </TabsContent>
 

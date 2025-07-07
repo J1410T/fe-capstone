@@ -2,10 +2,14 @@ import { GoogleAuthResponse } from "@/types/auth";
 import { axiosClient } from "../api";
 // import Cookies from "js-cookie";
 
-export const getGoogleAuthResponse = async () => {
+export const getGoogleAuthResponse = async (token: string) => {
   // const sessionId = Cookies.get("sessionId");
   // console.log("getGoogleAuthResponse: sessionId", sessionId);
-  return (await axiosClient.get<GoogleAuthResponse>("/auth/session")).data;
+  return (
+    await axiosClient.post<GoogleAuthResponse>(
+      `/auth/google-authentication?Token=${token}`
+    )
+  ).data;
 };
 
 /**

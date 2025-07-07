@@ -1,0 +1,25 @@
+export type ProjectDetail = {
+  id: string;
+  "logo-url": string;
+  "picture-url": string;
+  code: string;
+  "english-title": string;
+  "vietnamese-title": string;
+  abbreviations: string;
+  duration: null;
+  "start-date": string;
+  "end-date": string;
+  description: string;
+  "requirement-note": string;
+  budget: number;
+  progress: number;
+  "maximum-member": number;
+  language: string;
+  category: string;
+  type: string;
+  genre: string;
+  "created-at": string;
+  "updated-at": string;
+  status: string;
+  "creator-id": string;
+};
