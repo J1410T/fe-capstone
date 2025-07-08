@@ -26,18 +26,6 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const { login } = useAuth();
 
-  // const handleGoogleLogin = () => {
-  //   setIsLoading(true);
-
-  //   setTimeout(() => {
-  //     login(mockUserLogin(UserRole.RESEARCHER).credential.token);
-  //     setIsLoading(false);
-  //     console.log("Login successful");
-  //     console.log("Role: ", UserRole.RESEARCHER);
-  //   }, 1000);
-  //   console.log("Role: ", UserRole.RESEARCHER);
-  // };
-
   const handleStaffLogin = () => {
     if (!email || !password) {
       toast.error("Please enter both email and password.");
@@ -85,16 +73,6 @@ export function LoginForm({
                     Use your FPTU Google account to access the system
                   </p>
                 </div>
-                {/* <Button
-                  type="button"
-                  variant="default"
-                  className="w-full h-12 text-base bg-emerald-700 hover:bg-emerald-600 text-white flex items-center justify-center gap-2"
-                  onClick={handleGoogleLogin}
-                  disabled={isLoading}
-                >
-                  <LogIn className="h-5 w-5" />
-                  {isLoading ? "Redirecting..." : "Login with Google"}
-                </Button> */}
                 <GoogleAuthentication />
               </div>
             </TabsContent>

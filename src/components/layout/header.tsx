@@ -44,13 +44,8 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-// import { useAuthResponse } from "@/hooks/queries";
-// import { axiosClient } from "@/services/api";
-// // import { GoogleAuthResponse } from "@/types/auth";
-// import { ProjectDetail } from "@/types/project";
-// import Cookies from "js-cookie";
+import { useAuthResponse } from "@/hooks/queries";
 
-// Mock notifications data
 const mockNotifications = [
   {
     id: 1,
@@ -99,7 +94,6 @@ const mockNotifications = [
   },
 ];
 
-// Define menu items for each role
 const menuItemsByRole = {
   [UserRole.RESEARCHER]: [
     { name: "Home", path: "/home", icon: Home },
@@ -151,21 +145,9 @@ function Header() {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(mockNotifications);
-  // const googleResponseQuery = useAuthResponse();
-  // const [data, setData] = useState({});
+  const { data: authData } = useAuthResponse();
 
-  // useEffect(() => {
-  //   const GoogleAuthResponse = async () => {
-  //     const res = await axiosClient.get<ProjectDetail>(
-  //       "/project/00541722-ed20-44fc-95e6-0a4b1b9daf37"
-  //     );
-  //     setData(res.data);
-  //   };
-
-  //   GoogleAuthResponse();
-  // }, []);
-  // console.log("response Data", data);
-  // console.log("sessionId", sessionId);
+  console.log("Auth data:", authData);
 
   // Get menu items based on user role
   const menuItems = user?.role

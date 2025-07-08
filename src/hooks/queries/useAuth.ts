@@ -1,13 +1,8 @@
-import { getGoogleAuthResponse } from "@/services/resources/auth";
-import { useQuery } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { GoogleAuthResponse } from "@/types/auth";
 
-export function useAuthResponse(token: string | undefined) {
-  return useQuery({
-    queryKey: ["auth-response"],
-    queryFn: () => getGoogleAuthResponse(token!),
-    enabled: !!token,
-    staleTime: 1000 * 60 * 60 * 5, // 5 hours
-    refetchOnMount: false,
-    refetchOnWindowFocus: false,
-  });
+export function useAuthResponse() {
+  const queryClient = useQueryClient();
+  const data = queryClient.getQueryData<GoogleAuthResponse>(["auth-response"]);
+  return { data };
 }

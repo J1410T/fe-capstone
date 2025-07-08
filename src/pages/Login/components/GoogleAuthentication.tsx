@@ -1,121 +1,69 @@
-// import {
-//   GoogleOAuthProvider,
-//   GoogleLogin,
-//   CredentialResponse,
-// } from "@react-oauth/google";
-// import { env } from "@/config/env";
-// import { useAuthResponse } from "@/hooks/queries";
-// import { useNavigate } from "react-router-dom";
-// import { mockUserLogin } from "@/utils";
-// import { useAuth } from "@/contexts";
-// import { UserRole } from "@/contexts/auth-types";
-// import { useEffect, useState } from "react";
-// import { axiosClient } from "@/services/api";
-// import { GoogleAuthResponse } from "@/types/auth";
-
-// const GoogleAuthentication = () => {
-//   const navigate = useNavigate();
-//   const { login } = useAuth();
-//   const [googleToken, setGoogleToken] = useState<string | null>(null);
-
-//   const queryAuthResponse = useAuthResponse(googleToken ?? undefined);
-
-//   const handleSuccess = (response: CredentialResponse) => {
-//     const token = response.credential;
-//     if (token) {
-//         const res = await axiosClient.get<GoogleAuthResponse>(
-//                   `/auth/google-authentication?Token=${token}`
-//                 );
-//                 setGoogleToken(res.data);
-//               };
-//     } else {
-//       console.warn("Google token is missing from response.");
-//     }
-//   };
-
-//   const handleError = () => {
-//     console.log("Error during Google login!");
-//   };
-
-//   // Thực hiện login sau khi query thành công
-//   useEffect(() => {
-//     if (queryAuthResponse.isSuccess && googleToken) {
-//       login(mockUserLogin(UserRole.RESEARCHER).credential.token);
-//       navigate("/home");
-//     }
-//   }, []);
-
-//   return (
-//     <div>
-//       <GoogleOAuthProvider clientId={env.GOOGLE_CLIENT_ID}>
-//         <GoogleLogin
-//           text="continue_with"
-//           onSuccess={handleSuccess}
-//           onError={handleError}
-//         />
-//       </GoogleOAuthProvider>
-//     </div>
-//   );
-// };
-
-// export default GoogleAuthentication;
-
-import {
-  GoogleOAuthProvider,
-  GoogleLogin,
-  CredentialResponse,
-} from "@react-oauth/google";
-import { env } from "@/config/env";
+import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts";
 import { GoogleAuthResponse } from "@/types/auth";
-import { useEffect, useState } from "react";
 import { axiosClient } from "@/services/api";
 import { mockUserLogin } from "@/utils";
 import { UserRole } from "@/contexts/auth-types";
+import { useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components";
+import { useState } from "react";
+import { LogIn } from "lucide-react";
 
 const GoogleAuthentication = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const [authData, setAuthData] = useState<GoogleAuthResponse | null>(null);
+  const queryClient = useQueryClient();
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSuccess = async (response: CredentialResponse) => {
-    const token = response.credential;
-    if (!token) {
-      console.warn("Google token is missing from response.");
-      return;
-    }
+  const loginGoogle = useGoogleLogin({
+    onSuccess: async (credentialResponse) => {
+      console.log(credentialResponse);
+      const token = credentialResponse.access_token;
 
-    try {
-      const res = await axiosClient.post<GoogleAuthResponse>(
-        `/auth/google-authentication?Token=${token}`
-      );
-      setAuthData(res.data);
-    } catch (error) {
-      console.error("Failed to fetch Google auth response:", error);
-    }
-  };
+      if (!token) {
+        console.warn("Google token is missing from response.");
+        return;
+      }
 
-  const handleError = () => {
-    console.log("Error during Google login!");
-  };
+      setIsLoading(true);
+      try {
+        const res = await axiosClient.post<GoogleAuthResponse>(
+          `/auth/google-authentication?Token=${token}`
+        );
 
-  useEffect(() => {
-    if (authData) {
-      login(mockUserLogin(UserRole.RESEARCHER).credential.token);
-      navigate("/home");
-    }
-  }, []);
+        if (res.data) {
+          queryClient.setQueryData<GoogleAuthResponse>(
+            ["auth-response"],
+            res.data
+          );
+          login(mockUserLogin(UserRole.RESEARCHER).credential.token);
+          navigate("/home");
+        }
+      } catch (error) {
+        console.error("Failed to fetch Google auth response:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.error("Failed to login with Google:", error);
+      setIsLoading(false);
+    },
+  });
 
   return (
     <div>
-      <GoogleOAuthProvider clientId={env.GOOGLE_CLIENT_ID}>
-        <GoogleLogin
-          text="continue_with"
-          onSuccess={handleSuccess}
-          onError={handleError}
-        />
-      </GoogleOAuthProvider>
+      <Button
+        type="button"
+        variant="default"
+        className="w-full h-12 text-base bg-emerald-700 hover:bg-emerald-600 text-white flex items-center justify-center gap-2"
+        onClick={() => loginGoogle()}
+        disabled={isLoading}
+      >
+        <LogIn className="h-5 w-5" />
+        {isLoading ? "Redirecting..." : "Login with Google"}
+      </Button>
     </div>
   );
 };
