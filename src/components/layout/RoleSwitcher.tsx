@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useAuthResponse } from "@/hooks/queries";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -61,13 +62,7 @@ const roleConfig = {
   },
 };
 
-// Available roles for switching (excluding Staff - staff cannot switch roles)
-const availableRoles = [
-  UserRole.RESEARCHER,
-  UserRole.PRINCIPAL_INVESTIGATOR,
-  UserRole.HOST_INSTITUTION,
-  UserRole.APPRAISAL_COUNCIL,
-];
+// Note: availableRoles is now dynamically generated from auth-response data
 
 interface RoleSwitcherProps {
   variant?: "dropdown" | "button" | "mobile";
@@ -83,11 +78,22 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
   const { user, switchRole } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const { data: authData } = useAuthResponse();
 
   if (!user) return null;
 
   // Staff users cannot switch roles
   if (user.role === UserRole.STAFF) return null;
+
+  // Only display Switch Role section if there are 2 or more roles
+  if (!authData?.roles || authData.roles.length < 2) return null;
+
+  // Get available roles from auth-response data instead of hardcoded list
+  const availableRoles = authData.roles
+    .filter((role): role is UserRole =>
+      Object.values(UserRole).includes(role as UserRole)
+    )
+    .filter((role) => role !== UserRole.STAFF); // Staff users cannot switch roles
 
   const currentRoleConfig = roleConfig[user.role];
 

@@ -2,8 +2,10 @@ import React, { useState, useEffect, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import { UserRole, User, JwtPayload } from "./auth-types";
 import { AuthContext } from "./auth-context";
+import { GoogleAuthResponse } from "@/types/auth";
 
 // Re-export for compatibility (but keep them in separate files for fast refresh)
 export type { User } from "./auth-types";
@@ -20,6 +22,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   // Check if user is authenticated
   const isAuthenticated = !!user;
@@ -153,6 +156,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Store the current role in localStorage for persistence
       localStorage.setItem("currentRole", newRole);
+
+      // Update the auth-response query data with the new selected role
+      const currentAuthData = queryClient.getQueryData<GoogleAuthResponse>([
+        "auth-response",
+      ]);
+      if (currentAuthData) {
+        const updatedAuthData = {
+          ...currentAuthData,
+          "selected-role": newRole,
+        };
+        queryClient.setQueryData<GoogleAuthResponse>(
+          ["auth-response"],
+          updatedAuthData
+        );
+      }
 
       // Show success notification
       toast.success(`Switched to ${newRole} role`);

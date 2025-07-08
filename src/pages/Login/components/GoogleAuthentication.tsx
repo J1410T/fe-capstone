@@ -18,7 +18,7 @@ const GoogleAuthentication = () => {
 
   const loginGoogle = useGoogleLogin({
     onSuccess: async (credentialResponse) => {
-      console.log(credentialResponse);
+      // console.log(credentialResponse);
       const token = credentialResponse.access_token;
 
       if (!token) {
@@ -37,7 +37,14 @@ const GoogleAuthentication = () => {
             ["auth-response"],
             res.data
           );
-          login(mockUserLogin(UserRole.RESEARCHER).credential.token);
+
+          // Use the selected-role from the API response instead of hardcoding RESEARCHER
+          const selectedRole = res.data["selected-role"] as UserRole;
+          const userRole = Object.values(UserRole).includes(selectedRole)
+            ? selectedRole
+            : UserRole.RESEARCHER; // fallback to RESEARCHER if invalid role
+
+          login(mockUserLogin(userRole).credential.token);
           navigate("/home");
         }
       } catch (error) {

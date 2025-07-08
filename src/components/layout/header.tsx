@@ -147,24 +147,31 @@ function Header() {
   const [notifications, setNotifications] = useState(mockNotifications);
   const { data: authData } = useAuthResponse();
 
-  console.log("Auth data:", authData);
+  // Get user display data from auth-response if available, otherwise fallback to user context
+  const displayUser = {
+    name: authData?.["full-name"] || user?.name || "User",
+    email: authData?.email || user?.email || "user@example.com",
+    role: authData?.["selected-role"] || user?.role || "RESEARCHER",
+    avatar: authData?.["avatar-url"] || user?.avatar || "",
+  };
 
-  // Get menu items based on user role
-  const menuItems = user?.role
-    ? menuItemsByRole[user.role]
+  // Get menu items based on current selected role (from auth-response or user context)
+  const currentRole = (authData?.["selected-role"] as UserRole) || user?.role;
+  const menuItems = currentRole
+    ? menuItemsByRole[currentRole]
     : menuItemsByRole[UserRole.RESEARCHER];
 
   const handleProfileClick = () => {
-    // Navigate to role-specific profile page
-    if (user?.role === "Principal Investigator") {
+    // Navigate to role-specific profile page based on current selected role
+    if (currentRole === "Principal Investigator") {
       navigate("/pi/profile");
-    } else if (user?.role === "Researcher") {
+    } else if (currentRole === "Researcher") {
       navigate("/researcher/profile");
-    } else if (user?.role === "Host Institution") {
+    } else if (currentRole === "Host Institution") {
       navigate("/host/profile");
-    } else if (user?.role === "Appraisal council") {
+    } else if (currentRole === "Appraisal council") {
       navigate("/council/profile");
-    } else if (user?.role === "Staff") {
+    } else if (currentRole === "Staff") {
       navigate("/staff/profile");
     } else {
       // Fallback to RESEARCHER profile for unknown roles
@@ -379,9 +386,12 @@ function Header() {
                 className="relative h-10 w-10 rounded-full hover:bg-gray-100 transition-colors"
               >
                 <Avatar className="h-9 w-9 ring-2 ring-gray-100">
-                  <AvatarImage src={user?.avatar} alt={user?.name || "User"} />
+                  <AvatarImage
+                    src={displayUser.avatar}
+                    alt={displayUser.name}
+                  />
                   <AvatarFallback className="bg-emerald-100 text-emerald-700 font-semibold">
-                    {user?.name?.charAt(0) || "U"}
+                    {displayUser.name.charAt(0)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
@@ -390,16 +400,16 @@ function Header() {
               <DropdownMenuLabel className="font-normal p-4 bg-gray-50/50 border-b">
                 <div className="flex flex-col space-y-2">
                   <p className="text-sm font-semibold leading-none text-gray-900">
-                    {user?.name || "User"}
+                    {displayUser.name}
                   </p>
                   <p className="text-xs leading-none text-gray-500">
-                    {user?.email || "user@example.com"}
+                    {displayUser.email}
                   </p>
                   <Badge
                     variant="secondary"
                     className="w-fit text-xs font-medium"
                   >
-                    {user?.role || "RESEARCHER"}
+                    {displayUser.role}
                   </Badge>
                 </div>
               </DropdownMenuLabel>
@@ -458,25 +468,25 @@ function Header() {
                 <div className="flex items-center gap-4">
                   <Avatar className="h-12 w-12 ring-2 ring-emerald-100">
                     <AvatarImage
-                      src={user?.avatar}
-                      alt={user?.name || "User"}
+                      src={displayUser.avatar}
+                      alt={displayUser.name}
                     />
                     <AvatarFallback className="bg-emerald-100 text-emerald-700 font-semibold text-lg">
-                      {user?.name?.charAt(0) || "U"}
+                      {displayUser.name.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-gray-900 truncate">
-                      {user?.name || "User"}
+                      {displayUser.name}
                     </div>
                     <div className="text-sm text-gray-500 truncate">
-                      {user?.email || "user@example.com"}
+                      {displayUser.email}
                     </div>
                     <Badge
                       variant="secondary"
                       className="mt-1 w-fit text-xs font-medium"
                     >
-                      {user?.role || "RESEARCHER"}
+                      {displayUser.role}
                     </Badge>
                   </div>
                 </div>
