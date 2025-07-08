@@ -38,13 +38,20 @@ const GoogleAuthentication = () => {
             res.data
           );
 
-          // Use the selected-role from the API response instead of hardcoding RESEARCHER
-          const selectedRole = res.data["selected-role"] as UserRole;
-          const userRole = Object.values(UserRole).includes(selectedRole)
-            ? selectedRole
-            : UserRole.RESEARCHER; // fallback to RESEARCHER if invalid role
+          // Use the token from the API response if available, otherwise generate mock token
+          let accessToken = res.data.token;
 
-          login(mockUserLogin(userRole).credential.token);
+          if (!accessToken) {
+            // Fallback to mock token if API doesn't provide one
+            const selectedRole = res.data["selected-role"] as UserRole;
+            const userRole = Object.values(UserRole).includes(selectedRole)
+              ? selectedRole
+              : UserRole.RESEARCHER; // fallback to RESEARCHER if invalid role
+
+            accessToken = mockUserLogin(userRole).credential.token;
+          }
+
+          login(accessToken);
           navigate("/home");
         }
       } catch (error) {

@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { UserRole, User, JwtPayload } from "./auth-types";
 import { AuthContext } from "./auth-context";
 import { GoogleAuthResponse } from "@/types/auth";
+import { simpleSessionManager } from "@/contexts/simple-session-manager";
 
 // Re-export for compatibility (but keep them in separate files for fast refresh)
 export type { User } from "./auth-types";
@@ -27,25 +28,51 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Check if user is authenticated
   const isAuthenticated = !!user;
 
-  // Initialize auth state from localStorage
+  // Initialize auth state from localStorage and auth-response
   useEffect(() => {
     const initAuth = async () => {
       setIsLoading(true);
       try {
+        // First check if auth-response exists and is valid
+        if (!simpleSessionManager.isAuthResponseValid()) {
+          console.log("No valid auth-response found during initialization");
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+
+        // Get UserRole from auth-response
+        const userRole = simpleSessionManager.getUserRoleFromAuthResponse();
+        if (!userRole) {
+          console.log("No valid UserRole found in auth-response");
+          simpleSessionManager.clearSession();
+          setUser(null);
+          setIsLoading(false);
+          return;
+        }
+
+        // Check for existing token
         const token = localStorage.getItem("accessToken");
         if (token) {
-          // Validate token and set user
-          const { success } = await validateAndSetUser(token);
+          // Validate token and set user with role from auth-response
+          const { success } = await validateAndSetUser(token, userRole);
           if (!success) {
-            // Clear invalid token
-            localStorage.removeItem("accessToken");
+            // Clear invalid token and session
+            simpleSessionManager.clearSession();
             setUser(null);
+          } else {
+            // Start session tracking
+            simpleSessionManager.startSession();
           }
+        } else {
+          // No token but auth-response exists - clear everything
+          simpleSessionManager.clearSession();
+          setUser(null);
         }
       } catch (error) {
         console.error("Failed to initialize auth:", error);
-        // Clear invalid token
-        localStorage.removeItem("accessToken");
+        // Clear invalid session
+        simpleSessionManager.clearSession();
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -55,8 +82,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
-  // Validate token and set user
-  const validateAndSetUser = async (token: string) => {
+  // Validate token and set user with role from auth-response
+  const validateAndSetUser = async (
+    token: string,
+    roleFromAuthResponse?: UserRole
+  ) => {
     try {
       // Decode JWT token
       const decoded = jwtDecode<JwtPayload>(token);
@@ -67,19 +97,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error("Token expired");
       }
 
-      // Set user
+      // Use role from auth-response if provided, otherwise fall back to token role
+      const userRole = roleFromAuthResponse || decoded.role;
+
+      // Set user with role from auth-response
       setUser({
         id: decoded.sub,
         name: decoded.name,
         email: decoded.email,
         avatar: decoded.picture,
-        role: decoded.role,
+        role: userRole,
         accessToken: token,
       });
 
       return {
         success: true,
-        userRole: decoded.role,
+        userRole: userRole,
       };
     } catch (error) {
       console.error("Token validation failed:", error);
@@ -98,13 +131,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Save token to localStorage
       localStorage.setItem("accessToken", accessToken);
 
-      // Validate token and set user
-      const { success, userRole } = await validateAndSetUser(accessToken);
+      // Get UserRole from auth-response (should be set by GoogleAuthentication component)
+      const userRole = simpleSessionManager.getUserRoleFromAuthResponse();
+
+      if (!userRole) {
+        console.error("No valid UserRole found in auth-response during login");
+        toast.error("Login failed - invalid role");
+        return;
+      }
+
+      // Validate token and set user with role from auth-response
+      const { success } = await validateAndSetUser(accessToken, userRole);
 
       if (success) {
+        // Start session tracking
+        simpleSessionManager.startSession();
+
         toast.success("Login successful");
 
-        // Redirect users based on their role
+        // Redirect users based on their role from auth-response
         if (userRole === UserRole.STAFF) {
           // Staff users go to staff dashboard with sidebar
           navigate("/staff/dashboard");
@@ -126,12 +171,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Logout function
   const logout = () => {
-    // Clear user and token
+    // Clear user and session
     setUser(null);
-    localStorage.removeItem("accessToken");
+    simpleSessionManager.clearSession();
     toast.success("Logged out successfully");
     navigate("/auth/login");
   };
+
+  // Initialize session manager
+  useEffect(() => {
+    simpleSessionManager.initialize({
+      onLogout: () => {
+        console.log("Session manager triggered logout");
+        logout();
+      },
+      onAuthResponseLost: () => {
+        console.log("Auth-response lost - redirecting to login");
+        setUser(null);
+        navigate("/auth/login");
+      },
+      queryClient: queryClient,
+    });
+
+    return () => {
+      simpleSessionManager.cleanup();
+    };
+  }, [navigate, queryClient, logout]);
 
   // Check if user has specific role
   const hasRole = (role: UserRole) => {
@@ -143,34 +208,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!user) return false;
 
     try {
-      // In production, this would:
-      // 1. Call API to verify user has permission for this role
-      // 2. Get new JWT token with updated role
-      // 3. Update user state
-
-      // For now, simulate the role switch
-      const updatedUser = { ...user, role: newRole };
-
-      // Update user state with new role
-      setUser(updatedUser);
-
-      // Store the current role in localStorage for persistence
-      localStorage.setItem("currentRole", newRole);
-
-      // Update the auth-response query data with the new selected role
-      const currentAuthData = queryClient.getQueryData<GoogleAuthResponse>([
+      // Get current auth-response data
+      const authResponse = queryClient.getQueryData<GoogleAuthResponse>([
         "auth-response",
       ]);
-      if (currentAuthData) {
-        const updatedAuthData = {
-          ...currentAuthData,
-          "selected-role": newRole,
-        };
-        queryClient.setQueryData<GoogleAuthResponse>(
-          ["auth-response"],
-          updatedAuthData
-        );
+      if (!authResponse) {
+        throw new Error("No auth response data found");
       }
+
+      // Check if the new role is available in the user's roles
+      if (!authResponse.roles.includes(newRole)) {
+        throw new Error(`Role ${newRole} is not available for this user`);
+      }
+
+      // Update the auth-response data with new selected role
+      const updatedAuthResponse = {
+        ...authResponse,
+        "selected-role": newRole,
+      };
+
+      // Update the query cache
+      queryClient.setQueryData<GoogleAuthResponse>(
+        ["auth-response"],
+        updatedAuthResponse
+      );
+
+      // Update user role
+      setUser((prev) => (prev ? { ...prev, role: newRole } : null));
+
+      // Reset session activity since role switch is a user action
+      simpleSessionManager.updateLastActivity();
 
       // Show success notification
       toast.success(`Switched to ${newRole} role`);
