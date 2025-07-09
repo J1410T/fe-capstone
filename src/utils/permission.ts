@@ -32,7 +32,7 @@ export const PERMISSIONS = {
  * Role-based permission mapping
  */
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
-  [UserRole.MEMBER]: [PERMISSIONS.VIEW_PROJECT_BASIC],
+  [UserRole.RESEARCHER]: [PERMISSIONS.VIEW_PROJECT_BASIC],
   [UserRole.PRINCIPAL_INVESTIGATOR]: [
     PERMISSIONS.VIEW_PROJECT_BASIC,
     PERMISSIONS.VIEW_PROJECT_TASKS,

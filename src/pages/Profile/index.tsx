@@ -233,7 +233,7 @@ const Profile: React.FC = () => {
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
                   <span className="text-gray-600 font-medium">
-                    Member Since
+                    RESEARCHER Since
                   </span>
                   <span className="font-bold text-gray-800">
                     {format(new Date(user.joinDate), "MMM yyyy")}
@@ -491,7 +491,7 @@ const Profile: React.FC = () => {
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-emerald-600" />
-                      Member Since
+                      RESEARCHER Since
                     </Label>
                     <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
                       <span className="text-gray-800 font-medium">
@@ -525,7 +525,7 @@ const Profile: React.FC = () => {
                   </Label>
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
                     <span className="text-gray-800 font-medium">
-                      {user.isLeader ? "Leader Account" : "Member Account"}
+                      {user.isLeader ? "Leader Account" : "RESEARCHER Account"}
                     </span>
                     {user.isLeader && (
                       <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">

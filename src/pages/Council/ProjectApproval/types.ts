@@ -79,7 +79,7 @@ export interface Secretary {
   workAddress: string;
 }
 
-export interface TeamMember {
+export interface TeamResearcher {
   name: string;
   academicTitle: string;
   workUnit: string;
@@ -97,7 +97,7 @@ export interface EvaluationData {
   implementationTime: ImplementationTime;
   principalInvestigator: PrincipalInvestigator;
   secretary: Secretary;
-  teamMembers: TeamMember[];
+  teamResearchers: TeamResearcher[];
   hostInstitution: HostInstitution;
 }
 

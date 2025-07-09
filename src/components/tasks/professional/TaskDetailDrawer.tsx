@@ -28,7 +28,7 @@ interface TaskDetailDrawerProps {
   onOpenChange: (open: boolean) => void;
   task: Task | null;
   currentUser: User;
-  teamMembers: User[];
+  teamResearchers: User[];
   onUpdate: (taskId: string, data: UpdateTaskData) => void;
   isLoading?: boolean;
 }
@@ -68,7 +68,7 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
   onOpenChange,
   task,
   currentUser,
-  teamMembers,
+  teamResearchers,
   onUpdate,
   isLoading = false,
 }) => {
@@ -308,18 +308,18 @@ export const TaskDetailDrawer: React.FC<TaskDetailDrawerProps> = ({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {teamMembers.map((member) => (
-                    <SelectItem key={member.id} value={member.id}>
+                  {teamResearchers.map((researcher) => (
+                    <SelectItem key={researcher.id} value={researcher.id}>
                       <div className="flex items-center space-x-2">
                         <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-medium text-slate-600">
-                          {member.name
+                          {researcher.name
                             .split(" ")
                             .map((n: string) => n[0])
                             .join("")}
                         </div>
-                        <span>{member.name}</span>
+                        <span>{researcher.name}</span>
                         <span className="text-xs text-slate-500">
-                          ({member.role})
+                          ({researcher.role})
                         </span>
                       </div>
                     </SelectItem>

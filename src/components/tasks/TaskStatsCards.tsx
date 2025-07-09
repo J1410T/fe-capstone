@@ -12,14 +12,14 @@ interface TaskStats {
 
 interface TaskStatsCardsProps {
   stats: TaskStats;
-  teamMembers?: number;
+  teamResearchers?: number;
   projectTags?: number;
   showExtendedStats?: boolean;
 }
 
 export const TaskStatsCards: React.FC<TaskStatsCardsProps> = ({
   stats,
-  teamMembers,
+  teamResearchers,
   projectTags,
   showExtendedStats = false,
 }) => {
@@ -55,11 +55,11 @@ export const TaskStatsCards: React.FC<TaskStatsCardsProps> = ({
   ];
 
   const extendedStats = [
-    ...(teamMembers !== undefined
+    ...(teamResearchers !== undefined
       ? [
           {
-            title: "Team Members",
-            value: teamMembers,
+            title: "Team Researchers",
+            value: teamResearchers,
             icon: Users,
             color: "text-purple-900",
             iconColor: "bg-purple-100 text-purple-600",

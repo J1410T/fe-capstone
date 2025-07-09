@@ -43,7 +43,7 @@ const FormRegister: React.FC = () => {
   // Set default form based on user role
   useEffect(() => {
     if (availableForms.length > 0) {
-      // Default to BM1 for PI, BM4 for Member
+      // Default to BM1 for PI, BM4 for RESEARCHER
       const defaultForm =
         user?.role === UserRole.PRINCIPAL_INVESTIGATOR ? "BM1" : "BM4";
       if (availableForms.includes(defaultForm)) {

@@ -10,7 +10,7 @@ import { MilestoneCard, TaskDialog } from "./milestone";
 const MilestoneTab: React.FC = () => {
   const { user } = useAuth();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
-  const [teamMembers, setTeamMembers] = useState<PIUser[]>([]);
+  const [teamResearchers, setTeamResearchers] = useState<PIUser[]>([]);
   const [showTaskDialog, setShowTaskDialog] = useState(false);
   const [selectedMilestone, setSelectedMilestone] = useState<string>("");
   const selectedMilestoneRef = useRef<string>("");
@@ -195,12 +195,12 @@ const MilestoneTab: React.FC = () => {
 
   useEffect(() => {
     loadMilestonesAndTasks();
-    loadTeamMembers();
+    loadTeamResearchers();
   }, [loadMilestonesAndTasks]);
 
-  const loadTeamMembers = async () => {
-    // Mock team members
-    const mockMembers: PIUser[] = [
+  const loadTeamResearchers = async () => {
+    // Mock team RESEARCHERs
+    const mockResearchers: PIUser[] = [
       {
         id: "1",
         name: "John Smith",
@@ -223,7 +223,7 @@ const MilestoneTab: React.FC = () => {
         joinedAt: "2023-02-01",
       },
     ];
-    setTeamMembers(mockMembers);
+    setTeamResearchers(mockResearchers);
   };
 
   // Task handlers
@@ -427,7 +427,7 @@ const MilestoneTab: React.FC = () => {
         onFormChange={handleTaskFormChange}
         dueDate={taskDueDate}
         onDueDateChange={handleTaskDueDateChange}
-        teamMembers={teamMembers}
+        teamResearchers={teamResearchers}
       />
     </Card>
   );

@@ -30,9 +30,9 @@ This is the client-side frontend of **SRPM**, built with modern web technologies
 ### User Roles
 
 - **Principal Investigator (PI)**: Project leaders with full project control
-- **Team Members**: Researchers and staff assigned to projects
+- **Team RESEARCHERs**: Researchers and staff assigned to projects
 - **Host Institution**: Administrative oversight and resource management
-- **Council Members**: Project evaluation and approval authority
+- **Council RESEARCHERs**: Project evaluation and approval authority
 - **Staff**: Administrative support and system management
 
 ## 🛠️ Technology Stack

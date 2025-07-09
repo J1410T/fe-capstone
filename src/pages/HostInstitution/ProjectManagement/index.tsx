@@ -39,7 +39,7 @@ const milestones = [
       {
         id: 1,
         user: "Dr. Jane Smith",
-        text: "All team members have been assigned their roles.",
+        text: "All team RESEARCHERs have been assigned their roles.",
         date: "2023-06-10",
       },
       {

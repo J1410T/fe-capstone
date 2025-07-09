@@ -1,11 +1,35 @@
 import FlexibleHeader from "@/components/layout/header";
 import { Outlet, useLocation } from "react-router-dom";
 import AuthGuard from "@/components/auth/AuthGuard";
+import { useSimpleSession } from "@/contexts/simple-session-manager";
+import { useEffect } from "react";
 
 function UserLayout() {
   const location = useLocation();
   const isHomePage = location.pathname === "/home";
-  const isTasksPage = location.pathname === "/member/tasks";
+  const isTasksPage = location.pathname === "/researcher/tasks";
+  const { updateActivity } = useSimpleSession();
+
+  // Add activity listeners to track user interaction
+  useEffect(() => {
+    const activityEvents = ["click", "keypress", "scroll", "mousemove"];
+
+    const handleActivity = () => {
+      updateActivity();
+    };
+
+    // Add event listeners
+    activityEvents.forEach((event) => {
+      document.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    // Cleanup
+    return () => {
+      activityEvents.forEach((event) => {
+        document.removeEventListener(event, handleActivity);
+      });
+    };
+  }, [updateActivity]);
 
   return (
     <AuthGuard>
@@ -22,6 +46,8 @@ function UserLayout() {
             </div>
           )}
         </main>
+        {/* Session Status Component - Disabled due to infinite loop */}
+        {/* <SessionStatus position="bottom-right" /> */}
       </div>
     </AuthGuard>
   );

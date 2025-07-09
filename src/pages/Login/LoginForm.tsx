@@ -8,43 +8,23 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { mockUserLogin } from "@/utils";
 import { LogIn, Shield } from "lucide-react";
+import GoogleAuthentication from "./components/GoogleAuthentication";
+// import { env } from "@/config/env";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole | "">("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { login } = useAuth();
-
-  const handleUserLogin = () => {
-    if (!selectedRole) {
-      toast.error("Please select a role to continue.");
-      return;
-    }
-    setIsLoading(true);
-    // Simulate user login with mock token
-    setTimeout(() => {
-      login(mockUserLogin(selectedRole as UserRole).credential.token);
-      setIsLoading(false);
-    }, 1000);
-  };
 
   const handleStaffLogin = () => {
     if (!email || !password) {
@@ -52,6 +32,7 @@ export function LoginForm({
       return;
     }
     setIsLoading(true);
+
     // Simulate staff login with mock token
     setTimeout(() => {
       login(mockUserLogin(UserRole.STAFF).credential.token);
@@ -80,62 +61,20 @@ export function LoginForm({
             </TabsList>
 
             <TabsContent value="user">
-              <div className="text-center mb-7">
-                <div className="inline-flex items-center justify-center w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg mb-3">
-                  <LogIn className="h-6 w-6 text-white" />
+              <div className="flex flex-col items-center gap-8 py-6">
+                <div className="text-center mb-2">
+                  <div className="inline-flex items-center justify-center w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg mb-3">
+                    <LogIn className="h-7 w-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-1">
+                    Login with Google
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Use your FPTU Google account to access the system
+                  </p>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">
-                  User Access
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Select your role and login to continue
-                </p>
+                <GoogleAuthentication />
               </div>
-              <form
-                onSubmit={(e) => e.preventDefault()}
-                className="flex flex-col gap-6"
-              >
-                <div className="w-full space-y-4">
-                  <Label
-                    htmlFor="role-select"
-                    className="text-sm font-semibold text-gray-500"
-                  >
-                    Select your role to continue:
-                  </Label>
-                  <Select
-                    value={selectedRole}
-                    onValueChange={(value) =>
-                      setSelectedRole(value as UserRole)
-                    }
-                  >
-                    <SelectTrigger className="w-full h-12 text-base mb-0">
-                      <SelectValue placeholder="Choose your role..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={UserRole.MEMBER}>Member</SelectItem>
-                      <SelectItem value={UserRole.APPRAISAL_COUNCIL}>
-                        Appraisal Council
-                      </SelectItem>
-                      <SelectItem value={UserRole.HOST_INSTITUTION}>
-                        Host Institution
-                      </SelectItem>
-                      <SelectItem value={UserRole.PRINCIPAL_INVESTIGATOR}>
-                        Principal Investigator
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button
-                  type="button"
-                  variant="default"
-                  className="w-full h-12 text-base bg-emerald-700 hover:bg-emerald-600 text-white flex items-center justify-center gap-2"
-                  onClick={handleUserLogin}
-                  disabled={isLoading || !selectedRole}
-                >
-                  <LogIn className="h-5 w-5" />
-                  {isLoading ? "Logging in..." : "Login"}
-                </Button>
-              </form>
             </TabsContent>
 
             <TabsContent value="staff">

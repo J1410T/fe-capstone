@@ -14,9 +14,9 @@ import UserHome from "@/pages/UserHome";
 import ProjectsList from "@/pages/ProjectsList";
 import ProjectDetail from "@/pages/ProjectDetail";
 
-// Member Pages
+// RESEARCHER Pages
 import UserTaskManagement from "@/pages/TaskManagement";
-import MemberDashboard from "@/pages/Member/Dashboard";
+import ResearcherDashboard from "@/pages/Researcher/Dashboard";
 
 // Other Pages
 import Profile from "@/pages/Profile";
@@ -63,7 +63,7 @@ export const routes: RouteObject[] = [
     ),
     errorElement: <ErrorBoundaryPage />,
     children: [
-      // Redirect from home to member home for all users
+      // Redirect from home to RESEARCHER home for all users
       {
         index: true,
         element: <Navigate to="/home" replace />,
@@ -106,9 +106,9 @@ export const routes: RouteObject[] = [
         ],
       },
       {
-        path: "member",
+        path: "researcher",
         element: (
-          <AuthGuard requiredRoles={[UserRole.MEMBER]}>
+          <AuthGuard requiredRoles={[UserRole.RESEARCHER]}>
             <UserLayout />
           </AuthGuard>
         ),
@@ -131,7 +131,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "dashboard",
-            element: <MemberDashboard />,
+            element: <ResearcherDashboard />,
           },
           {
             path: "profile",
@@ -150,7 +150,7 @@ export const routes: RouteObject[] = [
             path: "my-projects",
             element: <ProjectDetail />,
           },
-          // Add more member routes here
+          // Add more RESEARCHER routes here
         ],
       },
       // Dashboard routes for all users

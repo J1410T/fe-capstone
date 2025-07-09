@@ -6,6 +6,9 @@
 // Auth hooks
 export { useAuth } from "@/contexts/AuthContext";
 
+// Session hooks
+export { useSessionActivity } from "./useSessionActivity";
+
 // Form hooks (commented out until created)
 // export { useFormField } from "@/components/ui/form-hooks";
 

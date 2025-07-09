@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart3, CheckSquare, TrendingUp, DollarSign } from "lucide-react";
 import { DashboardOverview } from "./components/DashboardOverview";
 import { RecentTaskList } from "./components/RecentTaskList";
 import { AnalyticsCharts } from "./components/AnalyticsCharts";
 import { FundingRequestList } from "./components/FundingRequestList";
-import { BarChart3, CheckSquare, TrendingUp, DollarSign } from "lucide-react";
 
-const MemberDashboard: React.FC = () => {
+const ResearcherDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("overview");
 
   return (
@@ -17,7 +17,7 @@ const MemberDashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-semibold text-slate-900 tracking-tight">
-                Member Dashboard
+                Researcher Dashboard
               </h1>
               <p className="text-sm text-slate-600 mt-1">
                 Manage your tasks, track progress, and monitor funding requests
@@ -35,32 +35,36 @@ const MemberDashboard: React.FC = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="space-y-6"
+        >
           {/* Tab Navigation */}
           <TabsList className="grid w-full grid-cols-4 bg-white border border-slate-200 p-1 rounded-lg">
-            <TabsTrigger 
-              value="overview" 
+            <TabsTrigger
+              value="overview"
               className="flex items-center space-x-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
             >
               <BarChart3 className="w-4 h-4" />
               <span>Overview</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="tasks" 
+            <TabsTrigger
+              value="tasks"
               className="flex items-center space-x-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
             >
               <CheckSquare className="w-4 h-4" />
               <span>Recent Tasks</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="analytics" 
+            <TabsTrigger
+              value="analytics"
               className="flex items-center space-x-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
             >
               <TrendingUp className="w-4 h-4" />
               <span>Analytics</span>
             </TabsTrigger>
-            <TabsTrigger 
-              value="funding" 
+            <TabsTrigger
+              value="funding"
               className="flex items-center space-x-2 data-[state=active]:bg-blue-50 data-[state=active]:text-blue-700"
             >
               <DollarSign className="w-4 h-4" />
@@ -90,4 +94,4 @@ const MemberDashboard: React.FC = () => {
   );
 };
 
-export default MemberDashboard;
+export default ResearcherDashboard;

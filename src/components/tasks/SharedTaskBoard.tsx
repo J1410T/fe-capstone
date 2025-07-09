@@ -46,7 +46,7 @@ const convertToProfessionalTask = (task: KanbanTask): ProfessionalTask => ({
   priority: task.priority,
   assignee: {
     ...task.assignee,
-    role: UserRole.MEMBER,
+    role: UserRole.RESEARCHER,
   },
   createdAt: task.createdAt,
   dueDate: task.dueDate,
@@ -257,7 +257,7 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
                     ...activeTask,
                     assignee: {
                       ...activeTask.assignedTo,
-                      role: UserRole.MEMBER,
+                      role: UserRole.RESEARCHER,
                     },
                     status: STATUS_MAPPING[activeTask.status] as KanbanStatus,
                   }}

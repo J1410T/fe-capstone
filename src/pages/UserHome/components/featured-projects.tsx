@@ -8,7 +8,7 @@ const projects = [
     description:
       "Analyzing the effects of climate change on coastal ecosystems",
     updatedAt: "3 days ago",
-    teamMembers: 8,
+    teamResearchers: 8,
     manager: "Dr. Sarah Johnson",
     progress: 75,
     status: "In Progress",
@@ -21,7 +21,7 @@ const projects = [
     description:
       "Exploring practical applications of quantum computing in cryptography",
     updatedAt: "3 days ago",
-    teamMembers: 6,
+    teamResearchers: 6,
     manager: "Prof. Michael Chen",
     progress: 45,
     status: "In Progress",
@@ -33,7 +33,7 @@ const projects = [
     title: "Novel Antibiotics Discovery",
     description: "Researching new antibiotic compounds from marine organisms",
     updatedAt: "3 days ago",
-    teamMembers: 12,
+    teamResearchers: 12,
     manager: "Dr. Emily Rodriguez",
     progress: 60,
     status: "Done",
@@ -45,7 +45,7 @@ const projects = [
     title: "Neural Network Optimization",
     description: "Developing new algorithms for optimizing neural networks",
     updatedAt: "3 days ago",
-    teamMembers: 5,
+    teamResearchers: 5,
     manager: "Dr. James Wilson",
     progress: 30,
     status: "In Progress",
@@ -58,7 +58,7 @@ const projects = [
     description:
       "Investigating novel materials for energy storage applications",
     updatedAt: "3 days ago",
-    teamMembers: 10,
+    teamResearchers: 10,
     manager: "Prof. Lisa Thompson",
     progress: 85,
     status: "In Progress",
@@ -71,7 +71,7 @@ const projects = [
     description:
       "Identifying genetic markers associated with disease resistance in crops",
     updatedAt: "3 days ago",
-    teamMembers: 7,
+    teamResearchers: 7,
     manager: "Dr. Robert Brown",
     progress: 50,
     status: "Done",

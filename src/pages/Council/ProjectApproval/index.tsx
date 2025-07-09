@@ -177,7 +177,7 @@ const piApplicants: ApplicantData[] = [
         workUnit: "University of Technology",
         workAddress: "123 Tech Street, Boston, MA",
       },
-      teamMembers: [
+      teamResearchers: [
         {
           name: "Dr. Alice Johnson",
           academicTitle: "Ph.D.",
@@ -297,7 +297,7 @@ const piApplicants: ApplicantData[] = [
         workUnit: "National Institute of Technology",
         workAddress: "456 Research Ave, Pittsburgh, PA",
       },
-      teamMembers: [
+      teamResearchers: [
         {
           name: "Dr. Mark Wilson",
           academicTitle: "Ph.D.",
@@ -410,7 +410,7 @@ const piApplicants: ApplicantData[] = [
         workUnit: "Tech University",
         workAddress: "789 Innovation Blvd, Seattle, WA",
       },
-      teamMembers: [
+      teamResearchers: [
         {
           name: "Dr. Lisa Chen",
           academicTitle: "Ph.D.",
