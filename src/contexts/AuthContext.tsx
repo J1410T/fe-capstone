@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ReactNode } from "react";
+import React, { useState, useEffect, ReactNode, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
@@ -51,13 +51,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return;
         }
 
-        // Check for existing token
-        const token = localStorage.getItem("accessToken");
+        // Check for existing token in React Query cache
+        const token = simpleSessionManager.getAccessToken();
         if (token) {
           // Validate token and set user with role from auth-response
           const { success } = await validateAndSetUser(token, userRole);
           if (!success) {
-            // Clear invalid token and session
+            // Clear invalid token and session g
             simpleSessionManager.clearSession();
             setUser(null);
           } else {
@@ -117,7 +117,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       console.error("Token validation failed:", error);
       setUser(null);
-      localStorage.removeItem("accessToken");
+      // Clear token from React Query cache instead of localStorage
+      simpleSessionManager.setAccessToken("");
       return {
         success: false,
         userRole: null,
@@ -128,8 +129,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Login function
   const login = async (accessToken: string) => {
     try {
-      // Save token to localStorage
-      localStorage.setItem("accessToken", accessToken);
+      // Save token to React Query cache instead of localStorage
+      simpleSessionManager.setAccessToken(accessToken);
 
       // Get UserRole from auth-response (should be set by GoogleAuthentication component)
       const userRole = simpleSessionManager.getUserRoleFromAuthResponse();
@@ -170,13 +171,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   // Logout function
-  const logout = () => {
+  const logout = useCallback(() => {
     // Clear user and session
     setUser(null);
     simpleSessionManager.clearSession();
     toast.success("Logged out successfully");
     navigate("/auth/login");
-  };
+  }, [navigate]);
 
   // Initialize session manager
   useEffect(() => {

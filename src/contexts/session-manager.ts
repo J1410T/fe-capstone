@@ -109,11 +109,11 @@ export class SessionManager {
   }
 
   /**
-   * Get auth-response data from query client or localStorage
+   * Get auth-response data from query client only (no localStorage fallback)
    */
   public getAuthResponseData(): GoogleAuthResponse | null {
     try {
-      // First try to get from React Query cache
+      // Get from React Query cache only
       if (this.queryClient) {
         const cachedData = this.queryClient.getQueryData<GoogleAuthResponse>([
           "auth-response",
@@ -121,14 +121,6 @@ export class SessionManager {
         if (cachedData) {
           return cachedData;
         }
-      }
-
-      // Fallback to localStorage (if implemented)
-      const storedData = localStorage.getItem(
-        SESSION_CONFIG.STORAGE_KEYS.AUTH_RESPONSE
-      );
-      if (storedData) {
-        return JSON.parse(storedData);
       }
 
       return null;
@@ -159,15 +151,12 @@ export class SessionManager {
    * Clear all session data
    */
   public clearSession() {
-    // Clear localStorage
-    localStorage.removeItem(SESSION_CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
-    localStorage.removeItem(SESSION_CONFIG.STORAGE_KEYS.LAST_ACTIVITY);
-    localStorage.removeItem(SESSION_CONFIG.STORAGE_KEYS.AUTH_RESPONSE);
-
-    // Clear React Query cache
+    // Clear React Query cache only (no localStorage)
     try {
       if (this.queryClient) {
         this.queryClient.removeQueries({ queryKey: ["auth-response"] });
+        this.queryClient.removeQueries({ queryKey: ["last-activity"] });
+        this.queryClient.removeQueries({ queryKey: ["access-token"] });
       }
     } catch (error) {
       console.error("Error clearing query cache:", error);
@@ -181,10 +170,10 @@ export class SessionManager {
    */
   private updateLastActivity() {
     const now = Date.now();
-    localStorage.setItem(
-      SESSION_CONFIG.STORAGE_KEYS.LAST_ACTIVITY,
-      now.toString()
-    );
+    // Store in React Query cache instead of localStorage
+    if (this.queryClient) {
+      this.queryClient.setQueryData(["last-activity"], now);
+    }
     this.resetActivityTimer();
   }
 
@@ -264,11 +253,11 @@ export class SessionManager {
       }
 
       // Check for inactivity
-      const lastActivity = localStorage.getItem(
-        SESSION_CONFIG.STORAGE_KEYS.LAST_ACTIVITY
-      );
+      const lastActivity = this.queryClient?.getQueryData<number>([
+        "last-activity",
+      ]);
       if (lastActivity) {
-        const timeSinceActivity = Date.now() - parseInt(lastActivity);
+        const timeSinceActivity = Date.now() - lastActivity;
         if (timeSinceActivity >= SESSION_CONFIG.INACTIVITY_TIMEOUT) {
           this.handleInactivityTimeout();
         }

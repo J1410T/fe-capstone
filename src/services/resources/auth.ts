@@ -1,5 +1,6 @@
 import { GoogleAuthResponse } from "@/types/auth";
 import { axiosClient } from "../api";
+import { queryClient } from "@/lib/react-query";
 // import Cookies from "js-cookie";
 
 export const getGoogleAuthResponse = async (token: string) => {
@@ -62,7 +63,9 @@ export const authApi = {
    * Refresh access token
    */
   async refreshToken(): Promise<RefreshTokenResponse> {
-    const refreshToken = localStorage.getItem("refreshToken");
+    const refreshToken = queryClient.getQueryData(["refresh-token"]) as
+      | string
+      | undefined;
     if (!refreshToken) {
       throw new Error("No refresh token available");
     }

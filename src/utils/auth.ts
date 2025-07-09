@@ -4,6 +4,7 @@
  */
 
 import { UserRole } from "@/contexts/AuthContext";
+import { queryClient } from "@/lib/react-query";
 
 /**
  * Mock authentication utilities (for testing and development)
@@ -50,22 +51,27 @@ export const mockAuth = {
    */
   logout: async () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
-    localStorage.removeItem("auth-token");
+    // Clear from React Query cache instead of localStorage
+    queryClient.removeQueries({ queryKey: ["access-token"] });
+    queryClient.removeQueries({ queryKey: ["auth-response"] });
   },
 
   /**
    * Check if user is authenticated
    */
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem("auth-token");
+    const token = queryClient.getQueryData(["access-token"]) as
+      | string
+      | undefined;
+    return !!token;
   },
 
   /**
    * Get stored user data
    */
   getStoredUser: () => {
-    const userData = localStorage.getItem("user-data");
-    return userData ? JSON.parse(userData) : null;
+    const userData = queryClient.getQueryData(["auth-user"]);
+    return userData || null;
   },
 };
 
@@ -77,21 +83,21 @@ export const tokenUtils = {
    * Store authentication token
    */
   store: (token: string): void => {
-    localStorage.setItem("auth-token", token);
+    queryClient.setQueryData(["access-token"], token);
   },
 
   /**
    * Get stored authentication token
    */
   get: (): string | null => {
-    return localStorage.getItem("auth-token");
+    return queryClient.getQueryData(["access-token"]) as string | null;
   },
 
   /**
    * Remove authentication token
    */
   remove: (): void => {
-    localStorage.removeItem("auth-token");
+    queryClient.removeQueries({ queryKey: ["access-token"] });
   },
 
   /**
@@ -126,22 +132,21 @@ export const sessionUtils = {
    * Store user session data
    */
   storeUser: (userData: Record<string, unknown>): void => {
-    localStorage.setItem("user-data", JSON.stringify(userData));
+    queryClient.setQueryData(["auth-user"], userData);
   },
 
   /**
    * Get user session data
    */
   getUser: (): Record<string, unknown> | null => {
-    const userData = localStorage.getItem("user-data");
-    return userData ? JSON.parse(userData) : null;
+    return queryClient.getQueryData(["auth-user"]) || null;
   },
 
   /**
    * Clear user session data
    */
   clearUser: (): void => {
-    localStorage.removeItem("user-data");
+    queryClient.removeQueries({ queryKey: ["auth-user"] });
   },
 
   /**
@@ -158,7 +163,9 @@ export const sessionUtils = {
   clearAll: (): void => {
     tokenUtils.remove();
     sessionUtils.clearUser();
-    localStorage.removeItem("researcher-me");
+    queryClient.removeQueries({ queryKey: ["researcher-me"] });
+    queryClient.removeQueries({ queryKey: ["auth-response"] });
+    queryClient.removeQueries({ queryKey: ["last-activity"] });
   },
 };
 

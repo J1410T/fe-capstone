@@ -75,10 +75,10 @@ export class SimpleSessionManager {
    */
   public updateLastActivity() {
     const now = Date.now();
-    localStorage.setItem(
-      SESSION_CONFIG.STORAGE_KEYS.LAST_ACTIVITY,
-      now.toString()
-    );
+    // Store in React Query cache instead of localStorage
+    if (this.queryClient) {
+      this.queryClient.setQueryData(["last-activity"], now);
+    }
   }
 
   /**
@@ -103,6 +103,34 @@ export class SimpleSessionManager {
     } catch (error) {
       console.error("Error getting UserRole from auth-response:", error);
       return null;
+    }
+  }
+
+  /**
+   * Get access token from React Query cache
+   */
+  public getAccessToken(): string | null {
+    try {
+      if (this.queryClient) {
+        return this.queryClient.getQueryData<string>(["access-token"]) || null;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error getting access token:", error);
+      return null;
+    }
+  }
+
+  /**
+   * Set access token in React Query cache
+   */
+  public setAccessToken(token: string): void {
+    try {
+      if (this.queryClient) {
+        this.queryClient.setQueryData(["access-token"], token);
+      }
+    } catch (error) {
+      console.error("Error setting access token:", error);
     }
   }
 
@@ -147,14 +175,12 @@ export class SimpleSessionManager {
    * Clear all session data
    */
   public clearSession() {
-    // Clear localStorage
-    localStorage.removeItem(SESSION_CONFIG.STORAGE_KEYS.ACCESS_TOKEN);
-    localStorage.removeItem(SESSION_CONFIG.STORAGE_KEYS.LAST_ACTIVITY);
-
-    // Clear React Query cache
+    // Clear React Query cache only (no localStorage)
     try {
       if (this.queryClient) {
         this.queryClient.removeQueries({ queryKey: ["auth-response"] });
+        this.queryClient.removeQueries({ queryKey: ["last-activity"] });
+        this.queryClient.removeQueries({ queryKey: ["access-token"] });
       }
     } catch (error) {
       console.error("Error clearing query cache:", error);
@@ -167,14 +193,14 @@ export class SimpleSessionManager {
    * Check if user has been inactive for too long
    */
   private checkInactivity(): boolean {
-    const lastActivityStr = localStorage.getItem(
-      SESSION_CONFIG.STORAGE_KEYS.LAST_ACTIVITY
-    );
-    if (!lastActivityStr) {
+    // Get last activity from React Query cache instead of localStorage
+    const lastActivity = this.queryClient?.getQueryData<number>([
+      "last-activity",
+    ]);
+    if (!lastActivity) {
       return true; // No activity recorded, consider inactive
     }
 
-    const lastActivity = parseInt(lastActivityStr);
     const timeSinceActivity = Date.now() - lastActivity;
 
     return timeSinceActivity >= SESSION_CONFIG.INACTIVITY_TIMEOUT;

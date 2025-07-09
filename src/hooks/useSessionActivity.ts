@@ -5,6 +5,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import { sessionManager } from "@/contexts/session-manager";
+import { queryClient } from "@/lib/react-query";
 
 interface UseSessionActivityOptions {
   /**
@@ -30,7 +31,7 @@ interface UseSessionActivityOptions {
   debounceMs?: number;
 }
 
-// Removed unused interface - using individual state variables instead
+// Remo ved unused interface - using individual state variables instead
 
 /**
  * Hook for tracking user session activity
@@ -190,10 +191,11 @@ export const useSessionActivity = (options: UseSessionActivityOptions = {}) => {
         return;
       }
 
-      // Get last activity from localStorage
-      const lastActivityStr = localStorage.getItem("last-activity");
-      if (lastActivityStr) {
-        const lastActivityTime = parseInt(lastActivityStr);
+      // Get last activity from React Query cache
+      const lastActivityTime = queryClient.getQueryData([
+        "last-activity",
+      ]) as number;
+      if (lastActivityTime) {
         const timeSinceActivity = Date.now() - lastActivityTime;
         const TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
 

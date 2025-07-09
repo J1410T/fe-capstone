@@ -4,27 +4,19 @@
 
 import { createResource, type Resource } from "@/utils/suspense";
 import { env } from "@/config/env";
+import { queryClient } from "@/lib/react-query";
 
 /**
- * Get authentication token from localStorage
+ * Get authentication token from React Query cache
  * @returns JWT token or null if not found
  */
 export function getToken(): string | null {
   try {
-    const tokenData = localStorage.getItem("auth_token");
-    if (tokenData) {
-      const { token, expiry } = JSON.parse(tokenData);
-      // Check if token is expired
-      if (expiry && expiry > Date.now()) {
-        return token;
-      }
-    }
-    // Fallback to accessToken for backward compatibility with older versions
-    const fallbackToken = localStorage.getItem("accessToken");
-    if (fallbackToken) {
-      console.warn("Using fallback token from 'accessToken'. Consider migrating to 'auth_token'.");
-    }
-    return fallbackToken;
+    // Get token from React Query cache
+    const token = queryClient.getQueryData(["access-token"]) as
+      | string
+      | undefined;
+    return token || null;
   } catch (error) {
     console.error("Error getting token:", error);
     return null; // Return null if an error occurs
@@ -94,9 +86,9 @@ async function handleTokenRefresh(): Promise<boolean> {
     isRefreshingToken = true;
     console.log("Starting token refresh");
 
-    // Kiểm tra sessionStorage
-    const isLoggedIn = sessionStorage.getItem("isLoggedIn") === "true";
-    if (!isLoggedIn) {
+    // Check if auth-response exists in React Query cache
+    const authResponse = queryClient.getQueryData(["auth-response"]);
+    if (!authResponse) {
       console.log("No active session, skip token refresh");
       return false;
     }
@@ -181,35 +173,24 @@ export const api = {
     // Lấy token JWT từ localStorage (nếu có)
     const token = getToken();
 
-    // Đối với API `/auth/me`, kiểm tra phiên đăng nhập trước khi gọi API
+    // For `/auth/me` API, check session before calling API
     if (endpoint === "/auth/me") {
-      const isLoggedIn = sessionStorage.getItem("isLoggedIn") === "true";
-      const savedUser = localStorage.getItem("auth_user");
+      const authResponse = queryClient.getQueryData(["auth-response"]);
+      const savedUser = queryClient.getQueryData(["auth-user"]);
 
-      // Nếu không có token hoặc phiên đăng nhập, không cần gọi API
-      if (!token || !isLoggedIn) {
+      // If no token or session, don't call API
+      if (!token || !authResponse) {
         return Promise.reject(new Error("Authentication failed"));
       }
 
-      // Nếu đã có thông tin user trong localStorage, kiểm tra xem token có hợp lệ không
-      // bằng cách lấy thời gian hết hạn
-      try {
-        const tokenData = localStorage.getItem("auth_token");
-        if (tokenData) {
-          const { expiry } = JSON.parse(tokenData);
-
-          // Nếu token còn hạn và đã có user, trả về dữ liệu từ localStorage để tránh request mạng
-          if (expiry && expiry > Date.now() && savedUser) {
-            return {
-              data: { user: JSON.parse(savedUser) },
-              success: true,
-              message: "User info retrieved from cache",
-              timestamp: new Date().toISOString(),
-            } as unknown as TData;
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing cached auth data", error);
+      // If user data is cached, return it to avoid network request
+      if (savedUser) {
+        return {
+          data: { user: savedUser },
+          success: true,
+          message: "User info retrieved from cache",
+          timestamp: new Date().toISOString(),
+        } as unknown as TData;
       }
     }
 
@@ -257,9 +238,10 @@ export const api = {
           return this.fetch<TData>(endpoint, params, options);
         } else {
           console.log("Token refresh failed, clearing auth state");
-          // Xóa dữ liệu phiên đăng nhập
-          sessionStorage.removeItem("isLoggedIn");
-          // Nếu không thể làm mới token, ném lỗi xác thực
+          // Clear session data from React Query cache
+          queryClient.removeQueries({ queryKey: ["auth-response"] });
+          queryClient.removeQueries({ queryKey: ["access-token"] });
+          // If token refresh fails, throw authentication error
           throw new Error("Authentication failed");
         }
       }
