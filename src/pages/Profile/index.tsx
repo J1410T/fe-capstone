@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,46 +17,107 @@ import {
   X,
   Camera,
   Shield,
-  Clock,
+  // Clock,
   Star,
   Award,
   BookOpen,
+  Building,
+  Globe,
+  Facebook,
+  Linkedin,
 } from "lucide-react";
 import { format } from "date-fns";
 import { validateEmail, validateRequired } from "@/utils";
-
-// Mock user data
-const mockUser = {
-  id: "user1",
-  name: "Sarah Chen",
-  email: "sarah.chen@company.com",
-  phone: "+1 (555) 123-4567",
-  location: "San Francisco, CA",
-  role: "Senior Developer",
-  department: "Engineering",
-  avatar: "",
-  joinDate: "2023-03-15T10:00:00Z",
-  lastLogin: "2024-01-25T14:30:00Z",
-  bio: "Passionate full-stack developer with 5+ years of experience in React, Node.js, and cloud technologies. Love building scalable applications and mentoring junior developers.",
-  skills: ["React", "TypeScript", "Node.js", "Python", "AWS", "Docker"],
-  isLeader: true,
-  projectsCompleted: 42,
-  rating: 4.8,
-  certifications: ["AWS Certified", "React Professional", "Node.js Expert"],
-};
+import { useAccountInfo } from "@/hooks/queries";
 
 const Profile: React.FC = () => {
-  const [user, setUser] = useState(mockUser);
+  const { data: accountInfo } = useAccountInfo();
+
+  // Initialize state with empty values that will be populated when accountInfo loads
+  const [user, setUser] = useState({
+    id: "",
+    identityCode: "",
+    name: "",
+    email: "",
+    alternativeEmail: "",
+    phone: "",
+    address: "",
+    dateOfBirth: null as Date | null,
+    gender: "",
+    website: "",
+    facebookUrl: "",
+    linkedInUrl: "",
+    avatar: "",
+    bio: "",
+    degree: "",
+    degreeType: "",
+    proficiencyLevel: "",
+    companyName: "",
+    createTime: null as Date | null,
+    status: "",
+  });
+
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
-    name: user.name,
-    email: user.email,
-    phone: user.phone,
-    location: user.location,
-    bio: user.bio,
+    name: "",
+    email: "",
+    alternativeEmail: "",
+    phone: "",
+    address: "",
+    bio: "",
+    website: "",
+    facebookUrl: "",
+    linkedInUrl: "",
+    companyName: "",
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update user state when accountInfo changes
+  useEffect(() => {
+    if (accountInfo) {
+      const userData = {
+        id: accountInfo.id || "",
+        identityCode: accountInfo["identity-code"] || "",
+        name: accountInfo["full-name"] || "",
+        email: accountInfo.email || "",
+        alternativeEmail: accountInfo["alternative-email"] || "",
+        phone: accountInfo["phone-number"] || "",
+        address: accountInfo.address || "",
+        dateOfBirth: accountInfo["date-of-birth"]
+          ? new Date(accountInfo["date-of-birth"])
+          : null,
+        gender: accountInfo.gender || "",
+        website: accountInfo.website || "",
+        facebookUrl: accountInfo["facebook-url"] || "",
+        linkedInUrl: accountInfo["linked-in-url"] || "",
+        avatar: accountInfo["avatar-url"] || "",
+        bio: accountInfo.bio || "",
+        degree: accountInfo.degree || "",
+        degreeType: accountInfo["degree-type"] || "",
+        proficiencyLevel: accountInfo["proficiency-level"] || "",
+        companyName: accountInfo["company-name"] || "",
+        createTime: accountInfo["create-time"]
+          ? new Date(accountInfo["create-time"])
+          : null,
+        status: accountInfo.status || "",
+      };
+
+      setUser(userData);
+      setEditData({
+        name: userData.name,
+        email: userData.email,
+        alternativeEmail: userData.alternativeEmail,
+        phone: userData.phone,
+        address: userData.address,
+        bio: userData.bio,
+        website: userData.website,
+        facebookUrl: userData.facebookUrl,
+        linkedInUrl: userData.linkedInUrl,
+        companyName: userData.companyName,
+      });
+    }
+  }, [accountInfo]);
 
   const validateForm = (): boolean => {
     const newErrors: { [key: string]: string } = {};
@@ -73,11 +134,28 @@ const Profile: React.FC = () => {
       newErrors.email = "Please enter a valid email address";
     }
 
+    // Validate alternative email (optional)
+    if (
+      editData.alternativeEmail &&
+      !validateEmail(editData.alternativeEmail)
+    ) {
+      newErrors.alternativeEmail = "Please enter a valid email address";
+    }
+
     // Validate phone (optional)
     if (editData.phone && editData.phone.length > 0) {
       const cleanPhone = editData.phone.replace(/[\s\-()]/g, "");
       if (!/^[+]?[1-9][\d]{0,15}$/.test(cleanPhone)) {
         newErrors.phone = "Please enter a valid phone number";
+      }
+    }
+
+    // Validate website URL (optional)
+    if (editData.website && editData.website.length > 0) {
+      try {
+        new URL(editData.website);
+      } catch {
+        newErrors.website = "Please enter a valid URL";
       }
     }
 
@@ -106,9 +184,14 @@ const Profile: React.FC = () => {
     setEditData({
       name: user.name,
       email: user.email,
+      alternativeEmail: user.alternativeEmail,
       phone: user.phone,
-      location: user.location,
+      address: user.address,
       bio: user.bio,
+      website: user.website,
+      facebookUrl: user.facebookUrl,
+      linkedInUrl: user.linkedInUrl,
+      companyName: user.companyName,
     });
     setErrors({});
   };
@@ -122,6 +205,17 @@ const Profile: React.FC = () => {
     }
   };
 
+  // Show loading state while data is being fetched
+  if (!accountInfo) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading profile...</p>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Clean Header */}
@@ -155,31 +249,41 @@ const Profile: React.FC = () => {
               <div className="text-white">
                 <div className="flex items-center gap-3 mb-2">
                   <h1 className="text-4xl font-bold tracking-tight">
-                    {user.name}
+                    {user.name || "Unknown User"}
                   </h1>
-                  {user.isLeader && (
-                    <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
-                      <Shield className="w-4 h-4 mr-1" />
-                      Leader
-                    </Badge>
-                  )}
+                  <Badge className="bg-white/20 text-white border-white/30 hover:bg-white/30">
+                    <Shield className="w-4 h-4 mr-1" />
+                    {user.status?.charAt(0).toUpperCase() +
+                      user.status?.slice(1) || "Active"}
+                  </Badge>
                 </div>
                 <p className="text-xl text-white/90 mb-2">
-                  {user.role} • {user.department}
+                  {user.identityCode && `ID: ${user.identityCode}`}
+                  {user.degree &&
+                    user.degreeType &&
+                    ` • ${user.degree} (${user.degreeType})`}
                 </p>
                 <div className="flex items-center gap-4 text-white/80">
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 fill-current" />
-                    <span className="font-medium">{user.rating}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Award className="w-4 h-4" />
-                    <span>{user.projectsCompleted} Projects</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    <span>{user.location}</span>
-                  </div>
+                  {user.proficiencyLevel && (
+                    <div className="flex items-center gap-1">
+                      <Star className="w-4 h-4 fill-current" />
+                      <span className="font-medium">
+                        {user.proficiencyLevel}
+                      </span>
+                    </div>
+                  )}
+                  {user.companyName && (
+                    <div className="flex items-center gap-1">
+                      <Building className="w-4 h-4" />
+                      <span>{user.companyName}</span>
+                    </div>
+                  )}
+                  {user.address && (
+                    <div className="flex items-center gap-1">
+                      <MapPin className="w-4 h-4" />
+                      <span>{user.address}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -201,91 +305,136 @@ const Profile: React.FC = () => {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 py-8 -mt-6 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Stats & Skills */}
+          {/* Left Column - Info & Links */}
           <div className="space-y-6">
-            {/* Quick Stats */}
+            {/* Account Details */}
             <Card className="border-0 shadow-lg bg-white">
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-gray-800">
-                  <Award className="w-5 h-5 text-emerald-600" />
-                  Quick Stats
+                  <Shield className="w-5 h-5 text-emerald-600" />
+                  Account Details
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
                   <span className="text-gray-600 font-medium">
-                    Projects Completed
+                    Identity Code
                   </span>
                   <span className="font-bold text-emerald-600 text-lg">
-                    {user.projectsCompleted}
+                    {user.identityCode || "N/A"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
-                  <span className="text-gray-600 font-medium">
-                    Average Rating
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Star className="w-4 h-4 text-amber-400 fill-current" />
-                    <span className="font-bold text-gray-800 text-lg">
-                      {user.rating}
+                  <span className="text-gray-600 font-medium">Status</span>
+                  <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
+                    {user.status?.charAt(0).toUpperCase() +
+                      user.status?.slice(1) || "Active"}
+                  </Badge>
+                </div>
+                {user.createTime && (
+                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+                    <span className="text-gray-600 font-medium">
+                      Member Since
+                    </span>
+                    <span className="font-bold text-gray-800">
+                      {format(new Date(user.createTime), "MMM yyyy")}
                     </span>
                   </div>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
-                  <span className="text-gray-600 font-medium">
-                    RESEARCHER Since
-                  </span>
-                  <span className="font-bold text-gray-800">
-                    {format(new Date(user.joinDate), "MMM yyyy")}
-                  </span>
-                </div>
+                )}
               </CardContent>
             </Card>
 
-            {/* Skills */}
-            <Card className="border-0 shadow-lg bg-white">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-gray-800">
-                  <BookOpen className="w-5 h-5 text-emerald-600" />
-                  Skills & Expertise
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-wrap gap-2">
-                  {user.skills.map((skill, index) => (
-                    <Badge
-                      key={index}
-                      className="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 px-3 py-1.5"
-                    >
-                      {skill}
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Certifications */}
-            <Card className="border-0 shadow-lg bg-white">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-gray-800">
-                  <Award className="w-5 h-5 text-emerald-600" />
-                  Certifications
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {user.certifications.map((cert, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100"
-                  >
-                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
-                      <Award className="w-4 h-4 text-emerald-600" />
+            {/* Education & Professional */}
+            {(user.degree || user.degreeType || user.proficiencyLevel) && (
+              <Card className="border-0 shadow-lg bg-white">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-gray-800">
+                    <BookOpen className="w-5 h-5 text-emerald-600" />
+                    Education & Skills
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {user.degree && (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <Award className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-700 block">
+                          {user.degree}
+                        </span>
+                        {user.degreeType && (
+                          <span className="text-sm text-gray-500">
+                            {user.degreeType}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <span className="font-medium text-gray-700">{cert}</span>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+                  )}
+                  {user.proficiencyLevel && (
+                    <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                      <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                        <Star className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <span className="font-medium text-gray-700">
+                        Proficiency: {user.proficiencyLevel}
+                      </span>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Social Links */}
+            {(user.website || user.facebookUrl || user.linkedInUrl) && (
+              <Card className="border-0 shadow-lg bg-white">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-gray-800">
+                    <Globe className="w-5 h-5 text-emerald-600" />
+                    Social Links
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {user.website && (
+                    <a
+                      href={user.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
+                    >
+                      <Globe className="w-5 h-5 text-emerald-600" />
+                      <span className="font-medium text-gray-700">Website</span>
+                    </a>
+                  )}
+                  {user.facebookUrl && (
+                    <a
+                      href={user.facebookUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
+                    >
+                      <Facebook className="w-5 h-5 text-blue-600" />
+                      <span className="font-medium text-gray-700">
+                        Facebook
+                      </span>
+                    </a>
+                  )}
+                  {user.linkedInUrl && (
+                    <a
+                      href={user.linkedInUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg border border-gray-100 hover:bg-gray-100 transition-colors"
+                    >
+                      <Linkedin className="w-5 h-5 text-blue-700" />
+                      <span className="font-medium text-gray-700">
+                        LinkedIn
+                      </span>
+                    </a>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           {/* Right Column - Main Info */}
@@ -328,7 +477,7 @@ const Profile: React.FC = () => {
                     ) : (
                       <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
                         <span className="text-gray-800 font-medium">
-                          {user.name}
+                          {user.name || "Not provided"}
                         </span>
                       </div>
                     )}
@@ -364,7 +513,47 @@ const Profile: React.FC = () => {
                     ) : (
                       <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
                         <span className="text-gray-800 font-medium">
-                          {user.email}
+                          {user.email || "Not provided"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Alternative Email */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Mail className="w-4 h-4 text-emerald-600" />
+                      Alternative Email
+                    </Label>
+                    {isEditing ? (
+                      <div>
+                        <Input
+                          type="email"
+                          value={editData.alternativeEmail}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "alternativeEmail",
+                              e.target.value
+                            )
+                          }
+                          placeholder="Alternative email address"
+                          className={`transition-all duration-200 ${
+                            errors.alternativeEmail
+                              ? "border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50"
+                              : "border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                          }`}
+                        />
+                        {errors.alternativeEmail && (
+                          <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                            <X className="w-3 h-3" />
+                            {errors.alternativeEmail}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <span className="text-gray-800 font-medium">
+                          {user.alternativeEmail || "Not provided"}
                         </span>
                       </div>
                     )}
@@ -401,31 +590,55 @@ const Profile: React.FC = () => {
                     ) : (
                       <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
                         <span className="text-gray-800 font-medium">
-                          {user.phone}
+                          {user.phone || "Not provided"}
                         </span>
                       </div>
                     )}
                   </div>
 
-                  {/* Location */}
+                  {/* Address */}
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-emerald-600" />
-                      Location
+                      Address
                     </Label>
                     {isEditing ? (
                       <Input
-                        value={editData.location}
+                        value={editData.address}
                         onChange={(e) =>
-                          handleInputChange("location", e.target.value)
+                          handleInputChange("address", e.target.value)
                         }
-                        placeholder="City, State/Country"
+                        placeholder="Your address"
                         className="border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white transition-all duration-200"
                       />
                     ) : (
                       <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
                         <span className="text-gray-800 font-medium">
-                          {user.location}
+                          {user.address || "Not provided"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Company */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Building className="w-4 h-4 text-emerald-600" />
+                      Company
+                    </Label>
+                    {isEditing ? (
+                      <Input
+                        value={editData.companyName}
+                        onChange={(e) =>
+                          handleInputChange("companyName", e.target.value)
+                        }
+                        placeholder="Company name"
+                        className="border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white transition-all duration-200"
+                      />
+                    ) : (
+                      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <span className="text-gray-800 font-medium">
+                          {user.companyName || "Not provided"}
                         </span>
                       </div>
                     )}
@@ -448,11 +661,75 @@ const Profile: React.FC = () => {
                   ) : (
                     <div className="p-4 bg-gray-50 rounded-lg border border-gray-100">
                       <p className="text-gray-700 leading-relaxed">
-                        {user.bio}
+                        {user.bio || "No bio provided"}
                       </p>
                     </div>
                   )}
                 </div>
+
+                {/* Website */}
+                {isEditing && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                      <Globe className="w-4 h-4 text-emerald-600" />
+                      Website
+                    </Label>
+                    <div>
+                      <Input
+                        value={editData.website}
+                        onChange={(e) =>
+                          handleInputChange("website", e.target.value)
+                        }
+                        placeholder="https://your-website.com"
+                        className={`transition-all duration-200 ${
+                          errors.website
+                            ? "border-red-300 focus:border-red-500 focus:ring-red-500 bg-red-50"
+                            : "border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white"
+                        }`}
+                      />
+                      {errors.website && (
+                        <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                          <X className="w-3 h-3" />
+                          {errors.website}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Social Links - Edit Mode */}
+                {isEditing && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Facebook className="w-4 h-4 text-blue-600" />
+                        Facebook
+                      </Label>
+                      <Input
+                        value={editData.facebookUrl}
+                        onChange={(e) =>
+                          handleInputChange("facebookUrl", e.target.value)
+                        }
+                        placeholder="https://facebook.com/profile"
+                        className="border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white transition-all duration-200"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Linkedin className="w-4 h-4 text-blue-700" />
+                        LinkedIn
+                      </Label>
+                      <Input
+                        value={editData.linkedInUrl}
+                        onChange={(e) =>
+                          handleInputChange("linkedInUrl", e.target.value)
+                        }
+                        placeholder="https://linkedin.com/in/profile"
+                        className="border-gray-300 focus:border-emerald-500 focus:ring-emerald-500 bg-white transition-all duration-200"
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Edit Actions */}
                 {isEditing && (
@@ -488,32 +765,47 @@ const Profile: React.FC = () => {
               </CardHeader>
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-emerald-600" />
-                      RESEARCHER Since
-                    </Label>
-                    <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
-                      <span className="text-gray-800 font-medium">
-                        {format(new Date(user.joinDate), "MMMM dd, yyyy")}
-                      </span>
+                  {user.createTime && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-emerald-600" />
+                        Member Since
+                      </Label>
+                      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <span className="text-gray-800 font-medium">
+                          {format(new Date(user.createTime), "MMMM dd, yyyy")}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="space-y-2">
-                    <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-emerald-600" />
-                      Last Login
-                    </Label>
-                    <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
-                      <span className="text-gray-800 font-medium">
-                        {format(
-                          new Date(user.lastLogin),
-                          "MMM dd, yyyy 'at' HH:mm"
-                        )}
-                      </span>
+                  {user.dateOfBirth && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <Calendar className="w-4 h-4 text-emerald-600" />
+                        Date of Birth
+                      </Label>
+                      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <span className="text-gray-800 font-medium">
+                          {format(new Date(user.dateOfBirth), "MMMM dd, yyyy")}
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
+
+                  {user.gender && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <User className="w-4 h-4 text-emerald-600" />
+                        Gender
+                      </Label>
+                      <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg border border-gray-100">
+                        <span className="text-gray-800 font-medium">
+                          {user.gender}
+                        </span>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <Separator className="my-6 bg-gray-200" />
@@ -521,17 +813,16 @@ const Profile: React.FC = () => {
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                     <Shield className="w-4 h-4 text-emerald-600" />
-                    Account Type
+                    Account Status
                   </Label>
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
                     <span className="text-gray-800 font-medium">
-                      {user.isLeader ? "Leader Account" : "RESEARCHER Account"}
+                      {user.status?.charAt(0).toUpperCase() +
+                        user.status?.slice(1) || "Active"}
                     </span>
-                    {user.isLeader && (
-                      <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
-                        Full Access
-                      </Badge>
-                    )}
+                    <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
+                      {user.status === "created" ? "Account Created" : "Active"}
+                    </Badge>
                   </div>
                 </div>
               </CardContent>
