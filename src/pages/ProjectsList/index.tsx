@@ -1,24 +1,20 @@
 import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "@/components/ui/loaders";
-import { ProjectsHeader, ProjectCard, ProjectsPagination } from "./components";
+import {
+  ProjectsHeader,
+  ProjectCard,
+  ProjectsPagination,
+  StatusFilter,
+  FieldFilter,
+  MajorFilter,
+  CategoryFilter,
+  TypeFilter,
+  SortOption,
+} from "./components";
 import { getStatusColor } from "./utils/statusHelpers";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { Project } from "@/types/project";
-
-type SortOption =
-  | "latest"
-  | "oldest"
-  | "a-z"
-  | "z-a"
-  | "progress-high"
-  | "progress-low";
-type StatusFilter = "all" | "created" | "done";
-type FieldFilter = "all" | string;
-type MajorFilter = "all" | string;
-type CategoryFilter = "all" | "basic" | "application/implementation";
-type TypeFilter = "all" | "school level" | "cooperate";
-type GenreFilter = "all" | "normal" | "proposal" | "propose";
 
 const ProjectsList: React.FC = () => {
   const navigate = useNavigate();
@@ -34,7 +30,6 @@ const ProjectsList: React.FC = () => {
   const [selectedCategory, setSelectedCategory] =
     useState<CategoryFilter>("all");
   const [selectedType, setSelectedType] = useState<TypeFilter>("all");
-  const [selectedGenre, setSelectedGenre] = useState<GenreFilter>("all");
   const [selectedSort, setSelectedSort] = useState<SortOption>("latest");
   const [tags, setTags] = useState<string[]>([]);
 
@@ -53,7 +48,6 @@ const ProjectsList: React.FC = () => {
         ...(selectedMajor !== "all" && { major: selectedMajor }),
         ...(selectedCategory !== "all" && { category: selectedCategory }),
         ...(selectedType !== "all" && { type: selectedType }),
-        ...(selectedGenre !== "all" && { genre: selectedGenre }),
         ...(selectedSort && { sort: selectedSort }),
         ...(tags.length > 0 && { tags: tags.join(",") }),
       });
@@ -77,7 +71,6 @@ const ProjectsList: React.FC = () => {
     selectedMajor,
     selectedCategory,
     selectedType,
-    selectedGenre,
     selectedSort,
     tags,
     currentPage,
@@ -126,8 +119,6 @@ const ProjectsList: React.FC = () => {
         onCategoryChange={setSelectedCategory}
         selectedType={selectedType}
         onTypeChange={setSelectedType}
-        selectedGenre={selectedGenre}
-        onGenreChange={setSelectedGenre}
         tags={tags}
         onTagsChange={setTags}
         onSearch={handleSearch}

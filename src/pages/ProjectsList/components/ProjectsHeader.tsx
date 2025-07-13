@@ -18,7 +18,7 @@ export type FieldFilter = "all" | string;
 export type MajorFilter = "all" | string;
 export type CategoryFilter = "all" | "basic" | "application/implementation";
 export type TypeFilter = "all" | "school level" | "cooperate";
-export type GenreFilter = "all" | "normal" | "proposal" | "propose";
+// export type GenreFilter = "all" | "normal" | "proposal" | "propose";
 export type SortOption =
   | "latest"
   | "oldest"
@@ -49,9 +49,6 @@ interface ProjectsHeaderProps {
   selectedType: TypeFilter;
   onTypeChange: (value: TypeFilter) => void;
 
-  selectedGenre: GenreFilter;
-  onGenreChange: (value: GenreFilter) => void;
-
   tags: string[];
   onTagsChange: (tags: string[]) => void;
   onSearch: () => void;
@@ -72,8 +69,6 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
   onCategoryChange,
   selectedType,
   onTypeChange,
-  selectedGenre,
-  onGenreChange,
   tags,
   onTagsChange,
   onSearch,
@@ -114,7 +109,7 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         <Select value={selectedField} onValueChange={handleFieldChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Field" />
@@ -157,18 +152,6 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
                 </SelectItem>
               ))
             )}
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedGenre} onValueChange={onGenreChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Genre" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Genres</SelectItem>
-            <SelectItem value="normal">Normal</SelectItem>
-            <SelectItem value="proposal">Proposal</SelectItem>
-            <SelectItem value="propose">Propose</SelectItem>
           </SelectContent>
         </Select>
 
