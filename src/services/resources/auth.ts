@@ -1,18 +1,13 @@
-import { axiosClient } from "../api";
+import { axiosClient, getAccessToken } from "../api";
 import { queryClient } from "@/lib/react-query"; // đây là queryClient đã cấu hình sẵn
 
 export const getAccountInfo = async () => {
   try {
-    const accessToken = queryClient.getQueryData(["access-token"]);
-
-    if (!accessToken) {
-      throw new Error("Access token not found");
-    }
+    const accessToken = getAccessToken();
 
     const res = await axiosClient.get<AuthInfo>("/account/me", {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        Accept: "text/plain",
       },
     });
 

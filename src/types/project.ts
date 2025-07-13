@@ -1,7 +1,10 @@
+import { ItemResponse } from ".";
 import { Member } from "./auth";
 import { Transaction } from "./budget";
 import { DocumentProject } from "./document";
 import { Evaluation, IndividualEvaluation, Milestone } from "./task";
+
+export type ProjectistResponse = ItemResponse<Project>;
 
 export type ProjectDetail = {
   id: string;

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState, KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, SortAsc } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, X, Tag } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -8,16 +9,52 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useMajorsByField } from "@/hooks/queries/major";
+import { useFieldList } from "@/hooks/queries/field";
+
+// Định nghĩa lại trong ProjectsHeader.tsx nếu cần
+export type StatusFilter = "all" | "created" | "done";
+export type FieldFilter = "all" | string;
+export type MajorFilter = "all" | string;
+export type CategoryFilter = "all" | "basic" | "application/implementation";
+export type TypeFilter = "all" | "school level" | "cooperate";
+export type GenreFilter = "all" | "normal" | "proposal" | "propose";
+export type SortOption =
+  | "latest"
+  | "oldest"
+  | "a-z"
+  | "z-a"
+  | "progress-high"
+  | "progress-low";
 
 interface ProjectsHeaderProps {
   searchTerm: string;
   onSearchChange: (value: string) => void;
-  selectedStatus: string;
-  onStatusChange: (value: string) => void;
-  selectedField: string;
-  onFieldChange: (value: string) => void;
-  selectedSort: string;
-  onSortChange: (value: string) => void;
+
+  selectedStatus: StatusFilter;
+  onStatusChange: (value: StatusFilter) => void;
+
+  selectedField: FieldFilter;
+  onFieldChange: (value: FieldFilter) => void;
+
+  selectedMajor: MajorFilter;
+  onMajorChange: (value: MajorFilter) => void;
+
+  selectedSort: SortOption;
+  onSortChange: (value: SortOption) => void;
+
+  selectedCategory: CategoryFilter;
+  onCategoryChange: (value: CategoryFilter) => void;
+
+  selectedType: TypeFilter;
+  onTypeChange: (value: TypeFilter) => void;
+
+  selectedGenre: GenreFilter;
+  onGenreChange: (value: GenreFilter) => void;
+
+  tags: string[];
+  onTagsChange: (tags: string[]) => void;
+  onSearch: () => void;
 }
 
 export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
@@ -27,79 +64,210 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
   onStatusChange,
   selectedField,
   onFieldChange,
+  selectedMajor,
+  onMajorChange,
   selectedSort,
   onSortChange,
+  selectedCategory,
+  onCategoryChange,
+  selectedType,
+  onTypeChange,
+  selectedGenre,
+  onGenreChange,
+  tags,
+  onTagsChange,
+  onSearch,
 }) => {
+  const [tagInput, setTagInput] = useState("");
+
+  // Fetch fields and majors
+  const { data: fields, isLoading: fieldsLoading } = useFieldList();
+  const { data: majors, isLoading: majorsLoading } =
+    useMajorsByField(selectedField);
+
+  const handleTagKeyPress = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && tagInput.trim()) {
+      e.preventDefault();
+      if (!tags.includes(tagInput.trim())) {
+        onTagsChange([...tags, tagInput.trim()]);
+      }
+      setTagInput("");
+    }
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    onTagsChange(tags.filter((tag) => tag !== tagToRemove));
+  };
+
+  const handleFieldChange = (value: FieldFilter) => {
+    onFieldChange(value);
+    // Reset major selection when field changes
+    onMajorChange("all");
+  };
+
   return (
-    <div className="flex flex-col md:flex-row justify-between md:items-center gap-4">
+    <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">All Projects</h1>
         <p className="text-muted-foreground">
           View all research projects available at your institution
         </p>
       </div>
-      <div className="flex flex-col md:flex-row gap-2">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            type="search"
-            placeholder="Search projects..."
-            className="pl-8 w-full md:w-[250px]"
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-          />
-        </div>
-        {/* Research Field Filter */}
-        <Select value={selectedField} onValueChange={onFieldChange}>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <Filter className="mr-2 h-4 w-4" />
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2">
+        <Select value={selectedField} onValueChange={handleFieldChange}>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Field" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Fields</SelectItem>
-            <SelectItem value="Environmental Science">
-              Environmental Science
-            </SelectItem>
-            <SelectItem value="Computer Science">Computer Science</SelectItem>
-            <SelectItem value="Microbiology">Microbiology</SelectItem>
-            <SelectItem value="Artificial Intelligence">
-              Artificial Intelligence
-            </SelectItem>
-            <SelectItem value="Materials Science">Materials Science</SelectItem>
-            <SelectItem value="Agricultural Science">
-              Agricultural Science
-            </SelectItem>
-            <SelectItem value="Engineering">Engineering</SelectItem>
-            <SelectItem value="Medicine">Medicine</SelectItem>
-            <SelectItem value="Business">Business</SelectItem>
+            {fieldsLoading ? (
+              <SelectItem value="loading" disabled>
+                Loading...
+              </SelectItem>
+            ) : (
+              Array.isArray(fields) &&
+              fields.map((field) => (
+                <SelectItem key={field.id} value={field.id}>
+                  {field.name}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
+
+        <Select
+          value={selectedMajor}
+          onValueChange={onMajorChange}
+          disabled={selectedField === "all" || majorsLoading}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Major" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Majors</SelectItem>
+            {majorsLoading ? (
+              <SelectItem value="loading" disabled>
+                Loading...
+              </SelectItem>
+            ) : (
+              majors?.map((major) => (
+                <SelectItem key={major.id} value={major.id}>
+                  {major.name}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedGenre} onValueChange={onGenreChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Genre" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Genres</SelectItem>
+            <SelectItem value="normal">Normal</SelectItem>
+            <SelectItem value="proposal">Proposal</SelectItem>
+            <SelectItem value="propose">Propose</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedCategory} onValueChange={onCategoryChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Category" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="basic">Basic</SelectItem>
+            <SelectItem value="application/implementation">
+              Application
+            </SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={selectedType} onValueChange={onTypeChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="school level">School Level</SelectItem>
+            <SelectItem value="cooperate">Cooperate</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Select value={selectedStatus} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <Filter className="mr-2 h-4 w-4" />
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="Created">Open</SelectItem>
-            <SelectItem value="Done">Done</SelectItem>
+            <SelectItem value="created">Created</SelectItem>
+            <SelectItem value="done">Done</SelectItem>
           </SelectContent>
         </Select>
-        {/* Sort By */}
+
         <Select value={selectedSort} onValueChange={onSortChange}>
-          <SelectTrigger className="w-full sm:w-[150px]">
-            <SortAsc className="mr-2 h-4 w-4" />
+          <SelectTrigger className="w-full">
             <SelectValue placeholder="Sort By" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="latest">Latest</SelectItem>
             <SelectItem value="oldest">Oldest</SelectItem>
-            <SelectItem value="a-z">A - Z</SelectItem>
-            <SelectItem value="z-a">Z - A</SelectItem>
-            <SelectItem value="progress-high">Progress (High)</SelectItem>
-            <SelectItem value="progress-low">Progress (Low)</SelectItem>
+            <SelectItem value="a-z">A-Z</SelectItem>
+            <SelectItem value="z-a">Z-A</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="relative w-full">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+        <Input
+          type="search"
+          placeholder="Search projects..."
+          className="pl-8"
+          value={searchTerm}
+          onChange={(e) => onSearchChange(e.target.value)}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Input
+          type="text"
+          placeholder="Enter tags and press Enter..."
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={handleTagKeyPress}
+        />
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {tags.map((tag, idx) => (
+              <div
+                key={idx}
+                className="flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-sm"
+              >
+                <Tag className="h-3 w-3" />
+                <span>{tag}</span>
+                <button
+                  onClick={() => removeTag(tag)}
+                  className="ml-1 hover:text-emerald-600"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <Button
+          onClick={onSearch}
+          className="bg-emerald-600 hover:bg-emerald-700 text-white w-full"
+        >
+          <Search className="mr-2 h-4 w-4" />
+          Search
+        </Button>
       </div>
     </div>
   );
