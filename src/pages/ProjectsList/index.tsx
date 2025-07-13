@@ -1,31 +1,10 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "@/components/ui/loaders";
 import { ProjectsHeader, ProjectCard, ProjectsPagination } from "./components";
 import { getStatusColor } from "./utils/statusHelpers";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-
-// TypeScript interfaces
-interface Project {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  updatedAt: string;
-  teamResearchers: number; // ✅ đã đổi tên field
-  manager: string;
-  progress: number;
-  status:
-    | "Draft"
-    | "Created"
-    | "Submitted"
-    | "Approved"
-    | "In Progress"
-    | "Done"
-    | "Deleted";
-  type: "Application" | "Fundamental" | "Technology";
-  year: string;
-}
+import { Project } from "@/types/project";
 
 type SortOption =
   | "latest"
@@ -34,207 +13,76 @@ type SortOption =
   | "z-a"
   | "progress-high"
   | "progress-low";
-type StatusFilter = "all" | "Created" | "Done";
+type StatusFilter = "all" | "created" | "done";
 type FieldFilter = "all" | string;
-
-// Mock data for projects
-const mockProjects: Project[] = [
-  {
-    id: "1",
-    category: "Environmental Science",
-    title: "Climate Change Impact Study",
-    description:
-      "Analyzing the effects of climate change on coastal ecosystems",
-    updatedAt: "2 days ago",
-    teamResearchers: 8,
-    manager: "Dr. Sarah Johnson",
-    progress: 75,
-    status: "Approved",
-    type: "Application",
-    year: "2024",
-  },
-  {
-    id: "2",
-    category: "Computer Science",
-    title: "AI-Powered Data Analysis",
-    description:
-      "Developing machine learning algorithms for big data processing",
-    updatedAt: "1 week ago",
-    teamResearchers: 5,
-    manager: "Prof. Michael Chen",
-    progress: 45,
-    status: "In Progress",
-    type: "Fundamental",
-    year: "2020",
-  },
-  {
-    id: "3",
-    category: "Microbiology",
-    title: "Antibiotic Resistance Research",
-    description:
-      "Investigating new approaches to combat antibiotic-resistant bacteria",
-    updatedAt: "3 days ago",
-    teamResearchers: 12,
-    manager: "Dr. Emily Rodriguez",
-    progress: 90,
-    status: "Done",
-    type: "Application",
-    year: "2024",
-  },
-  {
-    id: "4",
-    category: "Artificial Intelligence",
-    title: "Natural Language Processing",
-    description: "Building advanced NLP models for multilingual text analysis",
-    updatedAt: "5 days ago",
-    teamResearchers: 6,
-    manager: "Dr. James Wilson",
-    progress: 30,
-    status: "Submitted",
-    type: "Technology",
-    year: "2022",
-  },
-  {
-    id: "5",
-    category: "Materials Science",
-    title: "Sustainable Materials Development",
-    description:
-      "Researching eco-friendly alternatives to traditional materials",
-    updatedAt: "1 day ago",
-    teamResearchers: 9,
-    manager: "Prof. Lisa Anderson",
-    progress: 60,
-    status: "Created",
-    type: "Fundamental",
-    year: "2024",
-  },
-  {
-    id: "6",
-    category: "Engineering",
-    title: "Renewable Energy Systems",
-    description:
-      "Designing efficient solar panel systems for urban environments",
-    updatedAt: "4 days ago",
-    teamResearchers: 7,
-    manager: "Dr. Robert Kim",
-    progress: 85,
-    status: "Draft",
-    type: "Technology",
-    year: "2021",
-  },
-  {
-    id: "7",
-    category: "Medicine",
-    title: "Cancer Treatment Innovation",
-    description: "Developing targeted therapies for rare cancer types",
-    updatedAt: "2 weeks ago",
-    teamResearchers: 15,
-    manager: "Dr. Maria Garcia",
-    progress: 25,
-    status: "Deleted",
-    type: "Application",
-    year: "2024",
-  },
-  {
-    id: "8",
-    category: "Business",
-    title: "Market Analysis Platform",
-    description: "Creating tools for real-time market trend analysis",
-    updatedAt: "6 days ago",
-    teamResearchers: 4,
-    manager: "Prof. David Lee",
-    progress: 100,
-    status: "Done",
-    type: "Application",
-    year: "2023",
-  },
-];
+type MajorFilter = "all" | string;
+type CategoryFilter = "all" | "basic" | "application/implementation";
+type TypeFilter = "all" | "school level" | "cooperate";
+type GenreFilter = "all" | "normal" | "proposal" | "propose";
 
 const ProjectsList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [projects] = useState<Project[]>(mockProjects);
-  const [isLoading] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [totalPages, setTotalPages] = useState(1);
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedStatus, setSelectedStatus] = useState<StatusFilter>("all");
   const [selectedField, setSelectedField] = useState<FieldFilter>("all");
+  const [selectedMajor, setSelectedMajor] = useState<MajorFilter>("all");
+  const [selectedCategory, setSelectedCategory] =
+    useState<CategoryFilter>("all");
+  const [selectedType, setSelectedType] = useState<TypeFilter>("all");
+  const [selectedGenre, setSelectedGenre] = useState<GenreFilter>("all");
   const [selectedSort, setSelectedSort] = useState<SortOption>("latest");
+  const [tags, setTags] = useState<string[]>([]);
 
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(6);
 
-  const filteredProjects = useMemo(() => {
-    let filtered = [...projects];
+  const handleSearch = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const searchParams = new URLSearchParams({
+        "page-index": currentPage.toString(),
+        "page-size": pageSize.toString(),
+        ...(searchTerm && { search: searchTerm }),
+        ...(selectedStatus !== "all" && { status: selectedStatus }),
+        ...(selectedField !== "all" && { field: selectedField }),
+        ...(selectedMajor !== "all" && { major: selectedMajor }),
+        ...(selectedCategory !== "all" && { category: selectedCategory }),
+        ...(selectedType !== "all" && { type: selectedType }),
+        ...(selectedGenre !== "all" && { genre: selectedGenre }),
+        ...(selectedSort && { sort: selectedSort }),
+        ...(tags.length > 0 && { tags: tags.join(",") }),
+      });
 
-    if (searchTerm.trim()) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (project) =>
-          project.title.toLowerCase().includes(searchLower) ||
-          project.description.toLowerCase().includes(searchLower) ||
-          project.manager.toLowerCase().includes(searchLower)
-      );
+      const response = await fetch(`/api/projects?${searchParams}`);
+      const data = await response.json();
+
+      setProjects(data["data-list"] || []);
+      setTotalPages(data["total-page"] || 1);
+    } catch (error) {
+      console.error("Search failed:", error);
+      setProjects([]);
+      setTotalPages(1);
+    } finally {
+      setIsLoading(false);
     }
-
-    if (selectedField !== "all") {
-      filtered = filtered.filter(
-        (project) => project.category === selectedField
-      );
-    }
-
-    if (selectedStatus !== "all") {
-      filtered = filtered.filter(
-        (project) => project.status === selectedStatus
-      );
-    }
-
-    filtered.sort((a, b) => {
-      switch (selectedSort) {
-        case "latest":
-          return new Date(b.year).getTime() - new Date(a.year).getTime();
-        case "oldest":
-          return new Date(a.year).getTime() - new Date(b.year).getTime();
-        case "a-z":
-          return a.title.localeCompare(b.title);
-        case "z-a":
-          return b.title.localeCompare(a.title);
-        case "progress-high":
-          return b.progress - a.progress;
-        case "progress-low":
-          return a.progress - b.progress;
-        default:
-          return 0;
-      }
-    });
-
-    return filtered;
-  }, [projects, searchTerm, selectedField, selectedStatus, selectedSort]);
-
-  const handleFieldChange = useCallback((value: string) => {
-    setSelectedField(value as FieldFilter);
-    setCurrentPage(1);
-  }, []);
-
-  const handleStatusChange = useCallback((value: string) => {
-    setSelectedStatus(value as StatusFilter);
-    setCurrentPage(1);
-  }, []);
-
-  const handleSortChange = useCallback((value: string) => {
-    setSelectedSort(value as SortOption);
-  }, []);
-
-  const handleSearchChange = useCallback((value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-  }, []);
-
-  const totalPages = Math.ceil(filteredProjects.length / pageSize);
-  const paginatedProjects = filteredProjects.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
+  }, [
+    searchTerm,
+    selectedStatus,
+    selectedField,
+    selectedMajor,
+    selectedCategory,
+    selectedType,
+    selectedGenre,
+    selectedSort,
+    tags,
+    currentPage,
+    pageSize,
+  ]);
 
   const handleViewDetails = useCallback(
     (projectId: string | number) => {
@@ -243,29 +91,46 @@ const ProjectsList: React.FC = () => {
       } else if (user?.role === UserRole.HOST_INSTITUTION) {
         navigate(`/host/project/${projectId}`);
       } else {
-        // ✅ fix URL path
         navigate(`/researcher/project/${projectId}`);
       }
     },
     [navigate, user?.role]
   );
 
-  const handlePageSizeChange = useCallback((size: number) => {
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
-  }, []);
+  };
+
+  useEffect(() => {
+    handleSearch();
+  }, [handleSearch]);
 
   return (
     <div className="space-y-6">
       <ProjectsHeader
         searchTerm={searchTerm}
-        onSearchChange={handleSearchChange}
+        onSearchChange={setSearchTerm}
         selectedStatus={selectedStatus}
-        onStatusChange={handleStatusChange}
+        onStatusChange={setSelectedStatus}
         selectedField={selectedField}
-        onFieldChange={handleFieldChange}
+        onFieldChange={setSelectedField}
+        selectedMajor={selectedMajor}
+        onMajorChange={setSelectedMajor}
         selectedSort={selectedSort}
-        onSortChange={handleSortChange}
+        onSortChange={setSelectedSort}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+        selectedGenre={selectedGenre}
+        onGenreChange={setSelectedGenre}
+        tags={tags}
+        onTagsChange={setTags}
+        onSearch={handleSearch}
       />
 
       {isLoading ? (
@@ -273,15 +138,19 @@ const ProjectsList: React.FC = () => {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedProjects.map((project) => (
+            {projects.map((project) => (
               <ProjectCard
                 key={project.id}
                 id={project.id}
-                title={project.title}
+                title={
+                  project["englishTitle"] ||
+                  project["vietnameseTitle"] ||
+                  "Untitled"
+                }
                 status={project.status}
                 type={project.type}
                 category={project.category}
-                description={project.description}
+                description={project.description || ""}
                 progress={project.progress}
                 onViewDetails={handleViewDetails}
                 getStatusColor={getStatusColor}
@@ -289,7 +158,7 @@ const ProjectsList: React.FC = () => {
             ))}
           </div>
 
-          {filteredProjects.length === 0 && (
+          {projects.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10">
               <h3 className="text-lg font-medium">No projects found</h3>
               <p className="text-muted-foreground">
@@ -298,12 +167,12 @@ const ProjectsList: React.FC = () => {
             </div>
           )}
 
-          {filteredProjects.length > 0 && (
+          {projects.length > 0 && (
             <ProjectsPagination
               currentPage={currentPage}
               totalPages={totalPages}
               pageSize={pageSize}
-              onPageChange={setCurrentPage}
+              onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
             />
           )}

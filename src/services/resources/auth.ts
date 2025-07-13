@@ -1,16 +1,21 @@
-import { GoogleAuthResponse } from "@/types/auth";
-import { axiosClient } from "../api";
-import { queryClient } from "@/lib/react-query";
-// import Cookies from "js-cookie";
+import { axiosClient, getAccessToken } from "../api";
+import { queryClient } from "@/lib/react-query"; // đây là queryClient đã cấu hình sẵn
 
-export const getGoogleAuthResponse = async (token: string) => {
-  // const sessionId = Cookies.get("sessionId");
-  // console.log("getGoogleAuthResponse: sessionId", sessionId);
-  return (
-    await axiosClient.post<GoogleAuthResponse>(
-      `/auth/google-authentication?Token=${token}`
-    )
-  ).data;
+export const getAccountInfo = async () => {
+  try {
+    const accessToken = getAccessToken();
+
+    const res = await axiosClient.get<AuthInfo>("/account/me", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    console.error("getAccountInfo error:", error);
+    throw error;
+  }
 };
 
 /**
@@ -18,6 +23,7 @@ export const getGoogleAuthResponse = async (token: string) => {
  */
 
 import { api } from "../base";
+import { AuthInfo } from "@/types/auth";
 
 export interface LoginRequest extends Record<string, unknown> {
   email: string;
