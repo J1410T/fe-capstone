@@ -31,22 +31,16 @@ export type AuthInfo = {
   status: string;
 };
 
-export type User = {
-  id?: string;
-  fullName: string;
-  email: string;
-  avatarUrl: string;
-  role: string;
-  roles: string[];
-};
-
-export type LoginRequest = {
-  role: string;
-  returnUrl?: string;
-};
-
-export type AuthState = {
-  isAuthenticated: boolean;
-  user: User | null;
-  token: string | null;
+export type Member = {
+  id: string;
+  code: string;
+  groupName: string;
+  isOfficial: boolean;
+  expireDate: string;
+  createdAt: string;
+  status: string;
+  accountId: string;
+  roleId: string;
+  projectId: string;
+  appraisalCouncilId: string;
 };

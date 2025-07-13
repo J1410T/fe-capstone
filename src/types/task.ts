@@ -1,4 +1,5 @@
 import { User } from "@/contexts/AuthContext";
+import { Member } from "./auth";
 
 export type TaskStatus = "To Do" | "In Progress" | "Completed" | "Overdue";
 export type UserTaskStatus =
@@ -57,3 +58,69 @@ export interface UpdateTaskData {
   dueDate?: string;
   status?: TaskStatus;
 }
+
+export type Milestone = {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  objective: string;
+  cost: number;
+  startDate: string;
+  endDate: string;
+  type: string;
+  createdAt: string;
+  status: string;
+  projectId: string;
+  creatorId: string;
+  project: string;
+  creator: Member;
+  evaluations: Evaluation[];
+  individualEvaluations: IndividualEvaluation[];
+  tasks: ProjectTask[];
+};
+
+export type ProjectTask = {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  deliveryDate: string;
+  priority: string;
+  progress: number;
+  overdue: number;
+  meetingUrl: string;
+  note: string;
+  status: string;
+  milestoneId: string;
+  creatorId: string;
+};
+
+export type Evaluation = {
+  id: string;
+  code: string;
+  title: string;
+  totalRate: number;
+  comment: string;
+  phrase: string;
+  type: string;
+  createDate: string;
+  status: string;
+};
+
+export type IndividualEvaluation = {
+  id: string;
+  totalRate: number;
+  comment: string;
+  submittedAt: string;
+  isApproved: boolean;
+  reviewerResult: boolean;
+  isAIReport: boolean;
+  status: string;
+  evaluationStageId: string;
+  reviewerId: string;
+  projectId: string;
+  milestoneId: string;
+};
