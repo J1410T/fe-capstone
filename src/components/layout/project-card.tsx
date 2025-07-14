@@ -5,38 +5,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Building2, Tag, ArrowRight } from "lucide-react";
-
-interface ProjectCardProps {
-  // Common fields
-  id: string | number;
-  title: string;
-  progress: number;
-  status: string;
-
-  // Optional fields for different use cases (kept for backward compatibility)
-  category?: string;
-  description?: string;
-  updatedAt?: string;
-  teamResearchers?: number;
-  manager?: string;
-  pi?: string;
-  department?: string;
-  year?: string;
-  budget?: string;
-  type?: string; // Added for project type (Application/Fundamental)
-
-  // Callback functions
-  onViewDetails?: (projectId: string | number) => void;
-  getStatusColor?: (status: string) => string;
-}
+import { ProjectCardProps } from "@/types/project";
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
   id,
   title,
+  vietnameseTitle,
   status,
   type,
   category,
   description,
+  tags = [],
   onViewDetails,
   getStatusColor,
 }) => {
@@ -57,7 +36,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     } else if (user?.role === UserRole.APPRAISAL_COUNCIL) {
       return `/council/project/${id}`;
     } else {
-      // Default to regular project details
       return `/project/${id}`;
     }
   };
@@ -108,14 +86,21 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
   return (
     <Card className="group h-full flex flex-col bg-white border border-gray-200/80 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1">
-      {/* Compact Header Section */}
+      {/* Header Section */}
       <CardHeader className="p-4 pb-2">
         <div className="space-y-2">
           {/* Title and Status Row */}
           <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug flex-1 group-hover:text-emerald-900 transition-colors">
-              {title}
-            </CardTitle>
+            <div className="flex-1">
+              <CardTitle className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-emerald-900 transition-colors">
+                {title}
+              </CardTitle>
+              {vietnameseTitle && (
+                <p className="text-sm text-gray-600 mt-1 line-clamp-1">
+                  {vietnameseTitle}
+                </p>
+              )}
+            </div>
             <Badge
               className={`${statusColorClass} text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0`}
             >
@@ -147,13 +132,38 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
       </CardHeader>
 
-      {/* Compact Content Section */}
+      {/* Content Section */}
       <CardContent className="p-4 pt-0 flex-1 flex flex-col">
         {description && (
           <div className="mb-3 flex-1">
             <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">
               {description}
             </p>
+          </div>
+        )}
+
+        {/* Project Tags */}
+        {tags.length > 0 && (
+          <div className="mb-3">
+            <div className="flex flex-wrap gap-1">
+              {tags.slice(0, 3).map((tag, index) => (
+                <Badge
+                  key={index}
+                  variant="secondary"
+                  className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
+                >
+                  {tag}
+                </Badge>
+              ))}
+              {tags.length > 3 && (
+                <Badge
+                  variant="secondary"
+                  className="text-xs px-2 py-0.5 bg-gray-50 text-gray-600"
+                >
+                  +{tags.length - 3}
+                </Badge>
+              )}
+            </div>
           </div>
         )}
 
@@ -188,23 +198,4 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   );
 };
 
-// Backward compatibility - keep the old interface but use new formal layout
-interface UserProjectCardProps {
-  id: string;
-  category: string;
-  title: string;
-  description: string;
-  updatedAt: string;
-  teamResearchers: number;
-  manager: string;
-  progress: number;
-  status: string;
-  type?: string;
-}
-
-const UserProjectCard: React.FC<UserProjectCardProps> = (props) => {
-  return <ProjectCard {...props} />;
-};
-
 export default ProjectCard;
-export { UserProjectCard };
