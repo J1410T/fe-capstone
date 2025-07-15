@@ -1,6 +1,8 @@
 import {
+  CreateProjectRequest,
   ProjectFilterRequest,
   ProjectFilterResponse,
+  ProjectItem,
   SortOption,
 } from "@/types/project";
 import { axiosClient, getAccessToken } from "../api";
@@ -105,4 +107,21 @@ export const buildFilterParams = (filters: {
   }
 
   return params;
+};
+
+export const createProject = async (
+  data: CreateProjectRequest
+): Promise<ProjectItem> => {
+  try {
+    const accessToken = getAccessToken();
+    const res = await axiosClient.post<ProjectItem>(`/project`, data, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.error("createProject error:", error);
+    throw error;
+  }
 };

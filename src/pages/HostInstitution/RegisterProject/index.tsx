@@ -1,42 +1,11 @@
 import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "@/components/ui/loaders";
-import {
-  Brain,
-  Rocket,
-  Dna,
-  Leaf,
-  Beaker,
-  Atom,
-  Users,
-  BookOpen,
-  Landmark,
-  Microscope,
-} from "lucide-react";
 import { ProgressSteps, ProjectInfoForm, ReviewForm } from "./components";
 import { toast } from "sonner";
-
-// Research fields with icons
-const researchFields = [
-  { id: "computer-science", name: "Computer Science", icon: Brain },
-  { id: "engineering", name: "Engineering", icon: Rocket },
-  { id: "medicine", name: "Medicine & Health Sciences", icon: Dna },
-  { id: "biology", name: "Biology", icon: Leaf },
-  { id: "chemistry", name: "Chemistry", icon: Beaker },
-  { id: "physics", name: "Physics", icon: Atom },
-  { id: "social-sciences", name: "Social Sciences", icon: Users },
-  { id: "humanities", name: "Humanities", icon: BookOpen },
-  { id: "business", name: "Business & Economics", icon: Landmark },
-  { id: "other", name: "Other", icon: Microscope },
-];
-
-export interface ProjectFormData {
-  title: string;
-  field: string;
-  type: string;
-  target: string;
-  overview: string;
-}
+import { createProject } from "@/services/resources/project";
+import { FormHostRegister } from "@/types/form";
+import { createProjectMajor } from "@/services/resources/major";
 
 const RegisterProject: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -44,12 +13,19 @@ const RegisterProject: React.FC = () => {
   const navigate = useNavigate();
 
   // Form state
-  const [formData, setFormData] = useState<ProjectFormData>({
-    title: "",
-    field: "",
+  const [formData, setFormData] = useState<FormHostRegister>({
+    englishTitle: "",
+    vietnameseTitle: "",
+    abbreviations: "",
+    duration: "",
+    description: "",
+    requirementNote: "",
+    maximumMember: "",
+    language: "",
+    category: "",
     type: "",
-    target: "",
-    overview: "",
+    field: "",
+    major: "",
   });
 
   const handleInputChange = useCallback(
@@ -67,16 +43,44 @@ const RegisterProject: React.FC = () => {
   const handleNextStep = useCallback(() => {
     // Validate form before proceeding
     if (currentStep === 1) {
-      if (!formData.title.trim()) {
-        toast.error("Project title is required");
+      if (!formData.englishTitle.trim()) {
+        toast.error("English title is required");
         return;
       }
-      if (!formData.field) {
-        toast.error("Research field is required");
+      if (!formData.vietnameseTitle.trim()) {
+        toast.error("Vietnamese title is required");
+        return;
+      }
+      if (!formData.description.trim()) {
+        toast.error("Description is required");
+        return;
+      }
+      if (!formData.duration || parseInt(formData.duration) <= 0) {
+        toast.error("Valid duration is required");
+        return;
+      }
+      if (!formData.maximumMember || parseInt(formData.maximumMember) <= 0) {
+        toast.error("Valid maximum member count is required");
+        return;
+      }
+      if (!formData.language) {
+        toast.error("Language is required");
+        return;
+      }
+      if (!formData.category) {
+        toast.error("Category is required");
         return;
       }
       if (!formData.type) {
-        toast.error("Project type is required");
+        toast.error("Type is required");
+        return;
+      }
+      if (!formData.field) {
+        toast.error("Field is required");
+        return;
+      }
+      if (!formData.major) {
+        toast.error("Major is required");
         return;
       }
     }
@@ -88,23 +92,65 @@ const RegisterProject: React.FC = () => {
   }, []);
 
   const handleRegisterProject = useCallback(
-    (e: React.FormEvent) => {
+    async (e: React.FormEvent) => {
       e.preventDefault();
 
       // Final validation
-      if (!formData.title.trim() || !formData.field || !formData.type) {
+      if (
+        !formData.englishTitle.trim() ||
+        !formData.vietnameseTitle.trim() ||
+        !formData.description.trim() ||
+        !formData.duration ||
+        !formData.maximumMember ||
+        !formData.language ||
+        !formData.category ||
+        !formData.type ||
+        !formData.field ||
+        !formData.major
+      ) {
         toast.error("Please fill all required fields");
         return;
       }
 
       setIsLoading(true);
 
-      // Simulate API call
-      setTimeout(() => {
+      try {
+        // Create project
+        const projectData = {
+          "english-title": formData.englishTitle,
+          "vietnamese-title": formData.vietnameseTitle,
+          abbreviations: formData.abbreviations,
+          duration: parseInt(formData.duration),
+          description: formData.description,
+          "requirement-note": formData.requirementNote,
+          "maximum-member": parseInt(formData.maximumMember),
+          language: formData.language,
+          category: formData.category,
+          type: formData.type,
+        };
+
+        const projectResponse = await createProject(projectData);
+
+        if (projectResponse && projectResponse.id) {
+          // Create project-major association
+          const projectMajorData = {
+            "project-id": projectResponse.id,
+            "major-id": formData.major,
+          };
+
+          await createProjectMajor(projectMajorData);
+
+          toast.success("Project registered successfully");
+          navigate("/host/history");
+        } else {
+          throw new Error("Failed to create project");
+        }
+      } catch (error) {
+        console.error("Error creating project:", error);
+        toast.error("Failed to register project. Please try again.");
+      } finally {
         setIsLoading(false);
-        toast.success("Project registered successfully");
-        navigate("/host/history");
-      }, 1500);
+      }
     },
     [formData, navigate]
   );
@@ -133,7 +179,6 @@ const RegisterProject: React.FC = () => {
           {currentStep === 1 && (
             <ProjectInfoForm
               formData={formData}
-              researchFields={researchFields}
               onInputChange={handleInputChange}
               onSelectChange={handleSelectChange}
               onNextStep={handleNextStep}
@@ -143,7 +188,6 @@ const RegisterProject: React.FC = () => {
           {currentStep === 2 && (
             <ReviewForm
               formData={formData}
-              researchFields={researchFields}
               onPrevStep={handlePrevStep}
               onSubmit={handleRegisterProject}
             />

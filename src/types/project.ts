@@ -31,14 +31,14 @@ export interface ProjectFilterResponse {
   "page-size": number;
   "total-count": number;
   "total-page": number;
-  "data-list": ProjectFilterItem[];
+  "data-list": ProjectItem[];
 }
 
-export interface ProjectFilterItem {
+export interface ProjectItem {
   id: string;
   "logo-url": string | null;
   "picture-url": string | null;
-  code: string;
+  code: string | null;
   "english-title": string;
   "vietnamese-title": string;
   abbreviations: string | null;
@@ -47,8 +47,8 @@ export interface ProjectFilterItem {
   "end-date": string | null;
   description: string | null;
   "requirement-note": string | null;
-  budget: number;
-  progress: number;
+  budget: number | null;
+  progress: number | null;
   "maximum-member": number;
   language: string;
   category: string;
@@ -63,8 +63,8 @@ export interface ProjectFilterItem {
   milestones: Milestone[] | null;
   evaluations: Evaluation[] | null;
   "individual-evaluations": IndividualEvaluation[] | null;
-  majors: ProjectMajor[];
-  "project-tags": ProjectTag[];
+  majors: ProjectMajor[] | null;
+  "project-tags": ProjectTag[] | null;
   documents: DocumentProject[] | null;
   transactions: Transaction[] | null;
 }
@@ -123,4 +123,33 @@ export interface ProjectCardProps {
   tags?: string[];
   onViewDetails?: (projectId: string) => void;
   getStatusColor?: (status: string) => string;
+}
+
+export interface CreateProjectRequest {
+  "english-title": string;
+  "vietnamese-title": string;
+  abbreviations?: string;
+  duration: number;
+  description: string;
+  "requirement-note"?: string;
+  "maximum-member": number;
+  language: string;
+  category: string;
+  type: string;
+}
+export interface CreateProjectMajorRequest {
+  "project-id": string;
+  "major-id": string;
+}
+
+export interface CreateProjectMajorRequest {
+  "project-id": string;
+  "major-id": string;
+}
+
+export interface CreateProjectMajorResponse {
+  "project-id": string;
+  "major-id": string;
+  project: ProjectItem | null;
+  major: ProjectMajor | null;
 }
