@@ -2,6 +2,7 @@ import React from "react";
 import { ComingSoon } from "@/components/common/ComingSoon";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/contexts/AuthContext";
+import AuthWrapper from "@/components/auth/AuthWrapper";
 
 const NotFound: React.FC = () => {
   const { user } = useAuth();
@@ -24,13 +25,19 @@ const NotFound: React.FC = () => {
     }
   };
 
-  return (
+  const NotFoundContent = () => (
     <ComingSoon
       title="Page Not Found"
       description="The page you're looking for doesn't exist yet, but we're working on it! This feature will be available soon."
       estimatedTime="Next update"
       backPath={getBackPath()}
     />
+  );
+
+  return (
+    <AuthWrapper>
+      <NotFoundContent />
+    </AuthWrapper>
   );
 };
 

@@ -9,6 +9,7 @@ import { UserRole } from "@/contexts/AuthContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import UserLayout from "@/layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
+import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
 
 // General Pages
 import ProjectsList from "@/pages/ProjectsList";
@@ -58,6 +59,7 @@ export const routes: RouteObject[] = [
     path: "/",
     element: (
       <AuthProvider>
+        <GlobalAuthListener />
         <Outlet />
       </AuthProvider>
     ),

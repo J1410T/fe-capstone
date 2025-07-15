@@ -11,51 +11,7 @@ import {
 } from "@/components/ui/select";
 import { useMajorsByField } from "@/hooks/queries/major";
 import { useFieldList } from "@/hooks/queries/field";
-
-// Định nghĩa lại trong ProjectsHeader.tsx nếu cần
-export type StatusFilter = "all" | "created" | "done";
-export type FieldFilter = "all" | string;
-export type MajorFilter = "all" | string;
-export type CategoryFilter = "all" | "basic" | "application/implementation";
-export type TypeFilter = "all" | "school level" | "cooperate";
-export type GenreFilter = "all" | "normal" | "proposal" | "propose";
-export type SortOption =
-  | "latest"
-  | "oldest"
-  | "a-z"
-  | "z-a"
-  | "progress-high"
-  | "progress-low";
-
-interface ProjectsHeaderProps {
-  searchTerm: string;
-  onSearchChange: (value: string) => void;
-
-  selectedStatus: StatusFilter;
-  onStatusChange: (value: StatusFilter) => void;
-
-  selectedField: FieldFilter;
-  onFieldChange: (value: FieldFilter) => void;
-
-  selectedMajor: MajorFilter;
-  onMajorChange: (value: MajorFilter) => void;
-
-  selectedSort: SortOption;
-  onSortChange: (value: SortOption) => void;
-
-  selectedCategory: CategoryFilter;
-  onCategoryChange: (value: CategoryFilter) => void;
-
-  selectedType: TypeFilter;
-  onTypeChange: (value: TypeFilter) => void;
-
-  selectedGenre: GenreFilter;
-  onGenreChange: (value: GenreFilter) => void;
-
-  tags: string[];
-  onTagsChange: (tags: string[]) => void;
-  onSearch: () => void;
-}
+import { ProjectsHeaderProps } from "@/types/project";
 
 export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
   searchTerm,
@@ -72,8 +28,6 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
   onCategoryChange,
   selectedType,
   onTypeChange,
-  selectedGenre,
-  onGenreChange,
   tags,
   onTagsChange,
   onSearch,
@@ -99,10 +53,14 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
     onTagsChange(tags.filter((tag) => tag !== tagToRemove));
   };
 
-  const handleFieldChange = (value: FieldFilter) => {
+  const handleFieldChange = (value: string) => {
     onFieldChange(value);
     // Reset major selection when field changes
     onMajorChange("all");
+  };
+
+  const handleSearchClick = () => {
+    onSearch();
   };
 
   return (
@@ -114,7 +72,7 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
         <Select value={selectedField} onValueChange={handleFieldChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Field" />
@@ -128,7 +86,7 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
             ) : (
               Array.isArray(fields) &&
               fields.map((field) => (
-                <SelectItem key={field.id} value={field.id}>
+                <SelectItem key={field.id} value={field.idx}>
                   {field.name}
                 </SelectItem>
               ))
@@ -157,18 +115,6 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
                 </SelectItem>
               ))
             )}
-          </SelectContent>
-        </Select>
-
-        <Select value={selectedGenre} onValueChange={onGenreChange}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Genre" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Genres</SelectItem>
-            <SelectItem value="normal">Normal</SelectItem>
-            <SelectItem value="proposal">Proposal</SelectItem>
-            <SelectItem value="propose">Propose</SelectItem>
           </SelectContent>
         </Select>
 
@@ -262,7 +208,7 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
 
       <div>
         <Button
-          onClick={onSearch}
+          onClick={handleSearchClick}
           className="bg-emerald-600 hover:bg-emerald-700 text-white w-full"
         >
           <Search className="mr-2 h-4 w-4" />

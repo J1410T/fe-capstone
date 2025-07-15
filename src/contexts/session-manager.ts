@@ -9,7 +9,7 @@ import { QueryClient } from "@tanstack/react-query";
 
 // Session configuration
 const SESSION_CONFIG = {
-  INACTIVITY_TIMEOUT: 15 * 60 * 1000, // 15 minutes in milliseconds
+  INACTIVITY_TIMEOUT: 2 * 60 * 1000, // 15 minutes in milliseconds
   ACTIVITY_CHECK_INTERVAL: 30 * 1000, // Check every 30 seconds
   STORAGE_KEYS: {
     AUTH_RESPONSE: "auth-response",

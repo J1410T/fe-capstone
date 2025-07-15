@@ -1,87 +1,155 @@
-import { ItemResponse } from ".";
 import { Member } from "./auth";
 import { Transaction } from "./budget";
 import { DocumentProject } from "./document";
 import { Evaluation, IndividualEvaluation, Milestone } from "./task";
 
-export type ProjectistResponse = ItemResponse<Project>;
+// Filter types
+export type StatusFilter = "all" | "created" | "done";
+export type FieldFilter = "all" | string;
+export type MajorFilter = "all" | string;
+export type CategoryFilter = "all" | "basic" | "application/implementation";
+export type TypeFilter = "all" | "school level" | "cooperate";
+export type SortOption = "latest" | "oldest" | "a-z" | "z-a";
 
-export type ProjectDetail = {
+// API interfaces
+export interface ProjectFilterRequest {
+  title?: string;
+  category?: string;
+  type?: string;
+  "major-name"?: string;
+  "field-name"?: string;
+  "tag-names"?: string[];
+  "sort-by": string;
+  desc: boolean;
+  "page-index": number;
+  "page-size": number;
+  status?: string;
+}
+
+export interface ProjectFilterResponse {
+  "page-index": number;
+  "page-size": number;
+  "total-count": number;
+  "total-page": number;
+  "data-list": ProjectItem[];
+}
+
+export interface ProjectItem {
   id: string;
-  "logo-url": string;
-  "picture-url": string;
-  code: string;
+  "logo-url": string | null;
+  "picture-url": string | null;
+  code: string | null;
   "english-title": string;
   "vietnamese-title": string;
-  abbreviations: string;
-  duration: null;
-  "start-date": string;
-  "end-date": string;
-  description: string;
-  "requirement-note": string;
-  budget: number;
-  progress: number;
+  abbreviations: string | null;
+  duration: number | null;
+  "start-date": string | null;
+  "end-date": string | null;
+  description: string | null;
+  "requirement-note": string | null;
+  budget: number | null;
+  progress: number | null;
   "maximum-member": number;
   language: string;
   category: string;
   type: string;
   genre: string;
   "created-at": string;
-  "updated-at": string;
+  "updated-at": string | null;
   status: string;
   "creator-id": string;
-};
-
-export type ProjectResponse = {
-  pageIndex: number;
-  pageSize: number;
-  totalCount: number;
-  totalPage: number;
-  dataList: Project[];
-};
-
-export type Project = {
-  id: string;
-  logoUrl: string;
-  pictureUrl: string;
-  code: string;
-  englishTitle: string;
-  vietnameseTitle: string;
-  abbreviations: string;
-  duration: number;
-  startDate: string;
-  endDate: string;
-  description: string;
-  requirementNote: string;
-  budget: number;
-  progress: number;
-  maximumMember: number;
-  language: string;
-  category: string;
-  type: string;
-  genre: string;
-  createdAt: string;
-  updatedAt: string;
-  status: string;
-  creatorId: string;
   creator: Member | null;
   members: Member[] | null;
   milestones: Milestone[] | null;
   evaluations: Evaluation[] | null;
-  individualEvaluations: IndividualEvaluation[] | null;
-  majors: Major[] | null;
-  projectTags: ProjectTag[] | null;
+  "individual-evaluations": IndividualEvaluation[] | null;
+  majors: ProjectMajor[] | null;
+  "project-tags": ProjectTag[] | null;
   documents: DocumentProject[] | null;
   transactions: Transaction[] | null;
-};
+}
 
-export type Major = {
+export interface ProjectMajor {
+  id: string;
   name: string;
   field: {
+    id: string;
     name: string;
   };
-};
+}
 
-export type ProjectTag = {
+export interface ProjectTag {
   name: string;
-};
+}
+
+// Component prop interfaces
+export interface ProjectsHeaderProps {
+  searchTerm: string;
+  onSearchChange: (value: string) => void;
+  selectedStatus: StatusFilter;
+  onStatusChange: (value: StatusFilter) => void;
+  selectedField: FieldFilter;
+  onFieldChange: (value: FieldFilter) => void;
+  selectedMajor: MajorFilter;
+  onMajorChange: (value: MajorFilter) => void;
+  selectedSort: SortOption;
+  onSortChange: (value: SortOption) => void;
+  selectedCategory: CategoryFilter;
+  onCategoryChange: (value: CategoryFilter) => void;
+  selectedType: TypeFilter;
+  onTypeChange: (value: TypeFilter) => void;
+  tags: string[];
+  onTagsChange: (tags: string[]) => void;
+  onSearch: () => void;
+}
+
+export interface ProjectsPaginationProps {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+}
+
+export interface ProjectCardProps {
+  id: string;
+  title: string;
+  vietnameseTitle?: string;
+  progress: number;
+  status: string;
+  category?: string;
+  type?: string;
+  description?: string;
+  tags?: string[];
+  onViewDetails?: (projectId: string) => void;
+  getStatusColor?: (status: string) => string;
+}
+
+export interface CreateProjectRequest {
+  "english-title": string;
+  "vietnamese-title": string;
+  abbreviations?: string;
+  duration: number;
+  description: string;
+  "requirement-note"?: string;
+  "maximum-member": number;
+  language: string;
+  category: string;
+  type: string;
+}
+export interface CreateProjectMajorRequest {
+  "project-id": string;
+  "major-id": string;
+}
+
+export interface CreateProjectMajorRequest {
+  "project-id": string;
+  "major-id": string;
+}
+
+export interface CreateProjectMajorResponse {
+  "project-id": string;
+  "major-id": string;
+  project: ProjectItem | null;
+  major: ProjectMajor | null;
+}

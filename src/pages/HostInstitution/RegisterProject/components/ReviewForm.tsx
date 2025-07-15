@@ -9,37 +9,32 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle } from "lucide-react";
-
-interface FormData {
-  title: string;
-  field: string;
-  type: string;
-  target: string;
-  overview: string;
-}
-
-interface ResearchField {
-  id: string;
-  name: string;
-  icon: React.ElementType;
-}
+import { useFieldList } from "@/hooks/queries/field";
+import { useMajorsByField } from "@/hooks/queries/major";
+import { FormHostRegister } from "@/types/form";
 
 interface ReviewFormProps {
-  formData: FormData;
-  researchFields: ResearchField[];
+  formData: FormHostRegister;
   onPrevStep: () => void;
   onSubmit: (e: React.FormEvent) => void;
 }
 
 export const ReviewForm: React.FC<ReviewFormProps> = ({
   formData,
-  researchFields,
   onPrevStep,
   onSubmit,
 }) => {
+  const { data: fields } = useFieldList();
+  const { data: majors } = useMajorsByField(formData.field);
+
   const getFieldName = (fieldId: string) => {
-    const field = researchFields.find((f) => f.id === fieldId);
+    const field = Array.isArray(fields) && fields.find((f) => f.id === fieldId);
     return field ? field.name : fieldId;
+  };
+
+  const getMajorName = (majorId: string) => {
+    const major = majors?.find((m) => m.id === majorId);
+    return major ? major.name : majorId;
   };
 
   return (
@@ -56,41 +51,79 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Project Name
+                English Title
               </p>
-              <p className="text-base">{formData.title}</p>
+              <p className="text-base">{formData.englishTitle}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted-foreground">
-                Research Field
+                Vietnamese Title
               </p>
+              <p className="text-base">{formData.vietnameseTitle}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Abbreviations
+              </p>
+              <p className="text-base">{formData.abbreviations || "N/A"}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Duration
+              </p>
+              <p className="text-base">{formData.duration} months</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Maximum Members
+              </p>
+              <p className="text-base">{formData.maximumMember}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Language
+              </p>
+              <p className="text-base">{formData.language}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Category
+              </p>
+              <p className="text-base">{formData.category}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Type</p>
+              <p className="text-base">{formData.type}</p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Field</p>
               <p className="text-base">{getFieldName(formData.field)}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Project Type
-              </p>
-              <p className="text-base">{formData.type}</p>
+              <p className="text-sm font-medium text-muted-foreground">Major</p>
+              <p className="text-base">{getMajorName(formData.major)}</p>
             </div>
+          </div>
 
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Project Description
-                </p>
-                <p className="text-base whitespace-pre-line">
-                  {formData.overview}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Research Target
-                </p>
-                <p className="text-base whitespace-pre-line">
-                  {formData.target}
-                </p>
-              </div>
+          <div className="space-y-4">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">
+                Description
+              </p>
+              <p className="text-base whitespace-pre-line">
+                {formData.description}
+              </p>
             </div>
+            {formData.requirementNote && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Requirement Note
+                </p>
+                <p className="text-base whitespace-pre-line">
+                  {formData.requirementNote}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
