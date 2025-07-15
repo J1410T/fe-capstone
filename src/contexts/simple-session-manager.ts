@@ -9,8 +9,8 @@ import { QueryClient } from "@tanstack/react-query";
 
 // Session configuration
 const SESSION_CONFIG = {
-  INACTIVITY_TIMEOUT: 2 * 60 * 1000, // 15 minutes in milliseconds
-  CHECK_INTERVAL: 60 * 1000, // Check every minute
+  INACTIVITY_TIMEOUT: 15 * 60 * 1000, // 15 minutes in milliseconds
+  CHECK_INTERVAL: 30 * 1000, // Check every 30 seconds for more responsive detection
   STORAGE_KEYS: {
     AUTH_RESPONSE: "auth-response",
     LAST_ACTIVITY: "last-activity",
@@ -175,12 +175,17 @@ export class SimpleSessionManager {
    * Clear all session data
    */
   public clearSession() {
+    console.log("Clearing session data...");
     // Clear React Query cache only (no localStorage)
     try {
       if (this.queryClient) {
         this.queryClient.removeQueries({ queryKey: ["auth-response"] });
         this.queryClient.removeQueries({ queryKey: ["last-activity"] });
         this.queryClient.removeQueries({ queryKey: ["access-token"] });
+        this.queryClient.removeQueries({ queryKey: ["auth-user"] });
+
+        // Force invalidate all queries to ensure fresh state
+        this.queryClient.invalidateQueries();
       }
     } catch (error) {
       console.error("Error clearing query cache:", error);
@@ -219,8 +224,17 @@ export class SimpleSessionManager {
 
       // Check if auth-response still exists
       if (!this.isAuthResponseValid()) {
-        console.log("Auth-response no longer valid");
+        console.log("Auth-response no longer valid during session check");
         this.handleAuthResponseLoss();
+        return;
+      }
+
+      // Check if access token still exists
+      const token = this.getAccessToken();
+      if (!token) {
+        console.log("Access token no longer exists during session check");
+        this.clearSession();
+        this.onLogoutCallback?.();
         return;
       }
 

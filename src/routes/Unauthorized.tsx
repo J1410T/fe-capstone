@@ -1,8 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import AuthWrapper from "@/components/auth/AuthWrapper";
 
 export const Unauthorized: React.FC = () => {
-  return (
+  const UnauthorizedContent = () => (
     <div className="flex min-h-screen items-center justify-center  p-4">
       <div className="w-full max-w-md rounded-lg p-6  text-center">
         <div className="flex justify-center mb-4">
@@ -70,5 +71,11 @@ export const Unauthorized: React.FC = () => {
         </Link>
       </div>
     </div>
+  );
+
+  return (
+    <AuthWrapper>
+      <UnauthorizedContent />
+    </AuthWrapper>
   );
 };

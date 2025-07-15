@@ -199,6 +199,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, [navigate, queryClient, logout]);
 
+  // Monitor query cache for auth data changes
+  useEffect(() => {
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      // Check if auth-related queries were removed/invalidated
+      if (event.type === "removed" || event.type === "updated") {
+        const queryKey = event.query.queryKey;
+
+        // If access token or auth-response was removed and user is still set
+        if (
+          user &&
+          ((Array.isArray(queryKey) && queryKey.includes("access-token")) ||
+            (Array.isArray(queryKey) && queryKey.includes("auth-response")))
+        ) {
+          // Check if the data is actually gone
+          const token = simpleSessionManager.getAccessToken();
+          const authResponse = simpleSessionManager.isAuthResponseValid();
+
+          if (!token || !authResponse) {
+            console.log("Auth data cleared from cache - logging out user");
+            setUser(null);
+            // Don't navigate here as it might cause loops, let AuthGuard handle it
+          }
+        }
+      }
+    });
+
+    return unsubscribe;
+  }, [user, queryClient]);
+
   // Check if user has specific role
   const hasRole = (role: UserRole) => {
     return user?.role === role;
