@@ -1,5 +1,5 @@
 // types/auth.ts
-export type GoogleAuthResponse = {
+export type AuthResponse = {
   token: string;
   "full-name": string;
   "avatar-url": string;
@@ -44,3 +44,9 @@ export type Member = {
   projectId: string;
   appraisalCouncilId: string;
 };
+
+export interface StaffLoginRequest {
+  email: string;
+  password: string;
+  "selected-role": string;
+}

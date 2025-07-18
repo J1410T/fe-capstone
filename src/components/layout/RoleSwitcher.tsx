@@ -90,10 +90,10 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
 
   // Get available roles from auth-response data instead of hardcoded list
   const availableRoles = authData.roles
-    .filter((role): role is UserRole =>
+    .filter((role: string): role is UserRole =>
       Object.values(UserRole).includes(role as UserRole)
     )
-    .filter((role) => role !== UserRole.STAFF); // Staff users cannot switch roles
+    .filter((role: UserRole) => role !== UserRole.STAFF); // Staff users cannot switch roles
 
   const currentRoleConfig = roleConfig[user.role];
 
@@ -141,7 +141,7 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
         <DropdownMenuContent className="w-80" align="start">
           <DropdownMenuLabel>Switch to another role</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {availableRoles.map((role) => {
+          {availableRoles.map((role: UserRole) => {
             const config = roleConfig[role];
             const isCurrentRole = role === user.role;
             return (
@@ -192,7 +192,7 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
         <DropdownMenuContent className="w-72" align="center">
           <DropdownMenuLabel>Switch Role</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          {availableRoles.map((role) => {
+          {availableRoles.map((role: UserRole) => {
             const config = roleConfig[role];
             const isCurrentRole = role === user.role;
             return (
@@ -233,7 +233,7 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
       <DropdownMenuContent className="w-96" align="end" side="right">
         <DropdownMenuLabel>Switch to another role</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {availableRoles.map((role) => {
+        {availableRoles.map((role: UserRole) => {
           const config = roleConfig[role];
           const isCurrentRole = role === user.role;
           return (

@@ -4,7 +4,7 @@
  */
 
 import { UserRole } from "@/contexts/auth-types";
-import { GoogleAuthResponse } from "@/types/auth";
+import { AuthResponse } from "@/types/auth";
 import { QueryClient } from "@tanstack/react-query";
 
 // Session configuration
@@ -137,10 +137,10 @@ export class SimpleSessionManager {
   /**
    * Get auth-response data from query client
    */
-  public getAuthResponseData(): GoogleAuthResponse | null {
+  public getAuthResponseData(): AuthResponse | null {
     try {
       if (this.queryClient) {
-        const cachedData = this.queryClient.getQueryData<GoogleAuthResponse>([
+        const cachedData = this.queryClient.getQueryData<AuthResponse>([
           "auth-response",
         ]);
         if (cachedData) {

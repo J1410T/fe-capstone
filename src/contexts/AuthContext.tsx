@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { UserRole, User, JwtPayload } from "./auth-types";
 import { AuthContext } from "./auth-context";
-import { GoogleAuthResponse } from "@/types/auth";
+import { AuthResponse } from "@/types/auth";
 import { simpleSessionManager } from "@/contexts/simple-session-manager";
 
 // Re-export for compatibility (but keep them in separate files for fast refresh)
@@ -152,8 +152,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // Redirect users based on their role from auth-response
         if (userRole === UserRole.STAFF) {
-          // Staff users go to staff dashboard with sidebar
-          navigate("/staff/dashboard");
+          // Staff users go to staff index page
+          navigate("/staff");
         } else if (userRole === UserRole.PRINCIPAL_INVESTIGATOR) {
           // Principal Investigators go to home page
           navigate("/home");
@@ -239,7 +239,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       // Get current auth-response data
-      const authResponse = queryClient.getQueryData<GoogleAuthResponse>([
+      const authResponse = queryClient.getQueryData<AuthResponse>([
         "auth-response",
       ]);
       if (!authResponse) {
@@ -258,7 +258,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       };
 
       // Update the query cache
-      queryClient.setQueryData<GoogleAuthResponse>(
+      queryClient.setQueryData<AuthResponse>(
         ["auth-response"],
         updatedAuthResponse
       );
