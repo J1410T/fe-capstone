@@ -5,7 +5,20 @@ import { AuthContext } from "./auth-context";
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    // Instead of throwing an error, return a default context
+    // This prevents crashes when auth components are rendered outside of AuthProvider
+    console.warn(
+      "useAuth is being used outside of an AuthProvider. Using default values."
+    );
+    return {
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      login: () => {},
+      logout: () => {},
+      hasRole: () => false,
+      switchRole: async () => false,
+    };
   }
   return context;
 };

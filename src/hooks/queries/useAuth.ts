@@ -1,10 +1,10 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { GoogleAuthResponse } from "@/types/auth";
+import { AuthResponse } from "@/types/auth";
 import { getAccountInfo } from "@/services/resources/auth";
 
 export function useAuthResponse() {
   const queryClient = useQueryClient();
-  const data = queryClient.getQueryData<GoogleAuthResponse>(["auth-response"]);
+  const data = queryClient.getQueryData<AuthResponse>(["auth-response"]);
   return { data };
 }
 

@@ -1,5 +1,5 @@
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import { LoginForm } from "./LoginForm";
+import { GoogleLoginForm } from "./LoginForm";
 import StripeCanvas from "./StripeCanvas";
 import { env } from "@/config/env";
 
@@ -23,7 +23,7 @@ export default function Login() {
                 SRPM
               </span>
             </a>
-            <LoginForm />
+            <GoogleLoginForm />
           </div>
         </div>
       </div>

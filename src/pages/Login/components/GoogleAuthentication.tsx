@@ -1,14 +1,13 @@
 import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts";
-import { GoogleAuthResponse } from "@/types/auth";
 import { axiosClient } from "@/services/api";
 import { mockUserLogin } from "@/utils";
 import { UserRole } from "@/contexts/auth-types";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components";
 import { useState } from "react";
-import { LogIn } from "lucide-react";
+import { AuthResponse } from "@/types/auth";
 
 const GoogleAuthentication = () => {
   const navigate = useNavigate();
@@ -28,15 +27,12 @@ const GoogleAuthentication = () => {
 
       setIsLoading(true);
       try {
-        const res = await axiosClient.post<GoogleAuthResponse>(
+        const res = await axiosClient.post<AuthResponse>(
           `/auth/google-authentication?Token=${token}`
         );
 
         if (res.data) {
-          queryClient.setQueryData<GoogleAuthResponse>(
-            ["auth-response"],
-            res.data
-          );
+          queryClient.setQueryData<AuthResponse>(["auth-response"], res.data);
 
           // Use the token from the API response if available, otherwise generate mock token
           let accessToken = res.data.token;
@@ -75,7 +71,11 @@ const GoogleAuthentication = () => {
         onClick={() => loginGoogle()}
         disabled={isLoading}
       >
-        <LogIn className="h-5 w-5" />
+        <img
+          src="/images/google-logo.png"
+          alt="Google Logo"
+          className="h-10 w-10"
+        />
         {isLoading ? "Redirecting..." : "Login with Google"}
       </Button>
     </div>

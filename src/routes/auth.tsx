@@ -1,5 +1,6 @@
 import { Navigate, RouteObject } from "react-router-dom";
 import Login from "@/pages/Login";
+import StaffLogin from "@/pages/Login/StaffLogin";
 
 export const authRoutes: RouteObject[] = [
   {
@@ -9,5 +10,9 @@ export const authRoutes: RouteObject[] = [
   {
     path: "login",
     element: <Login />,
+  },
+  {
+    path: "login-staff",
+    element: <StaffLogin />,
   },
 ];
