@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import {
   getProjectListFilter,
   buildFilterParams,
+  getProjectDetail,
 } from "@/services/resources/project";
 import { SortOption } from "@/types/project";
 
@@ -36,5 +37,12 @@ export function useFieldList() {
     queryKey: ["field-list"],
     queryFn: () => getProjectListFilter(), // Adjust this to your actual field list API
     select: (data) => data?.["data-list"] || [],
+  });
+}
+
+export function useProject(projectId: string) {
+  return useQuery({
+    queryKey: ["project"],
+    queryFn: () => getProjectDetail(projectId), // Adjust this to your actual project detail API
   });
 }

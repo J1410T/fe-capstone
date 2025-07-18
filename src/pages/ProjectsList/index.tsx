@@ -241,7 +241,7 @@ import {
   CategoryFilter,
   FieldFilter,
   MajorFilter,
-  ProjectFilterItem,
+  ProjectItem,
   SortOption,
   StatusFilter,
   TypeFilter,
@@ -255,7 +255,7 @@ import { ProjectCard, ProjectsHeader, ProjectsPagination } from "./components";
 const ProjectsList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [projects, setProjects] = useState<ProjectFilterItem[]>([]);
+  const [projects, setProjects] = useState<ProjectItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);

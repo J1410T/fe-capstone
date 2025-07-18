@@ -115,7 +115,7 @@ export interface ProjectCardProps {
   id: string;
   title: string;
   vietnameseTitle?: string;
-  progress: number;
+  progress: number | null;
   status: string;
   category?: string;
   type?: string;

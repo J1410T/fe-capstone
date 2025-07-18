@@ -86,7 +86,7 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
             ) : (
               Array.isArray(fields) &&
               fields.map((field) => (
-                <SelectItem key={field.id} value={field.idx}>
+                <SelectItem key={field.id} value={field.id}>
                   {field.name}
                 </SelectItem>
               ))
