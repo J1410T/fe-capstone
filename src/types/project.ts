@@ -16,8 +16,8 @@ export interface ProjectFilterRequest {
   title?: string;
   category?: string;
   type?: string;
-  "major-name"?: string;
-  "field-name"?: string;
+  "major-id"?: string;
+  "field-id"?: string;
   "tag-names"?: string[];
   "sort-by": string;
   desc: boolean;

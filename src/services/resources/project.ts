@@ -95,11 +95,11 @@ export const buildFilterParams = (filters: {
   }
 
   if (selectedField !== "all") {
-    params["field-name"] = selectedField;
+    params["field-id"] = selectedField;
   }
 
   if (selectedMajor !== "all") {
-    params["major-name"] = selectedMajor;
+    params["major-id"] = selectedMajor;
   }
 
   if (tags.length > 0) {
