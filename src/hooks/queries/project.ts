@@ -43,6 +43,7 @@ export function useFieldList() {
 export function useProject(projectId: string) {
   return useQuery({
     queryKey: ["project"],
-    queryFn: () => getProjectDetail(projectId), // Adjust this to your actual project detail API
+    queryFn: () => getProjectDetail(projectId),
+    enabled: !!projectId,
   });
 }

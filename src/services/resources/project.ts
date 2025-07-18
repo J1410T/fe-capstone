@@ -7,12 +7,11 @@ import {
 } from "@/types/project";
 import { axiosClient, getAccessToken } from "../api";
 
-export const accessToken = getAccessToken();
-
 export const getProjectListFilter = async (
   params?: Partial<ProjectFilterRequest>
 ) => {
   try {
+    const accessToken = getAccessToken();
     const res = await axiosClient.post<ProjectFilterResponse>(
       `/project/filter`,
       params,
@@ -114,6 +113,7 @@ export const createProject = async (
   data: CreateProjectRequest
 ): Promise<ProjectItem> => {
   try {
+    const accessToken = getAccessToken();
     const res = await axiosClient.post<ProjectItem>(`/project`, data, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -127,6 +127,7 @@ export const createProject = async (
 };
 
 export const getProjectDetail = async (projectId: string) => {
+  const accessToken = getAccessToken();
   return await axiosClient.get<ProjectItem>(`/project/${projectId}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
