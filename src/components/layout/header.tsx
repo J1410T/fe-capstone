@@ -100,7 +100,6 @@ const menuItemsByRole = {
     { name: "Dashboard", path: "/researcher/dashboard", icon: LayoutDashboard },
     { name: "Projects", path: "/researcher/projects", icon: FolderOpen },
     { name: "Tasks", path: "/researcher/tasks", icon: ClipboardList },
-    { name: "Milestones", path: "/researcher/milestones", icon: ClipboardList },
     { name: "My Projects", path: "/researcher/my-projects", icon: Briefcase },
   ],
   [UserRole.HOST_INSTITUTION]: [

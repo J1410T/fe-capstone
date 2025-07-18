@@ -173,7 +173,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             <Button
               onClick={handleViewDetails}
               size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 h-7 text-xs group/btn"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 h-7 text-xs group/btn cursor-pointer"
             >
               View Details
               <ArrowRight className="ml-1 h-3 w-3 group-hover/btn:translate-x-0.5 transition-transform" />

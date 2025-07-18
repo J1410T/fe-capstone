@@ -58,15 +58,15 @@ export const buildFilterParams = (filters: {
   const getSortParams = (sort: SortOption) => {
     switch (sort) {
       case "latest":
-        return { "sort-by": "createdat", desc: true };
+        return { "sort-by": "createdate", desc: true };
       case "oldest":
-        return { "sort-by": "createdat", desc: false };
+        return { "sort-by": "createdate", desc: false };
       case "a-z":
         return { "sort-by": "englishtitle", desc: false };
       case "z-a":
         return { "sort-by": "englishtitle", desc: true };
       default:
-        return { "sort-by": "createdat", desc: true };
+        return { "sort-by": "createdate", desc: true };
     }
   };
 

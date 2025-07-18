@@ -1,6 +1,9 @@
 import { FaClipboardList, FaUsers, FaChartBar } from "react-icons/fa";
 import { motion } from "framer-motion";
 import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts";
+import { UserRole } from "@/contexts/auth-types";
 
 interface Feature {
   icon: React.ReactNode;
@@ -44,6 +47,21 @@ const fadeInUp = {
 };
 
 function HomeBanner() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const handleViewAllProjects = () => {
+    // Navigate to the projects list page based on user role
+    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+      navigate("/pi/projects");
+    } else if (user?.role === UserRole.HOST_INSTITUTION) {
+      navigate("/host/projects");
+    } else if (user?.role === UserRole.APPRAISAL_COUNCIL) {
+      navigate("/council/projects");
+    } else {
+      navigate("/researcher/projects");
+    }
+  };
   return (
     <motion.div
       className="relative w-full overflow-hidden bg-white"
@@ -90,7 +108,10 @@ function HomeBanner() {
             animate="visible"
             custom={2}
           >
-            <button className="rounded-md bg-emerald-700 px-6 py-3 font-semibold cursor-pointer text-white transition duration-300 ease-in-out hover:bg-emerald-600 active:scale-95">
+            <button
+              onClick={handleViewAllProjects}
+              className="rounded-md bg-emerald-700 px-6 py-3 font-semibold cursor-pointer text-white transition duration-300 ease-in-out hover:bg-emerald-600 active:scale-95"
+            >
               Explore Projects
             </button>
           </motion.div>

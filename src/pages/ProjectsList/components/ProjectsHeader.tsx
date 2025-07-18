@@ -1,7 +1,7 @@
 import React, { useState, KeyboardEvent } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, X, Tag } from "lucide-react";
+import { Search, X, Tag, RotateCcw } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -31,6 +31,7 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
   tags,
   onTagsChange,
   onSearch,
+  onReset, // Add this prop
 }) => {
   const [tagInput, setTagInput] = useState("");
 
@@ -61,6 +62,11 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
 
   const handleSearchClick = () => {
     onSearch();
+  };
+
+  const handleResetClick = () => {
+    setTagInput(""); // Clear the tag input field
+    onReset(); // Call the reset function from parent
   };
 
   return (
@@ -206,13 +212,17 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
         )}
       </div>
 
-      <div>
+      <div className="flex gap-2">
         <Button
           onClick={handleSearchClick}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white w-full"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white flex-1"
         >
           <Search className="mr-2 h-4 w-4" />
           Search
+        </Button>
+        <Button onClick={handleResetClick} variant="outline" className="flex-1">
+          <RotateCcw className="mr-2 h-4 w-4" />
+          Reset
         </Button>
       </div>
     </div>

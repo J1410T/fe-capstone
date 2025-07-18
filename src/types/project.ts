@@ -101,6 +101,7 @@ export interface ProjectsHeaderProps {
   tags: string[];
   onTagsChange: (tags: string[]) => void;
   onSearch: () => void;
+  onReset: () => void;
 }
 
 export interface ProjectsPaginationProps {
