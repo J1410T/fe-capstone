@@ -11,6 +11,17 @@ import UserLayout from "@/layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
 import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
 
+// Staff Pages
+import {
+  BMFormsManagement,
+  PaymentManagement,
+  ProjectApprovals,
+  ProjectAssignments,
+  StaffDashboard,
+  StaffProjectRegistration,
+  UserAccessControl,
+} from "@/pages/Staff";
+
 // General Pages
 import ProjectsList from "@/pages/ProjectsList";
 import ProjectDetail from "@/pages/ProjectDetail";
@@ -84,18 +95,47 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      // Staff routes with sidebar - simplified layout only
+      // Staff routes with sidebar - no authentication required for testing
       {
         path: "staff",
-        element: (
-          <AuthGuard requiredRoles={[UserRole.STAFF]}>
-            <StaffLayout />
-          </AuthGuard>
-        ),
+        element: <StaffLayout />,
         children: [
           {
             index: true,
-            element: <GeneralComingSoon />,
+            element: <StaffDashboard />,
+          },
+          {
+            path: "dashboard",
+            element: <StaffDashboard />,
+          },
+          {
+            path: "forms",
+            element: <BMFormsManagement />,
+          },
+          {
+            path: "projects",
+            children: [
+              {
+                path: "register",
+                element: <StaffProjectRegistration />,
+              },
+              {
+                path: "assignments",
+                element: <ProjectAssignments />,
+              },
+            ],
+          },
+          {
+            path: "approvals",
+            element: <ProjectApprovals />,
+          },
+          {
+            path: "payments",
+            element: <PaymentManagement />,
+          },
+          {
+            path: "users",
+            element: <UserAccessControl />,
           },
           {
             path: "profile",
@@ -103,7 +143,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "*",
-            element: <GeneralComingSoon />,
+            element: <StaffDashboard />,
           },
         ],
       },

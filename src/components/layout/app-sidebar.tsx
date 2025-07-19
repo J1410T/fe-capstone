@@ -2,16 +2,12 @@ import * as React from "react";
 import {
   LayoutDashboard,
   Users,
-  Settings,
   FolderOpen,
-  // History,
-  // Shield,
-  // BarChart,
-  ClipboardList,
+  DollarSign,
+  FileText,
+  CheckCircle,
 } from "lucide-react";
-
-import { NavMain } from "./nav-main";
-import { NavUser } from "./nav-user";
+import { Link } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -19,123 +15,72 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/contexts/AuthContext";
 
-// Admin navigation data
-const adminNavData = {
-  user: {
-    name: "Admin User",
-    email: "admin@example.com",
-    avatar: "/avatars/admin.jpg",
+// Simple navigation items
+const navigationItems = [
+  {
+    title: "Dashboard",
+    url: "/staff",
+    icon: LayoutDashboard,
   },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/staff/dashboard",
-      icon: LayoutDashboard,
-      // items: [],
-    },
-    {
-      title: "User Management",
-      url: "/staff/users",
-      icon: Users,
-      items: [
-        {
-          title: "All Users",
-          url: "/staff/users",
-        },
-        {
-          title: "Roles",
-          url: "/staff/users/roles",
-        },
-      ],
-    },
-    {
-      title: "Projects",
-      url: "/staff/projects",
-      icon: FolderOpen,
-      isActive: true,
-      items: [
-        {
-          title: "All Projects",
-          url: "/staff/projects",
-        },
-        {
-          title: "Create Project",
-          url: "/staff/projects/create",
-        },
-        {
-          title: "Templates",
-          url: "/staff/projects/templates",
-        },
-      ],
-    },
-    {
-      title: "Forms & Approvals",
-      url: "/staff/approvals",
-      icon: ClipboardList,
-      items: [
-        {
-          title: "Pending Approvals",
-          url: "/staff/approvals/pending",
-        },
-        {
-          title: "Budget Requests",
-          url: "/staff/approvals/budget",
-        },
-        {
-          title: "Form Templates",
-          url: "/staff/approvals/templates",
-        },
-      ],
-    },
-    {
-      title: "System",
-      url: "/staff/system",
-      icon: Settings,
-      items: [
-        {
-          title: "Configuration",
-          url: "/staff/system/config",
-        },
-        {
-          title: "Logs",
-          url: "/staff/system/logs",
-        },
-        {
-          title: "Backup",
-          url: "/staff/system/backup",
-        },
-      ],
-    },
-  ],
-};
+  {
+    title: "BM Forms",
+    url: "/staff/forms",
+    icon: FileText,
+  },
+  {
+    title: "Register Project",
+    url: "/staff/projects/register",
+    icon: FolderOpen,
+  },
+  {
+    title: "Project Assignments",
+    url: "/staff/projects/assignments",
+    icon: Users,
+  },
+  {
+    title: "Approvals",
+    url: "/staff/approvals",
+    icon: CheckCircle,
+  },
+  {
+    title: "Payments",
+    url: "/staff/payments",
+    icon: DollarSign,
+  },
+  {
+    title: "User Management",
+    url: "/staff/users",
+    icon: Users,
+  },
+];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useAuth();
-
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <div className="flex items-center px-4 py-2">
-          <div className="text-xl font-bold text-primary">SRPM Admin</div>
+          <div className="text-xl font-bold text-primary">SRPM Staff</div>
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={adminNavData.navMain} />
+        <div className="px-3 py-2">
+          <nav className="space-y-1">
+            {navigationItems.map((item) => (
+              <Link
+                key={item.url}
+                to={item.url}
+                className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+              >
+                <item.icon className="mr-3 h-5 w-5" />
+                {item.title}
+              </Link>
+            ))}
+          </nav>
+        </div>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser
-          user={
-            user
-              ? {
-                  name: user.name,
-                  email: user.email,
-                  avatar: user.avatar,
-                }
-              : adminNavData.user
-          }
-        />
+        <div className="px-4 py-2 text-sm text-gray-500">Staff Portal</div>
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
