@@ -1,5 +1,6 @@
 import { axiosClient, getAccessToken } from "../api";
-import { queryClient } from "@/lib/react-query"; // đây là queryClient đã cấu hình sẵn
+import { queryClient } from "@/lib/react-query";
+import { AuthInfo } from "@/types/auth";
 
 export const getAccountInfo = async () => {
   try {
@@ -21,9 +22,6 @@ export const getAccountInfo = async () => {
 /**
  * Authentication API resources
  */
-
-import { api } from "../base";
-import { AuthInfo } from "@/types/auth";
 
 export interface LoginRequest extends Record<string, unknown> {
   email: string;
@@ -62,7 +60,11 @@ export const authApi = {
    * Login user
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    return api.post<LoginResponse>("/auth/login", credentials);
+    const response = await axiosClient.post<LoginResponse>(
+      "/auth/login",
+      credentials
+    );
+    return response.data;
   },
 
   /**
@@ -76,22 +78,42 @@ export const authApi = {
       throw new Error("No refresh token available");
     }
 
-    return api.post<RefreshTokenResponse>("/auth/refresh", {
-      refreshToken,
-    });
+    const response = await axiosClient.post<RefreshTokenResponse>(
+      "/auth/refresh",
+      {
+        refreshToken,
+      }
+    );
+    return response.data;
   },
 
   /**
    * Get current user info
    */
   async me() {
-    return api.get("/auth/me");
+    const accessToken = getAccessToken();
+    const response = await axiosClient.get("/auth/me", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
   },
 
   /**
    * Logout user
    */
   async logout() {
-    return api.post("/auth/logout");
+    const accessToken = getAccessToken();
+    const response = await axiosClient.post(
+      "/auth/logout",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    return response.data;
   },
 };

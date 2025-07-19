@@ -2,8 +2,10 @@
  * Enhanced API client for TanStack Query
  */
 
-import { api, type QueryParams } from "../services/base";
+import { axiosClient, getAccessToken } from "./api";
 import { ApiError } from "@/lib/react-query";
+
+export type QueryParams = Record<string, string | number | boolean | undefined>;
 
 /**
  * Enhanced API client with TanStack Query integration
@@ -15,30 +17,54 @@ export const queryApi = {
   async get<TData>(
     endpoint: string,
     params?: QueryParams,
-    options?: RequestInit
+    options?: any
   ): Promise<TData> {
     try {
-      const response = await api.fetch<{
+      const accessToken = getAccessToken();
+
+      // Build query string from params
+      const queryString = params
+        ? new URLSearchParams(
+            Object.entries(params).reduce((acc, [key, value]) => {
+              if (value !== undefined) {
+                acc[key] = String(value);
+              }
+              return acc;
+            }, {} as Record<string, string>)
+          ).toString()
+        : "";
+
+      const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+
+      const response = await axiosClient.get<{
         success: boolean;
         data: TData;
         message?: string;
-      }>(endpoint, params, {
-        method: "GET",
+      }>(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          ...options?.headers,
+        },
         ...options,
       });
 
-      if (!response.success) {
-        throw new ApiError(400, response, response.message);
+      if (!response.data.success) {
+        throw new ApiError(400, response.data, response.data.message);
       }
 
-      return response.data;
-    } catch (error) {
-      if (error instanceof Response) {
-        const errorData = await error.json().catch(() => ({}));
+      return response.data.data;
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response: { status: number; data: Record<string, unknown> };
+        };
+        const errorData = axiosError.response.data || {};
         throw new ApiError(
-          error.status,
+          axiosError.response.status,
           errorData,
-          errorData.message || error.statusText
+          typeof errorData.message === "string"
+            ? errorData.message
+            : "API Error"
         );
       }
       throw error;
@@ -54,30 +80,50 @@ export const queryApi = {
     params?: QueryParams
   ): Promise<TData> {
     try {
-      const response = await api.fetch<{
+      const accessToken = getAccessToken();
+
+      // Build query string from params
+      const queryString = params
+        ? new URLSearchParams(
+            Object.entries(params).reduce((acc, [key, value]) => {
+              if (value !== undefined) {
+                acc[key] = String(value);
+              }
+              return acc;
+            }, {} as Record<string, string>)
+          ).toString()
+        : "";
+
+      const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+
+      const response = await axiosClient.post<{
         success: boolean;
         data: TData;
         message?: string;
-      }>(endpoint, params, {
-        method: "POST",
+      }>(url, data, {
         headers: {
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: data ? JSON.stringify(data) : undefined,
       });
 
-      if (!response.success) {
-        throw new ApiError(400, response, response.message);
+      if (!response.data.success) {
+        throw new ApiError(400, response.data, response.data.message);
       }
 
-      return response.data;
-    } catch (error) {
-      if (error instanceof Response) {
-        const errorData = await error.json().catch(() => ({}));
+      return response.data.data;
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response: { status: number; data: Record<string, unknown> };
+        };
+        const errorData = axiosError.response.data || {};
         throw new ApiError(
-          error.status,
+          axiosError.response.status,
           errorData,
-          errorData.message || error.statusText
+          typeof errorData.message === "string"
+            ? errorData.message
+            : "API Error"
         );
       }
       throw error;
@@ -93,30 +139,50 @@ export const queryApi = {
     params?: QueryParams
   ): Promise<TData> {
     try {
-      const response = await api.fetch<{
+      const accessToken = getAccessToken();
+
+      // Build query string from params
+      const queryString = params
+        ? new URLSearchParams(
+            Object.entries(params).reduce((acc, [key, value]) => {
+              if (value !== undefined) {
+                acc[key] = String(value);
+              }
+              return acc;
+            }, {} as Record<string, string>)
+          ).toString()
+        : "";
+
+      const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+
+      const response = await axiosClient.put<{
         success: boolean;
         data: TData;
         message?: string;
-      }>(endpoint, params, {
-        method: "PUT",
+      }>(url, data, {
         headers: {
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: data ? JSON.stringify(data) : undefined,
       });
 
-      if (!response.success) {
-        throw new ApiError(400, response, response.message);
+      if (!response.data.success) {
+        throw new ApiError(400, response.data, response.data.message);
       }
 
-      return response.data;
-    } catch (error) {
-      if (error instanceof Response) {
-        const errorData = await error.json().catch(() => ({}));
+      return response.data.data;
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response: { status: number; data: Record<string, unknown> };
+        };
+        const errorData = axiosError.response.data || {};
         throw new ApiError(
-          error.status,
+          axiosError.response.status,
           errorData,
-          errorData.message || error.statusText
+          typeof errorData.message === "string"
+            ? errorData.message
+            : "API Error"
         );
       }
       throw error;
@@ -132,30 +198,50 @@ export const queryApi = {
     params?: QueryParams
   ): Promise<TData> {
     try {
-      const response = await api.fetch<{
+      const accessToken = getAccessToken();
+
+      // Build query string from params
+      const queryString = params
+        ? new URLSearchParams(
+            Object.entries(params).reduce((acc, [key, value]) => {
+              if (value !== undefined) {
+                acc[key] = String(value);
+              }
+              return acc;
+            }, {} as Record<string, string>)
+          ).toString()
+        : "";
+
+      const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+
+      const response = await axiosClient.patch<{
         success: boolean;
         data: TData;
         message?: string;
-      }>(endpoint, params, {
-        method: "PATCH",
+      }>(url, data, {
         headers: {
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
-        body: data ? JSON.stringify(data) : undefined,
       });
 
-      if (!response.success) {
-        throw new ApiError(400, response, response.message);
+      if (!response.data.success) {
+        throw new ApiError(400, response.data, response.data.message);
       }
 
-      return response.data;
-    } catch (error) {
-      if (error instanceof Response) {
-        const errorData = await error.json().catch(() => ({}));
+      return response.data.data;
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response: { status: number; data: Record<string, unknown> };
+        };
+        const errorData = axiosError.response.data || {};
         throw new ApiError(
-          error.status,
+          axiosError.response.status,
           errorData,
-          errorData.message || error.statusText
+          typeof errorData.message === "string"
+            ? errorData.message
+            : "API Error"
         );
       }
       throw error;
@@ -167,26 +253,49 @@ export const queryApi = {
    */
   async delete<TData>(endpoint: string, params?: QueryParams): Promise<TData> {
     try {
-      const response = await api.fetch<{
+      const accessToken = getAccessToken();
+
+      // Build query string from params
+      const queryString = params
+        ? new URLSearchParams(
+            Object.entries(params).reduce((acc, [key, value]) => {
+              if (value !== undefined) {
+                acc[key] = String(value);
+              }
+              return acc;
+            }, {} as Record<string, string>)
+          ).toString()
+        : "";
+
+      const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+
+      const response = await axiosClient.delete<{
         success: boolean;
         data: TData;
         message?: string;
-      }>(endpoint, params, {
-        method: "DELETE",
+      }>(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
-      if (!response.success) {
-        throw new ApiError(400, response, response.message);
+      if (!response.data.success) {
+        throw new ApiError(400, response.data, response.data.message);
       }
 
-      return response.data;
-    } catch (error) {
-      if (error instanceof Response) {
-        const errorData = await error.json().catch(() => ({}));
+      return response.data.data;
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response: { status: number; data: Record<string, unknown> };
+        };
+        const errorData = axiosError.response.data || {};
         throw new ApiError(
-          error.status,
+          axiosError.response.status,
           errorData,
-          errorData.message || error.statusText
+          typeof errorData.message === "string"
+            ? errorData.message
+            : "API Error"
         );
       }
       throw error;
@@ -218,7 +327,23 @@ export const queryApi = {
     meta?: Record<string, unknown>;
   }> {
     try {
-      const response = await api.fetch<{
+      const accessToken = getAccessToken();
+
+      // Build query string from params
+      const queryString = params
+        ? new URLSearchParams(
+            Object.entries(params).reduce((acc, [key, value]) => {
+              if (value !== undefined) {
+                acc[key] = String(value);
+              }
+              return acc;
+            }, {} as Record<string, string>)
+          ).toString()
+        : "";
+
+      const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+
+      const response = await axiosClient.get<{
         success: boolean;
         data: TData[];
         pagination: {
@@ -231,26 +356,33 @@ export const queryApi = {
         };
         meta?: Record<string, unknown>;
         message?: string;
-      }>(endpoint, params, {
-        method: "GET",
+      }>(url, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
-      if (!response.success) {
-        throw new ApiError(400, response, response.message);
+      if (!response.data.success) {
+        throw new ApiError(400, response.data, response.data.message);
       }
 
       return {
-        data: response.data,
-        pagination: response.pagination,
-        meta: response.meta,
+        data: response.data.data,
+        pagination: response.data.pagination,
+        meta: response.data.meta,
       };
-    } catch (error) {
-      if (error instanceof Response) {
-        const errorData = await error.json().catch(() => ({}));
+    } catch (error: unknown) {
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as {
+          response: { status: number; data: Record<string, unknown> };
+        };
+        const errorData = axiosError.response.data || {};
         throw new ApiError(
-          error.status,
+          axiosError.response.status,
           errorData,
-          errorData.message || error.statusText
+          typeof errorData.message === "string"
+            ? errorData.message
+            : "API Error"
         );
       }
       throw error;
