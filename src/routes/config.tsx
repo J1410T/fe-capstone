@@ -15,15 +15,14 @@ import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
 import {
   DocumentFormsManagement,
   PaymentManagement,
-  ProjectApprovals,
-  ProjectAssignments,
   StaffDashboard,
   StaffProjectRegistration,
+  ProjectManagementOverview,
   UserAccessControl,
   FieldsManagement,
   AppraisalCouncilsManagement,
   MajorsManagement,
-  MilestonesManagement,
+  StaffMilestoneManagement,
 } from "@/pages/Staff";
 
 // General Pages
@@ -120,18 +119,18 @@ export const routes: RouteObject[] = [
             path: "projects",
             children: [
               {
+                index: true,
+                element: <ProjectManagementOverview />,
+              },
+              {
                 path: "register",
                 element: <StaffProjectRegistration />,
               },
               {
-                path: "assignments",
-                element: <ProjectAssignments />,
+                path: "overview",
+                element: <ProjectManagementOverview />,
               },
             ],
-          },
-          {
-            path: "approvals",
-            element: <ProjectApprovals />,
           },
           {
             path: "payments",
@@ -156,7 +155,12 @@ export const routes: RouteObject[] = [
           },
           {
             path: "milestones",
-            element: <MilestonesManagement />,
+            children: [
+              {
+                path: "management",
+                element: <StaffMilestoneManagement />,
+              },
+            ],
           },
           {
             path: "profile",

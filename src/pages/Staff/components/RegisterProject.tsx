@@ -22,7 +22,6 @@ import {
 import {
   FolderPlus,
   Calendar as CalendarIcon,
-  Users,
   DollarSign,
   FileText,
   Save,
@@ -36,13 +35,10 @@ interface ProjectFormData {
   title: string;
   description: string;
   category: string;
-  priority: string;
   budget: string;
   duration: string;
   startDate: Date | undefined;
   endDate: Date | undefined;
-  principalInvestigator: string;
-  hostInstitution: string;
   department: string;
   objectives: string;
   methodology: string;
@@ -54,13 +50,10 @@ interface ProjectFormErrors {
   title?: string;
   description?: string;
   category?: string;
-  priority?: string;
   budget?: string;
   duration?: string;
   startDate?: string;
   endDate?: string;
-  principalInvestigator?: string;
-  hostInstitution?: string;
   department?: string;
   objectives?: string;
   methodology?: string;
@@ -73,13 +66,10 @@ const ProjectRegistration: React.FC = () => {
     title: "",
     description: "",
     category: "",
-    priority: "",
     budget: "",
     duration: "",
     startDate: undefined,
     endDate: undefined,
-    principalInvestigator: "",
-    hostInstitution: "",
     department: "",
     objectives: "",
     methodology: "",
@@ -108,13 +98,8 @@ const ProjectRegistration: React.FC = () => {
     if (!formData.description.trim())
       newErrors.description = "Description is required";
     if (!formData.category) newErrors.category = "Category is required";
-    if (!formData.priority) newErrors.priority = "Priority is required";
     if (!formData.budget.trim()) newErrors.budget = "Budget is required";
-    if (!formData.principalInvestigator.trim())
-      newErrors.principalInvestigator = "Principal Investigator is required";
-    if (!formData.hostInstitution.trim())
-      newErrors.hostInstitution = "Host Institution is required";
-    if (!formData.startDate) newErrors.startDate = "Start date is required";
+   
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -141,13 +126,10 @@ const ProjectRegistration: React.FC = () => {
           title: "",
           description: "",
           category: "",
-          priority: "",
           budget: "",
           duration: "",
           startDate: undefined,
           endDate: undefined,
-          principalInvestigator: "",
-          hostInstitution: "",
           department: "",
           objectives: "",
           methodology: "",
@@ -265,6 +247,46 @@ const ProjectRegistration: React.FC = () => {
                 )}
               </div>
 
+              <div className="space-y-2">
+                <Label htmlFor="objectives">Objectives *</Label>
+                <Textarea
+                  id="objectives"
+                  value={formData.objectives}
+                  onChange={(e) =>
+                    handleInputChange("objectives", e.target.value)
+                  }
+                  placeholder="Provide the objectives of the project"
+                  rows={4}
+                  className={errors.objectives ? "border-red-500" : ""}
+                />
+                {errors.objectives && (
+                  <p className="text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors.objectives}
+                  </p>
+                )}
+              </div>
+
+               <div className="space-y-2">
+                <Label htmlFor="expectedOutcomes">Expected Outcomes *</Label>
+                <Textarea
+                  id="expectedOutcomes"
+                  value={formData.expectedOutcomes}
+                  onChange={(e) =>
+                    handleInputChange("expectedOutcomes", e.target.value)
+                  }
+                  placeholder="Provide the Expected Outcomes of the project"
+                  rows={4}
+                  className={errors.expectedOutcomes ? "border-red-500" : ""}
+                />
+                {errors.expectedOutcomes && (
+                  <p className="text-sm text-red-600 flex items-center">
+                    <AlertCircle className="w-4 h-4 mr-1" />
+                    {errors.expectedOutcomes}
+                  </p>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="category">Category *</Label>
@@ -286,14 +308,6 @@ const ProjectRegistration: React.FC = () => {
                       <SelectItem value="applied-research">
                         Applied Research
                       </SelectItem>
-                      <SelectItem value="development">Development</SelectItem>
-                      <SelectItem value="clinical-trial">
-                        Clinical Trial
-                      </SelectItem>
-                      <SelectItem value="social-science">
-                        Social Science
-                      </SelectItem>
-                      <SelectItem value="engineering">Engineering</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.category && (
@@ -304,97 +318,7 @@ const ProjectRegistration: React.FC = () => {
                   )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="priority">Priority *</Label>
-                  <Select
-                    value={formData.priority}
-                    onValueChange={(value) =>
-                      handleInputChange("priority", value)
-                    }
-                  >
-                    <SelectTrigger
-                      className={errors.priority ? "border-red-500" : ""}
-                    >
-                      <SelectValue placeholder="Select priority" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="high">High</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="low">Low</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {errors.priority && (
-                    <p className="text-sm text-red-600 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors.priority}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Project Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Users className="w-5 h-5" />
-                <span>Project Details</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="pi">Principal Investigator *</Label>
-                  <Input
-                    id="pi"
-                    value={formData.principalInvestigator}
-                    onChange={(e) =>
-                      handleInputChange("principalInvestigator", e.target.value)
-                    }
-                    placeholder="Enter PI name"
-                    className={
-                      errors.principalInvestigator ? "border-red-500" : ""
-                    }
-                  />
-                  {errors.principalInvestigator && (
-                    <p className="text-sm text-red-600 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors.principalInvestigator}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="institution">Host Institution *</Label>
-                  <Input
-                    id="institution"
-                    value={formData.hostInstitution}
-                    onChange={(e) =>
-                      handleInputChange("hostInstitution", e.target.value)
-                    }
-                    placeholder="Enter institution name"
-                    className={errors.hostInstitution ? "border-red-500" : ""}
-                  />
-                  {errors.hostInstitution && (
-                    <p className="text-sm text-red-600 flex items-center">
-                      <AlertCircle className="w-4 h-4 mr-1" />
-                      {errors.hostInstitution}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="department">Department</Label>
-                <Input
-                  id="department"
-                  value={formData.department}
-                  onChange={(e) =>
-                    handleInputChange("department", e.target.value)
-                  }
-                  placeholder="Enter department"
-                />
+                
               </div>
             </CardContent>
           </Card>

@@ -53,7 +53,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar,
-  Building,
   User,
 } from "lucide-react";
 import { formatVND } from "@/utils";
@@ -71,7 +70,6 @@ const transactions = [
     id: 1,
     projectTitle: "AI Drug Discovery Platform",
     pi: "Dr. Sarah Johnson",
-    institution: "University of Technology",
     amount: 600000000, // ~25K USD in VND
     type: "milestone",
     status: "pending",
@@ -84,7 +82,6 @@ const transactions = [
     id: 2,
     projectTitle: "Sustainable Energy Storage",
     pi: "Dr. Michael Chen",
-    institution: "Institute of Science",
     amount: 360000000, // ~15K USD in VND
     type: "equipment",
     status: "approved",
@@ -97,9 +94,8 @@ const transactions = [
     id: 3,
     projectTitle: "Climate Change Study",
     pi: "Dr. Emily Rodriguez",
-    institution: "Environmental Research Center",
     amount: 204000000, // ~8.5K USD in VND
-    type: "travel",
+    type: "milestone",
     status: "processed",
     requestDate: "2024-01-10",
     dueDate: "2024-01-20",
@@ -110,9 +106,8 @@ const transactions = [
     id: 4,
     projectTitle: "Marine Biology Research",
     pi: "Dr. James Wilson",
-    institution: "Marine Research Institute",
     amount: 1080000000, // ~45K USD in VND
-    type: "personnel",
+    type: "milestone",
     status: "rejected",
     requestDate: "2024-01-08",
     dueDate: "2024-01-22",
@@ -152,10 +147,6 @@ const PaymentManagement: React.FC = () => {
         return "bg-purple-100 text-purple-800";
       case "equipment":
         return "bg-blue-100 text-blue-800";
-      case "travel":
-        return "bg-green-100 text-green-800";
-      case "personnel":
-        return "bg-orange-100 text-orange-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -263,16 +254,7 @@ const PaymentManagement: React.FC = () => {
           </div>
         ),
       },
-      {
-        accessorKey: "institution",
-        header: "Institution",
-        cell: ({ row }) => (
-          <div className="flex items-center">
-            <Building className="w-4 h-4 mr-1 text-gray-500" />
-            <span className="text-sm">{row.getValue("institution")}</span>
-          </div>
-        ),
-      },
+
       {
         id: "actions",
         header: "Actions",
@@ -393,10 +375,7 @@ const PaymentManagement: React.FC = () => {
                 <Label>Principal Investigator</Label>
                 <p className="text-sm">{selectedTransaction.pi}</p>
               </div>
-              <div>
-                <Label>Institution</Label>
-                <p className="text-sm">{selectedTransaction.institution}</p>
-              </div>
+
               <div>
                 <Label>Amount</Label>
                 <p className="text-sm font-medium">{formatVND(selectedTransaction.amount)}</p>
@@ -554,20 +533,20 @@ const PaymentManagement: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           title="Total Processed"
-          value={`$${(paymentStats.totalProcessed / 1000000).toFixed(1)}M`}
+          value={`${(paymentStats.totalProcessed / 1000000).toFixed(1)}M`}
           icon={DollarSign}
           trend="+12.5% from last month"
           color="success"
         />
         <StatCard
           title="Pending Approvals"
-          value={`$${(paymentStats.pendingApprovals / 1000).toFixed(0)}K`}
+          value={`${(paymentStats.pendingApprovals / 1000).toFixed(0)}K`}
           icon={Clock}
           color="warning"
         />
         <StatCard
           title="Monthly Total"
-          value={`$${(paymentStats.monthlyTotal / 1000).toFixed(0)}K`}
+          value={`${(paymentStats.monthlyTotal / 1000).toFixed(0)}K`}
           icon={TrendingUp}
           trend="+8.2% from last month"
           color="default"
@@ -622,8 +601,6 @@ const PaymentManagement: React.FC = () => {
                   <SelectItem value="all">All Types</SelectItem>
                   <SelectItem value="milestone">Milestone</SelectItem>
                   <SelectItem value="equipment">Equipment</SelectItem>
-                  <SelectItem value="travel">Travel</SelectItem>
-                  <SelectItem value="personnel">Personnel</SelectItem>
                 </SelectContent>
               </Select>
             </div>

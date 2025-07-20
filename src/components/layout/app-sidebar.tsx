@@ -6,7 +6,6 @@ import {
   FolderOpen,
   DollarSign,
   FileText,
-  CheckCircle,
   BookOpen,
   Building2,
   Target,
@@ -41,67 +40,74 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 const data = {
   navMain: [
     {
-      title: "Main Navigation",
+      title: "General",
       items: [
         {
           title: "Dashboard",
           url: "/staff",
           icon: LayoutDashboard,
         },
-        {
+                {
           title: "Document Forms",
           url: "/staff/forms",
           icon: FileText,
         },
+      ],
+    },
+    {
+      title: "Projects",
+      items: [
         {
-          title: "Register Project",
+          title: "Project Overview",
+          url: "/staff/projects",
+          icon: LayoutDashboard,
+        },
+        {
+          title: "Project Registration",
           url: "/staff/projects/register",
           icon: FolderOpen,
         },
+        
         {
-          title: "Project Assignments",
-          url: "/staff/projects/assignments",
-          icon: Users,
-        },
-        {
-          title: "Approvals",
-          url: "/staff/approvals",
-          icon: CheckCircle,
-        },
-        {
-          title: "Payments",
+          title: "Project Payments",
           url: "/staff/payments",
           icon: DollarSign,
         },
         {
-          title: "User Management",
-          url: "/staff/users",
-          icon: Users,
+          title: "Milestone Review",
+          url: "/staff/milestones/management",
+          icon: Target,
         },
+
       ],
     },
     {
-      title: "Data Management",
+      title: "People",
       items: [
         {
-          title: "Fields",
-          url: "/staff/fields",
-          icon: BookOpen,
+          title: "User Access",
+          url: "/staff/users",
+          icon: Users,
         },
         {
           title: "Appraisal Councils",
           url: "/staff/councils",
           icon: Users,
         },
+      ],
+    },
+    {
+      title: "Academics",
+      items: [
         {
-          title: "Majors",
-          url: "/staff/majors",
-          icon: Building2,
+          title: "Academic Fields",
+          url: "/staff/fields",
+          icon: BookOpen,
         },
         {
-          title: "Milestones",
-          url: "/staff/milestones",
-          icon: Target,
+          title: "Academic Majors",
+          url: "/staff/majors",
+          icon: Building2,
         },
       ],
     },

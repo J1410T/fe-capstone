@@ -46,7 +46,6 @@ import {
   Trash2,
   Mail,
   Phone,
-  MapPin,
   Calendar,
   CheckCircle,
   AlertCircle,
@@ -64,7 +63,6 @@ const users = [
     name: "Dr. Sarah Johnson",
     email: "sarah.johnson@university.edu",
     phone: "+1 (555) 123-4567",
-    location: "Stanford, CA",
     role: "PRINCIPAL_INVESTIGATOR",
     status: "active",
     lastLogin: "2024-01-15",
@@ -78,7 +76,6 @@ const users = [
     name: "Dr. Michael Chen",
     email: "michael.chen@mit.edu",
     phone: "+1 (555) 234-5678",
-    location: "Cambridge, MA",
     role: "RESEARCHER",
     status: "active",
     lastLogin: "2024-01-14",
@@ -92,7 +89,6 @@ const users = [
     name: "Dr. Emily Rodriguez",
     email: "emily.rodriguez@ucsd.edu",
     phone: "+1 (555) 345-6789",
-    location: "San Diego, CA",
     role: "HOST_INSTITUTION",
     status: "pending",
     lastLogin: "Never",
@@ -106,7 +102,6 @@ const users = [
     name: "Dr. James Wilson",
     email: "james.wilson@research.org",
     phone: "+1 (555) 456-7890",
-    location: "Boston, MA",
     role: "COUNCIL_MEMBER",
     status: "inactive",
     lastLogin: "2023-12-20",
@@ -118,26 +113,22 @@ const users = [
 ];
 
 const roles = [
-  { value: "STAFF", label: "Staff", description: "System administrators" },
+  { value: "STAFF", label: "Staff",  },
   {
     value: "PRINCIPAL_INVESTIGATOR",
     label: "Principal Investigator",
-    description: "Project leaders",
   },
   {
     value: "RESEARCHER",
     label: "Researcher",
-    description: "Research team members",
   },
   {
     value: "HOST_INSTITUTION",
     label: "Host Institution",
-    description: "Institution representatives",
   },
   {
     value: "COUNCIL_MEMBER",
     label: "Council Member",
-    description: "Review board members",
   },
 ];
 
@@ -211,9 +202,7 @@ const UserAccessControl: React.FC = () => {
       const matchesStatus = statusFilter === "all" || user.status === statusFilter;
       const matchesSearch =
         user.name.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        user.email.toLowerCase().includes(globalFilter.toLowerCase()) ||
-        user.location.toLowerCase().includes(globalFilter.toLowerCase());
-      return matchesRole && matchesStatus && matchesSearch;
+        user.email.toLowerCase().includes(globalFilter.toLowerCase());      return matchesRole && matchesStatus && matchesSearch;
     });
   }, [roleFilter, statusFilter, globalFilter]);
 
@@ -249,8 +238,8 @@ const UserAccessControl: React.FC = () => {
           </Button>
         ),
         cell: ({ row }) => (
-          <div className="flex items-center space-x-3">
-            <Avatar className="w-10 h-10">
+          <div className="flex items-center space-x-3 min-w-0">
+            <Avatar className="w-10 h-10 flex-shrink-0">
               <AvatarImage src={row.original.avatar} />
               <AvatarFallback>
                 {row.original.name
@@ -259,11 +248,11 @@ const UserAccessControl: React.FC = () => {
                   .join("")}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <div className="font-medium">{row.getValue("name")}</div>
-              <div className="text-sm text-muted-foreground flex items-center">
-                <Mail className="w-3 h-3 mr-1" />
-                {row.original.email}
+            <div className="min-w-0 flex-1">
+              <div className="font-medium truncate">{row.getValue("name")}</div>
+              <div className="text-sm text-muted-foreground flex items-center min-w-0">
+                <Mail className="w-3 h-3 mr-1 flex-shrink-0" />
+                <span className="truncate">{row.original.email}</span>
               </div>
             </div>
           </div>
@@ -295,22 +284,12 @@ const UserAccessControl: React.FC = () => {
         },
       },
       {
-        accessorKey: "location",
-        header: "Location",
-        cell: ({ row }) => (
-          <div className="flex items-center">
-            <MapPin className="w-4 h-4 mr-1 text-gray-500" />
-            <span>{row.getValue("location")}</span>
-          </div>
-        ),
-      },
-      {
         accessorKey: "phone",
         header: "Contact",
         cell: ({ row }) => (
-          <div className="flex items-center">
-            <Phone className="w-4 h-4 mr-1 text-gray-500" />
-            <span className="text-sm">{row.getValue("phone")}</span>
+          <div className="flex items-center min-w-0">
+            <Phone className="w-4 h-4 mr-1 text-gray-500 flex-shrink-0" />
+            <span className="text-sm truncate">{row.getValue("phone")}</span>
           </div>
         ),
       },
@@ -318,30 +297,32 @@ const UserAccessControl: React.FC = () => {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => (
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1">
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleViewDetails(row.original)}
+              className="h-8 px-2"
             >
-              <Eye className="w-4 h-4 mr-1" />
-              View
+              <Eye className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">View</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => handleEditUser(row.original)}
+              className="h-8 px-2"
             >
-              <Edit className="w-4 h-4 mr-1" />
-              Edit
+              <Edit className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Edit</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
-              className="text-red-600 hover:text-red-700"
+              className="text-red-600 hover:text-red-700 h-8 px-2"
             >
-              <Trash2 className="w-4 h-4 mr-1" />
-              Delete
+              <Trash2 className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Delete</span>
             </Button>
           </div>
         ),
@@ -364,7 +345,7 @@ const UserAccessControl: React.FC = () => {
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
       const user = row.original;
-      const searchString = `${user.name} ${user.email} ${user.location}`.toLowerCase();
+      const searchString = `${user.name} ${user.email} ${user.role}`.toLowerCase();
       return searchString.includes(filterValue.toLowerCase());
     },
     initialState: {
@@ -419,13 +400,7 @@ const UserAccessControl: React.FC = () => {
                   <span className="text-sm">{selectedUser.phone}</span>
                 </div>
               </div>
-              <div>
-                <Label>Location</Label>
-                <div className="flex items-center mt-1">
-                  <MapPin className="w-4 h-4 mr-2 text-gray-500" />
-                  <span className="text-sm">{selectedUser.location}</span>
-                </div>
-              </div>
+              
               <div>
                 <Label>Joined Date</Label>
                 <div className="flex items-center mt-1">
@@ -595,9 +570,6 @@ const UserAccessControl: React.FC = () => {
                   <SelectItem key={role.value} value={role.value}>
                     <div>
                       <div className="font-medium">{role.label}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {role.description}
-                      </div>
                     </div>
                   </SelectItem>
                 ))}
@@ -610,10 +582,7 @@ const UserAccessControl: React.FC = () => {
               <Label htmlFor="new-phone">Phone</Label>
               <Input id="new-phone" placeholder="Enter phone number" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="new-location">Location</Label>
-              <Input id="new-location" placeholder="Enter location" />
-            </div>
+            
           </div>
         </div>
         <DialogFooter>
@@ -639,7 +608,7 @@ const UserAccessControl: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
             User Access Control
@@ -648,7 +617,7 @@ const UserAccessControl: React.FC = () => {
             Manage user accounts, roles, and permissions
           </p>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className="bg-green-50 text-green-700">
             <CheckCircle className="w-4 h-4 mr-1" />
             {users.filter((u) => u.status === "active").length} Active
@@ -674,8 +643,8 @@ const UserAccessControl: React.FC = () => {
           <CardTitle>Search & Filter</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <div className="flex-1 w-full sm:w-auto">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
@@ -686,9 +655,9 @@ const UserAccessControl: React.FC = () => {
                 />
               </div>
             </div>
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-2 w-full sm:w-auto">
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-[200px]">
+                <SelectTrigger className="w-full sm:w-[200px]">
                   <SelectValue placeholder="Filter by role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -701,7 +670,7 @@ const UserAccessControl: React.FC = () => {
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]">
+                <SelectTrigger className="w-full sm:w-[150px]">
                   <SelectValue placeholder="Filter by status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -718,23 +687,21 @@ const UserAccessControl: React.FC = () => {
 
       {/* Clean Users Table */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <Table className="w-full table-fixed" style={{ minWidth: '1000px' }}>
+        <div className="w-full">
+          <Table className="w-full">
             <TableHeader>
               <TableRow className="bg-white border-b border-gray-200">
                 {table.getHeaderGroups().map((headerGroup) =>
                   headerGroup.headers.map((header, index) => (
                     <TableHead
                       key={header.id}
-                      className="font-semibold text-gray-900 py-3 px-3 text-left bg-gray-50/50"
-                      style={{
-                        width: index === 0 ? '25%' : // Name
-                               index === 1 ? '20%' : // Email
-                               index === 2 ? '15%' : // Role
-                               index === 3 ? '15%' : // Status
-                               index === 4 ? '15%' : // Department
-                               '10%' // Actions
-                      }}
+                      className={`font-semibold text-gray-900 py-3 px-3 text-left bg-gray-50/50 ${
+                        index === 0 ? 'w-[35%]' : // User (name + email)
+                        index === 1 ? 'w-[15%]' : // Role
+                        index === 2 ? 'w-[10%]' : // Status
+                        index === 3 ? 'w-[15%]' : // Contact
+                        'w-[25%]' // Actions
+                      }`}
                     >
                       {header.isPlaceholder
                         ? null
@@ -754,10 +721,16 @@ const UserAccessControl: React.FC = () => {
                   key={row.id}
                   className="hover:bg-sky-50/50 transition-colors duration-150 border-b border-gray-100 last:border-b-0"
                 >
-                  {row.getVisibleCells().map((cell) => (
+                  {row.getVisibleCells().map((cell, index) => (
                     <TableCell
                       key={cell.id}
-                      className="py-3 px-3 text-gray-900"
+                      className={`py-3 px-3 text-gray-900 ${
+                        index === 0 ? 'w-[35%]' : // User
+                        index === 1 ? 'w-[15%]' : // Role
+                        index === 2 ? 'w-[10%]' : // Status
+                        index === 3 ? 'w-[15%]' : // Contact
+                        'w-[25%]' // Actions
+                      }`}
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
@@ -788,8 +761,8 @@ const UserAccessControl: React.FC = () => {
         </div>
 
         {/* Clean Pagination */}
-        <div className="flex items-center justify-between px-4 py-3 bg-gray-50/30 border-t border-gray-200">
-          <div className="text-sm text-gray-600">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 py-3 bg-gray-50/30 border-t border-gray-200 space-y-3 sm:space-y-0">
+          <div className="text-sm text-gray-600 text-center sm:text-left">
             Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
             {Math.min(
               (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
@@ -797,7 +770,7 @@ const UserAccessControl: React.FC = () => {
             )}{" "}
             of {table.getFilteredRowModel().rows.length} entries
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-center space-x-2">
             <Button
               variant="outline"
               size="sm"
@@ -805,26 +778,32 @@ const UserAccessControl: React.FC = () => {
               disabled={!table.getCanPreviousPage()}
               className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
             >
-              <ChevronLeft className="w-4 h-4 mr-1" />
-              Previous
+              <ChevronLeft className="w-4 h-4 sm:mr-1" />
+              <span className="hidden sm:inline">Previous</span>
             </Button>
 
             <div className="flex items-center space-x-1">
-              {Array.from({ length: table.getPageCount() }, (_, i) => i).map((pageIndex) => (
-                <Button
-                  key={pageIndex}
-                  variant={table.getState().pagination.pageIndex === pageIndex ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => table.setPageIndex(pageIndex)}
-                  className={`h-8 w-8 p-0 ${
-                    table.getState().pagination.pageIndex === pageIndex
-                      ? "bg-sky-600 text-white hover:bg-sky-700"
-                      : "text-gray-700 border-gray-300 hover:bg-gray-100"
-                  }`}
-                >
-                  {pageIndex + 1}
-                </Button>
-              ))}
+              {Array.from({ length: Math.min(table.getPageCount(), 5) }, (_, i) => {
+                const pageIndex = Math.max(0, Math.min(
+                  table.getState().pagination.pageIndex - 2 + i,
+                  table.getPageCount() - 1
+                ));
+                return (
+                  <Button
+                    key={pageIndex}
+                    variant={table.getState().pagination.pageIndex === pageIndex ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => table.setPageIndex(pageIndex)}
+                    className={`h-8 w-8 p-0 ${
+                      table.getState().pagination.pageIndex === pageIndex
+                        ? "bg-sky-600 text-white hover:bg-sky-700"
+                        : "text-gray-700 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {pageIndex + 1}
+                  </Button>
+                );
+              })}
             </div>
 
             <Button
@@ -834,8 +813,8 @@ const UserAccessControl: React.FC = () => {
               disabled={!table.getCanNextPage()}
               className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
             >
-              Next
-              <ChevronRight className="w-4 h-4 ml-1" />
+              <span className="hidden sm:inline">Next</span>
+              <ChevronRight className="w-4 h-4 sm:ml-1" />
             </Button>
           </div>
         </div>

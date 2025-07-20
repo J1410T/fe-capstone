@@ -54,50 +54,183 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-// AppraisalCouncil interface
+// Council Member interface
+interface CouncilMember {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  role: "Chairman" | "Council" | "Secretary";
+}
+
+// Project interface for dropdown
+interface Project {
+  id: string;
+  title: string;
+  pi: string;
+  status: string;
+}
+
+// User interface for member selection
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+// Enhanced AppraisalCouncil interface
 interface AppraisalCouncil {
   id: string;
-  code: string;
   name: string;
+  projectId?: string;
+  projectTitle?: string;
+  members: CouncilMember[];
   status: "created" | "active" | "inactive" | "archived";
   createdAt: string;
   updatedAt: string;
-  memberCount?: number;
 }
+
+// Mock data for projects (available for assignment)
+const mockProjects: Project[] = [
+  {
+    id: "1",
+    title: "AI-Powered Drug Discovery Platform",
+    pi: "Dr. Sarah Johnson",
+    status: "Active",
+  },
+  {
+    id: "2",
+    title: "Sustainable Energy Storage Solutions",
+    pi: "Dr. Michael Chen",
+    status: "Active",
+  },
+  {
+    id: "3",
+    title: "Blockchain-based Supply Chain Management",
+    pi: "Dr. Emily Rodriguez",
+    status: "Under Review",
+  },
+  {
+    id: "4",
+    title: "Machine Learning for Medical Diagnosis",
+    pi: "Dr. James Wilson",
+    status: "Active",
+  },
+];
+
+// Mock data for users (available for council membership)
+const mockUsers: User[] = [
+  {
+    id: "1",
+    name: "Dr. Sarah Johnson",
+    email: "sarah.johnson@university.edu",
+    role: "PRINCIPAL_INVESTIGATOR",
+  },
+  {
+    id: "2",
+    name: "Dr. Michael Chen",
+    email: "michael.chen@mit.edu",
+    role: "RESEARCHER",
+  },
+  {
+    id: "3",
+    name: "Prof. Emily Rodriguez",
+    email: "emily.rodriguez@stanford.edu",
+    role: "APPRAISAL_COUNCIL",
+  },
+  {
+    id: "4",
+    name: "Dr. James Wilson",
+    email: "james.wilson@harvard.edu",
+    role: "PRINCIPAL_INVESTIGATOR",
+  },
+  {
+    id: "5",
+    name: "Dr. Lisa Anderson",
+    email: "lisa.anderson@caltech.edu",
+    role: "RESEARCHER",
+  },
+  {
+    id: "6",
+    name: "Prof. David Kim",
+    email: "david.kim@mit.edu",
+    role: "APPRAISAL_COUNCIL",
+  },
+];
 
 // Mock data for appraisal councils
 const mockCouncils: AppraisalCouncil[] = [
   {
-    id: "8d1b3c4a-b2de-46be-b309-5ed9ec992058",
-    code: "councilAu-01",
-    name: "Hội Đồng Nghiệm Thu 1",
-    status: "created",
+    id: "council-1",
+    name: "AI Research Evaluation Council",
+    projectId: "1",
+    projectTitle: "AI-Powered Drug Discovery Platform",
+    members: [
+      {
+        id: "member-1",
+        userId: "3",
+        name: "Prof. Emily Rodriguez",
+        email: "emily.rodriguez@stanford.edu",
+        role: "Chairman",
+      },
+      {
+        id: "member-2",
+        userId: "2",
+        name: "Dr. Michael Chen",
+        email: "michael.chen@mit.edu",
+        role: "Council",
+      },
+      {
+        id: "member-3",
+        userId: "5",
+        name: "Dr. Lisa Anderson",
+        email: "lisa.anderson@caltech.edu",
+        role: "Secretary",
+      },
+    ],
+    status: "active",
     createdAt: "2025-07-18T14:50:33.6033333",
     updatedAt: "2025-07-18T14:50:33.6033333",
-    memberCount: 5,
   },
   {
-    id: "9e2c4d5b-c3ef-47cf-c410-6fe0fd003169",
-    code: "councilAu-02",
-    name: "Hội Đồng Nghiệm Thu 2",
-    status: "active",
+    id: "council-2",
+    name: "Energy Research Council",
+    projectId: "2",
+    projectTitle: "Sustainable Energy Storage Solutions",
+    members: [
+      {
+        id: "member-4",
+        userId: "6",
+        name: "Prof. David Kim",
+        email: "david.kim@mit.edu",
+        role: "Chairman",
+      },
+      {
+        id: "member-5",
+        userId: "4",
+        name: "Dr. James Wilson",
+        email: "james.wilson@harvard.edu",
+        role: "Council",
+      },
+      {
+        id: "member-6",
+        userId: "1",
+        name: "Dr. Sarah Johnson",
+        email: "sarah.johnson@university.edu",
+        role: "Secretary",
+      },
+    ],
+    status: "created",
     createdAt: "2025-07-17T10:30:00.0000000",
     updatedAt: "2025-07-18T09:15:00.0000000",
-    memberCount: 7,
-  },
-  {
-    id: "af3d5e6c-d4f0-58d0-d521-7gf1ge114270",
-    code: "councilAu-03",
-    name: "Hội Đồng Nghiệm Thu 3",
-    status: "inactive",
-    createdAt: "2025-07-16T16:20:00.0000000",
-    updatedAt: "2025-07-17T14:45:00.0000000",
-    memberCount: 3,
   },
 ];
 
 const AppraisalCouncilsManagement: React.FC = () => {
   const [councils, setCouncils] = useState<AppraisalCouncil[]>(mockCouncils);
+  const [projects] = useState<Project[]>(mockProjects);
+  const [users] = useState<User[]>(mockUsers);
   const [globalFilter, setGlobalFilter] = useState("");
   const [selectedCouncil, setSelectedCouncil] = useState<AppraisalCouncil | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -105,8 +238,13 @@ const AppraisalCouncilsManagement: React.FC = () => {
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
-    code: "",
     name: "",
+    projectId: "",
+    members: [
+      { userId: "", role: "Chairman" as CouncilMember["role"] },
+      { userId: "", role: "Council" as CouncilMember["role"] },
+      { userId: "", role: "Secretary" as CouncilMember["role"] },
+    ],
     status: "created" as AppraisalCouncil["status"],
   });
 
@@ -125,25 +263,17 @@ const AppraisalCouncilsManagement: React.FC = () => {
     }
   };
 
+  // Get available projects (not assigned to other councils)
+  const getAvailableProjects = (currentCouncilId?: string) => {
+    const assignedProjectIds = councils
+      .filter(council => council.id !== currentCouncilId && council.projectId)
+      .map(council => council.projectId);
+    return projects.filter(project => !assignedProjectIds.includes(project.id));
+  };
+
   // Table columns definition
   const columns = useMemo<ColumnDef<AppraisalCouncil>[]>(
     () => [
-      {
-        accessorKey: "code",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-auto p-0 font-semibold"
-          >
-            Code
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="font-mono text-sm">{row.getValue("code")}</div>
-        ),
-      },
       {
         accessorKey: "name",
         header: ({ column }) => (
@@ -161,6 +291,35 @@ const AppraisalCouncilsManagement: React.FC = () => {
         ),
       },
       {
+        accessorKey: "projectTitle",
+        header: "Assigned Project",
+        cell: ({ row }) => {
+          const projectTitle = row.getValue("projectTitle") as string;
+          return (
+            <div className="text-sm">
+              {projectTitle ? (
+                <span className="text-blue-600 font-medium">{projectTitle}</span>
+              ) : (
+                <span className="text-gray-400 italic">No project assigned</span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        id: "memberCount",
+        header: "Members",
+        cell: ({ row }) => {
+          const council = row.original;
+          return (
+            <div className="flex items-center">
+              <Users className="w-4 h-4 mr-1 text-gray-500" />
+              <span className="text-sm">{council.members.length}</span>
+            </div>
+          );
+        },
+      },
+      {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
@@ -170,24 +329,6 @@ const AppraisalCouncilsManagement: React.FC = () => {
               {status.charAt(0).toUpperCase() + status.slice(1)}
             </Badge>
           );
-        },
-      },
-      {
-        accessorKey: "memberCount",
-        header: "Members",
-        cell: ({ row }) => (
-          <div className="flex items-center">
-            <Users className="w-4 h-4 mr-1 text-gray-500" />
-            {row.getValue("memberCount") || 0}
-          </div>
-        ),
-      },
-      {
-        accessorKey: "createdAt",
-        header: "Created",
-        cell: ({ row }) => {
-          const date = row.getValue("createdAt") as string;
-          return new Date(date).toLocaleDateString();
         },
       },
       {
@@ -201,7 +342,7 @@ const AppraisalCouncilsManagement: React.FC = () => {
               onClick={() => handleView(row.original)}
             >
               <Eye className="w-4 h-4 mr-1" />
-              View
+              View Details
             </Button>
             <Button
               variant="outline"
@@ -240,7 +381,7 @@ const AppraisalCouncilsManagement: React.FC = () => {
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
       const council = row.original;
-      const searchString = `${council.code} ${council.name}`.toLowerCase();
+      const searchString = `${council.name} ${council.projectTitle || ""}`.toLowerCase();
       return searchString.includes(filterValue.toLowerCase());
     },
     initialState: {
@@ -251,15 +392,33 @@ const AppraisalCouncilsManagement: React.FC = () => {
   });
 
   const handleCreate = () => {
-    setFormData({ code: "", name: "", status: "created" });
+    setFormData({
+      name: "",
+      projectId: "",
+      members: [
+        { userId: "", role: "Chairman" },
+        { userId: "", role: "Council" },
+        { userId: "", role: "Secretary" },
+      ],
+      status: "created",
+    });
     setIsCreateDialogOpen(true);
   };
 
   const handleEdit = (council: AppraisalCouncil) => {
     setSelectedCouncil(council);
     setFormData({
-      code: council.code,
       name: council.name,
+      projectId: council.projectId || "",
+      members: council.members.length >= 3
+        ? council.members.map(member => ({ userId: member.userId, role: member.role }))
+        : [
+            ...council.members.map(member => ({ userId: member.userId, role: member.role })),
+            ...Array(3 - council.members.length).fill(null).map((_, index) => ({
+              userId: "",
+              role: ["Chairman", "Council", "Secretary"][council.members.length + index] as CouncilMember["role"]
+            }))
+          ],
       status: council.status,
     });
     setIsEditDialogOpen(true);
@@ -276,10 +435,51 @@ const AppraisalCouncilsManagement: React.FC = () => {
   };
 
   const handleSave = () => {
-    if (!formData.code.trim() || !formData.name.trim()) {
-      toast.error("Code and name are required");
+    // Validation
+    if (!formData.name.trim()) {
+      toast.error("Council name is required");
       return;
     }
+
+    if (!formData.projectId) {
+      toast.error("Please assign a project to the council");
+      return;
+    }
+
+    // Check if minimum 3 members are selected
+    const filledMembers = formData.members.filter(member => member.userId);
+    if (filledMembers.length < 3) {
+      toast.error("Council must have at least 3 members");
+      return;
+    }
+
+    // Check for duplicate members
+    const userIds = filledMembers.map(member => member.userId);
+    if (new Set(userIds).size !== userIds.length) {
+      toast.error("Cannot assign the same person to multiple roles");
+      return;
+    }
+
+    // Check if project is already assigned to another council
+    const isProjectAssigned = councils.some(council =>
+      council.id !== selectedCouncil?.id && council.projectId === formData.projectId
+    );
+    if (isProjectAssigned) {
+      toast.error("This project is already assigned to another council");
+      return;
+    }
+
+    const selectedProject = projects.find(p => p.id === formData.projectId);
+    const councilMembers: CouncilMember[] = filledMembers.map((member, index) => {
+      const user = users.find(u => u.id === member.userId);
+      return {
+        id: `member-${Date.now()}-${index}`,
+        userId: member.userId,
+        name: user?.name || "",
+        email: user?.email || "",
+        role: member.role,
+      };
+    });
 
     if (selectedCouncil) {
       // Update existing council
@@ -288,8 +488,10 @@ const AppraisalCouncilsManagement: React.FC = () => {
           council.id === selectedCouncil.id
             ? {
                 ...council,
-                code: formData.code,
                 name: formData.name,
+                projectId: formData.projectId,
+                projectTitle: selectedProject?.title,
+                members: councilMembers,
                 status: formData.status,
                 updatedAt: new Date().toISOString(),
               }
@@ -302,12 +504,13 @@ const AppraisalCouncilsManagement: React.FC = () => {
       // Create new council
       const newCouncil: AppraisalCouncil = {
         id: `council-${Date.now()}`,
-        code: formData.code,
         name: formData.name,
+        projectId: formData.projectId,
+        projectTitle: selectedProject?.title,
+        members: councilMembers,
         status: formData.status,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
-        memberCount: 0,
       };
       setCouncils(prev => [...prev, newCouncil]);
       toast.success("Council created successfully");
@@ -315,7 +518,16 @@ const AppraisalCouncilsManagement: React.FC = () => {
     }
 
     setSelectedCouncil(null);
-    setFormData({ code: "", name: "", status: "created" });
+    setFormData({
+      name: "",
+      projectId: "",
+      members: [
+        { userId: "", role: "Chairman" },
+        { userId: "", role: "Council" },
+        { userId: "", role: "Secretary" },
+      ],
+      status: "created",
+    });
   };
 
   const handleDeleteConfirm = () => {
@@ -332,9 +544,9 @@ const AppraisalCouncilsManagement: React.FC = () => {
       {/* Header and Controls */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Appraisal Councils Management</h2>
+          <h2 className="text-2xl font-bold">Council Management</h2>
           <p className="text-muted-foreground">
-            Manage appraisal councils and their status
+            Manage appraisal councils, assign projects, and configure member roles
           </p>
         </div>
         <Button onClick={handleCreate}>
@@ -492,37 +704,41 @@ const AppraisalCouncilsManagement: React.FC = () => {
       </div>
 
       {/* Create/Edit Dialog */}
-      <Dialog open={isCreateDialogOpen || isEditDialogOpen} onOpenChange={(open) => {
-        if (!open) {
-          setIsCreateDialogOpen(false);
-          setIsEditDialogOpen(false);
-          setSelectedCouncil(null);
-          setFormData({ code: "", name: "", status: "created" });
-        }
-      }}>
-        <DialogContent>
+      <Dialog
+        open={isCreateDialogOpen || isEditDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsCreateDialogOpen(false);
+            setIsEditDialogOpen(false);
+            setSelectedCouncil(null);
+            setFormData({
+              name: "",
+              projectId: "",
+              members: [
+                { userId: "", role: "Chairman" },
+                { userId: "", role: "Council" },
+                { userId: "", role: "Secretary" },
+              ],
+              status: "created",
+            });
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {selectedCouncil ? "Edit Council" : "Create New Council"}
+              {selectedCouncil ? "Edit Council" : "Add New Council"}
             </DialogTitle>
             <DialogDescription>
               {selectedCouncil
-                ? "Update the council information below."
-                : "Enter the details for the new council."}
+                ? "Update the council information and member assignments."
+                : "Create a new appraisal council with project assignment and members."}
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="code">Council Code</Label>
-              <Input
-                id="code"
-                value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                placeholder="Enter council code"
-              />
-            </div>
-            <div>
-              <Label htmlFor="name">Council Name</Label>
+          <div className="space-y-6 py-4">
+            {/* Council Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">Council Name *</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -530,23 +746,128 @@ const AppraisalCouncilsManagement: React.FC = () => {
                 placeholder="Enter council name"
               />
             </div>
-            <div>
-              <Label htmlFor="status">Status</Label>
+
+            {/* Assign to Project */}
+            <div className="space-y-2">
+              <Label htmlFor="project">Assign to Project *</Label>
               <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value as AppraisalCouncil["status"] })}
+                value={formData.projectId}
+                onValueChange={(value) => setFormData({ ...formData, projectId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Select a project" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="created">Created</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="archived">Archived</SelectItem>
+                  {getAvailableProjects(selectedCouncil?.id).map((project) => (
+                    <SelectItem key={project.id} value={project.id}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{project.title}</span>
+                        <span className="text-sm text-gray-500">PI: {project.pi}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {/* Council Members */}
+            <div className="space-y-4">
+              <Label className="text-base font-medium">Council Members *</Label>
+              <p className="text-sm text-gray-600">Minimum 3 members required</p>
+
+              {formData.members.map((member, index) => (
+                <div key={index} className="relative">
+                  <div className="grid grid-cols-2 gap-4 p-4 border rounded-lg">
+                    <div className="space-y-2">
+                      <Label>Select User</Label>
+                      <Select
+                        value={member.userId}
+                        onValueChange={(value) => {
+                          const newMembers = [...formData.members];
+                          newMembers[index] = { ...newMembers[index], userId: value };
+                          setFormData({ ...formData, members: newMembers });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a user" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {users.map((user) => (
+                            <SelectItem key={user.id} value={user.id}>
+                              <div className="flex flex-col">
+                                <span className="font-medium">{user.name}</span>
+                                <span className="text-sm text-gray-500">{user.email}</span>
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Role</Label>
+                      <Select
+                        value={member.role}
+                        onValueChange={(value) => {
+                          const newMembers = [...formData.members];
+                          newMembers[index] = { ...newMembers[index], role: value as CouncilMember["role"] };
+                          setFormData({ ...formData, members: newMembers });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Chairman">Chairman</SelectItem>
+                          <SelectItem value="Council">Council Member</SelectItem>
+                          <SelectItem value="Secretary">Secretary</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Remove button for additional members (beyond first 3) */}
+                  {index >= 3 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const newMembers = formData.members.filter((_, i) => i !== index);
+                        setFormData({ ...formData, members: newMembers });
+                      }}
+                      className="absolute -top-2 -right-2 h-7 w-7 p-0 rounded-full bg-red-100 hover:bg-red-200 text-red-600"
+                    >
+                      X
+                    </Button>
+                  )}
+                </div>
+              ))}
+
+              {/* Add Member Button */}
+              {formData.members.length < 10 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setFormData({
+                      ...formData,
+                      members: [...formData.members, { userId: "", role: "Council" }]
+                    });
+                  }}
+                  className="w-full"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Member
+                </Button>
+              )}
+
+              {/* Remove Member Buttons (for members beyond the first 3) */}
+              {formData.members.length > 3 && (
+                <div className="text-sm text-gray-600">
+                  <p>You can remove additional members (minimum 3 required)</p>
+                </div>
+              )}
+              </div>
           </div>
           <DialogFooter>
             <Button
@@ -555,13 +876,22 @@ const AppraisalCouncilsManagement: React.FC = () => {
                 setIsCreateDialogOpen(false);
                 setIsEditDialogOpen(false);
                 setSelectedCouncil(null);
-                setFormData({ code: "", name: "", status: "created" });
+                setFormData({
+                  name: "",
+                  projectId: "",
+                  members: [
+                    { userId: "", role: "Chairman" },
+                    { userId: "", role: "Council" },
+                    { userId: "", role: "Secretary" },
+                  ],
+                  status: "created",
+                });
               }}
             >
               Cancel
             </Button>
             <Button onClick={handleSave}>
-              {selectedCouncil ? "Update" : "Create"}
+              {selectedCouncil ? "Update Council" : "Create Council"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -569,49 +899,95 @@ const AppraisalCouncilsManagement: React.FC = () => {
 
       {/* View Dialog */}
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Council Details</DialogTitle>
+            <DialogDescription>
+              View detailed information about the appraisal council
+            </DialogDescription>
           </DialogHeader>
           {selectedCouncil && (
-            <div className="space-y-4">
-              <div>
-                <Label>Council Code</Label>
-                <p className="text-sm font-mono">{selectedCouncil.code}</p>
+            <div className="space-y-6 py-4">
+              {/* Council Name */}
+              <div className="space-y-2">
+                <Label className="text-base font-medium">Council Name</Label>
+                <p className="text-sm bg-gray-50 p-3 rounded-md">{selectedCouncil.name}</p>
               </div>
-              <div>
-                <Label>Council Name</Label>
-                <p className="text-sm font-medium">{selectedCouncil.name}</p>
+
+              {/* Assigned Project */}
+              <div className="space-y-2">
+                <Label className="text-base font-medium">Assigned Project</Label>
+                <div className="bg-blue-50 p-3 rounded-md border border-blue-200">
+                  {selectedCouncil.projectTitle ? (
+                    <div>
+                      <p className="font-medium text-blue-900">{selectedCouncil.projectTitle}</p>
+                      <p className="text-sm text-blue-600 mt-1">
+                        PI: {projects.find(p => p.id === selectedCouncil.projectId)?.pi}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 italic">No project assigned</p>
+                  )}
+                </div>
               </div>
-              <div>
-                <Label>Status</Label>
-                <Badge className={getStatusColor(selectedCouncil.status)}>
-                  {selectedCouncil.status.charAt(0).toUpperCase() + selectedCouncil.status.slice(1)}
-                </Badge>
+
+              {/* Council Members */}
+              <div className="space-y-3">
+                <Label className="text-base font-medium">Council Members</Label>
+                <div className="border rounded-lg overflow-hidden">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Member Name</th>
+                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Role</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {selectedCouncil.members.map((member, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3">
+                            <div>
+                              <p className="font-medium text-gray-900">{member.name}</p>
+                              <p className="text-sm text-gray-500">{member.email}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Badge
+                              className={
+                                member.role === "Chairman"
+                                  ? "bg-purple-100 text-purple-800 hover:bg-purple-200"
+                                  : member.role === "Secretary"
+                                  ? "bg-green-100 text-green-800 hover:bg-green-200"
+                                  : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                              }
+                            >
+                              {member.role}
+                            </Badge>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <div>
-                <Label>Members</Label>
-                <p className="text-sm">{selectedCouncil.memberCount || 0} members</p>
-              </div>
-              <div>
-                <Label>Created</Label>
-                <p className="text-sm">
-                  {new Date(selectedCouncil.createdAt).toLocaleString()}
-                </p>
-              </div>
-              <div>
-                <Label>Last Updated</Label>
-                <p className="text-sm">
-                  {new Date(selectedCouncil.updatedAt).toLocaleString()}
-                </p>
+
+              {/* Status and Dates */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Status</Label>
+                  <Badge className={getStatusColor(selectedCouncil.status)}>
+                    {selectedCouncil.status.charAt(0).toUpperCase() + selectedCouncil.status.slice(1)}
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  <Label>Created</Label>
+                  <p className="text-sm text-gray-600">
+                    {new Date(selectedCouncil.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
               </div>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
 
