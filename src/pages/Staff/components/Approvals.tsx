@@ -33,6 +33,7 @@ import {
   Search,
   Star,
 } from "lucide-react";
+import { formatVND } from "@/utils";
 import { UI_CONSTANTS } from "@/lib/ui-constants";
 
 // Mock data for proposals
@@ -44,7 +45,7 @@ const proposals = [
     institution: "Stanford University",
     department: "Computer Science",
     submittedDate: "2024-01-15",
-    budget: 250000,
+    budget: 6000000000, // ~250K USD in VND
     duration: "24 months",
     status: "pending",
     priority: "high",
@@ -61,7 +62,7 @@ const proposals = [
     institution: "MIT",
     department: "Materials Science",
     submittedDate: "2024-01-12",
-    budget: 180000,
+    budget: 4320000000, // ~180K USD in VND
     duration: "18 months",
     status: "under_review",
     priority: "medium",
@@ -78,7 +79,7 @@ const proposals = [
     institution: "UC San Diego",
     department: "Marine Biology",
     submittedDate: "2024-01-10",
-    budget: 320000,
+    budget: 7680000000, // ~320K USD in VND
     duration: "36 months",
     status: "approved",
     priority: "high",
@@ -181,7 +182,7 @@ const ProjectApprovals: React.FC = () => {
             <div>
               <span className="text-muted-foreground">Budget:</span>
               <span className="ml-2 font-medium">
-                ${proposal.budget.toLocaleString()}
+                {formatVND(proposal.budget)}
               </span>
             </div>
             <div>
@@ -354,7 +355,7 @@ const ProjectApprovals: React.FC = () => {
               </div>
               <div>
                 <Label className="font-semibold">Budget</Label>
-                <p>${selectedProposal.budget.toLocaleString()}</p>
+                <p>{formatVND(selectedProposal.budget)}</p>
               </div>
               <div>
                 <Label className="font-semibold">Duration</Label>

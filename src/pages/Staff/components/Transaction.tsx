@@ -35,12 +35,13 @@ import {
   FileText,
 } from "lucide-react";
 import { UI_CONSTANTS } from "@/lib/ui-constants";
+import { formatVND } from "@/utils";
 
-// Mock data
+// Mock data (amounts in VND)
 const paymentStats = {
-  totalProcessed: 2450000,
-  pendingApprovals: 125000,
-  monthlyTotal: 340000,
+  totalProcessed: 58800000000, // ~2.45M USD converted to VND
+  pendingApprovals: 3000000000, // ~125K USD converted to VND
+  monthlyTotal: 8160000000, // ~340K USD converted to VND
   transactionCount: 156,
 };
 
@@ -49,7 +50,7 @@ const transactions = [
     id: 1,
     projectTitle: "AI Drug Discovery Platform",
     pi: "Dr. Sarah Johnson",
-    amount: 25000,
+    amount: 600000000, // ~25K USD in VND
     type: "milestone",
     status: "pending",
     requestDate: "2024-01-15",
@@ -61,7 +62,7 @@ const transactions = [
     id: 2,
     projectTitle: "Sustainable Energy Storage",
     pi: "Dr. Michael Chen",
-    amount: 15000,
+    amount: 360000000, // ~15K USD in VND
     type: "equipment",
     status: "approved",
     requestDate: "2024-01-12",
@@ -73,7 +74,7 @@ const transactions = [
     id: 3,
     projectTitle: "Climate Change Study",
     pi: "Dr. Emily Rodriguez",
-    amount: 8500,
+    amount: 204000000, // ~8.5K USD in VND
     type: "travel",
     status: "processed",
     requestDate: "2024-01-10",
@@ -85,7 +86,7 @@ const transactions = [
     id: 4,
     projectTitle: "Marine Biology Research",
     pi: "Dr. James Wilson",
-    amount: 45000,
+    amount: 1080000000, // ~45K USD in VND
     type: "personnel",
     status: "rejected",
     requestDate: "2024-01-08",
@@ -220,7 +221,7 @@ const PaymentManagement: React.FC = () => {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-2xl font-bold text-green-600">
-              ${transaction.amount.toLocaleString()}
+              {formatVND(transaction.amount)}
             </span>
             <Badge variant="outline">{transaction.category}</Badge>
           </div>
@@ -284,7 +285,7 @@ const PaymentManagement: React.FC = () => {
           <div className="space-y-2">
             <Label>Amount</Label>
             <Input
-              value={`$${selectedTransaction?.amount.toLocaleString()}`}
+              value={selectedTransaction ? formatVND(selectedTransaction.amount) : ""}
               readOnly
               className="bg-gray-50"
             />

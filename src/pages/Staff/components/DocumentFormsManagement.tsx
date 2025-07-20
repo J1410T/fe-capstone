@@ -74,7 +74,7 @@ const formTemplates = [
   },
 ];
 
-const BMFormsManagement: React.FC = () => {
+const DocumentFormsManagement: React.FC = () => {
   const [activeTab, setActiveTab] = useState("templates");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -354,4 +354,4 @@ const BMFormsManagement: React.FC = () => {
   );
 };
 
-export default BMFormsManagement;
+export default DocumentFormsManagement;

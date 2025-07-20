@@ -13,7 +13,7 @@ import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
 
 // Staff Pages
 import {
-  BMFormsManagement,
+  DocumentFormsManagement,
   PaymentManagement,
   ProjectApprovals,
   ProjectAssignments,
@@ -110,7 +110,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "forms",
-            element: <BMFormsManagement />,
+            element: <DocumentFormsManagement />,
           },
           {
             path: "projects",

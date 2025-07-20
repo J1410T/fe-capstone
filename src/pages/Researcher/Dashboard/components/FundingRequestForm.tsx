@@ -224,19 +224,19 @@ export const FundingRequestForm: React.FC<FundingRequestFormProps> = ({
               htmlFor="amount"
               className="text-sm font-medium text-slate-700"
             >
-              Requested Amount (USD) *
+              Requested Amount (VND) *
             </Label>
             <div className="relative">
               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">
-                $
+                ₫
               </span>
               <Input
                 id="amount"
                 type="number"
                 min="0"
-                max="100000"
-                step="0.01"
-                placeholder="0.00"
+                max="10000000000"
+                step="1000"
+                placeholder="0"
                 value={formData.amount}
                 onChange={(e) => handleInputChange("amount", e.target.value)}
                 className={`pl-8 ${

@@ -18,14 +18,15 @@ import {
   Zap,
 } from "lucide-react";
 import { UI_CONSTANTS } from "@/lib/ui-constants";
+import { formatVND } from "@/utils";
 import { useNavigate } from "react-router-dom";
 
-// Mock data for demonstration
+// Mock data for demonstration (budget in VND)
 const systemStats = {
   totalUsers: 1247,
   activeProjects: 89,
   pendingApprovals: 23,
-  totalBudget: 2450000,
+  totalBudget: 58800000000, // ~2.45M USD in VND
   monthlyGrowth: 12.5,
   systemUptime: 99.9,
 };
@@ -271,7 +272,7 @@ const StaffDashboard: React.FC = () => {
         />
         <StatCard
           title="Total Budget"
-          value={`$${(systemStats.totalBudget / 1000000).toFixed(1)}M`}
+          value={formatVND(systemStats.totalBudget)}
           icon={DollarSign}
           trend="up"
           trendValue="+15.3%"

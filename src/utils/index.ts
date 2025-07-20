@@ -17,6 +17,7 @@ export * from "./suspense";
 // Format utilities (specific exports to avoid conflicts)
 export {
   formatCurrency,
+  formatVND,
   formatNumber,
   formatPercentage,
   calculateBudgetUtilization,
