@@ -19,7 +19,6 @@ import {
 } from "lucide-react";
 import { UI_CONSTANTS } from "@/lib/ui-constants";
 import { formatVND } from "@/utils";
-import { useNavigate } from "react-router-dom";
 
 // Mock data for demonstration (budget in VND)
 const systemStats = {
@@ -64,7 +63,6 @@ const recentActivity = [
 
 const StaffDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("overview");
-  const navigate = useNavigate();
 
   const StatCard = ({
     title,
@@ -186,65 +184,6 @@ const StaffDashboard: React.FC = () => {
           </Button>
         </div>
       </div>
-
-      {/* Quick Navigation for Testing */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Navigation (Testing)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/staff/forms")}
-              className="flex flex-col h-20"
-            >
-              <FileText className="w-6 h-6 mb-2" />
-              BM Forms
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/staff/projects/register")}
-              className="flex flex-col h-20"
-            >
-              <FolderOpen className="w-6 h-6 mb-2" />
-              Register Project
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/staff/projects/assignments")}
-              className="flex flex-col h-20"
-            >
-              <Users className="w-6 h-6 mb-2" />
-              Assignments
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/staff/approvals")}
-              className="flex flex-col h-20"
-            >
-              <CheckCircle className="w-6 h-6 mb-2" />
-              Approvals
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/staff/payments")}
-              className="flex flex-col h-20"
-            >
-              <DollarSign className="w-6 h-6 mb-2" />
-              Payments
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => navigate("/staff/users")}
-              className="flex flex-col h-20"
-            >
-              <Users className="w-6 h-6 mb-2" />
-              User Management
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

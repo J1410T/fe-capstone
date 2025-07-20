@@ -20,6 +20,10 @@ import {
   StaffDashboard,
   StaffProjectRegistration,
   UserAccessControl,
+  FieldsManagement,
+  AppraisalCouncilsManagement,
+  MajorsManagement,
+  MilestonesManagement,
 } from "@/pages/Staff";
 
 // General Pages
@@ -136,6 +140,23 @@ export const routes: RouteObject[] = [
           {
             path: "users",
             element: <UserAccessControl />,
+          },
+
+          {
+            path: "fields",
+            element: <FieldsManagement />,
+          },
+          {
+            path: "councils",
+            element: <AppraisalCouncilsManagement />,
+          },
+          {
+            path: "majors",
+            element: <MajorsManagement />,
+          },
+          {
+            path: "milestones",
+            element: <MilestonesManagement />,
           },
           {
             path: "profile",

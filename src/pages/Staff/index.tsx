@@ -21,3 +21,9 @@ export { default as PaymentManagement } from "./components/Transaction";
 
 // User Management
 export { default as UserAccessControl } from "./components/UsersManagement";
+
+// Individual Management Pages
+export { default as FieldsManagement } from "./components/FieldsManagement";
+export { default as AppraisalCouncilsManagement } from "./components/AppraisalCouncilsManagement";
+export { default as MajorsManagement } from "./components/MajorsManagement";
+export { default as MilestonesManagement } from "./components/MilestonesManagement";

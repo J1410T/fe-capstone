@@ -1,6 +1,22 @@
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
+import {
+  useReactTable,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getSortedRowModel,
+  getPaginationRowModel,
+  ColumnDef,
+  flexRender,
+} from "@tanstack/react-table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -20,7 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
+
 import {
   DollarSign,
   CreditCard,
@@ -33,8 +49,13 @@ import {
   Plus,
   Eye,
   FileText,
+  ArrowUpDown,
+  ChevronLeft,
+  ChevronRight,
+  Calendar,
+  Building,
+  User,
 } from "lucide-react";
-import { UI_CONSTANTS } from "@/lib/ui-constants";
 import { formatVND } from "@/utils";
 
 // Mock data (amounts in VND)
@@ -50,6 +71,7 @@ const transactions = [
     id: 1,
     projectTitle: "AI Drug Discovery Platform",
     pi: "Dr. Sarah Johnson",
+    institution: "University of Technology",
     amount: 600000000, // ~25K USD in VND
     type: "milestone",
     status: "pending",
@@ -62,6 +84,7 @@ const transactions = [
     id: 2,
     projectTitle: "Sustainable Energy Storage",
     pi: "Dr. Michael Chen",
+    institution: "Institute of Science",
     amount: 360000000, // ~15K USD in VND
     type: "equipment",
     status: "approved",
@@ -74,6 +97,7 @@ const transactions = [
     id: 3,
     projectTitle: "Climate Change Study",
     pi: "Dr. Emily Rodriguez",
+    institution: "Environmental Research Center",
     amount: 204000000, // ~8.5K USD in VND
     type: "travel",
     status: "processed",
@@ -86,6 +110,7 @@ const transactions = [
     id: 4,
     projectTitle: "Marine Biology Research",
     pi: "Dr. James Wilson",
+    institution: "Marine Research Institute",
     amount: 1080000000, // ~45K USD in VND
     type: "personnel",
     status: "rejected",
@@ -97,12 +122,13 @@ const transactions = [
 ];
 
 const PaymentManagement: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [selectedTransaction, setSelectedTransaction] = useState<
     (typeof transactions)[0] | null
   >(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isProcessDialogOpen, setIsProcessDialogOpen] = useState(false);
 
   const getStatusColor = (status: string) => {
@@ -135,16 +161,172 @@ const PaymentManagement: React.FC = () => {
     }
   };
 
-  const filteredTransactions = transactions.filter((transaction) => {
-    const matchesSearch =
-      transaction.projectTitle
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase()) ||
-      transaction.pi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      transaction.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || transaction.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  // Filter transactions based on status, type and search
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((transaction) => {
+      const matchesStatus = statusFilter === "all" || transaction.status === statusFilter;
+      const matchesType = typeFilter === "all" || transaction.type === typeFilter;
+      const matchesSearch =
+        transaction.projectTitle.toLowerCase().includes(globalFilter.toLowerCase()) ||
+        transaction.pi.toLowerCase().includes(globalFilter.toLowerCase()) ||
+        transaction.description.toLowerCase().includes(globalFilter.toLowerCase());
+      return matchesStatus && matchesType && matchesSearch;
+    });
+  }, [statusFilter, typeFilter, globalFilter]);
+
+  // Handler functions
+  const handleViewDetails = useCallback((transaction: (typeof transactions)[0]) => {
+    setSelectedTransaction(transaction);
+    setIsViewDialogOpen(true);
+  }, []);
+
+  const handleProcessPayment = useCallback((transaction: (typeof transactions)[0]) => {
+    setSelectedTransaction(transaction);
+    setIsProcessDialogOpen(true);
+  }, []);
+
+  // Table columns definition
+  const columns = useMemo<ColumnDef<(typeof transactions)[0]>[]>(
+    () => [
+      {
+        accessorKey: "projectTitle",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-auto p-0 font-semibold"
+          >
+            Project
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="max-w-[250px]">
+            <div className="font-medium truncate">{row.getValue("projectTitle")}</div>
+            <div className="text-sm text-muted-foreground flex items-center mt-1">
+              <User className="w-3 h-3 mr-1" />
+              {row.original.pi}
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "type",
+        header: "Type",
+        cell: ({ row }) => {
+          const type = row.getValue("type") as string;
+          return (
+            <Badge className={getTypeColor(type)}>
+              {type.charAt(0).toUpperCase() + type.slice(1)}
+            </Badge>
+          );
+        },
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => {
+          const status = row.getValue("status") as string;
+          return (
+            <Badge className={getStatusColor(status)}>
+              {status.charAt(0).toUpperCase() + status.slice(1)}
+            </Badge>
+          );
+        },
+      },
+      {
+        accessorKey: "amount",
+        header: ({ column }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-auto p-0 font-semibold"
+          >
+            Amount
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        ),
+        cell: ({ row }) => (
+          <div className="flex items-center">
+            <DollarSign className="w-4 h-4 mr-1 text-gray-500" />
+            <span className="font-medium">{formatVND(row.getValue("amount"))}</span>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "requestDate",
+        header: "Requested",
+        cell: ({ row }) => (
+          <div className="flex items-center">
+            <Calendar className="w-4 h-4 mr-1 text-gray-500" />
+            {new Date(row.getValue("requestDate")).toLocaleDateString()}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "institution",
+        header: "Institution",
+        cell: ({ row }) => (
+          <div className="flex items-center">
+            <Building className="w-4 h-4 mr-1 text-gray-500" />
+            <span className="text-sm">{row.getValue("institution")}</span>
+          </div>
+        ),
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }) => (
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleViewDetails(row.original)}
+            >
+              <Eye className="w-4 h-4 mr-1" />
+              View
+            </Button>
+            {row.original.status === "pending" && (
+              <Button
+                size="sm"
+                onClick={() => handleProcessPayment(row.original)}
+              >
+                <CheckCircle className="w-4 h-4 mr-1" />
+                Process
+              </Button>
+            )}
+            <Button size="sm" variant="outline">
+              <Download className="w-4 h-4" />
+            </Button>
+          </div>
+        ),
+      },
+    ],
+    [handleViewDetails, handleProcessPayment]
+  );
+
+  // Create table instance
+  const table = useReactTable({
+    data: filteredTransactions,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: {
+      globalFilter,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const transaction = row.original;
+      const searchString = `${transaction.projectTitle} ${transaction.pi} ${transaction.description}`.toLowerCase();
+      return searchString.includes(filterValue.toLowerCase());
+    },
+    initialState: {
+      pagination: {
+        pageSize: 10,
+      },
+    },
   });
 
   const StatCard = ({
@@ -169,7 +351,7 @@ const PaymentManagement: React.FC = () => {
 
     return (
       <Card
-        className={`${UI_CONSTANTS.BORDERS.default} ${UI_CONSTANTS.RADIUS.default}`}
+        className="border rounded-lg"
       >
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
@@ -189,90 +371,92 @@ const PaymentManagement: React.FC = () => {
     );
   };
 
-  const TransactionCard = ({
-    transaction,
-  }: {
-    transaction: (typeof transactions)[0];
-  }) => (
-    <Card
-      className={`${UI_CONSTANTS.BORDERS.default} ${UI_CONSTANTS.RADIUS.default} hover:shadow-md transition-shadow`}
-    >
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="text-lg font-semibold">
-              {transaction.projectTitle}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-1">
-              {transaction.pi} • {transaction.description}
-            </p>
-          </div>
-          <div className="flex flex-col items-end space-y-2">
-            <Badge className={getStatusColor(transaction.status)}>
-              {transaction.status}
-            </Badge>
-            <Badge className={getTypeColor(transaction.type)}>
-              {transaction.type}
-            </Badge>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold text-green-600">
-              {formatVND(transaction.amount)}
-            </span>
-            <Badge variant="outline">{transaction.category}</Badge>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Requested:</span>
-              <span className="ml-2 font-medium">
-                {transaction.requestDate}
-              </span>
+
+  const TransactionDetailDialog = () => (
+    <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Transaction Details</DialogTitle>
+          <DialogDescription>
+            View detailed information about the transaction
+          </DialogDescription>
+        </DialogHeader>
+        {selectedTransaction && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Project Title</Label>
+                <p className="text-sm font-medium">{selectedTransaction.projectTitle}</p>
+              </div>
+              <div>
+                <Label>Principal Investigator</Label>
+                <p className="text-sm">{selectedTransaction.pi}</p>
+              </div>
+              <div>
+                <Label>Institution</Label>
+                <p className="text-sm">{selectedTransaction.institution}</p>
+              </div>
+              <div>
+                <Label>Amount</Label>
+                <p className="text-sm font-medium">{formatVND(selectedTransaction.amount)}</p>
+              </div>
+              <div>
+                <Label>Type</Label>
+                <Badge className={getTypeColor(selectedTransaction.type)}>
+                  {selectedTransaction.type.charAt(0).toUpperCase() + selectedTransaction.type.slice(1)}
+                </Badge>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Badge className={getStatusColor(selectedTransaction.status)}>
+                  {selectedTransaction.status.charAt(0).toUpperCase() + selectedTransaction.status.slice(1)}
+                </Badge>
+              </div>
+              <div>
+                <Label>Request Date</Label>
+                <p className="text-sm">{new Date(selectedTransaction.requestDate).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <Label>Due Date</Label>
+                <p className="text-sm">{new Date(selectedTransaction.dueDate).toLocaleDateString()}</p>
+              </div>
             </div>
+
             <div>
-              <span className="text-muted-foreground">Due:</span>
-              <span className="ml-2 font-medium">{transaction.dueDate}</span>
+              <Label>Description</Label>
+              <p className="text-sm mt-1 p-3 bg-gray-50 rounded-md">
+                {selectedTransaction.description}
+              </p>
             </div>
-          </div>
 
-          <Separator />
 
-          <div className="flex space-x-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="flex-1"
-              onClick={() => setSelectedTransaction(transaction)}
-            >
-              <Eye className="w-4 h-4 mr-1" />
-              View Details
-            </Button>
-            {transaction.status === "pending" && (
-              <Button
-                size="sm"
-                onClick={() => {
-                  setSelectedTransaction(transaction);
-                  setIsProcessDialogOpen(true);
-                }}
-              >
-                <CheckCircle className="w-4 h-4 mr-1" />
-                Process
-              </Button>
-            )}
-            <Button size="sm" variant="outline">
-              <Download className="w-4 h-4" />
-            </Button>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+        )}
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
+            Close
+          </Button>
+          {selectedTransaction?.status === "pending" && (
+            <Button onClick={() => {
+              setIsViewDialogOpen(false);
+              setIsProcessDialogOpen(true);
+            }}>
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Process Payment
+            </Button>
+          )}
+          <Button variant="outline">
+            <Download className="w-4 h-4 mr-2" />
+            Download
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 
-  const ProcessPaymentDialog = () => (
+  const ProcessPaymentDialog = () => {
+    return (
     <Dialog open={isProcessDialogOpen} onOpenChange={setIsProcessDialogOpen}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
@@ -339,7 +523,8 @@ const PaymentManagement: React.FC = () => {
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -396,84 +581,172 @@ const PaymentManagement: React.FC = () => {
         />
       </div>
 
-      {/* Main Content */}
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview" className="flex items-center space-x-2">
-            <DollarSign className="w-4 h-4" />
-            <span>Overview</span>
-          </TabsTrigger>
-          <TabsTrigger value="pending" className="flex items-center space-x-2">
-            <Clock className="w-4 h-4" />
-            <span>Pending</span>
-          </TabsTrigger>
-          <TabsTrigger
-            value="processed"
-            className="flex items-center space-x-2"
-          >
-            <CheckCircle className="w-4 h-4" />
-            <span>Processed</span>
-          </TabsTrigger>
-          <TabsTrigger value="reports" className="flex items-center space-x-2">
-            <FileText className="w-4 h-4" />
-            <span>Reports</span>
-          </TabsTrigger>
-        </TabsList>
 
-        <TabsContent value={activeTab} className="space-y-6">
-          {/* Search and Filters */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Search transactions..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Filter by status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="approved">Approved</SelectItem>
-                    <SelectItem value="processed">Processed</SelectItem>
-                    <SelectItem value="rejected">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
+
+      {/* Search and Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Search & Filter</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center space-x-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search transactions..."
+                  value={globalFilter}
+                  onChange={(e) => setGlobalFilter(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Transactions Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {filteredTransactions.map((transaction) => (
-              <TransactionCard key={transaction.id} transaction={transaction} />
-            ))}
+            </div>
+            <div className="flex items-center space-x-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="processed">Processed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={typeFilter} onValueChange={setTypeFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="milestone">Milestone</SelectItem>
+                  <SelectItem value="equipment">Equipment</SelectItem>
+                  <SelectItem value="travel">Travel</SelectItem>
+                  <SelectItem value="personnel">Personnel</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+        </CardContent>
+      </Card>
 
-          {filteredTransactions.length === 0 && (
-            <Card>
-              <CardContent className="text-center py-8">
-                <DollarSign className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <p className="text-gray-500">No transactions found</p>
-              </CardContent>
-            </Card>
-          )}
-        </TabsContent>
-      </Tabs>
+      {/* Clean Transactions Table */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-white border-b border-gray-200">
+              {table.getHeaderGroups().map((headerGroup) =>
+                headerGroup.headers.map((header) => (
+                  <TableHead
+                    key={header.id}
+                    className="font-semibold text-gray-900 py-3 px-4 text-left bg-gray-50/50"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))
+              )}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  className="hover:bg-slate-50/50 transition-colors duration-150 border-b border-gray-100 last:border-b-0"
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className="py-3 px-4 text-gray-900"
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-32 text-center text-gray-500"
+                >
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <CreditCard className="w-8 h-8 text-gray-400" />
+                    <p className="text-lg font-medium">No transactions found</p>
+                    <p className="text-sm text-gray-400">
+                      {globalFilter ? "Try adjusting your search criteria" : "No transactions to display"}
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
 
+        {/* Clean Pagination */}
+        <div className="flex items-center justify-between px-4 py-3 bg-gray-50/30 border-t border-gray-200">
+          <div className="text-sm text-gray-600">
+            Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
+            {Math.min(
+              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+              table.getFilteredRowModel().rows.length
+            )}{" "}
+            of {table.getFilteredRowModel().rows.length} entries
+          </div>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
+            >
+              <ChevronLeft className="w-4 h-4 mr-1" />
+              Previous
+            </Button>
+
+            <div className="flex items-center space-x-1">
+              {Array.from({ length: table.getPageCount() }, (_, i) => i).map((pageIndex) => (
+                <Button
+                  key={pageIndex}
+                  variant={table.getState().pagination.pageIndex === pageIndex ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => table.setPageIndex(pageIndex)}
+                  className={`h-8 w-8 p-0 ${
+                    table.getState().pagination.pageIndex === pageIndex
+                      ? "bg-slate-600 text-white hover:bg-slate-700"
+                      : "text-gray-700 border-gray-300 hover:bg-gray-100"
+                  }`}
+                >
+                  {pageIndex + 1}
+                </Button>
+              ))}
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              className="h-8 px-3 text-gray-700 border-gray-300 hover:bg-gray-100"
+            >
+              Next
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      <TransactionDetailDialog />
       <ProcessPaymentDialog />
     </div>
   );
