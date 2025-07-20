@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { cn, mockUserLogin } from "@/utils";
+import { cn } from "@/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 import { LogIn, Shield } from "lucide-react";
@@ -89,7 +89,8 @@ export function StaffLoginForm({
         const accessToken = res.data.token;
 
         if (accessToken) {
-          login(mockUserLogin(UserRole.STAFF).credential.token);
+          // Use the actual access token from the API response
+          login(accessToken);
           navigate("/staff/dashboard");
           toast.success("Login successful!");
         } else {

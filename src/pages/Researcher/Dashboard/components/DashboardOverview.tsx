@@ -11,6 +11,7 @@ import {
   TrendingUp,
   Calendar,
 } from "lucide-react";
+import { formatVND } from "@/utils";
 
 // Mock data for demonstration
 const taskStats = {
@@ -25,8 +26,8 @@ const fundingStats = {
   approved: 3,
   pending: 1,
   rejected: 1,
-  totalAmount: 45000,
-  approvedAmount: 32000,
+  totalAmount: 1080000000, // ~45K USD in VND
+  approvedAmount: 768000000, // ~32K USD in VND
 };
 
 const recentActivity = [
@@ -184,7 +185,7 @@ export const DashboardOverview: React.FC = () => {
                 {fundingStats.totalRequests}
               </div>
               <p className="text-xs text-slate-500 mt-2">
-                ${fundingStats.totalAmount.toLocaleString()} requested
+                {formatVND(fundingStats.totalAmount)} requested
               </p>
             </CardContent>
           </Card>
@@ -222,7 +223,7 @@ export const DashboardOverview: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                ${fundingStats.approvedAmount.toLocaleString()}
+                {formatVND(fundingStats.approvedAmount)}
               </div>
               <p className="text-xs text-slate-500 mt-2">
                 {Math.round(

@@ -5,10 +5,8 @@
 
 // Core utilities
 export * from "./core";
-export * from "./auth";
-export * from "./api";
+
 export * from "./date";
-export * from "./string";
 export * from "./validation";
 export * from "./status";
 export * from "./permission";
@@ -19,6 +17,7 @@ export * from "./suspense";
 // Format utilities (specific exports to avoid conflicts)
 export {
   formatCurrency,
+  formatVND,
   formatNumber,
   formatPercentage,
   calculateBudgetUtilization,
@@ -44,6 +43,3 @@ export {
   compressImage,
   formatFileSize,
 } from "./file";
-
-// Legacy compatibility - will be removed in future versions
-export * from "./legacy";

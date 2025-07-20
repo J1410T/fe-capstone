@@ -29,6 +29,7 @@ import {
   getCategoryIcon,
   getCategoryColor,
   getStatusColor,
+  formatVND,
 } from "../shared/utils";
 
 // Local types
@@ -74,20 +75,20 @@ const BudgetTab: React.FC = () => {
       // Simulate API call
       setTimeout(() => {
         const mockBudget: BudgetData = {
-          total: 120000,
-          spent: 78000,
+          total: 2880000000, // ~120K USD in VND
+          spent: 1872000000, // ~78K USD in VND
           allocated: {
-            personnel: 60000,
-            equipment: 30000,
-            materials: 15000,
-            other: 5000,
+            personnel: 1440000000, // ~60K USD in VND
+            equipment: 720000000, // ~30K USD in VND
+            materials: 360000000, // ~15K USD in VND
+            other: 120000000, // ~5K USD in VND
           },
           expenses: [
             {
               id: "1",
               category: "personnel",
               description: "Research Assistant Salary - Q1",
-              amount: 15000,
+              amount: 360000000, // ~15K USD in VND
               date: "2024-03-31",
               status: "Approved",
               receipt: "salary-receipt-q1.pdf",
@@ -97,7 +98,7 @@ const BudgetTab: React.FC = () => {
               id: "2",
               category: "equipment",
               description: "High-Performance Computing Server",
-              amount: 25000,
+              amount: 600000000, // ~25K USD in VND
               date: "2024-04-15",
               status: "Approved",
               receipt: "server-invoice.pdf",
@@ -107,7 +108,7 @@ const BudgetTab: React.FC = () => {
               id: "4",
               category: "materials",
               description: "Research Materials and Supplies",
-              amount: 2800,
+              amount: 67200000, // ~2.8K USD in VND
               date: "2024-06-01",
               status: "Rejected",
               receipt: "materials-invoice.pdf",
@@ -181,7 +182,7 @@ const BudgetTab: React.FC = () => {
             <DollarSign className="w-6 h-6 text-green-600" />
             <div>
               <p className="text-xl font-semibold text-gray-900">
-                ${budget.total.toLocaleString()}
+                {formatVND(budget.total)}
               </p>
               <p className="text-sm text-gray-600 font-medium">Total Budget</p>
             </div>
@@ -190,7 +191,7 @@ const BudgetTab: React.FC = () => {
             <TrendingUp className="w-6 h-6 text-blue-600" />
             <div>
               <p className="text-xl font-bold text-gray-900">
-                ${budget.spent.toLocaleString()}
+                {formatVND(budget.spent)}
               </p>
               <p className="text-sm text-gray-600 font-medium">
                 Spent ({utilization}%)
@@ -201,7 +202,7 @@ const BudgetTab: React.FC = () => {
             <PieChart className="w-6 h-6 text-purple-600" />
             <div>
               <p className="text-xl font-bold text-gray-900">
-                ${(budget.total - budget.spent).toLocaleString()}
+                {formatVND(budget.total - budget.spent)}
               </p>
               <p className="text-sm text-gray-600 font-medium">Remaining</p>
             </div>
@@ -248,8 +249,7 @@ const BudgetTab: React.FC = () => {
                       <Badge
                         className={`${getCategoryColor(category)} text-xs`}
                       >
-                        ${spent.toLocaleString()} / $
-                        {(amount as number).toLocaleString()}
+                        {formatVND(spent)} / {formatVND(amount as number)}
                       </Badge>
                     </div>
                     <span className="text-xs sm:text-sm text-muted-foreground">
@@ -319,7 +319,7 @@ const BudgetTab: React.FC = () => {
                       </div>
                     </TableCell>
                     <TableCell className="text-sm">
-                      ${expense.amount.toLocaleString()}
+                      {formatVND(expense.amount)}
                     </TableCell>
                     <TableCell className="text-sm">
                       {formatDate(expense.date)}

@@ -4,12 +4,24 @@
  */
 
 /**
- * Formats a number as currency (USD by default)
+ * Formats a number as currency (VND by default)
  */
-export const formatCurrency = (amount: number, currency = "USD"): string => {
-  return new Intl.NumberFormat("en-US", {
+export const formatCurrency = (amount: number, currency = "VND"): string => {
+  return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency,
+  }).format(amount);
+};
+
+/**
+ * Formats a number as VND currency with proper Vietnamese formatting
+ */
+export const formatVND = (amount: number): string => {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   }).format(amount);
 };
 

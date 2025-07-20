@@ -2,8 +2,6 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts";
 import { axiosClient } from "@/services/api";
-import { mockUserLogin } from "@/utils";
-import { UserRole } from "@/contexts/auth-types";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components";
 import { useState } from "react";
@@ -39,12 +37,8 @@ const GoogleAuthentication = () => {
 
           if (!accessToken) {
             // Fallback to mock token if API doesn't provide one
-            const selectedRole = res.data["selected-role"] as UserRole;
-            const userRole = Object.values(UserRole).includes(selectedRole)
-              ? selectedRole
-              : UserRole.RESEARCHER; // fallback to RESEARCHER if invalid role
-
-            accessToken = mockUserLogin(userRole).credential.token;
+            // Use the actual access token from the API response
+            accessToken = res.data.token;
           }
 
           login(accessToken);
