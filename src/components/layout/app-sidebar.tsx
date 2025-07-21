@@ -35,6 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuthResponse } from "@/hooks/queries";
 
 // Navigation data structure
 const data = {
@@ -47,7 +48,7 @@ const data = {
           url: "/staff",
           icon: LayoutDashboard,
         },
-                {
+        {
           title: "Document Forms",
           url: "/staff/forms",
           icon: FileText,
@@ -67,7 +68,7 @@ const data = {
           url: "/staff/projects/register",
           icon: FolderOpen,
         },
-        
+
         {
           title: "Project Payments",
           url: "/staff/payments",
@@ -78,7 +79,6 @@ const data = {
           url: "/staff/milestones/management",
           icon: Target,
         },
-
       ],
     },
     {
@@ -116,6 +116,17 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, logout } = useAuth();
+  const { data: authData } = useAuthResponse();
+
+  const displayUser = {
+    name: authData?.["full-name"] || user?.name || "Staff",
+    email: authData?.email || user?.email || "user@example.com",
+    role: authData?.["selected-role"] || user?.role || "STAFF",
+    avatar:
+      authData?.["avatar-url"] ||
+      user?.avatar ||
+      "https://assets.beyondtrust.com/assets/images/resource-cards/resource-default.jpg?auto=format&fit=clip&q=40&speed=0&w=446",
+  };
 
   const handleLogout = () => {
     logout();
@@ -170,14 +181,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage src={user?.avatar} alt={user?.name} />
+                    <AvatarImage
+                      src={displayUser.avatar}
+                      alt={displayUser.name}
+                    />
                     <AvatarFallback className="rounded-lg">
-                      {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                      {displayUser.name}
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{user?.name || 'User'}</span>
-                    <span className="truncate text-xs">{user?.email || 'user@example.com'}</span>
+                    <span className="truncate font-semibold">
+                      {displayUser.name}
+                    </span>
+                    <span className="truncate text-xs">
+                      {displayUser.email}
+                    </span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4" />
                 </SidebarMenuButton>

@@ -556,7 +556,7 @@ function Header() {
                 >
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0 p-1">
-                      <LogOut className="h-5 w-5" />
+                      <LogOut className="h-5 w-5 text-red-600" />
                     </div>
                     <span>Sign Out</span>
                   </div>

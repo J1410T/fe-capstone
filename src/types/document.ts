@@ -1,3 +1,29 @@
+export type DocumentForm = {
+  id: string;
+  name: string;
+  type: string;
+  "is-template": boolean;
+  "content-html": string;
+  "updated-at": string;
+  "upload-at": string;
+  status: "created" | "pending" | "approved" | "rejected" | string;
+  "uploader-id": string;
+  "project-id": string | null;
+  "evaluation-id": string | null;
+  "individual-evaluation-id": string | null;
+  "transaction-id": string | null;
+  // Add computed properties for easier access
+  isTemplate?: boolean;
+  contentHtml?: string;
+  updatedAt?: string;
+  uploadAt?: string;
+  uploaderId?: string;
+  projectId?: string | null;
+  evaluationId?: string | null;
+  individualEvaluationId?: string | null;
+  transactionId?: string | null;
+};
+
 export type DocumentProject = {
   id: string;
   name: string;
