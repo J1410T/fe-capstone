@@ -1,5 +1,4 @@
 import { axiosClient, getAccessToken } from "../api";
-import { queryClient } from "@/lib/react-query"; // đây là queryClient đã cấu hình sẵn
 
 export const getAccountInfo = async () => {
   try {
@@ -69,16 +68,11 @@ export const authApi = {
    * Refresh access token
    */
   async refreshToken(): Promise<RefreshTokenResponse> {
-    const refreshToken = queryClient.getQueryData(["refresh-token"]) as
-      | string
-      | undefined;
-    if (!refreshToken) {
-      throw new Error("No refresh token available");
-    }
-
-    return api.post<RefreshTokenResponse>("/auth/refresh", {
-      refreshToken,
-    });
+    // Note: Refresh token functionality needs to be implemented with cookies
+    // For now, throw an error to indicate this needs implementation
+    throw new Error(
+      "Refresh token functionality needs to be implemented with cookie storage"
+    );
   },
 
   /**

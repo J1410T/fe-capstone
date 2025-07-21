@@ -4,19 +4,16 @@
 
 import { createResource, type Resource } from "@/utils/suspense";
 import { env } from "@/config/env";
-import { queryClient } from "@/lib/react-query";
+import { getAccessToken } from "@/utils/cookie-manager";
 
 /**
- * Get authentication token from React Query cache
+ * Get authentication token from encrypted cookie
  * @returns JWT token or null if not found
  */
 export function getToken(): string | null {
   try {
-    // Get token from React Query cache
-    const token = queryClient.getQueryData(["access-token"]) as
-      | string
-      | undefined;
-    return token || null;
+    // Get token from encrypted cookie
+    return getAccessToken();
   } catch (error) {
     console.error("Error getting token:", error);
     return null; // Return null if an error occurs
@@ -86,8 +83,9 @@ async function handleTokenRefresh(): Promise<boolean> {
     isRefreshingToken = true;
     console.log("Starting token refresh");
 
-    // Check if auth-response exists in React Query cache
-    const authResponse = queryClient.getQueryData(["auth-response"]);
+    // Check if auth-response exists in encrypted cookie
+    const { getAuthResponse } = await import("@/utils/cookie-manager");
+    const authResponse = getAuthResponse();
     if (!authResponse) {
       console.log("No active session, skip token refresh");
       return false;
@@ -175,23 +173,16 @@ export const api = {
 
     // For `/auth/me` API, check session before calling API
     if (endpoint === "/auth/me") {
-      const authResponse = queryClient.getQueryData(["auth-response"]);
-      const savedUser = queryClient.getQueryData(["auth-user"]);
+      const { getAuthResponse } = await import("@/utils/cookie-manager");
+      const authResponse = getAuthResponse();
 
       // If no token or session, don't call API
       if (!token || !authResponse) {
         return Promise.reject(new Error("Authentication failed"));
       }
 
-      // If user data is cached, return it to avoid network request
-      if (savedUser) {
-        return {
-          data: { user: savedUser },
-          success: true,
-          message: "User info retrieved from cache",
-          timestamp: new Date().toISOString(),
-        } as unknown as TData;
-      }
+      // Note: User data caching removed since we're using cookies now
+      // Always make the API call for fresh data
     }
 
     // Thêm token vào header nếu có
@@ -238,9 +229,9 @@ export const api = {
           return this.fetch<TData>(endpoint, params, options);
         } else {
           console.log("Token refresh failed, clearing auth state");
-          // Clear session data from React Query cache
-          queryClient.removeQueries({ queryKey: ["auth-response"] });
-          queryClient.removeQueries({ queryKey: ["access-token"] });
+          // Clear session data from encrypted cookies
+          const { clearAuthCookies } = await import("@/utils/cookie-manager");
+          clearAuthCookies();
           // If token refresh fails, throw authentication error
           throw new Error("Authentication failed");
         }

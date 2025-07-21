@@ -16,8 +16,6 @@ function StaffLayout() {
           </div>
         </div>
       </main>
-      {/* Session Status Component - Temporarily disabled */}
-      {/* <SessionStatus position="bottom-right" /> */}
     </SidebarProvider>
   );
 }

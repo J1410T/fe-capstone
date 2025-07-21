@@ -7,4 +7,5 @@ export const env = Object.freeze({
   API_SERVER: import.meta.env.VITE_API_SERVER || "http://localhost:4000",
   GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: import.meta.env.VITE_GOOGLE_CLIENT_SECRET,
+  VITE_CRYPTO_SECRET_KEY: import.meta.env.VITE_CRYPTO_SECRET_KEY,
 } as const);

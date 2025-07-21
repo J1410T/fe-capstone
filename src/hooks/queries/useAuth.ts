@@ -1,10 +1,10 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { AuthResponse } from "@/types/auth";
 import { getAccountInfo } from "@/services/resources/auth";
+import { getAuthResponse } from "@/utils/cookie-manager";
 
 export function useAuthResponse() {
-  const queryClient = useQueryClient();
-  const data = queryClient.getQueryData<AuthResponse>(["auth-response"]);
+  const data = getAuthResponse<AuthResponse>();
   return { data };
 }
 

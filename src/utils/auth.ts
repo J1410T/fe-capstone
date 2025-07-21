@@ -4,7 +4,7 @@
  */
 
 import { UserRole } from "@/contexts/AuthContext";
-import { queryClient } from "@/lib/react-query";
+import { clearAuthCookies, getAccessToken } from "@/utils/cookie-manager";
 
 /**
  * Mock authentication utilities (for testing and development)
@@ -51,27 +51,26 @@ export const mockAuth = {
    */
   logout: async () => {
     await new Promise((resolve) => setTimeout(resolve, 500));
-    // Clear from React Query cache instead of localStorage
-    queryClient.removeQueries({ queryKey: ["access-token"] });
-    queryClient.removeQueries({ queryKey: ["auth-response"] });
+    // Clear from encrypted cookies instead of React Query cache
+    clearAuthCookies();
   },
 
   /**
    * Check if user is authenticated
    */
   isAuthenticated: (): boolean => {
-    const token = queryClient.getQueryData(["access-token"]) as
-      | string
-      | undefined;
+    const token = getAccessToken();
     return !!token;
   },
 
   /**
-   * Get stored user data
+   * Get stored user data (deprecated - use cookie manager directly)
    */
   getStoredUser: () => {
-    const userData = queryClient.getQueryData(["auth-user"]);
-    return userData || null;
+    console.warn(
+      "mockAuth.getStoredUser is deprecated - use cookie manager directly"
+    );
+    return null;
   },
 };
 
@@ -82,22 +81,25 @@ export const tokenUtils = {
   /**
    * Store authentication token
    */
-  store: (token: string): void => {
-    queryClient.setQueryData(["access-token"], token);
+  store: (): void => {
+    // This function is deprecated - use cookie manager directly
+    console.warn(
+      "tokenUtils.store is deprecated - use cookie manager directly"
+    );
   },
 
   /**
    * Get stored authentication token
    */
   get: (): string | null => {
-    return queryClient.getQueryData(["access-token"]) as string | null;
+    return getAccessToken();
   },
 
   /**
    * Remove authentication token
    */
   remove: (): void => {
-    queryClient.removeQueries({ queryKey: ["access-token"] });
+    clearAuthCookies();
   },
 
   /**
@@ -129,24 +131,31 @@ export const tokenUtils = {
  */
 export const sessionUtils = {
   /**
-   * Store user session data
+   * Store user session data (deprecated - use cookie manager directly)
    */
-  storeUser: (userData: Record<string, unknown>): void => {
-    queryClient.setQueryData(["auth-user"], userData);
+  storeUser: (): void => {
+    console.warn(
+      "sessionUtils.storeUser is deprecated - use cookie manager directly"
+    );
   },
 
   /**
-   * Get user session data
+   * Get user session data (deprecated - use cookie manager directly)
    */
   getUser: (): Record<string, unknown> | null => {
-    return queryClient.getQueryData(["auth-user"]) || null;
+    console.warn(
+      "sessionUtils.getUser is deprecated - use cookie manager directly"
+    );
+    return null;
   },
 
   /**
-   * Clear user session data
+   * Clear user session data (deprecated - use cookie manager directly)
    */
   clearUser: (): void => {
-    queryClient.removeQueries({ queryKey: ["auth-user"] });
+    console.warn(
+      "sessionUtils.clearUser is deprecated - use cookie manager directly"
+    );
   },
 
   /**
@@ -161,11 +170,7 @@ export const sessionUtils = {
    * Clear all session data
    */
   clearAll: (): void => {
-    tokenUtils.remove();
-    sessionUtils.clearUser();
-    queryClient.removeQueries({ queryKey: ["researcher-me"] });
-    queryClient.removeQueries({ queryKey: ["auth-response"] });
-    queryClient.removeQueries({ queryKey: ["last-activity"] });
+    clearAuthCookies();
   },
 };
 
