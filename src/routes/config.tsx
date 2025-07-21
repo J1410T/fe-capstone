@@ -23,6 +23,7 @@ import {
   AppraisalCouncilsManagement,
   MajorsManagement,
   StaffMilestoneManagement,
+  StaffMeetings,
 } from "@/pages/Staff";
 
 // General Pages
@@ -140,7 +141,10 @@ export const routes: RouteObject[] = [
             path: "users",
             element: <UserAccessControl />,
           },
-
+          {
+            path: "meetings",
+            element: <StaffMeetings />,
+          },
           {
             path: "fields",
             element: <FieldsManagement />,

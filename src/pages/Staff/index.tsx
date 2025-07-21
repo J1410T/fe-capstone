@@ -7,7 +7,7 @@
 export { default as StaffDashboard } from "./components/Dashboard";
 
 // Document Forms Management
-export { default as DocumentFormsManagement } from "./components/DocumentFormsManagement"; 
+export { default as DocumentFormsManagement } from "./components/DocumentFormsManagement";
 
 // Project Management
 export { default as StaffProjectRegistration } from "./components/RegisterProject";
@@ -23,6 +23,9 @@ export { default as UserAccessControl } from "./components/UsersManagement";
 
 // Milestone Management
 export { default as StaffMilestoneManagement } from "./components/MilestoneManagement";
+
+// Meeting Management
+export { default as StaffMeetings } from "./components/StaffMeetings";
 
 // Individual Management Pages
 export { default as FieldsManagement } from "./components/FieldsManagement";

@@ -11,6 +11,7 @@ import {
   Target,
   LogOut,
   User,
+  Calendar,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -78,6 +79,11 @@ const data = {
           title: "Milestone Review",
           url: "/staff/milestones/management",
           icon: Target,
+        },
+        {
+          title: "Meeting Management",
+          url: "/staff/meetings",
+          icon: Calendar,
         },
       ],
     },
