@@ -13,13 +13,16 @@ import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
 
 // Staff Pages
 import {
-  BMFormsManagement,
+  DocumentFormsManagement,
   PaymentManagement,
-  ProjectApprovals,
-  ProjectAssignments,
   StaffDashboard,
   StaffProjectRegistration,
+  ProjectManagementOverview,
   UserAccessControl,
+  FieldsManagement,
+  AppraisalCouncilsManagement,
+  MajorsManagement,
+  StaffMilestoneManagement,
 } from "@/pages/Staff";
 
 // General Pages
@@ -110,24 +113,24 @@ export const routes: RouteObject[] = [
           },
           {
             path: "forms",
-            element: <BMFormsManagement />,
+            element: <DocumentFormsManagement />,
           },
           {
             path: "projects",
             children: [
               {
+                index: true,
+                element: <ProjectManagementOverview />,
+              },
+              {
                 path: "register",
                 element: <StaffProjectRegistration />,
               },
               {
-                path: "assignments",
-                element: <ProjectAssignments />,
+                path: "overview",
+                element: <ProjectManagementOverview />,
               },
             ],
-          },
-          {
-            path: "approvals",
-            element: <ProjectApprovals />,
           },
           {
             path: "payments",
@@ -136,6 +139,28 @@ export const routes: RouteObject[] = [
           {
             path: "users",
             element: <UserAccessControl />,
+          },
+
+          {
+            path: "fields",
+            element: <FieldsManagement />,
+          },
+          {
+            path: "councils",
+            element: <AppraisalCouncilsManagement />,
+          },
+          {
+            path: "majors",
+            element: <MajorsManagement />,
+          },
+          {
+            path: "milestones",
+            children: [
+              {
+                path: "management",
+                element: <StaffMilestoneManagement />,
+              },
+            ],
           },
           {
             path: "profile",

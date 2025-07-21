@@ -21,9 +21,6 @@ export const getAccountInfo = async () => {
  * Authentication API resources
  */
 
-import { api } from "../base";
-import { AuthInfo } from "@/types/auth";
-
 export interface LoginRequest extends Record<string, unknown> {
   email: string;
   password: string;
@@ -61,7 +58,11 @@ export const authApi = {
    * Login user
    */
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    return api.post<LoginResponse>("/auth/login", credentials);
+    const response = await axiosClient.post<LoginResponse>(
+      "/auth/login",
+      credentials
+    );
+    return response.data;
   },
 
   /**
@@ -79,13 +80,29 @@ export const authApi = {
    * Get current user info
    */
   async me() {
-    return api.get("/auth/me");
+    const accessToken = getAccessToken();
+    const response = await axiosClient.get("/auth/me", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    return response.data;
   },
 
   /**
    * Logout user
    */
   async logout() {
-    return api.post("/auth/logout");
+    const accessToken = getAccessToken();
+    const response = await axiosClient.post(
+      "/auth/logout",
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    return response.data;
   },
 };

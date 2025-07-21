@@ -2,7 +2,10 @@
  * API module exports
  */
 
-// Base API
-export * from "./base";
+// API Client
+export * from "./api";
+
+// Query Client
+export * from "./query-client";
 
 // Resources

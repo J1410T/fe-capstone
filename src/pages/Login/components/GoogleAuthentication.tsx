@@ -38,12 +38,8 @@ const GoogleAuthentication = () => {
 
           if (!accessToken) {
             // Fallback to mock token if API doesn't provide one
-            const selectedRole = res.data["selected-role"] as UserRole;
-            const userRole = Object.values(UserRole).includes(selectedRole)
-              ? selectedRole
-              : UserRole.RESEARCHER; // fallback to RESEARCHER if invalid role
-
-            accessToken = mockUserLogin(userRole).credential.token;
+            // Use the actual access token from the API response
+            accessToken = res.data.token;
           }
 
           login(accessToken);
