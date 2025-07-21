@@ -146,12 +146,17 @@ function Header() {
   const [notifications, setNotifications] = useState(mockNotifications);
   const { data: authData } = useAuthResponse();
 
+  // console.log("Auth Data:", authData);
+
   // Get user display data from auth-response if available, otherwise fallback to user context
   const displayUser = {
     name: authData?.["full-name"] || user?.name || "User",
     email: authData?.email || user?.email || "user@example.com",
     role: authData?.["selected-role"] || user?.role || "RESEARCHER",
-    avatar: authData?.["avatar-url"] || user?.avatar || "",
+    avatar:
+      authData?.["avatar-url"] ||
+      user?.avatar ||
+      "https://assets.beyondtrust.com/assets/images/resource-cards/resource-default.jpg?auto=format&fit=clip&q=40&speed=0&w=446",
   };
 
   // Get menu items based on current selected role (from auth-response or user context)

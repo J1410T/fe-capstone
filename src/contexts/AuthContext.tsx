@@ -2,11 +2,11 @@ import React, { useState, useEffect, ReactNode, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
 import { UserRole, User, JwtPayload } from "./auth-types";
 import { AuthContext } from "./auth-context";
 import { AuthResponse } from "@/types/auth";
 import { simpleSessionManager } from "@/contexts/simple-session-manager";
+import { getAuthResponse, setAuthResponse } from "@/utils/cookie-manager";
 
 // Re-export for compatibility (but keep them in separate files for fast refresh)
 export type { User } from "./auth-types";
@@ -23,10 +23,110 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   // Check if user is authenticated
   const isAuthenticated = !!user;
+
+  // Logout function
+  const logout = useCallback(() => {
+    // Clear user and session
+    setUser(null);
+    simpleSessionManager.clearSession();
+    toast.success("Logged out successfully");
+    navigate("/auth/login");
+  }, [navigate]);
+
+  // Simple activity tracking with native events
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let activityTimeout: NodeJS.Timeout;
+    let lastActivityTime = Date.now();
+
+    const updateActivity = () => {
+      lastActivityTime = Date.now();
+      simpleSessionManager.updateLastActivity();
+
+      // Clear existing timeout
+      if (activityTimeout) {
+        clearTimeout(activityTimeout);
+      }
+
+      // Set new timeout for 10 minutes
+      activityTimeout = setTimeout(() => {
+        const timeSinceActivity = Date.now() - lastActivityTime;
+        if (timeSinceActivity >= 10 * 60 * 1000) {
+          // 10 minutes
+          console.log("User idle - triggering automatic logout");
+          toast.info("You have been logged out due to inactivity");
+          logout();
+        }
+      }, 10 * 60 * 1000); // 10 minutes
+    };
+
+    // Activity events
+    const events = [
+      "mousedown",
+      "mousemove",
+      "keypress",
+      "scroll",
+      "touchstart",
+      "click",
+    ];
+
+    // Throttled event handler
+    let throttleTimer: NodeJS.Timeout | null = null;
+    const throttledUpdateActivity = () => {
+      if (throttleTimer) return;
+
+      throttleTimer = setTimeout(() => {
+        updateActivity();
+        throttleTimer = null;
+      }, 30000); // Update at most once every 30 seconds
+    };
+
+    // Add event listeners
+    events.forEach((event) => {
+      document.addEventListener(event, throttledUpdateActivity, {
+        passive: true,
+      });
+    });
+
+    // Page visibility handler
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log("User left the page");
+      } else {
+        console.log("User returned to page");
+        updateActivity();
+      }
+    };
+
+    // Note: Removed beforeunload logout handler as it was causing users to be logged out
+    // on page refresh. The session should persist across page refreshes and only
+    // timeout due to actual inactivity.
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Initial activity update
+    updateActivity();
+
+    // Cleanup
+    return () => {
+      if (activityTimeout) {
+        clearTimeout(activityTimeout);
+      }
+      if (throttleTimer) {
+        clearTimeout(throttleTimer);
+      }
+
+      events.forEach((event) => {
+        document.removeEventListener(event, throttledUpdateActivity);
+      });
+
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isAuthenticated, logout]);
 
   // Initialize auth state from localStorage and auth-response
   useEffect(() => {
@@ -170,16 +270,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  // Logout function
-  const logout = useCallback(() => {
-    // Clear user and session
-    setUser(null);
-    simpleSessionManager.clearSession();
-    toast.success("Logged out successfully");
-    navigate("/auth/login");
-  }, [navigate]);
-
-  // Initialize session manager
+  // Initialize session manager (moved to after logout definition)
   useEffect(() => {
     simpleSessionManager.initialize({
       onLogout: () => {
@@ -191,42 +282,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(null);
         navigate("/auth/login");
       },
-      queryClient: queryClient,
     });
 
     return () => {
       simpleSessionManager.cleanup();
     };
-  }, [navigate, queryClient, logout]);
+  }, [navigate, logout]);
 
-  // Monitor query cache for auth data changes
-  useEffect(() => {
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      // Check if auth-related queries were removed/invalidated
-      if (event.type === "removed" || event.type === "updated") {
-        const queryKey = event.query.queryKey;
-
-        // If access token or auth-response was removed and user is still set
-        if (
-          user &&
-          ((Array.isArray(queryKey) && queryKey.includes("access-token")) ||
-            (Array.isArray(queryKey) && queryKey.includes("auth-response")))
-        ) {
-          // Check if the data is actually gone
-          const token = simpleSessionManager.getAccessToken();
-          const authResponse = simpleSessionManager.isAuthResponseValid();
-
-          if (!token || !authResponse) {
-            console.log("Auth data cleared from cache - logging out user");
-            setUser(null);
-            // Don't navigate here as it might cause loops, let AuthGuard handle it
-          }
-        }
-      }
-    });
-
-    return unsubscribe;
-  }, [user, queryClient]);
+  // Note: Query cache monitoring removed since we're using cookies now
 
   // Check if user has specific role
   const hasRole = (role: UserRole) => {
@@ -238,10 +301,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     if (!user) return false;
 
     try {
-      // Get current auth-response data
-      const authResponse = queryClient.getQueryData<AuthResponse>([
-        "auth-response",
-      ]);
+      // Get current auth-response data from encrypted cookie
+      const authResponse = getAuthResponse<AuthResponse>();
       if (!authResponse) {
         throw new Error("No auth response data found");
       }
@@ -257,11 +318,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         "selected-role": newRole,
       };
 
-      // Update the query cache
-      queryClient.setQueryData<AuthResponse>(
-        ["auth-response"],
-        updatedAuthResponse
-      );
+      // Update the encrypted cookie
+      setAuthResponse(updatedAuthResponse);
 
       // Update user role
       setUser((prev) => (prev ? { ...prev, role: newRole } : null));

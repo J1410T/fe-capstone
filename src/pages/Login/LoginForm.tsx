@@ -15,9 +15,9 @@ import { toast } from "sonner";
 import { LogIn, Shield } from "lucide-react";
 import GoogleAuthentication from "./components/GoogleAuthentication";
 import { useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/services/api";
 import { AuthResponse } from "@/types/auth";
+import { setAuthResponse } from "@/utils/cookie-manager";
 
 // Google Login Form Component
 export function GoogleLoginForm({
@@ -64,7 +64,6 @@ export function StaffLoginForm({
   const [password, setPassword] = useState("");
   const { login } = useAuth();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   const handleStaffLogin = async () => {
     if (!email || !password) {
@@ -82,8 +81,8 @@ export function StaffLoginForm({
       });
 
       if (res.data) {
-        // Store auth response in query cache
-        queryClient.setQueryData<AuthResponse>(["auth-response"], res.data);
+        // Store auth response in encrypted cookie
+        setAuthResponse(res.data);
 
         // Use the token from the API response
         const accessToken = res.data.token;

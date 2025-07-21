@@ -1,87 +1,211 @@
 import * as React from "react";
 import {
   LayoutDashboard,
+  ChevronsUpDown,
   Users,
   FolderOpen,
   DollarSign,
   FileText,
-  CheckCircle,
+  BookOpen,
+  Building2,
+  Target,
+  LogOut,
+  User,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Simple navigation items
-const navigationItems = [
-  {
-    title: "Dashboard",
-    url: "/staff",
-    icon: LayoutDashboard,
-  },
-  {
-    title: "BM Forms",
-    url: "/staff/forms",
-    icon: FileText,
-  },
-  {
-    title: "Register Project",
-    url: "/staff/projects/register",
-    icon: FolderOpen,
-  },
-  {
-    title: "Project Assignments",
-    url: "/staff/projects/assignments",
-    icon: Users,
-  },
-  {
-    title: "Approvals",
-    url: "/staff/approvals",
-    icon: CheckCircle,
-  },
-  {
-    title: "Payments",
-    url: "/staff/payments",
-    icon: DollarSign,
-  },
-  {
-    title: "User Management",
-    url: "/staff/users",
-    icon: Users,
-  },
-];
+// Navigation data structure
+const data = {
+  navMain: [
+    {
+      title: "General",
+      items: [
+        {
+          title: "Dashboard",
+          url: "/staff",
+          icon: LayoutDashboard,
+        },
+                {
+          title: "Document Forms",
+          url: "/staff/forms",
+          icon: FileText,
+        },
+      ],
+    },
+    {
+      title: "Projects",
+      items: [
+        {
+          title: "Project Overview",
+          url: "/staff/projects",
+          icon: LayoutDashboard,
+        },
+        {
+          title: "Project Registration",
+          url: "/staff/projects/register",
+          icon: FolderOpen,
+        },
+        
+        {
+          title: "Project Payments",
+          url: "/staff/payments",
+          icon: DollarSign,
+        },
+        {
+          title: "Milestone Review",
+          url: "/staff/milestones/management",
+          icon: Target,
+        },
+
+      ],
+    },
+    {
+      title: "People",
+      items: [
+        {
+          title: "User Access",
+          url: "/staff/users",
+          icon: Users,
+        },
+        {
+          title: "Appraisal Councils",
+          url: "/staff/councils",
+          icon: Users,
+        },
+      ],
+    },
+    {
+      title: "Academics",
+      items: [
+        {
+          title: "Academic Fields",
+          url: "/staff/fields",
+          icon: BookOpen,
+        },
+        {
+          title: "Academic Majors",
+          url: "/staff/majors",
+          icon: Building2,
+        },
+      ],
+    },
+  ],
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user, logout } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div className="flex items-center px-4 py-2">
-          <div className="text-xl font-bold text-primary">SRPM Staff</div>
+        <div className="flex items-center px-4 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
+          <div className="logo-container flex items-center space-x-3 group-data-[collapsible=icon]:space-x-0">
+            <img
+              src="/images/pg-logo-green.png"
+              alt="SRPM Logo"
+              className="logo-medium group-data-[collapsible=icon]:h-12 group-data-[collapsible=icon]:w-12 group-data-[collapsible=icon]:object-contain transition-all duration-200"
+            />
+            <span className="font-bold text-xl leading-7 text-gray-800 font-secondary group-data-[collapsible=icon]:hidden">
+              SRPM
+            </span>
+          </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <div className="px-3 py-2">
-          <nav className="space-y-1">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.url}
-                to={item.url}
-                className="flex items-center px-3 py-2 text-sm font-medium rounded-md text-gray-700 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-              >
-                <item.icon className="mr-3 h-5 w-5" />
-                {item.title}
-              </Link>
-            ))}
-          </nav>
-        </div>
+        {data.navMain.map((group) => (
+          <SidebarGroup key={group.title}>
+            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {group.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <Link to={item.url}>
+                        <item.icon className="h-4 w-4" />
+                        {item.title}
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
       </SidebarContent>
+
+      {/* Footer with User Info and Logout */}
       <SidebarFooter>
-        <div className="px-4 py-2 text-sm text-gray-500">Staff Portal</div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                >
+                  <Avatar className="h-8 w-8 rounded-lg">
+                    <AvatarImage src={user?.avatar} alt={user?.name} />
+                    <AvatarFallback className="rounded-lg">
+                      {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">{user?.name || 'User'}</span>
+                    <span className="truncate text-xs">{user?.email || 'user@example.com'}</span>
+                  </div>
+                  <ChevronsUpDown className="ml-auto size-4" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                side="bottom"
+                align="end"
+                sideOffset={4}
+              >
+                <DropdownMenuItem className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-600 focus:text-red-600 focus:bg-red-50"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4 text-red-600" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarFooter>
+
       <SidebarRail />
     </Sidebar>
   );

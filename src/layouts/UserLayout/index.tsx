@@ -46,8 +46,6 @@ function UserLayout() {
             </div>
           )}
         </main>
-        {/* Session Status Component - Disabled due to infinite loop */}
-        {/* <SessionStatus position="bottom-right" /> */}
       </div>
     </AuthGuard>
   );

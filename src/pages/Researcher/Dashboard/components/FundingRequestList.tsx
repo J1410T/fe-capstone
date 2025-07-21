@@ -18,6 +18,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import { formatVND } from "@/utils";
 
 // Mock funding request data
 interface FundingRequest {
@@ -47,7 +48,7 @@ const mockRequests: FundingRequest[] = [
     title: "Research Equipment Purchase",
     description:
       "High-performance computing equipment for data analysis and machine learning research",
-    amount: 15000,
+    amount: 360000000, // ~15K USD in VND
     reason:
       "Current equipment is outdated and insufficient for complex computational tasks",
     status: "Approved",
@@ -67,7 +68,7 @@ const mockRequests: FundingRequest[] = [
     id: "2",
     title: "Conference Attendance",
     description: "Attendance at International AI Research Conference 2024",
-    amount: 3500,
+    amount: 84000000, // ~3.5K USD in VND
     reason: "Present research findings and network with industry experts",
     status: "Pending",
     createdAt: "2024-01-20T14:30:00Z",
@@ -77,7 +78,7 @@ const mockRequests: FundingRequest[] = [
     id: "3",
     title: "Software Licensing",
     description: "Annual license for specialized data analysis software",
-    amount: 2800,
+    amount: 67200000, // ~2.8K USD in VND
     reason: "Required for ongoing research projects and data processing",
     status: "Rejected",
     createdAt: "2024-01-10T09:15:00Z",
@@ -92,7 +93,7 @@ const mockRequests: FundingRequest[] = [
     id: "4",
     title: "Research Materials",
     description: "Laboratory supplies and materials for experimental research",
-    amount: 1200,
+    amount: 28800000, // ~1.2K USD in VND
     reason: "Consumables needed for ongoing experiments",
     status: "Approved",
     createdAt: "2024-01-05T11:20:00Z",
@@ -107,7 +108,7 @@ const mockRequests: FundingRequest[] = [
     id: "5",
     title: "Travel Expenses",
     description: "Travel costs for field research data collection",
-    amount: 4200,
+    amount: 100800000, // ~4.2K USD in VND
     reason: "Data collection at remote research sites",
     status: "Pending",
     createdAt: "2024-01-25T16:45:00Z",
@@ -263,7 +264,7 @@ export const FundingRequestList: React.FC = () => {
                   Approved Amount
                 </div>
                 <div className="text-xl font-bold text-green-600">
-                  ${stats.approvedAmount.toLocaleString()}
+                  {formatVND(stats.approvedAmount)}
                 </div>
               </div>
             </div>
@@ -329,7 +330,7 @@ export const FundingRequestList: React.FC = () => {
                       </div>
                       <div className="text-right">
                         <div className="text-2xl font-bold text-slate-900">
-                          ${request.amount.toLocaleString()}
+                          {formatVND(request.amount)}
                         </div>
                       </div>
                     </div>

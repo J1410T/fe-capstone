@@ -1,21 +1,24 @@
 /**
  * Simple Session Management Utility
- * Handles basic session timeout and auth-response management
+ * Handles basic session timeout and auth-response management using encrypted cookies
  */
 
 import { UserRole } from "@/contexts/auth-types";
 import { AuthResponse } from "@/types/auth";
-import { QueryClient } from "@tanstack/react-query";
+import {
+  getAccessToken,
+  setAccessToken,
+  getAuthResponse,
+  setAuthResponse,
+  setLastActivity,
+  clearAuthCookies,
+  getLastActivity,
+} from "@/utils/cookie-manager";
 
 // Session configuration
 const SESSION_CONFIG = {
   INACTIVITY_TIMEOUT: 15 * 60 * 1000, // 15 minutes in milliseconds
-  CHECK_INTERVAL: 30 * 1000, // Check every 30 seconds for more responsive detection
-  STORAGE_KEYS: {
-    AUTH_RESPONSE: "auth-response",
-    LAST_ACTIVITY: "last-activity",
-    ACCESS_TOKEN: "accessToken",
-  },
+  CHECK_INTERVAL: 60 * 1000, // Check every 60 seconds (reduced frequency to improve performance)
 } as const;
 
 export class SimpleSessionManager {
@@ -24,7 +27,6 @@ export class SimpleSessionManager {
   private isActive = false;
   private onLogoutCallback?: () => void;
   private onAuthResponseLostCallback?: () => void;
-  private queryClient?: QueryClient;
 
   private constructor() {
     this.updateLastActivity();
@@ -38,16 +40,14 @@ export class SimpleSessionManager {
   }
 
   /**
-   * Initialize session manager with callbacks and query client
+   * Initialize session manager with callbacks (no longer needs query client)
    */
   public initialize(callbacks: {
     onLogout?: () => void;
     onAuthResponseLost?: () => void;
-    queryClient?: QueryClient;
   }) {
     this.onLogoutCallback = callbacks.onLogout;
     this.onAuthResponseLostCallback = callbacks.onAuthResponseLost;
-    this.queryClient = callbacks.queryClient;
     this.isActive = true;
     this.startSessionCheck();
   }
@@ -75,10 +75,8 @@ export class SimpleSessionManager {
    */
   public updateLastActivity() {
     const now = Date.now();
-    // Store in React Query cache instead of localStorage
-    if (this.queryClient) {
-      this.queryClient.setQueryData(["last-activity"], now);
-    }
+    // Store in encrypted cookie instead of React Query cache
+    setLastActivity(now);
   }
 
   /**
@@ -107,14 +105,11 @@ export class SimpleSessionManager {
   }
 
   /**
-   * Get access token from React Query cache
+   * Get access token from encrypted cookie
    */
   public getAccessToken(): string | null {
     try {
-      if (this.queryClient) {
-        return this.queryClient.getQueryData<string>(["access-token"]) || null;
-      }
-      return null;
+      return getAccessToken();
     } catch (error) {
       console.error("Error getting access token:", error);
       return null;
@@ -122,35 +117,36 @@ export class SimpleSessionManager {
   }
 
   /**
-   * Set access token in React Query cache
+   * Set access token in encrypted cookie
    */
   public setAccessToken(token: string): void {
     try {
-      if (this.queryClient) {
-        this.queryClient.setQueryData(["access-token"], token);
-      }
+      setAccessToken(token);
     } catch (error) {
       console.error("Error setting access token:", error);
     }
   }
 
   /**
-   * Get auth-response data from query client
+   * Get auth-response data from encrypted cookie
    */
   public getAuthResponseData(): AuthResponse | null {
     try {
-      if (this.queryClient) {
-        const cachedData = this.queryClient.getQueryData<AuthResponse>([
-          "auth-response",
-        ]);
-        if (cachedData) {
-          return cachedData;
-        }
-      }
-      return null;
+      return getAuthResponse<AuthResponse>();
     } catch (error) {
       console.error("Error getting auth-response data:", error);
       return null;
+    }
+  }
+
+  /**
+   * Set auth-response data in encrypted cookie
+   */
+  public setAuthResponseData(authResponse: AuthResponse): void {
+    try {
+      setAuthResponse(authResponse);
+    } catch (error) {
+      console.error("Error setting auth-response data:", error);
     }
   }
 
@@ -176,19 +172,11 @@ export class SimpleSessionManager {
    */
   public clearSession() {
     console.log("Clearing session data...");
-    // Clear React Query cache only (no localStorage)
+    // Clear encrypted cookies instead of React Query cache
     try {
-      if (this.queryClient) {
-        this.queryClient.removeQueries({ queryKey: ["auth-response"] });
-        this.queryClient.removeQueries({ queryKey: ["last-activity"] });
-        this.queryClient.removeQueries({ queryKey: ["access-token"] });
-        this.queryClient.removeQueries({ queryKey: ["auth-user"] });
-
-        // Force invalidate all queries to ensure fresh state
-        this.queryClient.invalidateQueries();
-      }
+      clearAuthCookies();
     } catch (error) {
-      console.error("Error clearing query cache:", error);
+      console.error("Error clearing auth cookies:", error);
     }
 
     this.endSession();
@@ -198,17 +186,18 @@ export class SimpleSessionManager {
    * Check if user has been inactive for too long
    */
   private checkInactivity(): boolean {
-    // Get last activity from React Query cache instead of localStorage
-    const lastActivity = this.queryClient?.getQueryData<number>([
-      "last-activity",
-    ]);
-    if (!lastActivity) {
-      return true; // No activity recorded, consider inactive
+    try {
+      const lastActivity = getLastActivity();
+      if (!lastActivity) {
+        return true; // No activity recorded, consider inactive
+      }
+
+      const timeSinceActivity = Date.now() - lastActivity;
+      return timeSinceActivity >= SESSION_CONFIG.INACTIVITY_TIMEOUT;
+    } catch (error) {
+      console.error("Error checking stored inactivity:", error);
+      return true; // On error, consider inactive for safety
     }
-
-    const timeSinceActivity = Date.now() - lastActivity;
-
-    return timeSinceActivity >= SESSION_CONFIG.INACTIVITY_TIMEOUT;
   }
 
   /**

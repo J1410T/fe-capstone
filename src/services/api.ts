@@ -1,6 +1,6 @@
 import axios from "axios";
 import { env } from "../config/env";
-import { queryClient } from "@/lib/react-query";
+import { getAccessToken as getAccessTokenFromCookie } from "@/utils/cookie-manager";
 
 export const axiosClient = axios.create({
   baseURL: env.API_SERVER + env.API_BASE_URL,
@@ -12,9 +12,7 @@ export const axiosClient = axios.create({
 });
 
 export const getAccessToken = () => {
-  const token = queryClient.getQueryData(["access-token"]) as
-    | string
-    | undefined;
+  const token = getAccessTokenFromCookie();
   if (!token) {
     throw new Error("Access token not found");
   }

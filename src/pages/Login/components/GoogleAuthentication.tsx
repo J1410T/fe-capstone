@@ -2,7 +2,9 @@ import { useGoogleLogin } from "@react-oauth/google";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts";
 import { axiosClient } from "@/services/api";
-import { useQueryClient } from "@tanstack/react-query";
+// import { mockUserLogin } from "@/utils";
+// import { UserRole } from "@/contexts/auth-types";
+import { setAuthResponse } from "@/utils/cookie-manager";
 import { Button } from "@/components";
 import { useState } from "react";
 import { AuthResponse } from "@/types/auth";
@@ -10,7 +12,6 @@ import { AuthResponse } from "@/types/auth";
 const GoogleAuthentication = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
 
   const loginGoogle = useGoogleLogin({
@@ -30,7 +31,7 @@ const GoogleAuthentication = () => {
         );
 
         if (res.data) {
-          queryClient.setQueryData<AuthResponse>(["auth-response"], res.data);
+          setAuthResponse(res.data);
 
           // Use the token from the API response if available, otherwise generate mock token
           let accessToken = res.data.token;

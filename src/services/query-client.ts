@@ -17,7 +17,7 @@ export const queryApi = {
   async get<TData>(
     endpoint: string,
     params?: QueryParams,
-    options?: any
+    options?: Record<string, unknown>
   ): Promise<TData> {
     try {
       const accessToken = getAccessToken();
@@ -43,7 +43,7 @@ export const queryApi = {
       }>(url, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          ...options?.headers,
+          ...(options?.headers || {}),
         },
         ...options,
       });

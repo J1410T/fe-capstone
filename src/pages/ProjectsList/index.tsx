@@ -19,6 +19,20 @@ import {
 } from "@/services/resources/project";
 import { ProjectCard, ProjectsHeader, ProjectsPagination } from "./components";
 
+// Default values for filters
+const DEFAULT_FILTERS = {
+  searchTerm: "",
+  selectedStatus: "all" as StatusFilter,
+  selectedField: "all" as FieldFilter,
+  selectedMajor: "all" as MajorFilter,
+  selectedCategory: "all" as CategoryFilter,
+  selectedType: "all" as TypeFilter,
+  selectedSort: "latest" as SortOption,
+  tags: [] as string[],
+  currentPage: 1,
+  pageSize: 9,
+};
+
 const ProjectsList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -26,20 +40,6 @@ const ProjectsList: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-
-  // Default values for filters
-  const DEFAULT_FILTERS = {
-    searchTerm: "",
-    selectedStatus: "all" as StatusFilter,
-    selectedField: "all" as FieldFilter,
-    selectedMajor: "all" as MajorFilter,
-    selectedCategory: "all" as CategoryFilter,
-    selectedType: "all" as TypeFilter,
-    selectedSort: "latest" as SortOption,
-    tags: [] as string[],
-    currentPage: 1,
-    pageSize: 9,
-  };
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState<string>(
