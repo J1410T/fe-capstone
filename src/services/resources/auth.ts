@@ -1,3 +1,4 @@
+import { AuthInfo } from "@/types/auth";
 import { axiosClient, getAccessToken } from "../api";
 
 export const getAccountInfo = async () => {
