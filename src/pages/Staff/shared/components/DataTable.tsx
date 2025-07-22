@@ -10,6 +10,7 @@ import {
   SortingState,
   ColumnFiltersState,
   VisibilityState,
+  Row,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -88,7 +89,7 @@ export function DataTable<TData>({
 
   // Debounced search function
   const debouncedSearch = useMemo(
-    () => debounce((value: string) => onGlobalFilterChange(value), 300),
+    () => debounce(onGlobalFilterChange, 300),
     [onGlobalFilterChange]
   );
 

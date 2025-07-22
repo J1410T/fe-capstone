@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import UserLayout from "@/layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
 import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
+import NavigationGuard from "@/components/auth/NavigationGuard";
 
 // Staff Pages
 import {
@@ -49,9 +50,7 @@ import PIMyProjects from "@/pages/PrincipalInvestigator/MyProjects";
 import PendingEvaluations from "@/pages/Council/Evaluations";
 import EvaluationDetail from "@/pages/Council/Evaluations/EvaluationDetail";
 import EvaluationForm from "@/pages/Council/Evaluations/EvaluationForm";
-import ScheduleMeeting from "@/pages/Council/Meetings/ScheduleMeeting";
 import MeetingMinutes from "@/pages/Council/Meetings/MeetingMinutes";
-import ApprovalInterface from "@/pages/Council/Approvals";
 
 // Admin Pages - simplified to use general coming soon
 
@@ -65,6 +64,7 @@ import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
 import Meetings from "@/pages/Council/Meetings";
 import ProjectApproval from "@/pages/Council/ProjectApproval";
 import FormRegister from "@/pages/FormRegister";
+import TestRedirect from "@/pages/TestRedirect";
 
 /**
  * Main application routes configuration
@@ -75,6 +75,7 @@ export const routes: RouteObject[] = [
     element: (
       <AuthProvider>
         <GlobalAuthListener />
+        <NavigationGuard />
         <Outlet />
       </AuthProvider>
     ),
@@ -97,12 +98,20 @@ export const routes: RouteObject[] = [
             path: "home",
             element: <UserHome />,
           },
+          {
+            path: "test-redirect",
+            element: <TestRedirect />,
+          },
         ],
       },
-      // Staff routes with sidebar - no authentication required for testing
+      // Staff routes with sidebar - protected by AuthGuard
       {
         path: "staff",
-        element: <StaffLayout />,
+        element: (
+          <AuthGuard requiredRoles={[UserRole.STAFF]}>
+            <StaffLayout />
+          </AuthGuard>
+        ),
         children: [
           {
             index: true,
@@ -313,18 +322,12 @@ export const routes: RouteObject[] = [
             path: "meetings",
             element: <Meetings />,
           },
-          {
-            path: "meetings/schedule",
-            element: <ScheduleMeeting />,
-          },
+
           {
             path: "meeting/:id",
             element: <MeetingMinutes />,
           },
-          {
-            path: "approvals",
-            element: <ApprovalInterface />,
-          },
+
           {
             path: "project/:projectId",
             element: <ProjectDetail />,
@@ -372,10 +375,7 @@ export const routes: RouteObject[] = [
             path: "meetings",
             element: <Meetings />,
           },
-          {
-            path: "meetings/schedule",
-            element: <ScheduleMeeting />,
-          },
+
           {
             path: "meeting/:id",
             element: <MeetingMinutes />,

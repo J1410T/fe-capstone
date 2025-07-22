@@ -417,8 +417,9 @@ const AppraisalCouncilsManagement: React.FC = () => {
     }
   };
 
-  const handleFormChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  // Form change handler with proper typing
+  const handleFormChange = (field: string, value: unknown) => {
+    setFormData((prev) => ({ ...prev, [field]: value as string }));
     // Clear error when user starts typing
     if (formErrors[field]) {
       setFormErrors((prev) => ({ ...prev, [field]: "" }));

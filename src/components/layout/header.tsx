@@ -16,7 +16,6 @@ import {
   LayoutDashboard,
   FolderOpen,
   Calendar,
-  CheckSquare,
   BellRing,
   Clock,
   MessageSquare,
@@ -129,7 +128,6 @@ const menuItemsByRole = {
     },
     { name: "Evaluations", path: "/council/evaluations", icon: FileText },
     { name: "Meetings", path: "/council/meetings", icon: Calendar },
-    { name: "Approvals", path: "/council/approvals", icon: CheckSquare },
   ],
   [UserRole.STAFF]: [
     { name: "Home", path: "/home", icon: Home },
@@ -433,7 +431,7 @@ function Header() {
                   className="flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   <LogOut className="mr-3 h-4 w-4 text-red-600" />
-                  <span>Sign Out</span>
+                  <span className="text-red-600">Sign Out</span>
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
@@ -548,7 +546,7 @@ function Header() {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start h-12 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium transition-colors"
+                  className="flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
                   onClick={() => {
                     logout();
                     setIsOpen(false);
@@ -558,7 +556,7 @@ function Header() {
                     <div className="flex-shrink-0 p-1">
                       <LogOut className="h-5 w-5 text-red-600" />
                     </div>
-                    <span>Sign Out</span>
+                    <span className="text-red-600">Sign Out</span>
                   </div>
                 </Button>
               </div>

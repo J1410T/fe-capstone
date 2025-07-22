@@ -54,7 +54,7 @@ export function FormDialog({
 
   const renderField = (field: FormField) => {
     const hasError = !!errors[field.name];
-    const value = data[field.name] || "";
+    const value = (data[field.name] as string) || "";
 
     const baseInputProps = {
       id: field.name,

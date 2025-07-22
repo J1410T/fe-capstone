@@ -1,13 +1,6 @@
 import React, { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { Loading } from "@/components/ui/loaders";
-import {
-  ApprovalHeader,
-  TopicsTab,
-  ApplicantsTab,
-  ApplicantProfile,
-} from "./components";
+import { ApprovalHeader, TopicsTab, ApplicantProfile } from "./components";
 import { ApplicantData } from "./types";
 
 // Mock data for research topics
@@ -20,6 +13,8 @@ const proposedTopics = [
     createdAt: "2023-05-15",
     applicants: 3,
     status: "Waiting for PI",
+    councilApprovals: 4,
+    totalCouncilMembers: 5,
   },
   {
     id: 2,
@@ -29,6 +24,8 @@ const proposedTopics = [
     createdAt: "2023-05-10",
     applicants: 2,
     status: "Waiting for PI",
+    councilApprovals: 3,
+    totalCouncilMembers: 5,
   },
   {
     id: 3,
@@ -38,6 +35,8 @@ const proposedTopics = [
     createdAt: "2023-05-05",
     applicants: 1,
     status: "PI Assigned",
+    councilApprovals: 5,
+    totalCouncilMembers: 5,
   },
   {
     id: 4,
@@ -47,6 +46,8 @@ const proposedTopics = [
     createdAt: "2023-05-01",
     applicants: 0,
     status: "Waiting for PI",
+    councilApprovals: 2,
+    totalCouncilMembers: 5,
   },
   {
     id: 5,
@@ -56,6 +57,8 @@ const proposedTopics = [
     createdAt: "2023-04-25",
     applicants: 2,
     status: "Waiting for PI",
+    councilApprovals: 3,
+    totalCouncilMembers: 5,
   },
   {
     id: 6,
@@ -65,6 +68,8 @@ const proposedTopics = [
     createdAt: "2023-04-20",
     applicants: 1,
     status: "Waiting for PI",
+    councilApprovals: 1,
+    totalCouncilMembers: 5,
   },
   {
     id: 7,
@@ -74,10 +79,12 @@ const proposedTopics = [
     createdAt: "2023-04-15",
     applicants: 2,
     status: "PI Assigned",
+    councilApprovals: 4,
+    totalCouncilMembers: 5,
   },
 ];
 
-// Mock data for PI applicants
+// Mock data for proposals submitted to PI
 const piApplicants: ApplicantData[] = [
   {
     id: 1,
@@ -92,6 +99,11 @@ const piApplicants: ApplicantData[] = [
     status: "Pending Review",
     appliedFor: 1, // Topic ID
     appliedDate: "2023-05-20",
+    proposalTitle: "Advanced AI Diagnostic System for Medical Imaging",
+    proposalSummary:
+      "A comprehensive proposal for developing an AI-powered diagnostic system that can analyze medical images with 95% accuracy, reducing diagnosis time by 60%.",
+    proposalType: "Research Proposal",
+    submittedBy: "Dr. Jane Smith",
     profileData: {
       personalInformation: {
         fullName: "Dr. Jane Smith",
@@ -184,6 +196,24 @@ const piApplicants: ApplicantData[] = [
           workUnit: "University of Technology",
           contribution: "Machine Learning Development",
           workDuration: "24 months",
+          documents: [
+            {
+              id: "doc-1",
+              title: "Registration Form - Machine Learning Specialist",
+              type: "Registration Form",
+              description: "Application for ML specialist role",
+              uploadedDate: "2023-05-18",
+              fileSize: "2.1 MB",
+            },
+            {
+              id: "doc-2",
+              title: "Technical Qualifications Certificate",
+              type: "Certificate",
+              description: "ML certification and qualifications",
+              uploadedDate: "2023-05-18",
+              fileSize: "1.5 MB",
+            },
+          ],
         },
         {
           name: "Mr. David Lee",
@@ -191,12 +221,50 @@ const piApplicants: ApplicantData[] = [
           workUnit: "Tech Research Institute",
           contribution: "Data Analysis",
           workDuration: "18 months",
+          documents: [
+            {
+              id: "doc-3",
+              title: "Data Analyst Registration Form",
+              type: "Registration Form",
+              description: "Application for data analyst position",
+              uploadedDate: "2023-05-19",
+              fileSize: "1.8 MB",
+            },
+          ],
         },
       ],
       hostInstitution: {
         name: "University of Technology",
         address: "123 Tech Street, Boston, MA 02101",
       },
+      proposalDocuments: [
+        {
+          id: "prop-1",
+          title: "Main Research Proposal - AI Diagnostic System",
+          type: "Research Proposal",
+          description:
+            "Comprehensive proposal document outlining the AI diagnostic system development",
+          uploadedDate: "2023-05-20",
+          fileSize: "5.2 MB",
+        },
+        {
+          id: "prop-2",
+          title: "Technical Specifications Document",
+          type: "Technical Document",
+          description:
+            "Detailed technical specifications and implementation plan",
+          uploadedDate: "2023-05-20",
+          fileSize: "3.8 MB",
+        },
+        {
+          id: "prop-3",
+          title: "Budget and Timeline",
+          type: "Financial Document",
+          description: "Project budget breakdown and implementation timeline",
+          uploadedDate: "2023-05-20",
+          fileSize: "1.2 MB",
+        },
+      ],
     },
   },
   {
@@ -212,6 +280,11 @@ const piApplicants: ApplicantData[] = [
     status: "Pending Review",
     appliedFor: 1, // Topic ID
     appliedDate: "2023-05-18",
+    proposalTitle: "Intelligent Medical Diagnosis Platform Using Deep Learning",
+    proposalSummary:
+      "Development of a comprehensive AI platform that integrates multiple diagnostic tools and machine learning algorithms to provide accurate medical diagnoses across various specialties.",
+    proposalType: "Technical Proposal",
+    submittedBy: "Dr. Michael Johnson",
     profileData: {
       personalInformation: {
         fullName: "Dr. Michael Johnson",
@@ -304,12 +377,40 @@ const piApplicants: ApplicantData[] = [
           workUnit: "National Institute of Technology",
           contribution: "Algorithm Development",
           workDuration: "30 months",
+          documents: [
+            {
+              id: "doc-4",
+              title: "Algorithm Developer Registration Form",
+              type: "Registration Form",
+              description: "Application for algorithm development role",
+              uploadedDate: "2023-05-17",
+              fileSize: "1.9 MB",
+            },
+          ],
         },
       ],
       hostInstitution: {
         name: "National Institute of Technology",
         address: "456 Research Ave, Pittsburgh, PA 15213",
       },
+      proposalDocuments: [
+        {
+          id: "prop-4",
+          title: "Intelligent AI Platform Proposal",
+          type: "Research Proposal",
+          description: "Main proposal document for the AI diagnostic platform",
+          uploadedDate: "2023-05-18",
+          fileSize: "4.7 MB",
+        },
+        {
+          id: "prop-5",
+          title: "Implementation Roadmap",
+          type: "Technical Document",
+          description: "Detailed implementation plan and milestones",
+          uploadedDate: "2023-05-18",
+          fileSize: "2.3 MB",
+        },
+      ],
     },
   },
   {
@@ -325,6 +426,12 @@ const piApplicants: ApplicantData[] = [
     status: "Pending Review",
     appliedFor: 1, // Topic ID
     appliedDate: "2023-05-15",
+    proposalTitle:
+      "Machine Learning Framework for Enhanced Medical Diagnostics",
+    proposalSummary:
+      "A novel machine learning framework that combines deep learning with traditional diagnostic methods to improve accuracy and reduce false positives in medical imaging analysis.",
+    proposalType: "Research & Development Proposal",
+    submittedBy: "Dr. Sarah Williams",
     profileData: {
       personalInformation: {
         fullName: "Dr. Sarah Williams",
@@ -443,25 +550,13 @@ const piApplicants: ApplicantData[] = [
 
 const ProjectApproval: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState("topics");
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTopic, setSelectedTopic] = useState<number | null>(null);
   const [selectedApplicant, setSelectedApplicant] = useState<number | null>(
     null
   );
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all"); // Changed from selectedDepartment
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-
-  const handleViewApplicants = (topicId: number) => {
-    setSelectedTopic(topicId);
-    setActiveTab("applicants");
-  };
-
-  const handleBackToTopics = () => {
-    setSelectedTopic(null);
-    setActiveTab("topics");
-  };
 
   const handleViewApplicantProfile = (applicantId: number) => {
     setSelectedApplicant(applicantId);
@@ -523,11 +618,6 @@ const ProjectApproval: React.FC = () => {
     return matchesSearch && matchesType && matchesCategory && matchesStatus;
   });
 
-  // Get applicants for the selected topic
-  const topicApplicants = selectedTopic
-    ? piApplicants.filter((applicant) => applicant.appliedFor === selectedTopic)
-    : [];
-
   // Get selected applicant data
   const selectedApplicantData = selectedApplicant
     ? piApplicants.find((applicant) => applicant.id === selectedApplicant)
@@ -539,46 +629,19 @@ const ProjectApproval: React.FC = () => {
 
       {isLoading && <Loading />}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="topics">Research Topics</TabsTrigger>
-          <TabsTrigger value="applicants">
-            Project Applicants
-            {selectedTopic && (
-              <Badge variant="secondary" className="ml-2">
-                {topicApplicants.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-        </TabsList>
-
-        {/* Topics Tab */}
-        <TabsContent value="topics" className="space-y-4">
-          <TopicsTab
-            topics={filteredTopics}
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            selectedType={selectedType} // Changed from selectedDepartment
-            onTypeChange={setSelectedType} // Changed from onDepartmentChange
-            selectedCategory={selectedCategory} // New prop
-            onCategoryChange={setSelectedCategory} // New prop
-            selectedStatus={selectedStatus}
-            onStatusChange={setSelectedStatus}
-            onViewApplicants={handleViewApplicants}
-          />
-        </TabsContent>
-
-        {/* Applicants Tab */}
-        <TabsContent value="applicants" className="space-y-4">
-          <ApplicantsTab
-            applicants={topicApplicants}
-            selectedTopic={selectedTopic}
-            topics={proposedTopics}
-            onBackToTopics={handleBackToTopics}
-            onViewProfile={handleViewApplicantProfile}
-          />
-        </TabsContent>
-      </Tabs>
+      <TopicsTab
+        topics={filteredTopics}
+        applicants={piApplicants}
+        searchTerm={searchTerm}
+        onSearchChange={setSearchTerm}
+        selectedType={selectedType}
+        onTypeChange={setSelectedType}
+        selectedCategory={selectedCategory}
+        onCategoryChange={setSelectedCategory}
+        selectedStatus={selectedStatus}
+        onStatusChange={setSelectedStatus}
+        onViewProfile={handleViewApplicantProfile}
+      />
 
       {/* Applicant Profile Dialog */}
       <ApplicantProfile
