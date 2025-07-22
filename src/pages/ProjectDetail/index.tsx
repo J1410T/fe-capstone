@@ -6,7 +6,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui";
-import { useEffect, useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { OverviewTab, ProjectHeader, TeamTab } from "./components";
 import BudgetTab from "./components/BudgetTab";
@@ -15,306 +15,60 @@ import ProgressTab from "./components/ProgressTab";
 import MilestoneTab from "./components/MilestoneTab";
 import { ProjectEnrollModal } from "./components/ProjectEnrollModal";
 import { ArrowLeft } from "lucide-react";
-
-// Generate different project data based on project ID for testing access control
-const generateProjectData = (
-  projectId: string,
-  userEmail?: string,
-  userName?: string
-) => {
-  const id = parseInt(projectId) || 1;
-
-  // Define different project scenarios for testing access control
-  const projects = {
-    1: {
-      title: "Machine Learning for Medical Diagnosis",
-      pi: "Test PI", // User has access as PI
-      status: "In Progress",
-      type: "Application",
-      team: [
-        {
-          name: "Test PI",
-          role: "Principal Investigator",
-          department: "Computer Science",
-          email: userEmail || "testpi@example.com",
-        },
-        {
-          name: "Michael Johnson",
-          role: "Leader",
-          department: "Computer Science",
-          email: "michael.johnson@example.com",
-        },
-        {
-          name: "Sarah Williams",
-          role: "Secretary",
-          department: "Medicine",
-          email: "sarah.williams@example.com",
-        },
-      ],
-    },
-    2: {
-      title: "Quantum Computing Research",
-      pi: "Dr. Alice Johnson", // User does NOT have access
-      status: "Done",
-      type: "Fundamental",
-      team: [
-        {
-          name: "Dr. Alice Johnson",
-          role: "Principal Investigator",
-          department: "Physics",
-          email: "alice.johnson@example.com",
-        },
-        {
-          name: "Bob Smith",
-          role: "Leader",
-          department: "Physics",
-          email: "bob.smith@example.com",
-        },
-        {
-          name: "Carol Davis",
-          role: "Researcher",
-          department: "Mathematics",
-          email: "carol.davis@example.com",
-        },
-      ],
-    },
-    3: {
-      title: "Renewable Energy Systems",
-      pi: "Prof. John Wilson", // User does NOT have access
-      status: "Pending",
-      type: "Technology",
-      team: [
-        {
-          name: "Prof. John Wilson",
-          role: "Principal Investigator",
-          department: "Engineering",
-          email: "john.wilson@example.com",
-        },
-        {
-          name: "Jane Brown",
-          role: "Leader",
-          department: "Engineering",
-          email: "jane.brown@example.com",
-        },
-        {
-          name: "Mike Taylor",
-          role: "Researcher",
-          department: "Engineering",
-          email: "mike.taylor@example.com",
-        },
-      ],
-    },
-    4: {
-      title: "Artificial Intelligence in Education",
-      pi: "Dr. Maria Garcia", // User has access as team RESEARCHER
-      status: "Done",
-      type: "Application",
-      team: [
-        {
-          name: "Dr. Maria Garcia",
-          role: "Principal Investigator",
-          department: "Education",
-          email: "maria.garcia@example.com",
-        },
-        {
-          name: userName || "Test User",
-          role: "Researcher",
-          department: "Computer Science",
-          email: userEmail || "testuser@example.com",
-        },
-        {
-          name: "Alex Rodriguez",
-          role: "Leader",
-          department: "Education",
-          email: "alex.rodriguez@example.com",
-        },
-      ],
-    },
-  };
-
-  const project = projects[id as keyof typeof projects] || projects[1];
-
-  return {
-    id,
-    title: project.title,
-    category: "Basic scientific research topic",
-    type: project.type,
-    description: `This research project focuses on ${project.title.toLowerCase()}, utilizing cutting-edge methodologies and innovative approaches to advance the field.`,
-    objective: `To develop and validate new approaches in ${project.title.toLowerCase()} that can significantly impact the field and provide practical solutions.`,
-    pi: project.pi,
-    department: "Computer Science",
-    year: "2023",
-    status: project.status,
-    progress:
-      project.status === "Done"
-        ? 100
-        : project.status === "In Progress"
-        ? 65
-        : 30,
-    budget: {
-      total: "$120,000",
-      spent: "$78,000",
-      allocated: {
-        personnel: "$60,000",
-        equipment: "$30,000",
-        materials: "$15,000",
-        other: "$5,000",
-      },
-    },
-    objectives: [
-      `Develop innovative solutions for ${project.title.toLowerCase()}`,
-      "Create efficient algorithms and methodologies",
-      "Design user-friendly interfaces",
-      "Validate system accuracy through testing",
-    ],
-    team: project.team,
-    tasks: [
-      {
-        id: 1,
-        title: "Research planning and setup",
-        assignee: project.team[0]?.name || "Team Lead",
-        dueDate: "July 15, 2023",
-        status: "Completed",
-        priority: "High",
-      },
-      {
-        id: 2,
-        title: "Development and analysis",
-        assignee: project.team[1]?.name || "Team Researcher",
-        dueDate: "August 30, 2023",
-        status: "In Progress",
-        priority: "High",
-      },
-    ],
-    documents: [
-      {
-        id: 1,
-        name: "Project Proposal",
-        type: "PDF",
-        uploadedBy: project.pi,
-        uploadDate: "January 5, 2023",
-        size: "2.4 MB",
-      },
-      {
-        id: 2,
-        name: "Research Protocol",
-        type: "DOCX",
-        uploadedBy: project.team[1]?.name || "Team Researcher",
-        uploadDate: "March 10, 2023",
-        size: "1.8 MB",
-      },
-    ],
-    reports: [
-      {
-        name: "Initial Progress Report",
-        date: "April 15, 2023",
-        status: "Submitted",
-      },
-      {
-        name: "Quarterly Review Q2",
-        date: "July 1, 2023",
-        status: "Submitted",
-      },
-    ],
-  };
-};
+import { useProject } from "@/hooks/queries/project";
+import { useProjectMajors } from "@/hooks/queries/major";
+import { useAccountInfo, useRoleInfo } from "@/hooks/queries";
 
 function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
-  const [project, setProject] = useState<ReturnType<
-    typeof generateProjectData
-  > | null>(null);
   const [showEnrollModal, setShowEnrollModal] = useState(false);
   const [enrollLoading, setEnrollLoading] = useState(false);
+  const { data: majorProject } = useProjectMajors(projectId || "");
 
-  // Check if user owns or is a Researcher of the project
-  const isOwnerOrResearcher = () => {
-    if (!user || !project) {
-      console.log("❌ No user or no project data");
-      return false;
-    }
+  // Use React Query hooks
+  const {
+    data: projectResponse,
+    isLoading,
+    error,
+  } = useProject(projectId || "");
 
-    // Debug logging to help identify the issue
-    console.log("=== ACCESS CONTROL CHECK ===");
-    console.log("Checking access for user:", {
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
-    console.log("Project ID:", project.id);
-    console.log("Project PI:", project.pi);
-    console.log(
-      "Project team:",
-      project.team.map((m) => ({ name: m.name, email: m.email }))
-    );
+  const project = projectResponse?.data["project-detail"];
+  const members = project?.members || [];
 
-    // Check if user is the principal investigator (by name match)
-    const isPI = project.pi === user.name;
-    console.log(`PI Check: "${project.pi}" === "${user.name}" = ${isPI}`);
+  // Extract unique account and role IDs
+  const uniqueAccountIds = useMemo(
+    () => [
+      ...new Set(members.map((member) => member.accountId).filter(Boolean)),
+    ],
+    [members]
+  );
 
-    if (isPI) {
-      console.log("✅ User is PI - granting access");
-      return true;
-    }
+  const uniqueRoleIds = useMemo(
+    () => [...new Set(members.map((member) => member.roleId).filter(Boolean))],
+    [members]
+  );
 
-    // Check if user is a team RESEARCHER (by email match)
-    const teamResearcherMatch = project.team.find(
-      (researcher: {
-        name: string;
-        role: string;
-        department: string;
-        email: string;
-      }) => {
-        const emailMatch = researcher.email === user.email;
-        console.log(
-          `Team RESEARCHER check: "${researcher.email}" === "${user.email}" = ${emailMatch}`
-        );
-        return emailMatch;
-      }
-    );
+  // Call hooks for all unique account IDs at the top level
+  const accountData: { [key: string]: ReturnType<typeof useAccountInfo> } = {};
+  uniqueAccountIds.forEach((accountId) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    accountData[accountId] = useAccountInfo(accountId);
+  });
 
-    if (teamResearcherMatch) {
-      console.log(
-        "✅ User is team RESEARCHER - granting access:",
-        teamResearcherMatch.name
-      );
-      return true;
-    }
+  // Call hooks for all unique role IDs at the top level
+  const roleData: { [key: string]: ReturnType<typeof useRoleInfo> } = {};
+  uniqueRoleIds.forEach((roleId) => {
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    roleData[roleId] = useRoleInfo(roleId);
+  });
 
-    console.log("❌ User does not have access to this project");
-    return false;
-  };
-
-  const hasProjectAccess = isOwnerOrResearcher();
-
-  useEffect(() => {
-    // Simulate API call to fetch project details
-    const fetchProjectDetails = async () => {
-      setIsLoading(true);
-      try {
-        // In a real app, you would fetch data from an API
-        // For now, we'll use the dynamic mock data
-        setTimeout(() => {
-          const dynamicProject = generateProjectData(
-            projectId || "1",
-            user?.email,
-            user?.name
-          );
-          setProject(dynamicProject);
-          setIsLoading(false);
-        }, 1000);
-      } catch (error) {
-        console.error("Error fetching project details:", error);
-        setIsLoading(false);
-      }
-    };
-
-    fetchProjectDetails();
-  }, [projectId, user?.email, user?.name]);
+  // Check if member data is still loading
+  const membersLoading =
+    Object.values(accountData).some((query) => query.isLoading) ||
+    Object.values(roleData).some((query) => query.isLoading);
 
   const handleEnrollProject = async (data: {
     role: "Principal" | "Researcher";
@@ -322,15 +76,11 @@ function ProjectDetail() {
   }) => {
     setEnrollLoading(true);
     try {
-      // Simulate API call
       console.log("Enrolling in project:", { projectId, ...data });
-
-      // In real app, you would make API call here
+      // API call would go here
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
       setShowEnrollModal(false);
-      // Refresh project data to show updated RESEARCHERship
-      // In real app, refetch project data here
+      // Refetch project data after enrollment
     } catch (error) {
       console.error("Failed to enroll in project:", error);
     } finally {
@@ -338,48 +88,27 @@ function ProjectDetail() {
     }
   };
 
-  // Determine which tabs to show based on access control and project status
+  // Determine visible tabs based on membership
   const getVisibleTabs = () => {
-    if (!user) return ["overview"];
-
-    // All users can view overview
     const baseTabs = ["overview"];
 
-    // Only RESEARCHERs/owners can see additional tabs
-    if (hasProjectAccess) {
-      // Always show milestones, documents, and budget for project RESEARCHERs
-      baseTabs.push("milestones", "documents", "budget");
-
-      // Only show team tab when project status is "Done"
-      if (project?.status === "Done") {
-        baseTabs.splice(1, 0, "team"); // Insert team tab after overview
-        console.log("✅ Project is Done - showing team tab");
-      } else {
-        console.log(
-          "⚠️ Project not Done - hiding team tab (current status:",
-          project?.status,
-          ")"
-        );
-      }
-
-      console.log("✅ User has access - showing tabs:", baseTabs);
-    } else {
-      console.log("⚠️ User does not have access - showing only overview tab");
+    if (projectResponse?.data["is-member"]) {
+      // If user is a member, show all tabs
+      baseTabs.push("team", "milestones", "documents", "budget");
     }
 
     return baseTabs;
   };
 
   const visibleTabs = getVisibleTabs();
+  const isMember = projectResponse?.data["is-member"] || false;
+  const shouldShowEnrollButton = Boolean(user && !isMember);
 
-  // Show Enroll Project button for users who are not already RESEARCHERs
-  const shouldShowEnrollButton = Boolean(user && !hasProjectAccess);
-
-  if (isLoading) {
+  if (isLoading || membersLoading) {
     return <Loading />;
   }
 
-  if (!project) {
+  if (error || !projectResponse || !project) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <h2 className="text-xl font-semibold mb-2">Project Not Found</h2>
@@ -387,24 +116,83 @@ function ProjectDetail() {
           The project you're looking for doesn't exist or you don't have access.
         </p>
         <Button onClick={() => navigate("/home")}>
-          <ArrowLeft className=" h-4 w-4" />
+          <ArrowLeft className="h-4 w-4" />
           Back to Home
         </Button>
       </div>
     );
   }
 
+  const roleInProject = projectResponse.data["role-in-project"];
+
+  // Helper function to determine team member role display
+  const getTeamMemberRole = (
+    roleName?: string
+  ): "Researcher" | "Leader" | "Secretary" | "Principal Investigator" => {
+    if (!roleName) return "Researcher";
+
+    const name = roleName.toLowerCase();
+    if (name.includes("principal") || name.includes("investigator")) {
+      return "Principal Investigator";
+    }
+    if (name.includes("leader") || name.includes("lead")) {
+      return "Leader";
+    }
+    if (name.includes("secretary")) {
+      return "Secretary";
+    }
+    return "Researcher";
+  };
+
+  // Transform members with populated data
+  const teamMembers = members.map((member) => {
+    const accountQuery = accountData[member.accountId];
+    const roleQuery = roleData[member.roleId];
+    const account = accountQuery?.data;
+    const role = roleQuery?.data;
+
+    return {
+      id: member.id,
+      name: account?.["full-name"] || `none`,
+      role: getTeamMemberRole(role?.name),
+      major: account?.["company-name"] || "none",
+      email: account?.email || `none`,
+    };
+  });
+
+  console.log("team", teamMembers);
+
+  // Prepare project data for components
+  const projectData = {
+    id: project.id,
+    title: project["english-title"],
+    vietnameseTitle: project["vietnamese-title"],
+    logoUrl: project["logo-url"],
+    category: project.category,
+    type: project.type,
+    description: project.description || "",
+    abbreviations: project.abbreviations || "",
+    requirementNote: project["requirement-note"] || "",
+    language: project.language || "None",
+    maximumMember: project["maximum-member"] || 0,
+    status: project.status,
+    progress: project.progress || 0,
+    fieldName: majorProject?.["data-list"]?.[0]?.major?.field?.name || "",
+    majorName: majorProject?.["data-list"]?.[0]?.major?.name || "",
+    team: teamMembers,
+    majors: project.majors || [],
+    tags: project["project-tags"]?.map((tag) => tag.name) || [],
+  };
+
   return (
     <div className="space-y-6">
-      {/* Project Header - Simplified without Show All switch */}
       <ProjectHeader
-        title={project.title}
+        title={project["english-title"]}
         status={project.status}
-        pi={project.pi}
-        hasAccess={hasProjectAccess}
+        isMember={isMember}
+        roleInProject={roleInProject}
       />
 
-      {/* Project Tabs - Based on access control */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList
           className={`grid w-full ${
@@ -447,55 +235,54 @@ function ProjectDetail() {
           )}
         </TabsList>
 
-        {/* Overview Tab */}
-        {visibleTabs.includes("overview") && (
-          <TabsContent value="overview" className="space-y-4">
-            <OverviewTab
-              category={project.category}
-              type={project.type}
-              description={project.description}
-              objectives={project.objectives}
-              showEnrollButton={shouldShowEnrollButton}
-              onEnrollProject={() => setShowEnrollModal(true)}
-            />
-          </TabsContent>
-        )}
+        <TabsContent value="overview" className="space-y-4">
+          <OverviewTab
+            category={project.category}
+            type={project.type}
+            description={project.description || "No description available"}
+            vietnameseTitle={project["vietnamese-title"]}
+            logoUrl={
+              project["logo-url"] ||
+              "https://w0.peakpx.com/wallpaper/340/533/HD-wallpaper-chemistry-medical-biology-detail-medicine-psychedelic-science-abstract-abstraction-genetics-and-mobile-background-cool-abstract-science.jpg"
+            }
+            abbreviations={
+              project.abbreviations || "No abbreviations available"
+            }
+            requirementNote={
+              project["requirement-note"] || "No requirement note available"
+            }
+            language={project.language}
+            maximumMember={project["maximum-member"] || 0}
+            fieldName={projectData.fieldName}
+            majorName={projectData.majorName}
+            showEnrollButton={shouldShowEnrollButton}
+            tags={projectData.tags}
+            onEnrollProject={
+              project.status === "created"
+                ? () => setShowEnrollModal(true)
+                : undefined
+            }
+          />
+        </TabsContent>
 
-        {/* Team Tab */}
         {visibleTabs.includes("team") && (
           <TabsContent value="team" className="space-y-4">
-            <TeamTab
-              team={
-                project.team as Array<{
-                  name: string;
-                  role:
-                    | "Researcher"
-                    | "Leader"
-                    | "Secretary"
-                    | "Principal Investigator";
-                  department: string;
-                  email: string;
-                }>
-              }
-            />
+            <TeamTab team={projectData.team} />
           </TabsContent>
         )}
 
-        {/* Milestones Tab - renamed from Tasks */}
         {visibleTabs.includes("milestones") && (
           <TabsContent value="milestones" className="space-y-4">
             <MilestoneTab />
           </TabsContent>
         )}
 
-        {/* Documents Tab - renamed from Progress */}
         {visibleTabs.includes("documents") && (
           <TabsContent value="documents" className="space-y-4">
             <ProgressTab />
           </TabsContent>
         )}
 
-        {/* Budget Tab */}
         {visibleTabs.includes("budget") && (
           <TabsContent value="budget" className="space-y-4">
             <BudgetTab />
@@ -503,12 +290,11 @@ function ProjectDetail() {
         )}
       </Tabs>
 
-      {/* Project Enrollment Modal */}
       <ProjectEnrollModal
         isOpen={showEnrollModal}
         onClose={() => setShowEnrollModal(false)}
         onEnroll={handleEnrollProject}
-        projectTitle={project.title}
+        projectTitle={project["english-title"]}
         isLoading={enrollLoading}
       />
     </div>

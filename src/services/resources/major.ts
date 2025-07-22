@@ -1,4 +1,4 @@
-import { MajorItem } from "@/types/major";
+import { MajorItem, ProjectMajorFilterResponse } from "@/types/major";
 import { axiosClient, getAccessToken } from "../api";
 import {
   CreateProjectMajorRequest,
@@ -40,6 +40,27 @@ export const createProjectMajor = async (
     return res.data;
   } catch (error) {
     console.error("createProjectMajor error:", error);
+    throw error;
+  }
+};
+
+export const getProjectMajors = async (
+  projectId: string
+): Promise<ProjectMajorFilterResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    const res = await axiosClient.get<ProjectMajorFilterResponse>(
+      `/project-major/filter?ProjectId=${projectId}&PageSize=1`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    // console.log("getProjectMajors response:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("getProjectMajors error:", error);
     throw error;
   }
 };

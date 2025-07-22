@@ -1,7 +1,7 @@
-import { AuthInfo } from "@/types/auth";
+import { AuthInfo, RoleItem } from "@/types/auth";
 import { axiosClient, getAccessToken } from "../api";
 
-export const getAccountInfo = async () => {
+export const getMyAccountInfo = async () => {
   try {
     const accessToken = getAccessToken();
 
@@ -18,92 +18,36 @@ export const getAccountInfo = async () => {
   }
 };
 
-/**
- * Authentication API resources
- */
-
-export interface LoginRequest extends Record<string, unknown> {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  success: boolean;
-  data: {
-    accessToken: string;
-    refreshToken: string;
-    user: {
-      id: string;
-      email: string;
-      name: string;
-      role: string;
-    };
-  };
-  message: string;
-}
-
-export interface RefreshTokenResponse {
-  success: boolean;
-  data?: {
-    accessToken: string;
-    refreshToken: string;
-  };
-  message: string;
-}
-
-/**
- * Authentication API endpoints
- */
-export const authApi = {
-  /**
-   * Login user
-   */
-  async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response = await axiosClient.post<LoginResponse>(
-      "/auth/login",
-      credentials
-    );
-    return response.data;
-  },
-
-  /**
-   * Refresh access token
-   */
-  async refreshToken(): Promise<RefreshTokenResponse> {
-    // Note: Refresh token functionality needs to be implemented with cookies
-    // For now, throw an error to indicate this needs implementation
-    throw new Error(
-      "Refresh token functionality needs to be implemented with cookie storage"
-    );
-  },
-
-  /**
-   * Get current user info
-   */
-  async me() {
+export const getAccountById = async (accountId: string) => {
+  try {
     const accessToken = getAccessToken();
-    const response = await axiosClient.get("/auth/me", {
+
+    const res = await axiosClient.get<AuthInfo>(`/account/${accountId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-    return response.data;
-  },
+    console.log("getAccountById response:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("getAccountById error:", error);
+    throw error;
+  }
+};
 
-  /**
-   * Logout user
-   */
-  async logout() {
+export const getRoleById = async (roleId: string) => {
+  try {
     const accessToken = getAccessToken();
-    const response = await axiosClient.post(
-      "/auth/logout",
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
-    return response.data;
-  },
+
+    const res = await axiosClient.get<RoleItem>(`/role/${roleId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    console.log("getRoleById response:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("getRoleById error:", error);
+    throw error;
+  }
 };

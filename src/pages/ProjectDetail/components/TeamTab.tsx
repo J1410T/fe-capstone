@@ -13,7 +13,7 @@ interface TeamResearcher {
   id?: string;
   name: string;
   role: "Researcher" | "Leader" | "Secretary" | "Principal Investigator";
-  department: string;
+  major: string;
   email: string;
 }
 
@@ -98,7 +98,7 @@ export const TeamTab: React.FC<TeamTabProps> = ({ team }) => {
                 <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-600">
                   <div className="flex items-center">
                     <Briefcase className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="truncate">{researcher.department}</span>
+                    <span className="truncate">{researcher.major}</span>
                   </div>
                   <div className="flex items-center">
                     <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2 flex-shrink-0" />

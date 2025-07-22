@@ -50,3 +50,10 @@ export interface StaffLoginRequest {
   password: string;
   "selected-role": string;
 }
+
+export type RoleItem = {
+  id: string;
+  name: string;
+  "is-group-role": boolean;
+  status: string;
+};

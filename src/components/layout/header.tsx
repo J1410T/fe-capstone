@@ -44,7 +44,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { useAuthResponse } from "@/hooks/queries";
+import { useAccessToken, useAuthResponse } from "@/hooks/queries";
 
 const mockNotifications = [
   {
@@ -145,8 +145,9 @@ function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState(mockNotifications);
   const { data: authData } = useAuthResponse();
+  const accessToken = useAccessToken();
 
-  // console.log("Auth Data:", authData);
+  console.log("token: ", accessToken);
 
   // Get user display data from auth-response if available, otherwise fallback to user context
   const displayUser = {

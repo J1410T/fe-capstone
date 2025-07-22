@@ -28,10 +28,10 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { validateEmail, validateRequired } from "@/utils";
-import { useAccountInfo } from "@/hooks/queries";
+import { useMyAccountInfo } from "@/hooks/queries";
 
 const Profile: React.FC = () => {
-  const { data: accountInfo } = useAccountInfo();
+  const { data: accountInfo } = useMyAccountInfo();
 
   // Initialize state with empty values that will be populated when accountInfo loads
   const [user, setUser] = useState({
