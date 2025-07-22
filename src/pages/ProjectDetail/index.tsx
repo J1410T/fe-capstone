@@ -6,7 +6,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { OverviewTab, ProjectHeader, TeamTab } from "./components";
 import BudgetTab from "./components/BudgetTab";
@@ -15,9 +15,10 @@ import ProgressTab from "./components/ProgressTab";
 import MilestoneTab from "./components/MilestoneTab";
 import { ProjectEnrollModal } from "./components/ProjectEnrollModal";
 import { ArrowLeft } from "lucide-react";
+// import { useProjectMajors } from "@/hooks/queries/major";
 import { useProject } from "@/hooks/queries/project";
 import { useProjectMajors } from "@/hooks/queries/major";
-import { useAccountInfo, useRoleInfo } from "@/hooks/queries";
+// import { useProject, useProjectMajors } from "@/hooks/project";
 
 function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -35,40 +36,9 @@ function ProjectDetail() {
     error,
   } = useProject(projectId || "");
 
-  const project = projectResponse?.data["project-detail"];
-  const members = project?.members || [];
-
-  // Extract unique account and role IDs
-  const uniqueAccountIds = useMemo(
-    () => [
-      ...new Set(members.map((member) => member.accountId).filter(Boolean)),
-    ],
-    [members]
-  );
-
-  const uniqueRoleIds = useMemo(
-    () => [...new Set(members.map((member) => member.roleId).filter(Boolean))],
-    [members]
-  );
-
-  // Call hooks for all unique account IDs at the top level
-  const accountData: { [key: string]: ReturnType<typeof useAccountInfo> } = {};
-  uniqueAccountIds.forEach((accountId) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    accountData[accountId] = useAccountInfo(accountId);
-  });
-
-  // Call hooks for all unique role IDs at the top level
-  const roleData: { [key: string]: ReturnType<typeof useRoleInfo> } = {};
-  uniqueRoleIds.forEach((roleId) => {
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    roleData[roleId] = useRoleInfo(roleId);
-  });
-
-  // Check if member data is still loading
-  const membersLoading =
-    Object.values(accountData).some((query) => query.isLoading) ||
-    Object.values(roleData).some((query) => query.isLoading);
+  // const { data: majorResponse, isLoading: majorsLoading } = useProjectMajors(
+  //   projectId || ""
+  // );
 
   const handleEnrollProject = async (data: {
     role: "Principal" | "Researcher";
@@ -104,11 +74,11 @@ function ProjectDetail() {
   const isMember = projectResponse?.data["is-member"] || false;
   const shouldShowEnrollButton = Boolean(user && !isMember);
 
-  if (isLoading || membersLoading) {
+  if (isLoading) {
     return <Loading />;
   }
 
-  if (error || !projectResponse || !project) {
+  if (error || !projectResponse) {
     return (
       <div className="flex flex-col items-center justify-center h-64">
         <h2 className="text-xl font-semibold mb-2">Project Not Found</h2>
@@ -123,46 +93,41 @@ function ProjectDetail() {
     );
   }
 
+  const project = projectResponse.data["project-detail"];
   const roleInProject = projectResponse.data["role-in-project"];
 
-  // Helper function to determine team member role display
-  const getTeamMemberRole = (
-    roleName?: string
-  ): "Researcher" | "Leader" | "Secretary" | "Principal Investigator" => {
-    if (!roleName) return "Researcher";
-
-    const name = roleName.toLowerCase();
-    if (name.includes("principal") || name.includes("investigator")) {
-      return "Principal Investigator";
-    }
-    if (name.includes("leader") || name.includes("lead")) {
-      return "Leader";
-    }
-    if (name.includes("secretary")) {
-      return "Secretary";
-    }
-    return "Researcher";
-  };
-
-  // Transform members with populated data
-  const teamMembers = members.map((member) => {
-    const accountQuery = accountData[member.accountId];
-    const roleQuery = roleData[member.roleId];
-    const account = accountQuery?.data;
-    const role = roleQuery?.data;
-
-    return {
-      id: member.id,
-      name: account?.["full-name"] || `none`,
-      role: getTeamMemberRole(role?.name),
-      major: account?.["company-name"] || "none",
-      email: account?.email || `none`,
-    };
-  });
-
-  console.log("team", teamMembers);
+  console.log("Member project", project.members);
 
   // Prepare project data for components
+  // const projectData = {
+  //   id: project.id,
+  //   title: project["english-title"],
+  //   vietnameseTitle: project["vietnamese-title"],
+  //   logoUrl: project["logo-url"],
+  //   category: project.category,
+  //   type: project.type,
+  //   description: project.description || "",
+  //   abbreviations: project.abbreviations || "",
+  //   requirementNote: project["requirement-note"] || "",
+  //   language: project.language || "None",
+  //   maximumMember: project["maximum-member"] || 0,
+  //   status: project.status,
+  //   progress: project.progress || 0,
+  //   fieldName: majorProject?.["data-list"]?.[0]?.major?.field?.name || "",
+  //   majorName: majorProject?.["data-list"]?.[0]?.major?.name || "",
+  //   team:
+  //     project.members?.map((member) => ({
+  //       name: `Member ${member.id.substring(0, 8)}`, // You might need to fetch actual names
+  //       role: roleInProject.includes("Principal Investigator")
+  //         ? "Principal Investigator"
+  //         : "Researcher",
+  //       department: "Unknown", // Add if available in your data
+  //       email: `${member["accountId"]}@example.com`, // Replace with actual email if available
+  //     })) || [],
+  //   majors: project.majors || [],
+  //   tags: project["project-tags"]?.map((tag) => tag.name) || [],
+  // };
+
   const projectData = {
     id: project.id,
     title: project["english-title"],
@@ -179,7 +144,25 @@ function ProjectDetail() {
     progress: project.progress || 0,
     fieldName: majorProject?.["data-list"]?.[0]?.major?.field?.name || "",
     majorName: majorProject?.["data-list"]?.[0]?.major?.name || "",
-    team: teamMembers,
+    // Clean team mapping that matches TeamResearcher interface
+    team:
+      project.members?.map((member) => ({
+        id: member.id,
+        name: member["full-name"] || `Member ${member.id.substring(0, 8)}`,
+        role:
+          member.name === "Principal Investigator"
+            ? "Principal Investigator"
+            : member.name === "Leader"
+            ? "Leader"
+            : member.name === "Secretary"
+            ? "Secretary"
+            : "Researcher",
+        major: member.companyName || "Vietnam",
+        email: member.email || `None`,
+        avartar:
+          member["avatar-url"] ||
+          "https://c8.alamy.com/comp/R5RMNF/image-of-chemical-technology-abstract-background-science-wallpaper-with-school-chemistry-formulas-and-structures-R5RMNF.jpg",
+      })) || [],
     majors: project.majors || [],
     tags: project["project-tags"]?.map((tag) => tag.name) || [],
   };
@@ -267,7 +250,7 @@ function ProjectDetail() {
 
         {visibleTabs.includes("team") && (
           <TabsContent value="team" className="space-y-4">
-            <TeamTab team={projectData.team} />
+            <TeamTab team={projectData.team as []} />
           </TabsContent>
         )}
 

@@ -31,19 +31,26 @@ export type AuthInfo = {
   status: string;
 };
 
-export type Member = {
+export interface Member {
   id: string;
   code: string;
   groupName: string;
-  isOfficial: boolean;
-  expireDate: string;
-  createdAt: string;
-  status: string;
-  accountId: string;
-  roleId: string;
-  projectId: string;
-  appraisalCouncilId: string;
-};
+  isOfficial: boolean | null;
+  expireDate: string | null;
+  createdAt: string | null;
+  status: string | null;
+  accountId: string | null;
+  "full-name": string | null;
+  email: string | null;
+  phoneNumber: string | null;
+  address: string | null;
+  companyName: string | null;
+  "avatar-url": string | null;
+  roleId: string | null;
+  name: string | null;
+  projectId: string | null;
+  appraisalCouncilId: string | null;
+}
 
 export interface StaffLoginRequest {
   email: string;
