@@ -10,8 +10,8 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { OverviewTab, ProjectHeader, TeamTab } from "./components";
 import BudgetTab from "./components/BudgetTab";
+import DocumentTab from "./components/DocumentTab";
 import { useAuth } from "@/contexts/AuthContext";
-import ProgressTab from "./components/ProgressTab";
 import MilestoneTab from "./components/MilestoneTab";
 import { ProjectEnrollModal } from "./components/ProjectEnrollModal";
 import { ArrowLeft } from "lucide-react";
@@ -271,13 +271,13 @@ function ProjectDetail() {
 
         {visibleTabs.includes("documents") && (
           <TabsContent value="documents" className="space-y-4">
-            <ProgressTab />
+            <DocumentTab documents={project.documents || []} />
           </TabsContent>
         )}
 
         {visibleTabs.includes("budget") && (
           <TabsContent value="budget" className="space-y-4">
-            <BudgetTab />
+            <BudgetTab transactions={project.transactions || []} />
           </TabsContent>
         )}
       </Tabs>
