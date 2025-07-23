@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -18,147 +18,65 @@ import {
 } from "@/components/ui/table";
 import {
   DollarSign,
-  Receipt,
   CheckCircle,
   TrendingUp,
   PieChart,
+  Wallet,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { formatDate } from "@/utils";
-import {
-  getCategoryIcon,
-  getCategoryColor,
-  getStatusColor,
-  formatVND,
-} from "../shared/utils";
+import { getStatusColor, formatVND } from "../shared/utils";
+import { Transaction } from "@/types/budget";
 
-// Local types
-interface BudgetData {
-  total: number;
-  spent: number;
-  allocated: {
-    personnel: number;
-    equipment: number;
-    materials: number;
-    other: number;
-  };
-  expenses: ExpenseItem[];
+interface BudgetTabProps {
+  transactions: Transaction[];
 }
 
-interface ExpenseItem {
-  id: string;
-  category: "personnel" | "equipment" | "materials" | "other";
-  description: string;
-  amount: number;
-  date: string;
-  status: "Pending" | "Approved" | "Rejected";
-  receipt?: string;
-  approvedBy?: string;
-  feedback?: string;
-}
-
-// Utility functions
-// Only keep getCategoryIcon, getCategoryColor, getStatusColor as local helpers
-// Removed local helper function definitions
-
-const BudgetTab: React.FC = () => {
-  const [budget, setBudget] = useState<BudgetData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    loadBudgetData();
-  }, []);
-
-  const loadBudgetData = async () => {
-    setIsLoading(true);
-    try {
-      // Simulate API call
-      setTimeout(() => {
-        const mockBudget: BudgetData = {
-          total: 2880000000, // ~120K USD in VND
-          spent: 1872000000, // ~78K USD in VND
-          allocated: {
-            personnel: 1440000000, // ~60K USD in VND
-            equipment: 720000000, // ~30K USD in VND
-            materials: 360000000, // ~15K USD in VND
-            other: 120000000, // ~5K USD in VND
-          },
-          expenses: [
-            {
-              id: "1",
-              category: "personnel",
-              description: "Research Assistant Salary - Q1",
-              amount: 360000000, // ~15K USD in VND
-              date: "2024-03-31",
-              status: "Approved",
-              receipt: "salary-receipt-q1.pdf",
-              approvedBy: "Finance Department",
-            },
-            {
-              id: "2",
-              category: "equipment",
-              description: "High-Performance Computing Server",
-              amount: 600000000, // ~25K USD in VND
-              date: "2024-04-15",
-              status: "Approved",
-              receipt: "server-invoice.pdf",
-              approvedBy: "Finance Department",
-            },
-            {
-              id: "4",
-              category: "materials",
-              description: "Research Materials and Supplies",
-              amount: 67200000, // ~2.8K USD in VND
-              date: "2024-06-01",
-              status: "Rejected",
-              receipt: "materials-invoice.pdf",
-              feedback:
-                "Please provide more detailed breakdown of materials needed",
-            },
-          ],
-        };
-        setBudget(mockBudget);
-        setIsLoading(false);
-      }, 1000);
-    } catch (error) {
-      console.error("Error loading budget data:", error);
-      setIsLoading(false);
-    }
-  };
+const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
+  const [isLoading] = useState(false);
 
   const getStatusStats = () => {
-    if (!budget) return { approved: 0, pending: 0, rejected: 0 };
+    if (!transactions || transactions.length === 0)
+      return { approved: 0, pending: 0, rejected: 0 };
 
     return {
-      approved: budget.expenses.filter((e) => e.status === "Approved").length,
-      pending: budget.expenses.filter((e) => e.status === "Pending").length,
-      rejected: budget.expenses.filter((e) => e.status === "Rejected").length,
+      approved: transactions.filter(
+        (t) => t.status.toLowerCase() === "approved"
+      ).length,
+      pending: transactions.filter((t) => t.status.toLowerCase() === "pending")
+        .length,
+      rejected: transactions.filter(
+        (t) => t.status.toLowerCase() === "rejected"
+      ).length,
     };
   };
 
-  const getBudgetUtilization = () => {
-    if (!budget) return 0;
-    return Math.round((budget.spent / budget.total) * 100);
+  const getTotalAmount = () => {
+    if (!transactions || transactions.length === 0) return 0;
+    return transactions.reduce(
+      (total, transaction) => total + transaction.amount,
+      0
+    );
+  };
+
+  const getApprovedAmount = () => {
+    if (!transactions || transactions.length === 0) return 0;
+    return transactions
+      .filter((t) => t.status.toLowerCase() === "approved")
+      .reduce((total, transaction) => total + transaction.amount, 0);
   };
 
   const stats = getStatusStats();
-  const utilization = getBudgetUtilization();
+  const totalAmount = getTotalAmount();
+  const approvedAmount = getApprovedAmount();
+  const utilization =
+    totalAmount > 0 ? Math.round((approvedAmount / totalAmount) * 100) : 0;
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loading />
       </div>
-    );
-  }
-
-  if (!budget) {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center py-8">
-          <p className="text-muted-foreground">No budget data available.</p>
-        </CardContent>
-      </Card>
     );
   }
 
@@ -182,19 +100,19 @@ const BudgetTab: React.FC = () => {
             <DollarSign className="w-6 h-6 text-green-600" />
             <div>
               <p className="text-xl font-semibold text-gray-900">
-                {formatVND(budget.total)}
+                {formatVND(totalAmount)}
               </p>
-              <p className="text-sm text-gray-600 font-medium">Total Budget</p>
+              <p className="text-sm text-gray-600 font-medium">Total Amount</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
             <TrendingUp className="w-6 h-6 text-blue-600" />
             <div>
               <p className="text-xl font-bold text-gray-900">
-                {formatVND(budget.spent)}
+                {formatVND(approvedAmount)}
               </p>
               <p className="text-sm text-gray-600 font-medium">
-                Spent ({utilization}%)
+                Approved ({utilization}%)
               </p>
             </div>
           </div>
@@ -202,9 +120,9 @@ const BudgetTab: React.FC = () => {
             <PieChart className="w-6 h-6 text-purple-600" />
             <div>
               <p className="text-xl font-bold text-gray-900">
-                {formatVND(budget.total - budget.spent)}
+                {formatVND(totalAmount - approvedAmount)}
               </p>
-              <p className="text-sm text-gray-600 font-medium">Remaining</p>
+              <p className="text-sm text-gray-600 font-medium">Pending</p>
             </div>
           </div>
           <div className="flex items-center space-x-3 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
@@ -214,7 +132,7 @@ const BudgetTab: React.FC = () => {
                 {stats.approved}
               </p>
               <p className="text-sm text-gray-600 font-medium">
-                Approved Expenses
+                Approved Transactions
               </p>
             </div>
           </div>
@@ -222,133 +140,85 @@ const BudgetTab: React.FC = () => {
 
         <Separator className="my-4 sm:my-6" />
 
-        {/* Budget Allocation Section */}
+        {/* Transactions Table Section */}
         <div>
           <h3 className="text-sm sm:text-base font-medium text-gray-700 mb-3 sm:mb-4">
-            Budget Allocation
-          </h3>
-          <div className="space-y-3 sm:space-y-4">
-            {Object.entries(budget.allocated).map(([category, amount]) => {
-              const spent = budget.expenses
-                .filter(
-                  (e) => e.category === category && e.status === "Approved"
-                )
-                .reduce((sum, e) => sum + e.amount, 0);
-              const percentage = Math.round((spent / (amount as number)) * 100);
-
-              return (
-                <div key={category} className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg">
-                        {getCategoryIcon(category)}
-                      </span>
-                      <span className="font-medium capitalize text-sm sm:text-base">
-                        {category}
-                      </span>
-                      <Badge
-                        className={`${getCategoryColor(category)} text-xs`}
-                      >
-                        {formatVND(spent)} / {formatVND(amount as number)}
-                      </Badge>
-                    </div>
-                    <span className="text-xs sm:text-sm text-muted-foreground">
-                      {percentage}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full"
-                      style={{ width: `${Math.min(percentage, 100)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        <Separator className="my-4 sm:my-6" />
-
-        {/* Expenses Table Section */}
-        <div>
-          <h3 className="text-sm sm:text-base font-medium text-gray-700 mb-3 sm:mb-4">
-            Recent Expenses
+            Transactions
           </h3>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="min-w-[200px]">Description</TableHead>
-                  <TableHead className="min-w-[100px]">Category</TableHead>
+                  <TableHead className="min-w-[200px]">Transaction</TableHead>
+                  <TableHead className="min-w-[100px]">Type</TableHead>
                   <TableHead className="min-w-[80px]">Amount</TableHead>
                   <TableHead className="min-w-[100px]">Date</TableHead>
                   <TableHead className="min-w-[80px]">Status</TableHead>
                   <TableHead className="text-right min-w-[80px]">
-                    Receipt
+                    Payment Method
                   </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {budget.expenses.slice(0, 5).map((expense) => (
-                  <TableRow key={expense.id}>
+                {transactions.slice(0, 5).map((transaction) => (
+                  <TableRow key={transaction.code}>
                     <TableCell>
                       <div>
                         <p className="font-medium text-sm sm:text-base break-words">
-                          {expense.description}
+                          {transaction.title}
                         </p>
-                        {expense.feedback && (
-                          <p className="text-xs sm:text-sm text-red-600 mt-1">
-                            {expense.feedback}
+                        <p className="text-xs sm:text-sm text-muted-foreground">
+                          {transaction.code}
+                        </p>
+                        {transaction.description && (
+                          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                            {transaction.description}
                           </p>
                         )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center space-x-1 sm:space-x-2">
-                        <span className="text-sm">
-                          {getCategoryIcon(expense.category)}
-                        </span>
-                        <Badge
-                          className={`${getCategoryColor(
-                            expense.category
-                          )} text-xs`}
-                        >
-                          {expense.category}
-                        </Badge>
-                      </div>
+                      <Badge variant="outline" className="text-xs">
+                        {transaction.type}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {formatVND(expense.amount)}
+                      {formatVND(transaction.amount)}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {formatDate(expense.date)}
+                      {formatDate(transaction.createdAt)}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
-                        className={`${getStatusColor(expense.status)} text-xs`}
+                        className={`${getStatusColor(
+                          transaction.status
+                        )} text-xs`}
                       >
-                        {expense.status}
+                        {transaction.status}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      {expense.receipt && (
-                        <Badge variant="outline" className="text-xs">
-                          <Receipt className="w-3 h-3 mr-1" />
-                          <span className="hidden sm:inline">Receipt</span>
-                        </Badge>
-                      )}
+                      <Badge variant="outline" className="text-xs">
+                        {transaction.paymentMethod}
+                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
 
-            {budget.expenses.length === 0 && (
-              <p className="text-muted-foreground text-center py-8 text-sm sm:text-base">
-                No expenses recorded yet.
-              </p>
+            {transactions.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                <Wallet className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+                <p className="text-lg font-medium mb-2">
+                  No transactions found
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  No financial transactions have been recorded for this project
+                  yet.
+                </p>
+              </div>
             )}
           </div>
         </div>

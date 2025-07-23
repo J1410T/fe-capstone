@@ -6,8 +6,22 @@ import { calculateMilestoneProgress } from "../shared/utils";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { MilestoneCard, TaskDialog } from "./milestone";
+import { ProjectTask } from "@/types/task";
 
-const MilestoneTab: React.FC = () => {
+interface MilestoneTabProps {
+  milestones: Array<{
+    id: string;
+    name: string;
+    description: string | null;
+    deadline: string | null;
+    status: string;
+    tasks: ProjectTask[];
+  }>;
+}
+
+const MilestoneTab: React.FC<MilestoneTabProps> = ({
+  milestones: apiMilestones,
+}) => {
   const { user } = useAuth();
   const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [teamResearchers, setTeamResearchers] = useState<PIUser[]>([]);
@@ -63,135 +77,65 @@ const MilestoneTab: React.FC = () => {
 
   const loadMilestonesAndTasks = useCallback(async () => {
     try {
-      // Simulate API call
-      setTimeout(() => {
-        const mockMilestones: Milestone[] = [
-          {
-            id: "1",
-            name: "Literature Review",
-            description:
-              "Complete comprehensive literature review on machine learning applications",
-            deadline: "2024-03-31",
-            status: "Completed",
-            progress: 100,
-            tasks: [
-              {
-                id: "1",
-                title: "Research paper collection",
-                description:
-                  "Collect relevant research papers from the last 5 years",
-                assignedTo: "john.smith@example.com",
-                status: "Completed",
-                priority: "High",
-                dueDate: "2024-03-15",
-                createdAt: "2024-01-15T00:00:00Z",
-                completedAt: "2024-03-14T00:00:00Z",
-                evaluatedBy: "admin@example.com",
-                evaluation: "Excellent work on comprehensive paper collection",
-              },
-              {
-                id: "2",
-                title: "Literature analysis",
-                description:
-                  "Analyze and summarize key findings from collected papers",
-                assignedTo: "emily.chen@example.com",
-                status: "Completed",
-                priority: "High",
-                dueDate: "2024-03-30",
-                createdAt: "2024-03-16T00:00:00Z",
-                completedAt: "2024-03-28T00:00:00Z",
-              },
-            ],
-          },
-          {
-            id: "2",
-            name: "Data Collection",
-            description:
-              "Gather and prepare datasets for machine learning experiments",
-            deadline: "2024-06-30",
-            status: "In Progress",
-            progress: 60,
-            tasks: [
-              {
-                id: "3",
-                title: "Dataset identification",
-                description: "Identify suitable datasets for the research",
-                assignedTo: "john.smith@example.com",
-                status: "Completed",
-                priority: "High",
-                dueDate: "2024-05-15",
-                createdAt: "2024-04-01T00:00:00Z",
-                completedAt: "2024-05-10T00:00:00Z",
-              },
-              {
-                id: "4",
-                title: "Data preprocessing",
-                description: "Clean and preprocess the collected datasets",
-                assignedTo: "emily.chen@example.com",
-                status: "In Progress",
-                priority: "Medium",
-                dueDate: "2024-06-15",
-                createdAt: "2024-05-16T00:00:00Z",
-              },
-              {
-                id: "5",
-                title: "Data validation",
-                description: "Validate data quality and completeness",
-                status: "To Do",
-                priority: "Medium",
-                dueDate: "2024-06-25",
-                createdAt: "2024-05-16T00:00:00Z",
-              },
-            ],
-          },
-          {
-            id: "3",
-            name: "Algorithm Development",
-            description: "Develop and test machine learning algorithms",
-            deadline: "2024-09-30",
-            status: "Completed",
-            progress: 100,
-            tasks: [
-              {
-                id: "6",
-                title: "Algorithm design",
-                description: "Design machine learning algorithms",
-                assignedTo: "john.smith@example.com",
-                status: "Completed",
-                priority: "High",
-                dueDate: "2024-08-15",
-                createdAt: "2024-07-01T00:00:00Z",
-                completedAt: "2024-08-10T00:00:00Z",
-                evaluatedBy: "admin@example.com",
-                evaluation: "Excellent algorithm design and implementation",
-              },
-              {
-                id: "7",
-                title: "Algorithm testing",
-                description: "Test and validate algorithm performance",
-                assignedTo: "emily.chen@example.com",
-                status: "Completed",
-                priority: "High",
-                dueDate: "2024-09-15",
-                createdAt: "2024-08-16T00:00:00Z",
-                completedAt: "2024-09-10T00:00:00Z",
-              },
-            ],
-          },
-        ];
+      // Handle case where apiMilestones might be empty or undefined
+      if (!apiMilestones || apiMilestones.length === 0) {
+        setMilestones([]);
+        return;
+      }
 
-        // Calculate progress for each milestone
-        const milestonesWithProgress = mockMilestones.map((milestone) => ({
-          ...milestone,
-          progress: calculateMilestoneProgress(milestone.tasks),
-        }));
+      // Convert API milestones to component format
+      const convertedMilestones: Milestone[] = apiMilestones.map(
+        (apiMilestone) => {
+          // Convert ProjectTask[] to Task[]
+          const convertedTasks: Task[] = (apiMilestone.tasks || []).map(
+            (projectTask) => ({
+              id: projectTask.id,
+              title: projectTask.name,
+              description: projectTask.description,
+              assignedTo: undefined, // ProjectTask doesn't have direct assignee, would need member-tasks
+              status:
+                projectTask.status === "completed"
+                  ? "Completed"
+                  : projectTask.status === "in_progress"
+                  ? "In Progress"
+                  : "To Do",
+              priority:
+                projectTask.priority === "high"
+                  ? "High"
+                  : projectTask.priority === "medium"
+                  ? "Medium"
+                  : "Low",
+              dueDate: projectTask.endDate,
+              createdAt: projectTask.startDate,
+              completedAt: projectTask.deliveryDate,
+            })
+          );
 
-        setMilestones(milestonesWithProgress);
-      }, 1000);
+          return {
+            id: apiMilestone.id,
+            name: apiMilestone.name,
+            description: apiMilestone.description || "",
+            deadline: apiMilestone.deadline || "",
+            status:
+              apiMilestone.status === "completed"
+                ? "Completed"
+                : apiMilestone.status === "in_progress"
+                ? "In Progress"
+                : apiMilestone.status === "created"
+                ? "Not Started"
+                : "Not Started",
+            progress: calculateMilestoneProgress(convertedTasks),
+            tasks: convertedTasks,
+          };
+        }
+      );
+
+      setMilestones(convertedMilestones);
     } catch (error) {
       console.error("Error loading milestones:", error);
+      setMilestones([]);
     }
-  }, []);
+  }, [apiMilestones]);
 
   useEffect(() => {
     loadMilestonesAndTasks();

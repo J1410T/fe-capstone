@@ -63,20 +63,20 @@ export type Milestone = {
   id: string;
   code: string;
   title: string;
-  description: string;
-  objective: string;
-  cost: number;
-  startDate: string;
-  endDate: string;
+  description: string | null;
+  objective: string | null;
+  cost: number | 0;
+  startDate: string | null;
+  endDate: string | null;
   type: string;
   createdAt: string;
   status: string;
   projectId: string;
   creatorId: string;
-  project: string;
-  creator: Member;
-  evaluations: Evaluation[];
-  individualEvaluations: IndividualEvaluation[];
+  project: string | null;
+  creator: Member | null;
+  evaluations: Evaluation[] | null;
+  // individualEvaluations: IndividualEvaluation[];
   tasks: ProjectTask[];
 };
 
@@ -96,6 +96,19 @@ export type ProjectTask = {
   status: string;
   milestoneId: string;
   creatorId: string;
+  "member-tasks": MemberTask[] | null;
+};
+
+export type MemberTask = {
+  id: string;
+  progress: number;
+  overdue: number;
+  note: string;
+  deliveryDate: string;
+  joinedAt: string;
+  status: string;
+  memberId: string;
+  taskId: string;
 };
 
 export type Evaluation = {
