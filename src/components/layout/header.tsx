@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -44,6 +44,8 @@ import {
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import { useAccessToken, useAuthResponse } from "@/hooks/queries";
+import { getAuthResponse } from "@/utils/cookie-manager";
+import { AuthResponse } from "@/types/auth";
 
 const mockNotifications = [
   {
@@ -192,6 +194,11 @@ function Header() {
       )
     );
   };
+
+  useEffect(() => {
+    const result = getAuthResponse<AuthResponse>();
+    console.log("🍪 Auth response result:", result);
+  });
 
   const markAllAsRead = () => {
     setNotifications((prev) =>

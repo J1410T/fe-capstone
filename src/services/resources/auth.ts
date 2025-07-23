@@ -1,4 +1,4 @@
-import { AuthInfo, RoleItem } from "@/types/auth";
+import { AuthInfo, AuthResponse, RoleItem } from "@/types/auth";
 import { axiosClient, getAccessToken } from "../api";
 
 export const getMyAccountInfo = async () => {
@@ -48,6 +48,28 @@ export const getRoleById = async (roleId: string) => {
     return res.data;
   } catch (error) {
     console.error("getRoleById error:", error);
+    throw error;
+  }
+};
+
+export const setMyRole = async (roleName: string) => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("No access token available");
+    }
+
+    return await axiosClient.post<AuthResponse>(
+      `/auth/switch-role?selectedSwitchRole=${encodeURIComponent(roleName)}`,
+      {}, // Empty body as per curl example
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+  } catch (error) {
+    console.error("Error in setMyRole:", error);
     throw error;
   }
 };

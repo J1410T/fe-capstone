@@ -1,12 +1,13 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { AuthResponse } from "@/types/auth";
 
-import { getAuthResponse } from "@/utils/cookie-manager";
+import { getAuthResponse, setAuthResponse } from "@/utils/cookie-manager";
 import { getAccessToken } from "@/services";
 import {
   getAccountById,
   getMyAccountInfo,
   getRoleById,
+  setMyRole,
 } from "@/services/resources/auth";
 
 export function useAuthResponse() {
@@ -39,5 +40,24 @@ export function useRoleInfo(roleId: string) {
     queryKey: ["role-info", roleId],
     queryFn: () => getRoleById(roleId),
     enabled: !!roleId,
+  });
+}
+
+/**
+ * Mutation hook for switching user role
+ * Calls the API and updates the auth-response data
+ */
+export function useSetMyRole() {
+  return useMutation({
+    mutationFn: (roleName: string) => setMyRole(roleName),
+    onSuccess: (response) => {
+      // Update the auth-response data with the new response from API
+      if (response.data) {
+        setAuthResponse(response.data);
+      }
+    },
+    onError: (error) => {
+      console.error("Failed to switch role:", error);
+    },
   });
 }

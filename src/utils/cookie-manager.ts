@@ -188,7 +188,7 @@ export const getAuthResponse = <T>(): T | null => {
   //   COOKIE_KEYS.AUTH_RESPONSE
   // );
   const result = getEncryptedJSONCookie<T>(COOKIE_KEYS.AUTH_RESPONSE);
-  // console.log("🍪 Auth response result:", result ? "Found" : "Not found");
+  console.log("🍪 Auth response result:", result);
   return result;
 };
 
