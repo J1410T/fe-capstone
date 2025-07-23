@@ -79,16 +79,17 @@ function HomeBanner() {
         <div className="container max-w-screen-2xl flex flex-col items-center justify-center space-y-8 py-12 text-center z-10 px-4">
           <div className="space-y-6">
             <motion.h1
-              className="bg-gradient-to-br from-emerald-800 from-30% via-emerald-700 to-emerald-600 bg-clip-text text-4xl font-bold tracking-tight text-transparent sm:text-5xl md:text-6xl lg:text-7xl"
-              variants={fadeInUp}
-              initial="hidden"
-              animate="visible"
-              custom={0}
-            >
-              Manage Your Scientific Research
-              <br />
-              Projects Efficiently
-            </motion.h1>
+  className="bg-gradient-to-br from-emerald-800 from-30% via-emerald-700 to-emerald-600 bg-clip-text text-4xl font-bold tracking-wider text-transparent sm:text-5xl md:text-6xl lg:text-7xl"
+  variants={fadeInUp}
+  initial="hidden"
+  animate="visible"
+  custom={0}
+>
+  Manage Your Scientific Research
+  <br />
+  Projects Efficiently
+</motion.h1>
+
             <motion.p
               className="mx-auto max-w-[42rem] text-base sm:text-xl leading-normal text-gray-600"
               variants={fadeInUp}

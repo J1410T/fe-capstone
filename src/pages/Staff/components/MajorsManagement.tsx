@@ -1,86 +1,74 @@
 import React, { useState, useMemo } from "react";
-import {
-  useReactTable,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getSortedRowModel,
-  getPaginationRowModel,
-  ColumnDef,
-  flexRender,
-} from "@tanstack/react-table";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { ColumnDef } from "@tanstack/react-table";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Search,
-  Plus,
-  Edit,
-  Eye,
-  Trash2,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  BookOpen,
-  Calendar,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
-
-// Major interface
-interface Major {
-  id: string;
-  name: string;
-  field: {
-    id: string;
-    name: string;
-  };
-  createdAt?: string;
-  updatedAt?: string;
-  projectCount?: number;
-}
-
-// Field interface for selection
-interface Field {
-  id: string;
-  name: string;
-}
+import {
+  DataTable,
+  StatusBadge,
+  ActionButtons,
+  PageHeader,
+  FormDialog,
+  ConfirmDialog,
+  FilterBar,
+  createCommonActions,
+  type Major,
+  type Field,
+  type FormConfig,
+  type FilterConfig,
+  GENERAL_STATUSES,
+  formatDate,
+  generateId,
+} from "../shared";
 
 // Mock data for fields
 const mockFields: Field[] = [
-  { id: "5676c6a2-2b5f-4eaa-90cd-3f3d2f3145d1", name: "Engineering & Technology" },
-  { id: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6", name: "Information Technology" },
-  { id: "d0320c47-6f01-4e98-bcc0-96f3cb95730e", name: "Medical & Pharmaceutical Sciences" },
-  { id: "cf080a69-8860-4751-91f2-c320c767dfb2", name: "Social Sciences & Humanities" },
-  { id: "23011a33-a656-45e0-b128-f6a03b0c3aa1", name: "Economics & Management" },
+  {
+    id: "5676c6a2-2b5f-4eaa-90cd-3f3d2f3145d1",
+    name: "Engineering & Technology",
+    description: "Engineering and Technology fields",
+    status: "Active",
+    majorCount: 15,
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6",
+    name: "Information Technology",
+    description: "Information Technology fields",
+    status: "Active",
+    majorCount: 12,
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: "d0320c47-6f01-4e98-bcc0-96f3cb95730e",
+    name: "Medical & Pharmaceutical Sciences",
+    description: "Medical and Pharmaceutical Sciences fields",
+    status: "Active",
+    majorCount: 8,
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: "cf080a69-8860-4751-91f2-c320c767dfb2",
+    name: "Social Sciences & Humanities",
+    description: "Social Sciences and Humanities fields",
+    status: "Active",
+    majorCount: 10,
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
+  },
+  {
+    id: "23011a33-a656-45e0-b128-f6a03b0c3aa1",
+    name: "Economics & Management",
+    description: "Economics and Management fields",
+    status: "Active",
+    majorCount: 7,
+    createdAt: "2024-01-01T00:00:00Z",
+    updatedAt: "2024-01-01T00:00:00Z",
+  },
 ];
 
 // Mock data for majors
@@ -88,35 +76,38 @@ const mockMajors: Major[] = [
   {
     id: "818cb649-49ac-4920-a2fe-57d3b9f62217",
     name: "Accounting",
-    field: {
-      id: "23011a33-a656-45e0-b128-f6a03b0c3aa1",
-      name: "Economics & Management"
-    },
+    fieldId: "23011a33-a656-45e0-b128-f6a03b0c3aa1",
+    field: mockFields.find(
+      (f) => f.id === "23011a33-a656-45e0-b128-f6a03b0c3aa1"
+    )!,
+    status: "Active",
+    studentCount: 120,
     createdAt: "2024-01-15T10:30:00Z",
     updatedAt: "2024-01-15T10:30:00Z",
-    projectCount: 12,
   },
   {
     id: "57027f18-9e31-40e6-8df7-633bed2a0131",
     name: "Artificial Intelligence",
-    field: {
-      id: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6",
-      name: "Information Technology"
-    },
+    fieldId: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6",
+    field: mockFields.find(
+      (f) => f.id === "b0686776-c61c-44d2-a17a-8c05fc6fd7f6"
+    )!,
+    status: "Active",
+    studentCount: 85,
     createdAt: "2024-01-16T09:15:00Z",
     updatedAt: "2024-01-16T09:15:00Z",
-    projectCount: 8,
   },
   {
     id: "1762ef71-ae65-4ef6-8614-12cadbb2e5a7",
     name: "Automation Engineering",
-    field: {
-      id: "5676c6a2-2b5f-4eaa-90cd-3f3d2f3145d1",
-      name: "Engineering & Technology"
-    },
+    fieldId: "5676c6a2-2b5f-4eaa-90cd-3f3d2f3145d1",
+    field: mockFields.find(
+      (f) => f.id === "5676c6a2-2b5f-4eaa-90cd-3f3d2f3145d1"
+    )!,
+    status: "Active",
+    studentCount: 95,
     createdAt: "2024-01-17T14:20:00Z",
     updatedAt: "2024-01-17T14:20:00Z",
-    projectCount: 15,
   },
 ];
 
@@ -127,170 +118,155 @@ const MajorsManagement: React.FC = () => {
   const [selectedMajor, setSelectedMajor] = useState<Major | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     fieldId: "",
   });
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({
+    status: "all",
+    field: "all",
+  });
 
-  // Table columns definition with beautiful styling
+  // Table columns definition
   const columns = useMemo<ColumnDef<Major>[]>(
     () => [
       {
         accessorKey: "name",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-auto p-0 font-medium"
-          >
-            Major Name
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: "Major Name",
         cell: ({ row }) => (
           <div className="font-medium">{row.getValue("name")}</div>
         ),
       },
       {
         accessorKey: "field.name",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-auto p-0 font-medium"
-          >
-            Field
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        header: "Field",
         cell: ({ row }) => (
-          <Badge variant="secondary">
-            <BookOpen className="w-3 h-3 mr-1" />
-            {row.original.field.name}
-          </Badge>
+          <StatusBadge
+            status={row.original.field.name}
+            variant="type"
+            size="sm"
+          />
         ),
       },
       {
-        accessorKey: "projectCount",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-auto p-0 font-medium"
-          >
-            Projects
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
+        accessorKey: "studentCount",
+        header: "Students",
         cell: ({ row }) => (
-          <Badge variant="outline">
-            {row.getValue("projectCount") || 0} projects
-          </Badge>
+          <div className="text-center font-medium">
+            {row.getValue("studentCount")}
+          </div>
+        ),
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+          <StatusBadge status={row.getValue("status")} size="sm" />
         ),
       },
       {
         accessorKey: "createdAt",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-auto p-0 font-medium"
-          >
-            Created
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
+        header: "Created",
+        cell: ({ row }) => (
+          <div className="text-sm text-muted-foreground">
+            {formatDate(row.getValue("createdAt"))}
+          </div>
         ),
-        cell: ({ row }) => {
-          const date = row.getValue("createdAt") as string;
-          return (
-            <div className="flex items-center text-muted-foreground">
-              <Calendar className="w-4 h-4 mr-2" />
-              <span className="text-sm">
-                {date ? new Date(date).toLocaleDateString() : "-"}
-              </span>
-            </div>
-          );
-        },
       },
       {
         id: "actions",
-        header: () => <span className="font-medium">Actions</span>,
-        cell: ({ row }) => (
-          <div className="flex items-center space-x-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleView(row.original)}
-            >
-              <Eye className="w-4 h-4 mr-1" />
-              View
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleEdit(row.original)}
-            >
-              <Edit className="w-4 h-4 mr-1" />
-              Edit
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => handleDelete(row.original)}
-              className="text-destructive hover:text-destructive"
-            >
-              <Trash2 className="w-4 h-4 mr-1" />
-              Delete
-            </Button>
-          </div>
-        ),
+        header: "Actions",
+        cell: ({ row }) => {
+          const major = row.original;
+          return (
+            <ActionButtons
+              actions={[
+                createCommonActions.view(() => handleView(major)),
+                createCommonActions.edit(() => handleEdit(major)),
+                createCommonActions.delete(() => handleDelete(major)),
+              ]}
+            />
+          );
+        },
       },
     ],
     []
   );
 
-  // TanStack table setup
-  const table = useReactTable({
-    data: majors,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    state: {
-      globalFilter,
-    },
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: (row, _columnId, filterValue) => {
-      const major = row.original;
-      const searchString = `${major.name} ${major.field.name}`.toLowerCase();
-      return searchString.includes(filterValue.toLowerCase());
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10,
+  // Form configuration
+  const formConfig: FormConfig = {
+    title: selectedMajor ? "Edit Major" : "Create Major",
+    description: selectedMajor
+      ? "Update major information"
+      : "Add a new major to the system",
+    fields: [
+      {
+        name: "name",
+        label: "Major Name",
+        type: "text",
+        required: true,
+        placeholder: "Enter major name",
       },
-    },
-  });
+      {
+        name: "fieldId",
+        label: "Field",
+        type: "select",
+        required: true,
+        placeholder: "Select a field",
+        options: fields.map((field) => ({
+          value: field.id,
+          label: field.name,
+        })),
+      },
+    ],
+  };
 
+  // Filter configuration
+  const filterConfig: FilterConfig[] = [
+    {
+      key: "status",
+      label: "Status",
+      type: "select",
+      options: GENERAL_STATUSES.map((status) => ({
+        value: status.value,
+        label: status.label,
+      })),
+    },
+    {
+      key: "field",
+      label: "Field",
+      type: "select",
+      options: fields.map((field) => ({
+        value: field.id,
+        label: field.name,
+      })),
+    },
+  ];
+
+  // Handler functions
   const handleCreate = () => {
+    setSelectedMajor(null);
     setFormData({ name: "", fieldId: "" });
+    setFormErrors({});
     setIsCreateDialogOpen(true);
   };
 
   const handleView = (major: Major) => {
     setSelectedMajor(major);
-    setIsViewDialogOpen(true);
+    // For view, we could open a detailed view dialog or navigate to a detail page
+    toast.info(`Viewing ${major.name}`);
   };
 
   const handleEdit = (major: Major) => {
     setSelectedMajor(major);
     setFormData({
       name: major.name,
-      fieldId: major.field.id,
+      fieldId: major.fieldId,
     });
+    setFormErrors({});
     setIsEditDialogOpen(true);
   };
 
@@ -299,374 +275,198 @@ const MajorsManagement: React.FC = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleSave = () => {
-    if (!formData.name.trim() || !formData.fieldId) {
-      toast.error("Major name and field are required");
+  const validateForm = () => {
+    const errors: Record<string, string> = {};
+
+    if (!formData.name.trim()) {
+      errors.name = "Major name is required";
+    }
+
+    if (!formData.fieldId) {
+      errors.fieldId = "Field selection is required";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
       return;
     }
 
-    const selectedField = fields.find(f => f.id === formData.fieldId);
-    if (!selectedField) {
-      toast.error("Invalid field selected");
-      return;
-    }
+    setIsSubmitting(true);
 
-    if (selectedMajor) {
-      // Update existing major
-      setMajors(prev =>
-        prev.map(major =>
-          major.id === selectedMajor.id
-            ? {
-                ...major,
-                name: formData.name,
-                field: selectedField,
-                updatedAt: new Date().toISOString(),
-              }
-            : major
-        )
-      );
-      toast.success("Major updated successfully");
-      setIsEditDialogOpen(false);
-    } else {
-      // Create new major
-      const newMajor: Major = {
-        id: `major-${Date.now()}`,
-        name: formData.name,
-        field: selectedField,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        projectCount: 0,
-      };
-      setMajors(prev => [...prev, newMajor]);
-      toast.success("Major created successfully");
-      setIsCreateDialogOpen(false);
-    }
+    try {
+      const selectedField = fields.find((f) => f.id === formData.fieldId)!;
 
-    setSelectedMajor(null);
-    setFormData({ name: "", fieldId: "" });
+      if (selectedMajor) {
+        // Update existing major
+        setMajors((prev) =>
+          prev.map((major) =>
+            major.id === selectedMajor.id
+              ? {
+                  ...major,
+                  name: formData.name,
+                  fieldId: formData.fieldId,
+                  field: selectedField,
+                  updatedAt: new Date().toISOString(),
+                }
+              : major
+          )
+        );
+        toast.success("Major updated successfully");
+        setIsEditDialogOpen(false);
+      } else {
+        // Create new major
+        const newMajor: Major = {
+          id: generateId(),
+          name: formData.name,
+          fieldId: formData.fieldId,
+          field: selectedField,
+          status: "Active",
+          studentCount: 0,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        setMajors((prev) => [...prev, newMajor]);
+        toast.success("Major created successfully");
+        setIsCreateDialogOpen(false);
+      }
+
+      setSelectedMajor(null);
+      setFormData({ name: "", fieldId: "" });
+      setFormErrors({});
+    } catch {
+      toast.error("An error occurred while saving the major");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleDeleteConfirm = () => {
     if (selectedMajor) {
-      setMajors(prev => prev.filter(major => major.id !== selectedMajor.id));
+      setMajors((prev) =>
+        prev.filter((major) => major.id !== selectedMajor.id)
+      );
       toast.success("Major deleted successfully");
       setIsDeleteDialogOpen(false);
       setSelectedMajor(null);
     }
   };
 
-  // Group majors by field for statistics
-  const majorsByField = useMemo(() => {
-    const grouped = majors.reduce((acc, major) => {
-      const fieldName = major.field.name;
-      if (!acc[fieldName]) {
-        acc[fieldName] = 0;
-      }
-      acc[fieldName]++;
-      return acc;
-    }, {} as Record<string, number>);
-    return grouped;
-  }, [majors]);
+  const handleFormChange = (field: string, value: unknown) => {
+    setFormData((prev) => ({ ...prev, [field]: value as string }));
+    // Clear error when user starts typing
+    if (formErrors[field]) {
+      setFormErrors((prev) => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilterValues((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const handleClearFilters = () => {
+    setFilterValues({ status: "all", field: "all" });
+  };
+
+  // Filter majors based on current filter values
+  const filteredMajors = useMemo(() => {
+    return majors.filter((major) => {
+      const statusMatch =
+        filterValues.status === "all" || major.status === filterValues.status;
+      const fieldMatch =
+        filterValues.field === "all" || major.fieldId === filterValues.field;
+      return statusMatch && fieldMatch;
+    });
+  }, [majors, filterValues]);
 
   return (
     <div className="space-y-6">
-      {/* Header and Controls */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Majors Management</h2>
-          <p className="text-muted-foreground">
-            Manage academic majors and their field associations
-          </p>
-        </div>
-        <Button onClick={handleCreate}>
-          <Plus className="w-4 h-4 mr-2" />
-          Add Major
-        </Button>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        title="Majors Management"
+        description="Manage academic majors and their field associations"
+        badge={{ text: `${majors.length} majors`, variant: "secondary" }}
+        actions={
+          <Button onClick={handleCreate}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Major
+          </Button>
+        }
+      />
 
-      {/* Search and Filters */}
+      {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle>Search & Filter</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <Input
-                  placeholder="Search majors..."
-                  value={globalFilter}
-                  onChange={(e) => setGlobalFilter(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="flex space-x-2">
-              <Badge variant="outline">
-                {majors.length} total majors
-              </Badge>
-              {Object.entries(majorsByField).slice(0, 3).map(([field, count]) => (
-                <Badge key={field} variant="outline" className="bg-blue-50 text-blue-700">
-                  {field}: {count}
-                </Badge>
-              ))}
-            </div>
-          </div>
+        <CardContent className="pt-6">
+          <FilterBar
+            filters={filterConfig}
+            values={filterValues}
+            onChange={handleFilterChange}
+            onClear={handleClearFilters}
+          />
         </CardContent>
       </Card>
 
-      {/* Majors Table with shadcn/ui styling */}
-      <Card>
-        <CardContent className="p-0">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  {table.getHeaderGroups().map((headerGroup) =>
-                    headerGroup.headers.map((header) => (
-                      <TableHead key={header.id}>
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    ))
-                  )}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows?.length ? (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow
-                      key={row.id}
-                      data-state={row.getIsSelected() && "selected"}
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={columns.length}
-                      className="h-24 text-center"
-                    >
-                      <div className="flex flex-col items-center justify-center space-y-2">
-                        <BookOpen className="w-8 h-8 text-gray-400" />
-                        <p className="text-lg font-medium">No majors found</p>
-                        <p className="text-sm text-gray-400">
-                          {globalFilter ? "Try adjusting your search criteria" : "Get started by adding your first major"}
-                        </p>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+      {/* Majors Table */}
+      <DataTable
+        data={filteredMajors}
+        columns={columns}
+        searchable={true}
+        searchPlaceholder="Search majors..."
+        searchFields={["name", "field.name"]}
+        globalFilter={globalFilter}
+        onGlobalFilterChange={setGlobalFilter}
+        emptyMessage="No majors found. Get started by adding your first major."
+      />
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between px-4 py-3 border-t">
-            <div className="text-sm text-muted-foreground">
-              Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
-              {Math.min(
-                (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                table.getFilteredRowModel().rows.length
-              )}{" "}
-              of {table.getFilteredRowModel().rows.length} entries
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Previous
-              </Button>
-
-              <div className="flex items-center space-x-1">
-                {Array.from({ length: table.getPageCount() }, (_, i) => i).map((pageIndex) => (
-                  <Button
-                    key={pageIndex}
-                    variant={table.getState().pagination.pageIndex === pageIndex ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => table.setPageIndex(pageIndex)}
-                    className="h-8 w-8 p-0"
-                  >
-                    {pageIndex + 1}
-                  </Button>
-                ))}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Create/Edit Dialog */}
-      <Dialog open={isCreateDialogOpen || isEditDialogOpen} onOpenChange={(open) => {
-        if (!open) {
+      {/* Form Dialog */}
+      <FormDialog
+        open={isCreateDialogOpen || isEditDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsCreateDialogOpen(false);
+            setIsEditDialogOpen(false);
+            setSelectedMajor(null);
+            setFormData({ name: "", fieldId: "" });
+            setFormErrors({});
+          }
+        }}
+        config={formConfig}
+        data={formData}
+        errors={formErrors}
+        loading={isSubmitting}
+        onSubmit={handleFormSubmit}
+        onCancel={() => {
           setIsCreateDialogOpen(false);
           setIsEditDialogOpen(false);
           setSelectedMajor(null);
           setFormData({ name: "", fieldId: "" });
-        }
-      }}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {selectedMajor ? "Edit Major" : "Create New Major"}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedMajor
-                ? "Update the major information below."
-                : "Enter the details for the new major."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="name">Major Name</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Enter major name"
-              />
-            </div>
-            <div>
-              <Label htmlFor="field">Field</Label>
-              <Select
-                value={formData.fieldId}
-                onValueChange={(value) => setFormData({ ...formData, fieldId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a field" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fields.map((field) => (
-                    <SelectItem key={field.id} value={field.id}>
-                      {field.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsCreateDialogOpen(false);
-                setIsEditDialogOpen(false);
-                setSelectedMajor(null);
-                setFormData({ name: "", fieldId: "" });
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>
-              {selectedMajor ? "Update" : "Create"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* View Dialog */}
-      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Major Details</DialogTitle>
-          </DialogHeader>
-          {selectedMajor && (
-            <div className="space-y-4">
-              <div>
-                <Label>Major Name</Label>
-                <p className="text-sm font-medium">{selectedMajor.name}</p>
-              </div>
-              <div>
-                <Label>Field</Label>
-                <div className="mt-1">
-                  <Badge variant="secondary">
-                    <BookOpen className="w-3 h-3 mr-1" />
-                    {selectedMajor.field.name}
-                  </Badge>
-                </div>
-              </div>
-              <div>
-                <Label>Associated Projects</Label>
-                <p className="text-sm">{selectedMajor.projectCount || 0} projects</p>
-              </div>
-              <div>
-                <Label>Created</Label>
-                <p className="text-sm">
-                  {selectedMajor.createdAt
-                    ? new Date(selectedMajor.createdAt).toLocaleString()
-                    : "-"}
-                </p>
-              </div>
-              <div>
-                <Label>Last Updated</Label>
-                <p className="text-sm">
-                  {selectedMajor.updatedAt
-                    ? new Date(selectedMajor.updatedAt).toLocaleString()
-                    : "-"}
-                </p>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          setFormErrors({});
+        }}
+        onChange={handleFormChange}
+        mode={selectedMajor ? "edit" : "create"}
+      />
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Major</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete "{selectedMajor?.name}"? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteConfirm}
-            >
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Delete Major"
+        description={`Are you sure you want to delete "${selectedMajor?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        variant="destructive"
+        loading={isSubmitting}
+        onConfirm={handleDeleteConfirm}
+        onCancel={() => {
+          setIsDeleteDialogOpen(false);
+          setSelectedMajor(null);
+        }}
+      />
     </div>
   );
 };

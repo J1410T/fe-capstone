@@ -16,7 +16,6 @@ import {
   LayoutDashboard,
   FolderOpen,
   Calendar,
-  CheckSquare,
   BellRing,
   Clock,
   MessageSquare,
@@ -97,7 +96,6 @@ const mockNotifications = [
 const menuItemsByRole = {
   [UserRole.RESEARCHER]: [
     { name: "Home", path: "/home", icon: Home },
-    { name: "Dashboard", path: "/researcher/dashboard", icon: LayoutDashboard },
     { name: "Projects", path: "/researcher/projects", icon: FolderOpen },
     { name: "Tasks", path: "/researcher/tasks", icon: ClipboardList },
     { name: "My Projects", path: "/researcher/my-projects", icon: Briefcase },
@@ -114,10 +112,11 @@ const menuItemsByRole = {
     { name: "History", path: "/host/history", icon: History },
   ],
   [UserRole.PRINCIPAL_INVESTIGATOR]: [
-    { name: "Dashboard", path: "/pi/dashboard", icon: LayoutDashboard },
+    { name: "Home", path: "/home", icon: Home },
     { name: "Projects", path: "/pi/projects", icon: FolderOpen },
     { name: "My Projects", path: "/pi/my-projects", icon: Briefcase },
     { name: "Meetings", path: "/pi/meetings", icon: Calendar },
+    { name: "Forms", path: "/pi/forms", icon: FileText },
     // { name: "Progress", path: "/pi/progress-reports", icon: FileText },
   ],
   [UserRole.APPRAISAL_COUNCIL]: [
@@ -129,7 +128,6 @@ const menuItemsByRole = {
     },
     { name: "Evaluations", path: "/council/evaluations", icon: FileText },
     { name: "Meetings", path: "/council/meetings", icon: Calendar },
-    { name: "Approvals", path: "/council/approvals", icon: CheckSquare },
   ],
   [UserRole.STAFF]: [
     { name: "Home", path: "/home", icon: Home },
@@ -434,7 +432,7 @@ function Header() {
                   className="flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
                   <LogOut className="mr-3 h-4 w-4 text-red-600" />
-                  <span>Sign Out</span>
+                  <span className="text-red-600">Sign Out</span>
                 </DropdownMenuItem>
               </div>
             </DropdownMenuContent>
@@ -549,7 +547,7 @@ function Header() {
                 </Button>
                 <Button
                   variant="ghost"
-                  className="w-full justify-start h-12 px-3 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg font-medium transition-colors"
+                  className="flex items-center px-3 py-2 text-sm font-medium rounded-md cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
                   onClick={() => {
                     logout();
                     setIsOpen(false);
@@ -557,9 +555,9 @@ function Header() {
                 >
                   <div className="flex items-center space-x-3">
                     <div className="flex-shrink-0 p-1">
-                      <LogOut className="h-5 w-5" />
+                      <LogOut className="h-5 w-5 text-red-600" />
                     </div>
-                    <span>Sign Out</span>
+                    <span className="text-red-600">Sign Out</span>
                   </div>
                 </Button>
               </div>

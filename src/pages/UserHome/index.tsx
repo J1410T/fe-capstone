@@ -1,5 +1,6 @@
 import HomeBanner from "./components/banner";
 import FeaturedProjects from "./components/featured-projects";
+import AboutUs from "./components/about-us";
 import Footer from "@/components/layout/footer";
 
 function UserHome() {
@@ -8,6 +9,7 @@ function UserHome() {
       <main className="flex-grow">
         <HomeBanner />
         <FeaturedProjects />
+        <AboutUs />
       </main>
       <Footer />
     </div>

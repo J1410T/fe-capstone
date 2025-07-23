@@ -1,10 +1,9 @@
 // Principal Investigator Pages
-export { default as Profile } from "./Profile";
 export { default as ProjectRegistration } from "./ProjectRegistration";
-export { default as Dashboard } from "./Dashboard";
+export { default as MyProjects } from "./MyProjects";
 
-// Default export (Dashboard as main page)
-export { default } from "./Dashboard";
+// Default export (MyProjects as main page)
+export { default } from "./MyProjects";
 
 // Shared components and utilities
 export * from "./shared/types";

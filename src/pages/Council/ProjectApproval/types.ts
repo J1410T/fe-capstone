@@ -85,6 +85,16 @@ export interface TeamResearcher {
   workUnit: string;
   contribution: string;
   workDuration: string;
+  documents?: Document[];
+}
+
+export interface Document {
+  id: string;
+  title: string;
+  type: string;
+  description?: string;
+  uploadedDate: string;
+  fileSize?: string;
 }
 
 export interface HostInstitution {
@@ -99,9 +109,10 @@ export interface EvaluationData {
   secretary: Secretary;
   teamResearchers: TeamResearcher[];
   hostInstitution: HostInstitution;
+  proposalDocuments?: Document[];
 }
 
-// Combined Applicant Data
+// Combined Applicant Data (represents proposals submitted to PI)
 export interface ApplicantData {
   id: number;
   name: string;
@@ -115,6 +126,11 @@ export interface ApplicantData {
   status: string;
   appliedFor: number;
   appliedDate: string;
+  // Proposal-specific information
+  proposalTitle: string;
+  proposalSummary: string;
+  proposalType: string;
+  submittedBy: string;
   profileData: ProfileData;
   evaluationData: EvaluationData;
 }

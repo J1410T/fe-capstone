@@ -29,6 +29,7 @@ import {
 import { format } from "date-fns";
 import { validateEmail, validateRequired } from "@/utils";
 import { useMyAccountInfo } from "@/hooks/queries";
+import { ScientificCV } from "@/components/profile/ScientificCV";
 
 const Profile: React.FC = () => {
   const { data: accountInfo } = useMyAccountInfo();
@@ -439,6 +440,9 @@ const Profile: React.FC = () => {
 
           {/* Right Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Scientific CV Section */}
+            <ScientificCV className="border-0 shadow-lg bg-white" />
+
             {/* Personal Information */}
             <Card className="border-0 shadow-lg bg-white">
               <CardHeader className="bg-gray-50 rounded-t-lg border-b border-gray-100">

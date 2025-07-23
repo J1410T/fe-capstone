@@ -21,9 +21,11 @@ import {
   ChevronRight,
   BookOpen,
   Building2,
+  CalendarDays,
 } from "lucide-react";
 import { UI_CONSTANTS } from "@/lib/ui-constants";
-import { formatVND } from "@/utils";
+import { formatVND } from "../shared";
+import StaffMeetings from "./StaffMeetings";
 
 // Project interface based on the provided data structure
 interface Project {
@@ -59,8 +61,10 @@ const mockProjects: Project[] = [
   {
     id: "7a117ebd-e5c0-459f-a977-075b492a9aa1",
     code: "PRJ015",
-    "english-title": "BookStreet - The application helps people look up information about books for Ho Chi Minh city bookstreet company",
-    "vietnamese-title": "BookStreet - Ứng dụng giúp mọi người tra cứu thông tin về sách cho công ty đường sách TP.HCM",
+    "english-title":
+      "BookStreet - The application helps people look up information about books for Ho Chi Minh city bookstreet company",
+    "vietnamese-title":
+      "BookStreet - Ứng dụng giúp mọi người tra cứu thông tin về sách cho công ty đường sách TP.HCM",
     language: "Vietnamese",
     category: "basic",
     type: "school level",
@@ -95,17 +99,17 @@ const mockProjects: Project[] = [
         name: "Software Engineering",
         field: {
           id: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6",
-          name: "Information Technology"
-        }
+          name: "Information Technology",
+        },
       },
       {
         id: "b32a4b6e-3d34-4f79-a345-6b7c08e28474",
         name: "Computer Networks & Data Communication",
         field: {
           id: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6",
-          name: "Information Technology"
-        }
-      }
+          name: "Information Technology",
+        },
+      },
     ],
     "project-tags": [
       { name: "task management" },
@@ -115,7 +119,7 @@ const mockProjects: Project[] = [
       { name: "project" },
       { name: "task" },
       { name: "project management" },
-      { name: "AI plagmarism" }
+      { name: "AI plagmarism" },
     ],
   },
   {
@@ -139,25 +143,27 @@ const mockProjects: Project[] = [
         name: "Artificial Intelligence",
         field: {
           id: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6",
-          name: "Information Technology"
-        }
+          name: "Information Technology",
+        },
       },
       {
         id: "43933e55-b97a-4920-ae62-f1b3c3c111db",
         name: "Psychology",
         field: {
           id: "cf080a69-8860-4751-91f2-c320c767dfb2",
-          name: "Social Sciences & Humanities"
-        }
-      }
+          name: "Social Sciences & Humanities",
+        },
+      },
     ],
     "project-tags": [],
   },
   {
     id: "a07cbf07-c165-459c-b99f-2023cbe32653",
     code: "PRJ007",
-    "english-title": "FUC - Capstone management system for FPT university teachers and students",
-    "vietnamese-title": "FUC - Hệ thống quản lý đồ án cho giảng viên và sinh viên của trường đại học FPT",
+    "english-title":
+      "FUC - Capstone management system for FPT university teachers and students",
+    "vietnamese-title":
+      "FUC - Hệ thống quản lý đồ án cho giảng viên và sinh viên của trường đại học FPT",
     language: "English",
     category: "basic",
     type: "school level",
@@ -283,15 +289,20 @@ const StaffDashboard: React.FC = () => {
   // Calculate project statistics
   const projectStats = useMemo(() => {
     const total = mockProjects.length;
-    const created = mockProjects.filter(p => p.status === "created").length;
-    const ongoing = mockProjects.filter(p => p.status === "ongoing").length;
-    const completed = mockProjects.filter(p => p.status === "completed").length;
-    const avgProgress = mockProjects.reduce((sum, p) => sum + p.progress, 0) / total;
+    const created = mockProjects.filter((p) => p.status === "created").length;
+    const ongoing = mockProjects.filter((p) => p.status === "ongoing").length;
+    const completed = mockProjects.filter(
+      (p) => p.status === "completed"
+    ).length;
+    const avgProgress =
+      mockProjects.reduce((sum, p) => sum + p.progress, 0) / total;
 
     // Calculate progress distribution
-    const lowProgress = mockProjects.filter(p => p.progress < 30).length;
-    const mediumProgress = mockProjects.filter(p => p.progress >= 30 && p.progress < 70).length;
-    const highProgress = mockProjects.filter(p => p.progress >= 70).length;
+    const lowProgress = mockProjects.filter((p) => p.progress < 30).length;
+    const mediumProgress = mockProjects.filter(
+      (p) => p.progress >= 30 && p.progress < 70
+    ).length;
+    const highProgress = mockProjects.filter((p) => p.progress >= 70).length;
 
     return {
       total,
@@ -301,14 +312,18 @@ const StaffDashboard: React.FC = () => {
       avgProgress: Math.round(avgProgress),
       lowProgress,
       mediumProgress,
-      highProgress
+      highProgress,
     };
   }, []);
 
   // Get recent projects (last 3)
   const recentProjects = useMemo(() => {
     return mockProjects
-      .sort((a, b) => new Date(b["created-at"]).getTime() - new Date(a["created-at"]).getTime())
+      .sort(
+        (a, b) =>
+          new Date(b["created-at"]).getTime() -
+          new Date(a["created-at"]).getTime()
+      )
       .slice(0, 3);
   }, []);
 
@@ -483,7 +498,7 @@ const StaffDashboard: React.FC = () => {
         onValueChange={setActiveTab}
         className="space-y-4"
       >
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview" className="flex items-center space-x-2">
             <BarChart3 className="w-4 h-4" />
             <span>Overview</span>
@@ -495,6 +510,10 @@ const StaffDashboard: React.FC = () => {
           <TabsTrigger value="users" className="flex items-center space-x-2">
             <UserCheck className="w-4 h-4" />
             <span>Users</span>
+          </TabsTrigger>
+          <TabsTrigger value="meetings" className="flex items-center space-x-2">
+            <CalendarDays className="w-4 h-4" />
+            <span>Meetings</span>
           </TabsTrigger>
           <TabsTrigger value="finance" className="flex items-center space-x-2">
             <DollarSign className="w-4 h-4" />
@@ -519,43 +538,74 @@ const StaffDashboard: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Low Progress (&lt;30%)</span>
+                    <span className="text-sm font-medium">
+                      Low Progress (&lt;30%)
+                    </span>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="bg-red-100 text-red-800">
+                      <Badge
+                        variant="secondary"
+                        className="bg-red-100 text-red-800"
+                      >
                         {projectStats.lowProgress}
                       </Badge>
                       <div className="w-20 bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-red-500 h-2 rounded-full"
-                          style={{ width: `${(projectStats.lowProgress / projectStats.total) * 100}%` }}
+                          style={{
+                            width: `${
+                              (projectStats.lowProgress / projectStats.total) *
+                              100
+                            }%`,
+                          }}
                         ></div>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Medium Progress (30-70%)</span>
+                    <span className="text-sm font-medium">
+                      Medium Progress (30-70%)
+                    </span>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                      <Badge
+                        variant="secondary"
+                        className="bg-yellow-100 text-yellow-800"
+                      >
                         {projectStats.mediumProgress}
                       </Badge>
                       <div className="w-20 bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-yellow-500 h-2 rounded-full"
-                          style={{ width: `${(projectStats.mediumProgress / projectStats.total) * 100}%` }}
+                          style={{
+                            width: `${
+                              (projectStats.mediumProgress /
+                                projectStats.total) *
+                              100
+                            }%`,
+                          }}
                         ></div>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">High Progress (&gt;70%)</span>
+                    <span className="text-sm font-medium">
+                      High Progress (&gt;70%)
+                    </span>
                     <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      <Badge
+                        variant="secondary"
+                        className="bg-green-100 text-green-800"
+                      >
                         {projectStats.highProgress}
                       </Badge>
                       <div className="w-20 bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-green-500 h-2 rounded-full"
-                          style={{ width: `${(projectStats.highProgress / projectStats.total) * 100}%` }}
+                          style={{
+                            width: `${
+                              (projectStats.highProgress / projectStats.total) *
+                              100
+                            }%`,
+                          }}
                         ></div>
                       </div>
                     </div>
@@ -575,19 +625,28 @@ const StaffDashboard: React.FC = () => {
               <CardContent>
                 <div className="space-y-4">
                   {recentProjects.map((project) => (
-                    <div key={project.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div
+                      key={project.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
                           {project["english-title"]}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {project.code} • {getPrincipalInvestigator(project["creator-id"])}
+                          {project.code} •{" "}
+                          {getPrincipalInvestigator(project["creator-id"])}
                         </p>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="text-right">
-                          <p className="text-xs text-muted-foreground">{project.progress}%</p>
-                          <Progress value={project.progress} className="w-16 h-1" />
+                          <p className="text-xs text-muted-foreground">
+                            {project.progress}%
+                          </p>
+                          <Progress
+                            value={project.progress}
+                            className="w-16 h-1"
+                          />
                         </div>
                         <ChevronRight className="w-4 h-4 text-gray-400" />
                       </div>
@@ -612,22 +671,34 @@ const StaffDashboard: React.FC = () => {
                   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-blue-100 rounded-full">
                     <FolderOpen className="w-8 h-8 text-blue-600" />
                   </div>
-                  <p className="text-2xl font-bold text-blue-600">{projectStats.created}</p>
-                  <p className="text-sm text-muted-foreground">Created Projects</p>
+                  <p className="text-2xl font-bold text-blue-600">
+                    {projectStats.created}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Created Projects
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-yellow-100 rounded-full">
                     <Activity className="w-8 h-8 text-yellow-600" />
                   </div>
-                  <p className="text-2xl font-bold text-yellow-600">{projectStats.ongoing}</p>
-                  <p className="text-sm text-muted-foreground">Ongoing Projects</p>
+                  <p className="text-2xl font-bold text-yellow-600">
+                    {projectStats.ongoing}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Ongoing Projects
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-green-100 rounded-full">
                     <CheckCircle className="w-8 h-8 text-green-600" />
                   </div>
-                  <p className="text-2xl font-bold text-green-600">{projectStats.completed}</p>
-                  <p className="text-sm text-muted-foreground">Completed Projects</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {projectStats.completed}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Completed Projects
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -648,32 +719,60 @@ const StaffDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-blue-600">{projectStats.total}</p>
-                      <p className="text-sm text-muted-foreground">Total Projects</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {projectStats.total}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Projects
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">{milestoneStats.completedMilestones}</p>
-                      <p className="text-sm text-muted-foreground">Completed Milestones</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {milestoneStats.completedMilestones}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Completed Milestones
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Milestone Progress</span>
-                      <span>{Math.round((milestoneStats.completedMilestones / milestoneStats.totalMilestones) * 100)}%</span>
+                      <span>
+                        {Math.round(
+                          (milestoneStats.completedMilestones /
+                            milestoneStats.totalMilestones) *
+                            100
+                        )}
+                        %
+                      </span>
                     </div>
-                    <Progress value={(milestoneStats.completedMilestones / milestoneStats.totalMilestones) * 100} className="h-2" />
+                    <Progress
+                      value={
+                        (milestoneStats.completedMilestones /
+                          milestoneStats.totalMilestones) *
+                        100
+                      }
+                      className="h-2"
+                    />
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-xs">
                     <div className="text-center">
-                      <p className="font-semibold text-yellow-600">{milestoneStats.pendingMilestones}</p>
+                      <p className="font-semibold text-yellow-600">
+                        {milestoneStats.pendingMilestones}
+                      </p>
                       <p className="text-muted-foreground">Pending</p>
                     </div>
                     <div className="text-center">
-                      <p className="font-semibold text-green-600">{milestoneStats.approvedMilestones}</p>
+                      <p className="font-semibold text-green-600">
+                        {milestoneStats.approvedMilestones}
+                      </p>
                       <p className="text-muted-foreground">Approved</p>
                     </div>
                     <div className="text-center">
-                      <p className="font-semibold text-red-600">{milestoneStats.rejectedMilestones}</p>
+                      <p className="font-semibold text-red-600">
+                        {milestoneStats.rejectedMilestones}
+                      </p>
                       <p className="text-muted-foreground">Rejected</p>
                     </div>
                   </div>
@@ -693,30 +792,49 @@ const StaffDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <p className="text-2xl font-bold text-purple-600">{documentStats.totalForms}</p>
-                      <p className="text-sm text-muted-foreground">Total Forms</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {documentStats.totalForms}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Forms
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-orange-50 rounded-lg">
-                      <p className="text-2xl font-bold text-orange-600">{documentStats.totalSubmissions}</p>
-                      <p className="text-sm text-muted-foreground">Total Submissions</p>
+                      <p className="text-2xl font-bold text-orange-600">
+                        {documentStats.totalSubmissions}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Submissions
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Budget Forms</span>
-                      <Badge variant="secondary">{documentStats.budgetForms}</Badge>
+                      <Badge variant="secondary">
+                        {documentStats.budgetForms}
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Procurement Forms</span>
-                      <Badge variant="secondary">{documentStats.procurementForms}</Badge>
+                      <Badge variant="secondary">
+                        {documentStats.procurementForms}
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Reporting Forms</span>
-                      <Badge variant="secondary">{documentStats.reportingForms}</Badge>
+                      <Badge variant="secondary">
+                        {documentStats.reportingForms}
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Active Forms</span>
-                      <Badge variant="outline" className="bg-green-100 text-green-800">{documentStats.activeForms}</Badge>
+                      <Badge
+                        variant="outline"
+                        className="bg-green-100 text-green-800"
+                      >
+                        {documentStats.activeForms}
+                      </Badge>
                     </div>
                   </div>
                 </div>
@@ -738,29 +856,45 @@ const StaffDashboard: React.FC = () => {
                   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-indigo-100 rounded-full">
                     <BookOpen className="w-8 h-8 text-indigo-600" />
                   </div>
-                  <p className="text-2xl font-bold text-indigo-600">{academicStats.totalFields}</p>
-                  <p className="text-sm text-muted-foreground">Academic Fields</p>
+                  <p className="text-2xl font-bold text-indigo-600">
+                    {academicStats.totalFields}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Academic Fields
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-cyan-100 rounded-full">
                     <Building2 className="w-8 h-8 text-cyan-600" />
                   </div>
-                  <p className="text-2xl font-bold text-cyan-600">{academicStats.totalMajors}</p>
-                  <p className="text-sm text-muted-foreground">Academic Majors</p>
+                  <p className="text-2xl font-bold text-cyan-600">
+                    {academicStats.totalMajors}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Academic Majors
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-teal-100 rounded-full">
                     <Users className="w-8 h-8 text-teal-600" />
                   </div>
-                  <p className="text-2xl font-bold text-teal-600">{councilStats.totalCouncils}</p>
-                  <p className="text-sm text-muted-foreground">Appraisal Councils</p>
+                  <p className="text-2xl font-bold text-teal-600">
+                    {councilStats.totalCouncils}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Appraisal Councils
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-pink-100 rounded-full">
                     <UserCheck className="w-8 h-8 text-pink-600" />
                   </div>
-                  <p className="text-2xl font-bold text-pink-600">{councilStats.totalMembers}</p>
-                  <p className="text-sm text-muted-foreground">Council Members</p>
+                  <p className="text-2xl font-bold text-pink-600">
+                    {councilStats.totalMembers}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Council Members
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -796,30 +930,58 @@ const StaffDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-blue-600">{userStats.totalUsers}</p>
-                      <p className="text-sm text-muted-foreground">Total Users</p>
+                      <p className="text-2xl font-bold text-blue-600">
+                        {userStats.totalUsers}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Users
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">{userStats.activeUsers}</p>
-                      <p className="text-sm text-muted-foreground">Active Users</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {userStats.activeUsers}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Active Users
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Principal Investigators</span>
-                      <Badge variant="secondary" className="bg-purple-100 text-purple-800">{userStats.principalInvestigators}</Badge>
+                      <Badge
+                        variant="secondary"
+                        className="bg-purple-100 text-purple-800"
+                      >
+                        {userStats.principalInvestigators}
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Researchers</span>
-                      <Badge variant="secondary" className="bg-blue-100 text-blue-800">{userStats.researchers}</Badge>
+                      <Badge
+                        variant="secondary"
+                        className="bg-blue-100 text-blue-800"
+                      >
+                        {userStats.researchers}
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Host Institutions</span>
-                      <Badge variant="secondary" className="bg-orange-100 text-orange-800">{userStats.hostInstitutions}</Badge>
+                      <Badge
+                        variant="secondary"
+                        className="bg-orange-100 text-orange-800"
+                      >
+                        {userStats.hostInstitutions}
+                      </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Council Members</span>
-                      <Badge variant="secondary" className="bg-teal-100 text-teal-800">{userStats.councilMembers}</Badge>
+                      <Badge
+                        variant="secondary"
+                        className="bg-teal-100 text-teal-800"
+                      >
+                        {userStats.councilMembers}
+                      </Badge>
                     </div>
                   </div>
                 </div>
@@ -840,13 +1002,21 @@ const StaffDashboard: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Active Users</span>
                       <div className="flex items-center space-x-2">
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-100 text-green-800"
+                        >
                           {userStats.activeUsers}
                         </Badge>
                         <div className="w-20 bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-green-500 h-2 rounded-full"
-                            style={{ width: `${(userStats.activeUsers / userStats.totalUsers) * 100}%` }}
+                            style={{
+                              width: `${
+                                (userStats.activeUsers / userStats.totalUsers) *
+                                100
+                              }%`,
+                            }}
                           ></div>
                         </div>
                       </div>
@@ -854,27 +1024,47 @@ const StaffDashboard: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium">Pending Users</span>
                       <div className="flex items-center space-x-2">
-                        <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                        <Badge
+                          variant="secondary"
+                          className="bg-yellow-100 text-yellow-800"
+                        >
                           {userStats.pendingUsers}
                         </Badge>
                         <div className="w-20 bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-yellow-500 h-2 rounded-full"
-                            style={{ width: `${(userStats.pendingUsers / userStats.totalUsers) * 100}%` }}
+                            style={{
+                              width: `${
+                                (userStats.pendingUsers /
+                                  userStats.totalUsers) *
+                                100
+                              }%`,
+                            }}
                           ></div>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Inactive Users</span>
+                      <span className="text-sm font-medium">
+                        Inactive Users
+                      </span>
                       <div className="flex items-center space-x-2">
-                        <Badge variant="secondary" className="bg-red-100 text-red-800">
+                        <Badge
+                          variant="secondary"
+                          className="bg-red-100 text-red-800"
+                        >
                           {userStats.inactiveUsers}
                         </Badge>
                         <div className="w-20 bg-gray-200 rounded-full h-2">
                           <div
                             className="bg-red-500 h-2 rounded-full"
-                            style={{ width: `${(userStats.inactiveUsers / userStats.totalUsers) * 100}%` }}
+                            style={{
+                              width: `${
+                                (userStats.inactiveUsers /
+                                  userStats.totalUsers) *
+                                100
+                              }%`,
+                            }}
                           ></div>
                         </div>
                       </div>
@@ -882,9 +1072,14 @@ const StaffDashboard: React.FC = () => {
                   </div>
                   <div className="pt-4 border-t">
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground">User Activity Rate</p>
+                      <p className="text-sm text-muted-foreground">
+                        User Activity Rate
+                      </p>
                       <p className="text-2xl font-bold text-green-600">
-                        {Math.round((userStats.activeUsers / userStats.totalUsers) * 100)}%
+                        {Math.round(
+                          (userStats.activeUsers / userStats.totalUsers) * 100
+                        )}
+                        %
                       </p>
                     </div>
                   </div>
@@ -908,16 +1103,28 @@ const StaffDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 gap-4">
                     <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <p className="text-lg font-bold text-green-600">{formatVND(paymentStats.totalProcessed)}</p>
-                      <p className="text-sm text-muted-foreground">Total Processed</p>
+                      <p className="text-lg font-bold text-green-600">
+                        {formatVND(paymentStats.totalProcessed)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Processed
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                      <p className="text-lg font-bold text-yellow-600">{formatVND(paymentStats.pendingApprovals)}</p>
-                      <p className="text-sm text-muted-foreground">Pending Approvals</p>
+                      <p className="text-lg font-bold text-yellow-600">
+                        {formatVND(paymentStats.pendingApprovals)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Pending Approvals
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-lg font-bold text-blue-600">{formatVND(paymentStats.monthlyTotal)}</p>
-                      <p className="text-sm text-muted-foreground">Monthly Total</p>
+                      <p className="text-lg font-bold text-blue-600">
+                        {formatVND(paymentStats.monthlyTotal)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Monthly Total
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -936,31 +1143,54 @@ const StaffDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-purple-50 rounded-lg">
-                      <p className="text-2xl font-bold text-purple-600">{paymentStats.transactionCount}</p>
-                      <p className="text-sm text-muted-foreground">Total Transactions</p>
+                      <p className="text-2xl font-bold text-purple-600">
+                        {paymentStats.transactionCount}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Total Transactions
+                      </p>
                     </div>
                     <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">{paymentStats.completedPayments}</p>
+                      <p className="text-2xl font-bold text-green-600">
+                        {paymentStats.completedPayments}
+                      </p>
                       <p className="text-sm text-muted-foreground">Completed</p>
                     </div>
                   </div>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Completion Rate</span>
-                      <Badge variant="secondary" className="bg-green-100 text-green-800">
-                        {Math.round((paymentStats.completedPayments / paymentStats.transactionCount) * 100)}%
+                      <Badge
+                        variant="secondary"
+                        className="bg-green-100 text-green-800"
+                      >
+                        {Math.round(
+                          (paymentStats.completedPayments /
+                            paymentStats.transactionCount) *
+                            100
+                        )}
+                        %
                       </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Pending Payments</span>
-                      <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                      <Badge
+                        variant="secondary"
+                        className="bg-yellow-100 text-yellow-800"
+                      >
                         {paymentStats.pendingPayments}
                       </Badge>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <div
                         className="bg-green-500 h-2 rounded-full"
-                        style={{ width: `${(paymentStats.completedPayments / paymentStats.transactionCount) * 100}%` }}
+                        style={{
+                          width: `${
+                            (paymentStats.completedPayments /
+                              paymentStats.transactionCount) *
+                            100
+                          }%`,
+                        }}
                       ></div>
                     </div>
                   </div>
@@ -983,22 +1213,34 @@ const StaffDashboard: React.FC = () => {
                   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-green-100 rounded-full">
                     <CheckCircle className="w-8 h-8 text-green-600" />
                   </div>
-                  <p className="text-lg font-bold text-green-600">{formatVND(paymentStats.totalProcessed)}</p>
-                  <p className="text-sm text-muted-foreground">Total Budget Processed</p>
+                  <p className="text-lg font-bold text-green-600">
+                    {formatVND(paymentStats.totalProcessed)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Total Budget Processed
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-yellow-100 rounded-full">
                     <AlertCircle className="w-8 h-8 text-yellow-600" />
                   </div>
-                  <p className="text-lg font-bold text-yellow-600">{formatVND(paymentStats.pendingApprovals)}</p>
-                  <p className="text-sm text-muted-foreground">Pending Approvals</p>
+                  <p className="text-lg font-bold text-yellow-600">
+                    {formatVND(paymentStats.pendingApprovals)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Pending Approvals
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-blue-100 rounded-full">
                     <TrendingUp className="w-8 h-8 text-blue-600" />
                   </div>
-                  <p className="text-lg font-bold text-blue-600">+{systemStats.monthlyGrowth}%</p>
-                  <p className="text-sm text-muted-foreground">Monthly Growth</p>
+                  <p className="text-lg font-bold text-blue-600">
+                    +{systemStats.monthlyGrowth}%
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Monthly Growth
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -1019,7 +1261,10 @@ const StaffDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">System Uptime</span>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 text-green-800"
+                    >
                       {systemStats.systemUptime}%
                     </Badge>
                   </div>
@@ -1029,13 +1274,19 @@ const StaffDashboard: React.FC = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Server Load</span>
-                    <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    <Badge
+                      variant="secondary"
+                      className="bg-blue-100 text-blue-800"
+                    >
                       Normal
                     </Badge>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Database Status</span>
-                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 text-green-800"
+                    >
                       Healthy
                     </Badge>
                   </div>
@@ -1055,22 +1306,34 @@ const StaffDashboard: React.FC = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <p className="text-xl font-bold text-blue-600">{systemStats.totalUsers}</p>
-                      <p className="text-xs text-muted-foreground">Total Users</p>
+                      <p className="text-xl font-bold text-blue-600">
+                        {systemStats.totalUsers}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Total Users
+                      </p>
                     </div>
                     <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <p className="text-xl font-bold text-green-600">{systemStats.activeProjects}</p>
-                      <p className="text-xs text-muted-foreground">Active Projects</p>
+                      <p className="text-xl font-bold text-green-600">
+                        {systemStats.activeProjects}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Active Projects
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Monthly Growth</span>
-                      <span className="text-green-600 font-semibold">+{systemStats.monthlyGrowth}%</span>
+                      <span className="text-green-600 font-semibold">
+                        +{systemStats.monthlyGrowth}%
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Pending Approvals</span>
-                      <span className="font-semibold">{systemStats.pendingApprovals}</span>
+                      <span className="font-semibold">
+                        {systemStats.pendingApprovals}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -1092,33 +1355,45 @@ const StaffDashboard: React.FC = () => {
                   <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-blue-200 rounded-full">
                     <FolderOpen className="w-6 h-6 text-blue-600" />
                   </div>
-                  <p className="text-lg font-bold text-blue-600">{projectStats.total}</p>
+                  <p className="text-lg font-bold text-blue-600">
+                    {projectStats.total}
+                  </p>
                   <p className="text-xs text-muted-foreground">Projects</p>
                 </div>
                 <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
                   <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-green-200 rounded-full">
                     <Users className="w-6 h-6 text-green-600" />
                   </div>
-                  <p className="text-lg font-bold text-green-600">{userStats.totalUsers}</p>
+                  <p className="text-lg font-bold text-green-600">
+                    {userStats.totalUsers}
+                  </p>
                   <p className="text-xs text-muted-foreground">Users</p>
                 </div>
                 <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
                   <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-purple-200 rounded-full">
                     <FileText className="w-6 h-6 text-purple-600" />
                   </div>
-                  <p className="text-lg font-bold text-purple-600">{documentStats.totalForms}</p>
+                  <p className="text-lg font-bold text-purple-600">
+                    {documentStats.totalForms}
+                  </p>
                   <p className="text-xs text-muted-foreground">Forms</p>
                 </div>
                 <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg">
                   <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-orange-200 rounded-full">
                     <DollarSign className="w-6 h-6 text-orange-600" />
                   </div>
-                  <p className="text-lg font-bold text-orange-600">{paymentStats.transactionCount}</p>
+                  <p className="text-lg font-bold text-orange-600">
+                    {paymentStats.transactionCount}
+                  </p>
                   <p className="text-xs text-muted-foreground">Transactions</p>
                 </div>
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="meetings" className="space-y-6">
+          <StaffMeetings />
         </TabsContent>
       </Tabs>
     </div>

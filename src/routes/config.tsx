@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import UserLayout from "@/layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
 import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
+import NavigationGuard from "@/components/auth/NavigationGuard";
 
 // Staff Pages
 import {
@@ -23,6 +24,7 @@ import {
   AppraisalCouncilsManagement,
   MajorsManagement,
   StaffMilestoneManagement,
+  StaffMeetings,
 } from "@/pages/Staff";
 
 // General Pages
@@ -31,10 +33,14 @@ import ProjectDetail from "@/pages/ProjectDetail";
 
 // RESEARCHER Pages
 import UserTaskManagement from "@/pages/TaskManagement";
-import ResearcherDashboard from "@/pages/Researcher/Dashboard";
 
 // Other Pages
 import Profile from "@/pages/Profile";
+
+// Scientific CV Pages
+import CreateScientificCV from "@/pages/Profile/ScientificCV/CreateScientificCV";
+import ViewScientificCV from "@/pages/Profile/ScientificCV/ViewScientificCV";
+import EditScientificCV from "@/pages/Profile/ScientificCV/EditScientificCV";
 
 // Host Institution Pages
 import RegisterProject from "@/pages/HostInstitution/RegisterProject";
@@ -48,9 +54,7 @@ import PIMyProjects from "@/pages/PrincipalInvestigator/MyProjects";
 import PendingEvaluations from "@/pages/Council/Evaluations";
 import EvaluationDetail from "@/pages/Council/Evaluations/EvaluationDetail";
 import EvaluationForm from "@/pages/Council/Evaluations/EvaluationForm";
-import ScheduleMeeting from "@/pages/Council/Meetings/ScheduleMeeting";
 import MeetingMinutes from "@/pages/Council/Meetings/MeetingMinutes";
-import ApprovalInterface from "@/pages/Council/Approvals";
 
 // Admin Pages - simplified to use general coming soon
 
@@ -58,12 +62,15 @@ import ApprovalInterface from "@/pages/Council/Approvals";
 import GeneralComingSoon from "@/pages/ComingSoon";
 
 // Principal Investigator Pages
-import PIProfile from "@/pages/PrincipalInvestigator/Profile";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
-import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
 import Meetings from "@/pages/Council/Meetings";
 import ProjectApproval from "@/pages/Council/ProjectApproval";
-import FormRegister from "@/pages/FormRegister";
+
+// Form Management Pages
+import FormsOverview from "@/pages/FormRegister/FormsOverview";
+import FormView from "@/pages/FormRegister/FormView";
+import FormEdit from "@/pages/FormRegister/FormEdit";
+import FormCreate from "@/pages/FormRegister/FormCreate";
 
 /**
  * Main application routes configuration
@@ -74,6 +81,7 @@ export const routes: RouteObject[] = [
     element: (
       <AuthProvider>
         <GlobalAuthListener />
+        <NavigationGuard />
         <Outlet />
       </AuthProvider>
     ),
@@ -98,10 +106,14 @@ export const routes: RouteObject[] = [
           },
         ],
       },
-      // Staff routes with sidebar - no authentication required for testing
+      // Staff routes with sidebar - protected by AuthGuard
       {
         path: "staff",
-        element: <StaffLayout />,
+        element: (
+          <AuthGuard requiredRoles={[UserRole.STAFF]}>
+            <StaffLayout />
+          </AuthGuard>
+        ),
         children: [
           {
             index: true,
@@ -140,7 +152,10 @@ export const routes: RouteObject[] = [
             path: "users",
             element: <UserAccessControl />,
           },
-
+          {
+            path: "meetings",
+            element: <StaffMeetings />,
+          },
           {
             path: "fields",
             element: <FieldsManagement />,
@@ -197,10 +212,6 @@ export const routes: RouteObject[] = [
             element: <UserTaskManagement />,
           },
           {
-            path: "dashboard",
-            element: <ResearcherDashboard />,
-          },
-          {
             path: "profile",
             element: <Profile />,
           },
@@ -210,12 +221,29 @@ export const routes: RouteObject[] = [
             element: <GeneralComingSoon />,
           },
           {
-            path: "forms",
-            element: <FormRegister />,
-          },
-          {
             path: "my-projects",
             element: <ProjectDetail />,
+          },
+          {
+            path: "forms",
+            children: [
+              {
+                index: true,
+                element: <FormsOverview />,
+              },
+              {
+                path: "create",
+                element: <FormCreate />,
+              },
+              {
+                path: ":formId/view",
+                element: <FormView />,
+              },
+              {
+                path: ":formId/edit",
+                element: <FormEdit />,
+              },
+            ],
           },
           // Add more RESEARCHER routes here
         ],
@@ -267,8 +295,25 @@ export const routes: RouteObject[] = [
             element: <Profile />,
           },
           {
-            path: "forms/*",
-            element: <GeneralComingSoon />,
+            path: "forms",
+            children: [
+              {
+                index: true,
+                element: <FormsOverview />,
+              },
+              {
+                path: "create",
+                element: <FormCreate />,
+              },
+              {
+                path: ":formId/view",
+                element: <FormView />,
+              },
+              {
+                path: ":formId/edit",
+                element: <FormEdit />,
+              },
+            ],
           },
           {
             path: "project/*",
@@ -309,18 +354,12 @@ export const routes: RouteObject[] = [
             path: "meetings",
             element: <Meetings />,
           },
-          {
-            path: "meetings/schedule",
-            element: <ScheduleMeeting />,
-          },
+
           {
             path: "meeting/:id",
             element: <MeetingMinutes />,
           },
-          {
-            path: "approvals",
-            element: <ApprovalInterface />,
-          },
+
           {
             path: "project/:projectId",
             element: <ProjectDetail />,
@@ -358,27 +397,37 @@ export const routes: RouteObject[] = [
           },
           {
             path: "profile",
-            element: <PIProfile />,
-          },
-          {
-            path: "dashboard",
-            element: <PIDashboard />,
+            element: <Profile />,
           },
           {
             path: "meetings",
             element: <Meetings />,
           },
-          {
-            path: "meetings/schedule",
-            element: <ScheduleMeeting />,
-          },
+
           {
             path: "meeting/:id",
             element: <MeetingMinutes />,
           },
           {
             path: "forms",
-            element: <FormRegister />,
+            children: [
+              {
+                index: true,
+                element: <FormsOverview />,
+              },
+              {
+                path: "create",
+                element: <FormCreate />,
+              },
+              {
+                path: ":formId/view",
+                element: <FormView />,
+              },
+              {
+                path: ":formId/edit",
+                element: <FormEdit />,
+              },
+            ],
           },
           {
             path: "my-projects",
@@ -390,6 +439,31 @@ export const routes: RouteObject[] = [
       {
         path: "unauthorized",
         element: <Unauthorized />,
+      },
+      // Scientific CV routes (accessible by all authenticated users)
+      {
+        path: "profile/scientific-cv/create",
+        element: (
+          <AuthGuard>
+            <CreateScientificCV />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "profile/scientific-cv/view",
+        element: (
+          <AuthGuard>
+            <ViewScientificCV />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "profile/scientific-cv/edit",
+        element: (
+          <AuthGuard>
+            <EditScientificCV />
+          </AuthGuard>
+        ),
       },
       // Auth routes (login, register, etc.)
       {
