@@ -1,5 +1,6 @@
 import {
   CreateProjectRequest,
+  ProjectDetailResponse,
   ProjectFilterRequest,
   ProjectFilterResponse,
   ProjectItem,
@@ -128,7 +129,7 @@ export const createProject = async (
 
 export const getProjectDetail = async (projectId: string) => {
   const accessToken = getAccessToken();
-  return await axiosClient.get<ProjectItem>(`/project/${projectId}`, {
+  return await axiosClient.get<ProjectDetailResponse>(`/project/${projectId}`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },

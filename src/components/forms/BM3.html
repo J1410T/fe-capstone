@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>BM3: Phiếu đánh giá</title>
+    <!-- Styles moved to the end for clarity -->
+</head>
+
+<body>
+    <!-- Header -->
+    <header>
+        <h3 class="upper"><u>TRƯỜNG ĐẠI HỌC FPT</u></h3>
+        <h3 class="center upper">PHIẾU ĐÁNH GIÁ<br>THẨM ĐỊNH ĐỀ CƯƠNG ĐỀ TÀI NGHIÊN CỨU KHOA HỌC NĂM ...</h3>
+    </header>
+    <section class="section section-evaluation">
+        <div class="section-content">
+            <p class="section-label">1. Tên đề tài: <span class="dotted-line">&nbsp;</span></p>
+            <p class="section-label">2. Chủ nhiệm đề tài: <span class="dotted-line">&nbsp;</span></p>
+            <p class="section-label">3. Tên đơn vị chủ trì thực hiện đề tài: <span class="dotted-line">&nbsp;</span></p>
+            <p class="section-label">4. Họ và tên người nhận xét: <span class="dotted-line">&nbsp;</span></p>
+            <div class="overview-block ">
+                <div style="margin-left:5em;">Học vị: <span class="dotted-line short">&nbsp;</span></div>
+                <div style="margin-left:5em;">Chức danh khoa học: <span class="dotted-line short">&nbsp;</span></div>
+                <div style="margin-left:5em;">Ngành chuyên môn: <span class="dotted-line short">&nbsp;</span></div>
+                <div style="margin-left:5em;">Chức trách trong Hội đồng: <span class="dotted-line short">&nbsp;</span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section class=" section section-evaluation-content">
+        <p class="section-title"><b>2. Ý kiến đánh giá</b></p>
+        <div class="section-content">
+            <table class="main-table evaluation-table">
+                <thead>
+                    <tr>
+                        <th>TT</th>
+                        <th>Nội dung đánh giá</th>
+                        <th>Điểm tối đa</th>
+                        <th>Điểm đánh giá</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>1</td>
+                        <td>Mục đích, ý nghĩa của đề tài</td>
+                        <td>10</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>2</td>
+                        <td>Phương pháp nghiên cứu</td>
+                        <td>10</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>3</td>
+                        <td>Nội dung nghiên cứu và kết quả dự kiến</td>
+                        <td>40</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>4</td>
+                        <td>Năng lực của Chủ nhiệm đề tài và thành viên nhóm nghiên cứu</td>
+                        <td>20</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>5</td>
+                        <td>Tính hợp lý của dự toán kinh phí</td>
+                        <td>10</td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2"><strong>Cộng</strong></td>
+                        <td><strong>100</strong></td>
+                        <td></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="section-title"><b>3. Nhận xét chung:</b><br>
+                <span class="dotted-line">&nbsp;</span><br>
+                <span class="dotted-line">&nbsp;</span><br>
+            </p>
+            <p class="section-title"><b>4. Khuyến nghị khác (nếu có):</b><br>
+                <span class="dotted-line">&nbsp;</span><br>
+                <span class="dotted-line">&nbsp;</span><br>
+        </div>
+    </section>
+    <!-- Signature section -->
+    <footer class="signature-section" style="justify-content: flex-end;">
+        <div class="signature-box" style="width: 60%; text-align: center;">
+            <em><span class="dotted-line short">&nbsp;</span>Ngày <span class="dotted-line short">&nbsp;</span></span>
+                tháng <span class="dotted-line short">&nbsp;</span></span> năm 20<span
+                    class="dotted-line short"></span></em><br>
+            <strong>CHUYÊN GIA</strong><br>
+            (Ký và ghi rõ họ, tên)
+        </div>
+    </footer>
+
+    <!-- Styles for the form -->
+    <style>
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 13px;
+            line-height: 1.25;
+            margin: 0 auto;
+            padding: 32px 36px 24px 36px;
+            max-width: 800px;
+            background: #fff;
+        }
+
+        .section-title {
+            margin-bottom: 0.05rem;
+            display: block;
+            font-weight: normal;
+            font-weight: bold;
+            text-indent: 2.5em;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .upper {
+            text-transform: uppercase;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        h3.upper {
+            font-size: 1.18em;
+            margin: 0 0 1px 0;
+            font-weight: bold;
+        }
+
+        h3 {
+            margin: 0 0 1px 0;
+            font-weight: normal;
+        }
+
+        header p,
+        header h3 {
+            margin: 0 0 1px 0;
+            text-indent: 0;
+        }
+
+        p,
+        .section-label {
+            margin: 5px 0 0 0;
+        }
+
+        .section-intro p,
+        .section-parties p {
+            text-indent: 0 !important;
+        }
+
+        .contract-list p,
+        .contract-list li {
+            text-indent: 0 !important;
+            margin: 0 0 0.08em 0;
+            padding-left: 0.1em;
+        }
+
+        .section-parties .section-label {
+            text-indent: 0 !important;
+            margin-bottom: 0.04rem;
+        }
+
+        .section-label {
+            margin-bottom: 0.05rem;
+            display: block;
+            font-weight: normal;
+        }
+
+        .section-label b {
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .section {
+            margin-bottom: 0.15rem;
+        }
+
+        .section-content {
+            margin-left: 0;
+        }
+
+        .contract-list {
+            margin: 0 0 0 1.2em;
+            padding: 0;
+            list-style-type: none;
+        }
+
+        .signature-section {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 24px;
+            margin-bottom: 0;
+        }
+
+        .signature-box {
+            width: 60%;
+            text-align: center;
+            font-weight: bold;
+            padding-top: 0;
+        }
+
+        .signature-box strong {
+            font-size: 1em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .signature-box em {
+            font-weight: normal;
+            display: block;
+            margin-bottom: 1px;
+        }
+
+        br {
+            line-height: 0.1 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            display: block;
+        }
+
+        .signature-box br {
+            line-height: 0.1 !important;
+            height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .italic {
+            font-style: italic;
+        }
+
+        .small {
+            font-size: 12px;
+        }
+
+        .dotted-line {
+            display: inline-block;
+            border-bottom: 1px dotted #222;
+            min-width: 120px;
+            height: 1.1em;
+            vertical-align: middle;
+            margin: 0 2px 2px 2px;
+        }
+
+        .dotted-line.short {
+            min-width: 40px;
+        }
+
+        table.main-table {
+            width: 100%;
+            margin-top: 1rem;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            border: 1px solid #222;
+            padding: 6px 8px;
+            vertical-align: top;
+        }
+
+        th {
+            text-align: center;
+            background: #f0f0f0;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                margin: 0;
+                max-width: none;
+            }
+
+            .signature-section {
+                margin-top: 36px;
+            }
+        }
+    </style>
+</body>
+
+</html>

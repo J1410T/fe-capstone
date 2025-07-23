@@ -183,12 +183,12 @@ export const setAuthResponse = <T extends object>(authResponse: T): void => {
  * @returns Auth response object or null if not found
  */
 export const getAuthResponse = <T>(): T | null => {
-  console.log(
-    "🍪 Getting auth response from cookie:",
-    COOKIE_KEYS.AUTH_RESPONSE
-  );
+  // console.log(
+  //   "🍪 Getting auth response from cookie:",
+  //   COOKIE_KEYS.AUTH_RESPONSE
+  // );
   const result = getEncryptedJSONCookie<T>(COOKIE_KEYS.AUTH_RESPONSE);
-  console.log("🍪 Auth response result:", result ? "Found" : "Not found");
+  // console.log("🍪 Auth response result:", result ? "Found" : "Not found");
   return result;
 };
 

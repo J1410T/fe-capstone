@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Fira+Code:wght@500&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:opsz,wght@18..144,500&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap");
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -148,10 +148,12 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Fira Code", monospace;
-    font-optical-sizing: auto;
-    font-weight: 500;
-    font-style: normal;
+    font-family: "Merriweather", serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+  font-variation-settings:
+    "wdth" 100;
   }
 }
 

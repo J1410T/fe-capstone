@@ -29,14 +29,37 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
-    return <Navigate to="/auth/login" state={{ from: location }} replace />;
+    // Add navigation tracking metadata
+    return (
+      <Navigate
+        to="/auth/login"
+        state={{
+          from: location,
+          redirectReason: "authentication_required",
+          timestamp: Date.now(),
+        }}
+        replace
+      />
+    );
   }
 
   // Check if user has required role
   if (requiredRoles && requiredRoles.length > 0 && user) {
     const hasRequiredRole = requiredRoles.includes(user.role);
     if (!hasRequiredRole) {
-      return <Navigate to="/unauthorized" replace />;
+      return (
+        <Navigate
+          to="/unauthorized"
+          state={{
+            reason: "Insufficient permissions",
+            from: location.pathname,
+            requiredRoles,
+            userRole: user.role,
+            timestamp: Date.now(),
+          }}
+          replace
+        />
+      );
     }
   }
 
@@ -64,9 +87,20 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     }
   }
 
-  // Redirect non-staff users to RESEARCHER home if they try to access staff dashboard
+  // Redirect non-staff users to unauthorized if they try to access staff routes
   if (user?.role !== UserRole.STAFF && location.pathname.startsWith("/staff")) {
-    return <Navigate to="/home" replace />;
+    return (
+      <Navigate
+        to="/unauthorized"
+        state={{
+          reason: "Access denied: Staff role required",
+          from: location.pathname,
+          userRole: user?.role,
+          timestamp: Date.now(),
+        }}
+        replace
+      />
+    );
   }
 
   // Redirect staff users to admin dashboard if they try to access RESEARCHER home
@@ -74,20 +108,61 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     return <Navigate to="/staff/dashboard" replace />;
   }
 
-  // Redirect non-host users to RESEARCHER home if they try to access host dashboard
+  // Redirect non-host users to unauthorized if they try to access host routes
   if (
     user?.role !== UserRole.HOST_INSTITUTION &&
     location.pathname.startsWith("/host")
   ) {
-    return <Navigate to="/home" replace />;
+    return (
+      <Navigate
+        to="/unauthorized"
+        state={{
+          reason: "Access denied: Host Institution role required",
+          from: location.pathname,
+          userRole: user?.role,
+          timestamp: Date.now(),
+        }}
+        replace
+      />
+    );
   }
 
-  // Redirect non-PI users to RESEARCHER home if they try to access PI dashboard
+  // Redirect non-PI users to unauthorized if they try to access PI routes
   if (
     user?.role !== UserRole.PRINCIPAL_INVESTIGATOR &&
     location.pathname.startsWith("/pi")
   ) {
-    return <Navigate to="/home" replace />;
+    return (
+      <Navigate
+        to="/unauthorized"
+        state={{
+          reason: "Access denied: Principal Investigator role required",
+          from: location.pathname,
+          userRole: user?.role,
+          timestamp: Date.now(),
+        }}
+        replace
+      />
+    );
+  }
+
+  // Redirect non-council users to unauthorized if they try to access council routes
+  if (
+    user?.role !== UserRole.APPRAISAL_COUNCIL &&
+    location.pathname.startsWith("/council")
+  ) {
+    return (
+      <Navigate
+        to="/unauthorized"
+        state={{
+          reason: "Access denied: Appraisal Council role required",
+          from: location.pathname,
+          userRole: user?.role,
+          timestamp: Date.now(),
+        }}
+        replace
+      />
+    );
   }
 
   // Redirect non-RESEARCHER users to unauthorized page if they try to access RESEARCHER routes
@@ -95,7 +170,18 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     user?.role !== UserRole.RESEARCHER &&
     location.pathname.startsWith("/researcher")
   ) {
-    return <Navigate to="/unauthorized" replace />;
+    return (
+      <Navigate
+        to="/unauthorized"
+        state={{
+          reason: "Access denied: Researcher role required",
+          from: location.pathname,
+          userRole: user?.role,
+          timestamp: Date.now(),
+        }}
+        replace
+      />
+    );
   }
 
   // Render children if authenticated and has required role

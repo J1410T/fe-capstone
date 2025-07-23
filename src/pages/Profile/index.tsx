@@ -28,10 +28,11 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { validateEmail, validateRequired } from "@/utils";
-import { useAccountInfo } from "@/hooks/queries";
+import { useMyAccountInfo } from "@/hooks/queries";
+import { ScientificCV } from "@/components/profile/ScientificCV";
 
 const Profile: React.FC = () => {
-  const { data: accountInfo } = useAccountInfo();
+  const { data: accountInfo } = useMyAccountInfo();
 
   // Initialize state with empty values that will be populated when accountInfo loads
   const [user, setUser] = useState({
@@ -439,6 +440,9 @@ const Profile: React.FC = () => {
 
           {/* Right Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Scientific CV Section */}
+            <ScientificCV className="border-0 shadow-lg bg-white" />
+
             {/* Personal Information */}
             <Card className="border-0 shadow-lg bg-white">
               <CardHeader className="bg-gray-50 rounded-t-lg border-b border-gray-100">

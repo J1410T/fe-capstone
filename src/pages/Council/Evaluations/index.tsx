@@ -92,7 +92,7 @@ const PendingEvaluations: React.FC = () => {
   return (
     <div className="container mx-auto py-6 space-y-6">
       <EvaluationHeader
-        title="Pending Evaluations"
+        title="Project Evaluations"
         description="Review and evaluate project proposals and milestone reports"
       />
 

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar as CalendarIcon } from "lucide-react";
+// import { Calendar as CalendarIcon } from "lucide-react";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import UpcomingMeetingsTab from "./components/UpcomingMeetingsTab";
 import ProjectMeetingsTab from "./components/ProjectMeetingsTab";
@@ -95,7 +95,7 @@ const Meetings: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
 
   // Check if user is chairman
-  const isChairman = user?.role === UserRole.APPRAISAL_COUNCIL;
+  // const isChairman = user?.role === UserRole.APPRAISAL_COUNCIL;
 
   // Check if user can view meeting details
   const canViewDetails =
@@ -119,13 +119,13 @@ const Meetings: React.FC = () => {
     window.open(meetingLink, "_blank");
   };
 
-  const handleScheduleMeeting = () => {
-    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
-      navigate("/pi/meetings/schedule");
-    } else if (user?.role === UserRole.APPRAISAL_COUNCIL) {
-      navigate("/council/meetings/schedule");
-    }
-  };
+  // const handleScheduleMeeting = () => {
+  //   if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+  //     navigate("/pi/meetings/schedule");
+  //   } else if (user?.role === UserRole.APPRAISAL_COUNCIL) {
+  //     navigate("/council/meetings/schedule");
+  //   }
+  // };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -136,12 +136,12 @@ const Meetings: React.FC = () => {
             Schedule and participate in Online meetings
           </p>
         </div>
-        {isChairman && (
+        {/* {isChairman && (
           <Button onClick={handleScheduleMeeting}>
             <CalendarIcon className="mr-2 h-4 w-4" />
             Schedule Meeting
           </Button>
-        )}
+        )} */}
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
