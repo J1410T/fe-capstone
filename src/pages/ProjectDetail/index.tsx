@@ -165,6 +165,15 @@ function ProjectDetail() {
       })) || [],
     majors: project.majors || [],
     tags: project["project-tags"]?.map((tag) => tag.name) || [],
+    milestones: project.milestones?.map((milestone) => ({
+      id: milestone.id,
+      name: milestone.title,
+      description: milestone.description,
+      deadline: milestone.endDate,
+      status: milestone.status,
+      // progress: milestone.progress,
+      tasks: milestone.tasks,
+    })),
   };
 
   return (
@@ -256,7 +265,7 @@ function ProjectDetail() {
 
         {visibleTabs.includes("milestones") && (
           <TabsContent value="milestones" className="space-y-4">
-            <MilestoneTab />
+            <MilestoneTab milestones={projectData.milestones || []} />
           </TabsContent>
         )}
 
