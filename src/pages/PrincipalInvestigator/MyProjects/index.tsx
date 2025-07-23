@@ -25,136 +25,93 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, Users, Briefcase, ArrowUpDown, Eye } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+import {
+  Search,
+  // Users,
+  Briefcase,
+  ArrowUpDown,
+  Eye,
+  Loader2,
+} from "lucide-react";
+import { useMyProject } from "@/hooks/queries/project";
+import { useAuth } from "@/contexts";
+import { UserRole } from "@/contexts/auth-types";
 
-// Mock data for Principal Investigator's projects
-// Note: In real implementation, this would be filtered by API to only include
-// projects where current user is the Principal Investigator
-const getAllProjects = () => [
-  {
-    id: 1,
-    title: "Machine Learning for Medical Diagnosis",
-    field: "Computer Science",
-    status: "Active",
-    startDate: "2023-05-15",
-    endDate: "2024-11-15",
-    budget: "$120,000",
-    teamSize: 5,
-    progress: 65,
-    description: "Developing AI algorithms for early disease detection",
-    pi: "Test PI", // Matches the current test user
-  },
-  {
-    id: 2,
-    title: "Quantum Computing Applications",
-    field: "Physics",
-    status: "Planning",
-    startDate: "2024-01-15",
-    endDate: "2025-01-15",
-    budget: "$200,000",
-    teamSize: 3,
-    progress: 10,
-    description: "Research into practical quantum computing applications",
-    pi: "Test PI", // Matches the current test user
-  },
-  {
-    id: 3,
-    title: "Sustainable Energy Solutions",
-    field: "Engineering",
-    status: "Completed",
-    startDate: "2022-06-01",
-    endDate: "2023-06-01",
-    budget: "$85,000",
-    teamSize: 4,
-    progress: 100,
-    description: "Development of renewable energy storage systems",
-    pi: "Dr. John Doe", // Different PI - should not appear for Test PI
-  },
-  {
-    id: 4,
-    title: "Blockchain Security Research",
-    field: "Computer Science",
-    status: "Active",
-    startDate: "2023-09-01",
-    endDate: "2024-09-01",
-    budget: "$95,000",
-    teamSize: 6,
-    progress: 45,
-    description: "Advanced cryptographic security for blockchain systems",
-    pi: "Test PI", // Matches the current test user
-  },
-  {
-    id: 5,
-    title: "AI-Powered Data Analytics Platform",
-    field: "Computer Science",
-    status: "Active",
-    startDate: "2023-10-01",
-    endDate: "2024-12-01",
-    budget: "$150,000",
-    teamSize: 8,
-    progress: 30,
-    description:
-      "Building an advanced analytics platform using AI technologies",
-    pi: "Test PI", // Matches the current test user
-  },
-];
-
-const MyProjects: React.FC = () => {
+const MyProject: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
-  const [fieldFilter, setFieldFilter] = useState("All");
-  const [sortBy, setSortBy] = useState("title");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("englishTitle");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const { user } = useAuth();
 
-  // Filter projects to only show those where current user is the PI
-  const myProjects = getAllProjects().filter((project) => {
-    console.log(
-      "Checking project:",
-      project.title,
-      "PI:",
-      project.pi,
-      "vs User:",
-      user?.name
-    );
-    return project.pi === user?.name;
-  });
-
-  console.log("My Projects (filtered):", myProjects);
+  const { data: projectsResponse, isLoading, error } = useMyProject();
+  const projects = projectsResponse?.data || [];
 
   // Get status color
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
       case "active":
+      case "approved":
         return "text-emerald-700 border-emerald-200 bg-emerald-50";
       case "completed":
+      case "finished":
         return "text-indigo-700 border-indigo-200 bg-indigo-50";
+      case "created":
       case "planning":
         return "text-blue-700 border-blue-200 bg-blue-50";
       case "on hold":
+      case "suspended":
         return "text-orange-700 border-orange-200 bg-orange-50";
+      case "rejected":
+        return "text-red-700 border-red-200 bg-red-50";
       default:
         return "text-gray-700 border-gray-200 bg-gray-50";
     }
   };
 
   // Filter and sort projects
-  const filteredProjects = myProjects
+  const filteredProjects = projects
     .filter((project) => {
-      const matchesSearch = project.title
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
+      const matchesSearch =
+        project["english-title"]
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        project["vietnamese-title"]
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (project.description
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ??
+          false);
+
       const matchesStatus =
         statusFilter === "All" || project.status === statusFilter;
-      const matchesField =
-        fieldFilter === "All" || project.field === fieldFilter;
-      return matchesSearch && matchesStatus && matchesField;
+      const matchesCategory =
+        categoryFilter === "All" || project.category === categoryFilter;
+      const matchesType = typeFilter === "All" || project.type === typeFilter;
+
+      return matchesSearch && matchesStatus && matchesCategory && matchesType;
     })
     .sort((a, b) => {
-      const aValue = a[sortBy as keyof typeof a];
-      const bValue = b[sortBy as keyof typeof b];
+      let aValue: string = "";
+      let bValue: string = "";
+
+      if (sortBy === "englishTitle") {
+        aValue = a["english-title"];
+        bValue = b["english-title"];
+      } else if (sortBy === "vietnameseTitle") {
+        aValue = a["vietnamese-title"];
+        bValue = b["vietnamese-title"];
+      } else if (sortBy === "createdAt") {
+        aValue = a["created-at"];
+        bValue = b["created-at"];
+      } else {
+        aValue = String(a[sortBy as keyof typeof a] ?? "");
+        bValue = String(b[sortBy as keyof typeof b] ?? "");
+      }
 
       if (sortOrder === "asc") {
         return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
@@ -172,12 +129,48 @@ const MyProjects: React.FC = () => {
     }
   };
 
-  const handleViewProject = (projectId: number) => {
-    navigate(`/pi/project/${projectId}`);
+  const handleViewProject = (id: string) => {
+    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+      navigate(`/pi/project/${id}`);
+    } else if (user?.role === UserRole.HOST_INSTITUTION) {
+      navigate(`/host/project/${id}`);
+    } else {
+      navigate(`/researcher/project/${id}`);
+    }
   };
 
-  // Get unique fields for filter
-  const uniqueFields = Array.from(new Set(myProjects.map((p) => p.field)));
+  // Get unique values for filters
+  const uniqueStatuses = Array.from(new Set(projects.map((p) => p.status)));
+  const uniqueCategories = Array.from(new Set(projects.map((p) => p.category)));
+  const uniqueTypes = Array.from(new Set(projects.map((p) => p.type)));
+
+  // Format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  // Capitalize first letter
+  const capitalize = (str: string) => {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin" />
+        <span className="ml-2">Loading projects...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-600 mb-2">Error loading projects</div>
+        <p className="text-muted-foreground">Please try again later</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -216,22 +209,37 @@ const MyProjects: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Status</SelectItem>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Planning">Planning</SelectItem>
-                <SelectItem value="Completed">Completed</SelectItem>
-                <SelectItem value="On Hold">On Hold</SelectItem>
+                {uniqueStatuses.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {capitalize(status)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
-            <Select value={fieldFilter} onValueChange={setFieldFilter}>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
               <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Filter by field" />
+                <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="All">All Fields</SelectItem>
-                {uniqueFields.map((field) => (
-                  <SelectItem key={field} value={field}>
-                    {field}
+                <SelectItem value="All">All Categories</SelectItem>
+                {uniqueCategories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {capitalize(category)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Types</SelectItem>
+                {uniqueTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {capitalize(type)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -245,7 +253,7 @@ const MyProjects: React.FC = () => {
         <CardHeader>
           <CardTitle>Projects ({filteredProjects.length})</CardTitle>
           <CardDescription>
-            Projects where you serve as the Principal Investigator
+            Your research projects and their current status
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -256,19 +264,19 @@ const MyProjects: React.FC = () => {
                   <TableHead>
                     <Button
                       variant="ghost"
-                      onClick={() => handleSort("title")}
+                      onClick={() => handleSort("englishTitle")}
                       className="hover:bg-transparent p-0 h-auto font-medium"
                     >
                       Project Title
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
-                  <TableHead>Field</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Team</TableHead>
                   <TableHead>Progress</TableHead>
-                  <TableHead>Budget</TableHead>
-                  <TableHead>Duration</TableHead>
+                  <TableHead>Language</TableHead>
+                  <TableHead>Created</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -277,28 +285,36 @@ const MyProjects: React.FC = () => {
                   <TableRow key={project.id}>
                     <TableCell className="font-medium">
                       <div>
-                        <div className="font-semibold">{project.title}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {project.description}
+                        <div className="font-semibold">
+                          {project["english-title"]}
                         </div>
+                        <div className="text-sm text-muted-foreground">
+                          {project["vietnamese-title"]}
+                        </div>
+                        {project.description && (
+                          <div className="text-sm text-muted-foreground mt-1">
+                            {project.description}
+                          </div>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{project.field}</Badge>
+                      <Badge variant="outline">
+                        {capitalize(project.category)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {capitalize(project.type)}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
                         className={getStatusColor(project.status)}
                       >
-                        {project.status}
+                        {capitalize(project.status)}
                       </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1">
-                        <Users className="h-4 w-4" />
-                        {project.teamSize}
-                      </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
@@ -311,15 +327,10 @@ const MyProjects: React.FC = () => {
                         <span className="text-sm">{project.progress}%</span>
                       </div>
                     </TableCell>
-                    <TableCell>{project.budget}</TableCell>
+                    <TableCell>{project.language}</TableCell>
                     <TableCell>
                       <div className="text-sm">
-                        <div>
-                          {new Date(project.startDate).toLocaleDateString()}
-                        </div>
-                        <div className="text-muted-foreground">
-                          to {new Date(project.endDate).toLocaleDateString()}
-                        </div>
+                        {formatDate(project["created-at"])}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -344,7 +355,10 @@ const MyProjects: React.FC = () => {
               <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="text-lg font-semibold mb-2">No projects found</h3>
               <p className="text-muted-foreground mb-4">
-                {searchTerm || statusFilter !== "All" || fieldFilter !== "All"
+                {searchTerm ||
+                statusFilter !== "All" ||
+                categoryFilter !== "All" ||
+                typeFilter !== "All"
                   ? "Try adjusting your search criteria"
                   : "You haven't created any projects yet"}
               </p>
@@ -356,4 +370,4 @@ const MyProjects: React.FC = () => {
   );
 };
 
-export default MyProjects;
+export default MyProject;

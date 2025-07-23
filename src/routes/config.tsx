@@ -48,7 +48,6 @@ import MyProjects from "@/pages/HostInstitution/MyProjects";
 import ProjectHistory from "@/pages/HostInstitution/ProjectHistory";
 
 // Principal Investigator Pages
-import PIMyProjects from "@/pages/PrincipalInvestigator/MyProjects";
 
 // Council Pages
 import PendingEvaluations from "@/pages/Council/Evaluations";
@@ -71,6 +70,7 @@ import FormsOverview from "@/pages/FormRegister/FormsOverview";
 import FormView from "@/pages/FormRegister/FormView";
 import FormEdit from "@/pages/FormRegister/FormEdit";
 import FormCreate from "@/pages/FormRegister/FormCreate";
+import MyProject from "@/pages/PrincipalInvestigator";
 
 /**
  * Main application routes configuration
@@ -222,7 +222,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "my-projects",
-            element: <ProjectDetail />,
+            element: <MyProject />,
           },
           {
             path: "forms",
@@ -431,7 +431,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "my-projects",
-            element: <PIMyProjects />,
+            element: <MyProject />,
           },
         ],
       },
