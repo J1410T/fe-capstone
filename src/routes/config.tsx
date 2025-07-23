@@ -33,10 +33,14 @@ import ProjectDetail from "@/pages/ProjectDetail";
 
 // RESEARCHER Pages
 import UserTaskManagement from "@/pages/TaskManagement";
-import ResearcherDashboard from "@/pages/Researcher/Dashboard";
 
 // Other Pages
 import Profile from "@/pages/Profile";
+
+// Scientific CV Pages
+import CreateScientificCV from "@/pages/Profile/ScientificCV/CreateScientificCV";
+import ViewScientificCV from "@/pages/Profile/ScientificCV/ViewScientificCV";
+import EditScientificCV from "@/pages/Profile/ScientificCV/EditScientificCV";
 
 // Host Institution Pages
 import RegisterProject from "@/pages/HostInstitution/RegisterProject";
@@ -58,13 +62,15 @@ import MeetingMinutes from "@/pages/Council/Meetings/MeetingMinutes";
 import GeneralComingSoon from "@/pages/ComingSoon";
 
 // Principal Investigator Pages
-import PIProfile from "@/pages/PrincipalInvestigator/Profile";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
-import PIDashboard from "@/pages/PrincipalInvestigator/Dashboard";
 import Meetings from "@/pages/Council/Meetings";
 import ProjectApproval from "@/pages/Council/ProjectApproval";
-import FormRegister from "@/pages/FormRegister";
-import TestRedirect from "@/pages/TestRedirect";
+
+// Form Management Pages
+import FormsOverview from "@/pages/FormRegister/FormsOverview";
+import FormView from "@/pages/FormRegister/FormView";
+import FormEdit from "@/pages/FormRegister/FormEdit";
+import FormCreate from "@/pages/FormRegister/FormCreate";
 
 /**
  * Main application routes configuration
@@ -97,10 +103,6 @@ export const routes: RouteObject[] = [
           {
             path: "home",
             element: <UserHome />,
-          },
-          {
-            path: "test-redirect",
-            element: <TestRedirect />,
           },
         ],
       },
@@ -210,10 +212,6 @@ export const routes: RouteObject[] = [
             element: <UserTaskManagement />,
           },
           {
-            path: "dashboard",
-            element: <ResearcherDashboard />,
-          },
-          {
             path: "profile",
             element: <Profile />,
           },
@@ -223,12 +221,29 @@ export const routes: RouteObject[] = [
             element: <GeneralComingSoon />,
           },
           {
-            path: "forms",
-            element: <FormRegister />,
-          },
-          {
             path: "my-projects",
             element: <ProjectDetail />,
+          },
+          {
+            path: "forms",
+            children: [
+              {
+                index: true,
+                element: <FormsOverview />,
+              },
+              {
+                path: "create",
+                element: <FormCreate />,
+              },
+              {
+                path: ":formId/view",
+                element: <FormView />,
+              },
+              {
+                path: ":formId/edit",
+                element: <FormEdit />,
+              },
+            ],
           },
           // Add more RESEARCHER routes here
         ],
@@ -280,8 +295,25 @@ export const routes: RouteObject[] = [
             element: <Profile />,
           },
           {
-            path: "forms/*",
-            element: <GeneralComingSoon />,
+            path: "forms",
+            children: [
+              {
+                index: true,
+                element: <FormsOverview />,
+              },
+              {
+                path: "create",
+                element: <FormCreate />,
+              },
+              {
+                path: ":formId/view",
+                element: <FormView />,
+              },
+              {
+                path: ":formId/edit",
+                element: <FormEdit />,
+              },
+            ],
           },
           {
             path: "project/*",
@@ -365,11 +397,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "profile",
-            element: <PIProfile />,
-          },
-          {
-            path: "dashboard",
-            element: <PIDashboard />,
+            element: <Profile />,
           },
           {
             path: "meetings",
@@ -382,7 +410,24 @@ export const routes: RouteObject[] = [
           },
           {
             path: "forms",
-            element: <FormRegister />,
+            children: [
+              {
+                index: true,
+                element: <FormsOverview />,
+              },
+              {
+                path: "create",
+                element: <FormCreate />,
+              },
+              {
+                path: ":formId/view",
+                element: <FormView />,
+              },
+              {
+                path: ":formId/edit",
+                element: <FormEdit />,
+              },
+            ],
           },
           {
             path: "my-projects",
@@ -394,6 +439,31 @@ export const routes: RouteObject[] = [
       {
         path: "unauthorized",
         element: <Unauthorized />,
+      },
+      // Scientific CV routes (accessible by all authenticated users)
+      {
+        path: "profile/scientific-cv/create",
+        element: (
+          <AuthGuard>
+            <CreateScientificCV />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "profile/scientific-cv/view",
+        element: (
+          <AuthGuard>
+            <ViewScientificCV />
+          </AuthGuard>
+        ),
+      },
+      {
+        path: "profile/scientific-cv/edit",
+        element: (
+          <AuthGuard>
+            <EditScientificCV />
+          </AuthGuard>
+        ),
       },
       // Auth routes (login, register, etc.)
       {

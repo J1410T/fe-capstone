@@ -98,7 +98,11 @@ const NavigationGuard: React.FC = () => {
 
       // Check if user is accessing a route they're authorized for
       const userRolePatterns =
-        roleRoutePatterns[user?.role as keyof typeof roleRoutePatterns] || [];
+        (user?.role &&
+          roleRoutePatterns[
+            user.role as unknown as keyof typeof roleRoutePatterns
+          ]) ||
+        [];
       const isAccessingAuthorizedRoute = userRolePatterns.some((pattern) =>
         currentPath.startsWith(pattern)
       );
@@ -117,14 +121,14 @@ const NavigationGuard: React.FC = () => {
         // Only check if there was a previous navigation from a different role's route
         if (previousEntry) {
           const previousRoleRoute = Object.entries(roleRoutePatterns).find(
-            ([role, patterns]) =>
+            ([, patterns]) =>
               patterns.some((pattern) =>
                 previousEntry.pathname.startsWith(pattern)
               )
           );
 
           const currentRoleRoute = Object.entries(roleRoutePatterns).find(
-            ([role, patterns]) =>
+            ([, patterns]) =>
               patterns.some((pattern) => currentPath.startsWith(pattern))
           );
 

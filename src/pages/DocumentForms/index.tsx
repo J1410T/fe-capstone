@@ -97,7 +97,7 @@ export default function DocumentForms() {
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = html;
 
-    await html2pdf(tempDiv, {
+    html2pdf(tempDiv, {
       margin: 0.5,
       filename: "document-form.pdf",
       image: { type: "jpeg", quality: 0.98 },
@@ -117,7 +117,10 @@ export default function DocumentForms() {
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen overflow-x-hidden">
       {/* Select form dropdown */}
       <div>
-        <label htmlFor="form-select" className="block mb-2 font-semibold text-gray-700">
+        <label
+          htmlFor="form-select"
+          className="block mb-2 font-semibold text-gray-700"
+        >
           Select Form Template:
         </label>
         <Select
@@ -208,10 +211,12 @@ export default function DocumentForms() {
         />
       </div>
 
-
       {/* Action buttons */}
       <div className="flex justify-center gap-4">
-        <Button variant="outline" onClick={() => console.log(editorRef.current?.getContent())}>
+        <Button
+          variant="outline"
+          onClick={() => console.log(editorRef.current?.getContent())}
+        >
           Log Content
         </Button>
         <Button onClick={previewPdf}>Preview PDF</Button>

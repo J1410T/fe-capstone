@@ -96,7 +96,6 @@ const mockNotifications = [
 const menuItemsByRole = {
   [UserRole.RESEARCHER]: [
     { name: "Home", path: "/home", icon: Home },
-    { name: "Dashboard", path: "/researcher/dashboard", icon: LayoutDashboard },
     { name: "Projects", path: "/researcher/projects", icon: FolderOpen },
     { name: "Tasks", path: "/researcher/tasks", icon: ClipboardList },
     { name: "My Projects", path: "/researcher/my-projects", icon: Briefcase },
@@ -113,10 +112,11 @@ const menuItemsByRole = {
     { name: "History", path: "/host/history", icon: History },
   ],
   [UserRole.PRINCIPAL_INVESTIGATOR]: [
-    { name: "Dashboard", path: "/pi/dashboard", icon: LayoutDashboard },
+    { name: "Home", path: "/home", icon: Home },
     { name: "Projects", path: "/pi/projects", icon: FolderOpen },
     { name: "My Projects", path: "/pi/my-projects", icon: Briefcase },
     { name: "Meetings", path: "/pi/meetings", icon: Calendar },
+    { name: "Forms", path: "/pi/forms", icon: FileText },
     // { name: "Progress", path: "/pi/progress-reports", icon: FileText },
   ],
   [UserRole.APPRAISAL_COUNCIL]: [

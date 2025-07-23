@@ -95,7 +95,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
         state={{
           reason: "Access denied: Staff role required",
           from: location.pathname,
-          userRole: user.role,
+          userRole: user?.role,
           timestamp: Date.now(),
         }}
         replace
@@ -119,7 +119,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
         state={{
           reason: "Access denied: Host Institution role required",
           from: location.pathname,
-          userRole: user.role,
+          userRole: user?.role,
           timestamp: Date.now(),
         }}
         replace
@@ -138,7 +138,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
         state={{
           reason: "Access denied: Principal Investigator role required",
           from: location.pathname,
-          userRole: user.role,
+          userRole: user?.role,
           timestamp: Date.now(),
         }}
         replace
@@ -157,7 +157,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
         state={{
           reason: "Access denied: Appraisal Council role required",
           from: location.pathname,
-          userRole: user.role,
+          userRole: user?.role,
           timestamp: Date.now(),
         }}
         replace
@@ -176,7 +176,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
         state={{
           reason: "Access denied: Researcher role required",
           from: location.pathname,
-          userRole: user.role,
+          userRole: user?.role,
           timestamp: Date.now(),
         }}
         replace

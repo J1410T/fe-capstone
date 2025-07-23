@@ -16,7 +16,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import {
   CheckCircle,
   XCircle,
@@ -28,8 +28,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { ApplicantData, ProfileData, EvaluationData } from "../types";
-import ProfileTab from "./ProfileTab";
-import EvaluationTab from "./EvaluationTab";
+
 import { ConfirmDialog } from "@/components/common/ConfirmDialog";
 
 interface ApplicantProfileProps {
@@ -63,14 +62,6 @@ const ApplicantProfile: React.FC<ApplicantProfileProps> = ({
   }, [applicant]);
 
   if (!applicant || !profileData || !evaluationData) return null;
-
-  const handleProfileDataChange = (data: ProfileData) => {
-    setProfileData(data);
-  };
-
-  const handleEvaluationDataChange = (data: EvaluationData) => {
-    setEvaluationData(data);
-  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

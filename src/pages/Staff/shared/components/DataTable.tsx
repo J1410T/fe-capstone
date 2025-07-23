@@ -88,10 +88,10 @@ export function DataTable<TData>({
     externalOnGlobalFilterChange ?? setInternalGlobalFilter;
 
   // Debounced search function
-  const debouncedSearch = useMemo(
-    () => debounce(onGlobalFilterChange, 300),
-    [onGlobalFilterChange]
-  );
+  const debouncedSearch = useMemo(() => {
+    const searchFn = onGlobalFilterChange || (() => {});
+    return debounce(searchFn as (...args: unknown[]) => unknown, 300);
+  }, [onGlobalFilterChange]);
 
   const handleSearchChange = (value: string) => {
     if (externalOnGlobalFilterChange) {
@@ -117,7 +117,11 @@ export function DataTable<TData>({
       return searchFields.some((field) => {
         const value = field
           .split(".")
-          .reduce((obj, key) => obj?.[key], rowData);
+          .reduce(
+            (obj: Record<string, unknown>, key) =>
+              obj?.[key] as Record<string, unknown>,
+            rowData as Record<string, unknown>
+          );
         return value?.toString().toLowerCase().includes(searchValue);
       });
     }
