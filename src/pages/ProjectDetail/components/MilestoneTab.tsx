@@ -14,6 +14,7 @@ interface MilestoneTabProps {
     deadline: string | null;
     status: string;
     tasks: ProjectTask[] | null;
+    tasks: ProjectTask[] | null;
   }>;
 }
 
@@ -103,6 +104,10 @@ const MilestoneTab: React.FC<MilestoneTabProps> = ({
   const notStartedMilestones = milestones.filter(
     (m) => m.status === "Not Started"
   ).length;
+  const totalTasks = milestones.reduce(
+    (total, m) => total + (m.tasks?.length || 0),
+    0
+  );
   const totalTasks = milestones.reduce(
     (total, m) => total + (m.tasks?.length || 0),
     0
