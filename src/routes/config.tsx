@@ -30,6 +30,7 @@ import {
 // General Pages
 import ProjectsList from "@/pages/ProjectsList";
 import ProjectDetail from "@/pages/ProjectDetail";
+import ProjectEnroll from "@/pages/ProjectEnroll";
 
 // RESEARCHER Pages
 import UserTaskManagement from "@/pages/TaskManagement";
@@ -208,6 +209,10 @@ export const routes: RouteObject[] = [
             element: <ProjectDetail />,
           },
           {
+            path: "project/:projectId/enroll",
+            element: <ProjectEnroll />,
+          },
+          {
             path: "tasks",
             element: <UserTaskManagement />,
           },
@@ -285,6 +290,10 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId",
             element: <ProjectDetail />,
+          },
+          {
+            path: "project/:projectId/enroll",
+            element: <ProjectEnroll />,
           },
           {
             path: "history",
@@ -365,6 +374,10 @@ export const routes: RouteObject[] = [
             element: <ProjectDetail />,
           },
           {
+            path: "project/:projectId/enroll",
+            element: <ProjectEnroll />,
+          },
+          {
             path: "profile",
             element: <Profile />,
           },
@@ -390,6 +403,10 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId",
             element: <ProjectDetail />,
+          },
+          {
+            path: "project/:projectId/enroll",
+            element: <ProjectEnroll />,
           },
           {
             path: "project-enroll-form",

@@ -32,7 +32,6 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   type,
   description,
   vietnameseTitle,
-  logoUrl,
   abbreviations,
   requirementNote,
   language,
@@ -48,13 +47,6 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
       <CardHeader className="pb-4 sm:pb-6">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="flex items-center gap-4">
-            {logoUrl && (
-              <img
-                src={logoUrl}
-                alt="Project Logo"
-                className="w-14 h-14 sm:w-20 sm:h-20 rounded-md object-cover border"
-              />
-            )}
             <div>
               <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
                 Project Overview

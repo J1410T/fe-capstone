@@ -55,6 +55,7 @@ export interface Project {
     name: string;
     email: string;
   };
+  milestones: Milestone[];
   team: TeamResearcher[];
   year: string;
   progress: number;
@@ -136,6 +137,22 @@ export interface Task {
   completedAt?: string;
   evaluatedBy?: string;
   evaluation?: string;
+  "start-date": string;
+  "end-date": string;
+  "member-tasks": string;
+}
+
+export interface MemberTask {
+  id: string;
+  name: string;
+  progress: number;
+  overdue: number;
+  note: string;
+  deliveryDate: string;
+  joinedAt: string;
+  status: string;
+  memberId: string;
+  taskId: string;
 }
 
 export interface Milestone {
@@ -145,6 +162,8 @@ export interface Milestone {
   deadline: string;
   status: "Not Started" | "In Progress" | "Completed" | "Overdue";
   progress: number;
+  "start-date": string;
+  "end-date": string;
   tasks: Task[];
 }
 

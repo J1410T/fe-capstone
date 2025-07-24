@@ -124,6 +124,9 @@ export interface ProjectCardProps {
   tags?: string[];
   onViewDetails?: (projectId: string) => void;
   getStatusColor?: (status: string) => string;
+  logoUrl?: string;
+  major?: ProjectMajor[];
+  field?: ProjectMajor["field"];
 }
 
 export interface CreateProjectRequest {

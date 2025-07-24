@@ -18,3 +18,16 @@ export { FileUploadComponent as FileUpload } from "./FileUpload";
 
 // Data display components
 export { DataCard, UnifiedDataCard } from "./DataCard";
+
+// User search and invitation components
+export { UserSearchInput } from "./UserSearchInput";
+export { CollaboratorInvitation } from "./CollaboratorInvitation";
+export type { UserSearchResult, InvitedUser } from "./UserSearchInput";
+
+// Simplified user search components
+export { SimpleUserSearch } from "./SimpleUserSearch";
+export { SimpleCollaboratorManager } from "./SimpleCollaboratorManager";
+export type {
+  UserSearchResult as SimpleUserResult,
+  InvitedUser as SimpleInvitedUser,
+} from "./SimpleUserSearch";
