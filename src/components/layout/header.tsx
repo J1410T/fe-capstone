@@ -134,8 +134,8 @@ const menuItemsByRole = {
   [UserRole.STAFF]: [
     { name: "Home", path: "/home", icon: Home },
     { name: "Dashboard", path: "/staff/dashboard", icon: LayoutDashboard },
-    { name: "Projects", path: "/projects", icon: FolderOpen },
-    { name: "Tasks", path: "/tasks", icon: ClipboardList },
+    { name: "Projects", path: "/staff/projects", icon: FolderOpen },
+    { name: "Tasks", path: "/staff/tasks", icon: ClipboardList },
   ],
 };
 

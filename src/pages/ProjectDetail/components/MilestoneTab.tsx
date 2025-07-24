@@ -15,7 +15,7 @@ interface MilestoneTabProps {
     description: string | null;
     deadline: string | null;
     status: string;
-    tasks: ProjectTask[];
+    tasks: ProjectTask[] | null;
   }>;
 }
 
@@ -236,9 +236,9 @@ const MilestoneTab: React.FC<MilestoneTabProps> = ({
             milestone.id === milestoneId
               ? {
                   ...milestone,
-                  tasks: [...milestone.tasks, newTask],
+                  tasks: [...(milestone.tasks || []), newTask],
                   progress: calculateMilestoneProgress([
-                    ...milestone.tasks,
+                    ...(milestone.tasks || []),
                     newTask,
                   ]),
                 }
@@ -267,7 +267,10 @@ const MilestoneTab: React.FC<MilestoneTabProps> = ({
   const notStartedMilestones = milestones.filter(
     (m) => m.status === "Not Started"
   ).length;
-  const totalTasks = milestones.reduce((total, m) => total + m.tasks.length, 0);
+  const totalTasks = milestones.reduce(
+    (total, m) => total + (m.tasks?.length || 0),
+    0
+  );
 
   return (
     <Card>
