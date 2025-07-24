@@ -1,151 +1,169 @@
+/**
+ * Project-related React Query hooks
+ */
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { queryApi } from "@/services/query-client";
-import { DocumentForm } from "@/types/document";
+import { queryKeys } from "@/lib/react-query";
 
-// Query keys for documents
-export const documentQueryKeys = {
-  all: ["documents"] as const,
-  lists: () => [...documentQueryKeys.all, "list"] as const,
-  list: (filters?: Record<string, unknown>) =>
-    [...documentQueryKeys.lists(), { filters }] as const,
-  details: () => [...documentQueryKeys.all, "detail"] as const,
-  detail: (id: string) => [...documentQueryKeys.details(), id] as const,
-  byUser: (userId: string) =>
-    [...documentQueryKeys.all, "user", userId] as const,
-  byType: (type: string) => [...documentQueryKeys.all, "type", type] as const,
-  scientificCV: (userId: string) =>
-    [...documentQueryKeys.all, "scientific-cv", userId] as const,
-};
-
-// Types for document operations
-export interface CreateDocumentData {
+// Types
+export interface Project {
+  id: string;
   name: string;
-  type: string;
-  contentHtml: string;
-  isTemplate?: boolean;
-  projectId?: string | null;
-  evaluationId?: string | null;
-  individualEvaluationId?: string | null;
-  transactionId?: string | null;
+  type: "Basic" | "Application";
+  objective: string;
+  description: string;
+  status: "Draft" | "Under Review" | "Active" | "Completed" | "Cancelled";
+  createdAt: string;
+  updatedAt: string;
+  pi: string;
+  budget?: number;
+  team?: TeamResearcher[];
+  progress?: number;
+  category?: string;
+  manager?: string;
+  year?: string;
 }
 
-export interface UpdateDocumentData {
-  name?: string;
-  contentHtml?: string;
-  status?: string;
-  [key: string]: string | number | boolean | undefined;
+export interface TeamResearcher {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  avatar?: string;
 }
 
-export interface DocumentFilters {
-  type?: string;
+export interface ProjectFilters {
   status?: string;
-  uploaderId?: string;
-  projectId?: string;
-  page?: number;
-  limit?: number;
+  category?: string;
   search?: string;
   sortBy?: string;
   sortOrder?: "asc" | "desc";
-  [key: string]: string | number | boolean | undefined;
+  page?: number;
+  limit?: number;
+  [key: string]: string | number | undefined;
+}
+
+export interface CreateProjectData {
+  name: string;
+  type: "Basic" | "Application";
+  objective: string;
+  description: string;
+  relatedProjects?: string;
+  [key: string]: string | undefined;
+}
+
+export interface UpdateProjectData {
+  name?: string;
+  type?: "Basic" | "Application";
+  objective?: string;
+  description?: string;
+  relatedProjects?: string;
+  status?: Project["status"];
+  budget?: number;
+  progress?: number;
+  [key: string]: string | number | undefined;
 }
 
 /**
- * Hook to fetch user's Scientific CV
+ * Hook to fetch all projects with optional filters
  */
-export const useScientificCV = (userId: string, enabled = true) => {
+export const useProjects = (filters?: ProjectFilters) => {
   return useQuery({
-    queryKey: documentQueryKeys.scientificCV(userId),
-    queryFn: () =>
-      queryApi.get<DocumentForm>(`/documents/scientific-cv/${userId}`),
-    enabled: enabled && !!userId,
-    throwOnError: false, // Don't throw error if CV doesn't exist
-  });
-};
-
-/**
- * Hook to fetch documents with optional filters
- */
-export const useDocuments = (filters?: DocumentFilters) => {
-  return useQuery({
-    queryKey: documentQueryKeys.list(filters),
-    queryFn: () => queryApi.getPaginated<DocumentForm>("/documents", filters),
+    queryKey: queryKeys.projects.list(filters),
+    queryFn: () => queryApi.getPaginated<Project>("/projects", filters),
     throwOnError: true,
   });
 };
 
 /**
- * Hook to fetch a single document by ID
+ * Hook to fetch a single project by ID
  */
-export const useDocument = (id: string, enabled = true) => {
+export const useProject = (id: string, enabled = true) => {
   return useQuery({
-    queryKey: documentQueryKeys.detail(id),
-    queryFn: () => queryApi.get<DocumentForm>(`/document/${id}`),
+    queryKey: queryKeys.projects.detail(id),
+    queryFn: () => queryApi.get<Project>(`/projects/${id}`),
     enabled: enabled && !!id,
     throwOnError: true,
   });
 };
 
-// hooks/useDocumentByType.ts
-export const useDocumentByType = (
-  type: string,
-  isTemplate = false,
-  enabled = true
-) => {
+/**
+ * Hook to fetch project milestones
+ */
+export const useProjectMilestones = (projectId: string, enabled = true) => {
   return useQuery({
-    queryKey: documentQueryKeys.list({ type, "is-template": isTemplate }),
-    queryFn: async () => {
-      const res = await queryApi.getPaginated<DocumentForm>("/documents", {
-        type,
-        "is-template": isTemplate,
-      });
-
-      return {
-        data: Array.isArray(res.data) ? res.data : [],
-        pagination: res.pagination || {},
-      };
-    },
-    enabled,
-    retry: false,
-    throwOnError: false,
+    queryKey: queryKeys.projects.milestones(projectId),
+    queryFn: () => queryApi.get(`/projects/${projectId}/milestones`),
+    enabled: enabled && !!projectId,
+    throwOnError: true,
   });
 };
 
 /**
- * Hook to create a new document
+ * Hook to fetch project tasks
  */
-export const useCreateDocument = () => {
+export const useProjectTasks = (projectId: string, enabled = true) => {
+  return useQuery({
+    queryKey: queryKeys.projects.tasks(projectId),
+    queryFn: () => queryApi.get(`/projects/${projectId}/tasks`),
+    enabled: enabled && !!projectId,
+    throwOnError: true,
+  });
+};
+
+/**
+ * Hook to fetch project budget
+ */
+export const useProjectBudget = (projectId: string, enabled = true) => {
+  return useQuery({
+    queryKey: queryKeys.projects.budget(projectId),
+    queryFn: () => queryApi.get(`/projects/${projectId}/budget`),
+    enabled: enabled && !!projectId,
+    throwOnError: true,
+  });
+};
+
+/**
+ * Hook to fetch project team
+ */
+export const useProjectTeam = (projectId: string, enabled = true) => {
+  return useQuery({
+    queryKey: queryKeys.projects.team(projectId),
+    queryFn: () =>
+      queryApi.get<TeamResearcher[]>(`/projects/${projectId}/team`),
+    enabled: enabled && !!projectId,
+    throwOnError: true,
+  });
+};
+
+/**
+ * Hook to create a new project
+ */
+export const useCreateProject = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: CreateDocumentData) =>
-      queryApi.post<DocumentForm, CreateDocumentData>("/documents", data),
-    onSuccess: (newDocument) => {
-      // Invalidate and refetch documents list
-      queryClient.invalidateQueries({ queryKey: documentQueryKeys.all });
+    mutationFn: (data: CreateProjectData) =>
+      queryApi.post<Project>("/projects", data),
+    onSuccess: (newProject) => {
+      // Invalidate and refetch projects list
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
 
-      // If it's a Scientific CV, invalidate the specific query
-      if (newDocument.type === "BM2") {
-        queryClient.invalidateQueries({
-          queryKey: documentQueryKeys.scientificCV(
-            newDocument.uploaderId || newDocument["uploader-id"]
-          ),
-        });
-      }
-
-      // Add the new document to cache
+      // Add the new project to cache
       queryClient.setQueryData(
-        documentQueryKeys.detail(newDocument.id),
-        newDocument
+        queryKeys.projects.detail(newProject.id),
+        newProject
       );
 
-      toast.success("Document created successfully!", {
-        description: `${newDocument.name} has been created.`,
+      toast.success("Project created successfully!", {
+        description: `${newProject.name} has been created and is now under review.`,
       });
     },
     onError: (error) => {
-      console.error("Failed to create document:", error);
-      toast.error("Failed to create document", {
+      console.error("Failed to create project:", error);
+      toast.error("Failed to create project", {
         description: "Please check your input and try again",
       });
     },
@@ -153,66 +171,115 @@ export const useCreateDocument = () => {
 };
 
 /**
- * Hook to update an existing document
+ * Hook to update an existing project
  */
-export const useUpdateDocument = () => {
+export const useUpdateProject = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateDocumentData }) =>
-      queryApi.put<DocumentForm>(`/documents/${id}`, data),
-    onSuccess: (updatedDocument) => {
-      // Update the document in cache
+    mutationFn: ({ id, data }: { id: string; data: UpdateProjectData }) =>
+      queryApi.put<Project>(`/projects/${id}`, data),
+    onSuccess: (updatedProject) => {
+      // Update the project in cache
       queryClient.setQueryData(
-        documentQueryKeys.detail(updatedDocument.id),
-        updatedDocument
+        queryKeys.projects.detail(updatedProject.id),
+        updatedProject
       );
 
-      // Invalidate documents list to refresh
-      queryClient.invalidateQueries({ queryKey: documentQueryKeys.all });
+      // Invalidate projects list to refresh
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
 
-      // If it's a Scientific CV, invalidate the specific query
-      if (updatedDocument.type === "BM2") {
-        queryClient.invalidateQueries({
-          queryKey: documentQueryKeys.scientificCV(
-            updatedDocument.uploaderId || updatedDocument["uploader-id"]
-          ),
-        });
-      }
-
-      toast.success("Document updated successfully!", {
-        description: `${updatedDocument.name} has been updated.`,
+      toast.success("Project updated successfully!", {
+        description: `${updatedProject.name} has been updated.`,
       });
     },
     onError: (error) => {
-      console.error("Failed to update document:", error);
-      toast.error("Failed to update document");
+      console.error("Failed to update project:", error);
+      toast.error("Failed to update project");
     },
   });
 };
 
 /**
- * Hook to delete a document
+ * Hook to delete a project
  */
-export const useDeleteDocument = () => {
+export const useDeleteProject = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (id: string) => queryApi.delete(`/documents/${id}`),
+    mutationFn: (id: string) => queryApi.delete(`/projects/${id}`),
     onSuccess: (_, deletedId) => {
-      // Remove the document from cache
+      // Remove the project from cache
       queryClient.removeQueries({
-        queryKey: documentQueryKeys.detail(deletedId),
+        queryKey: queryKeys.projects.detail(deletedId),
       });
 
-      // Invalidate documents list to refresh
-      queryClient.invalidateQueries({ queryKey: documentQueryKeys.all });
+      // Invalidate projects list
+      queryClient.invalidateQueries({ queryKey: queryKeys.projects.all });
 
-      toast.success("Document deleted successfully!");
+      toast.success("Project deleted successfully!");
     },
     onError: (error) => {
-      console.error("Failed to delete document:", error);
-      toast.error("Failed to delete document");
+      console.error("Failed to delete project:", error);
+      toast.error("Failed to delete project");
+    },
+  });
+};
+
+/**
+ * Hook to add team RESEARCHER to project
+ */
+export const useAddTeamRESEARCHER = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      ResearcherId,
+    }: {
+      projectId: string;
+      ResearcherId: string;
+    }) => queryApi.post(`/projects/${projectId}/team`, { ResearcherId }),
+    onSuccess: (_, variables) => {
+      // Invalidate project team cache
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.team(variables.projectId),
+      });
+
+      toast.success("Team RESEARCHER added successfully!");
+    },
+    onError: (error) => {
+      console.error("Failed to add team RESEARCHER:", error);
+      toast.error("Failed to add team RESEARCHER");
+    },
+  });
+};
+
+/**
+ * Hook to remove team RESEARCHER from project
+ */
+export const useRemoveTeamResearcher = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      ResearcherId,
+    }: {
+      projectId: string;
+      ResearcherId: string;
+    }) => queryApi.delete(`/projects/${projectId}/team/${ResearcherId}`),
+    onSuccess: (_, variables) => {
+      // Invalidate project team cache
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.projects.team(variables.projectId),
+      });
+
+      toast.success("Team RESEARCHER removed successfully!");
+    },
+    onError: (error) => {
+      console.error("Failed to remove team RESEARCHER:", error);
+      toast.error("Failed to remove team RESEARCHER");
     },
   });
 };

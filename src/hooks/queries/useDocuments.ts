@@ -80,9 +80,34 @@ export const useDocuments = (filters?: DocumentFilters) => {
 export const useDocument = (id: string, enabled = true) => {
   return useQuery({
     queryKey: documentQueryKeys.detail(id),
-    queryFn: () => queryApi.get<DocumentForm>(`/documents/${id}`),
+    queryFn: () => queryApi.get<DocumentForm>(`/document/${id}`),
     enabled: enabled && !!id,
     throwOnError: true,
+  });
+};
+
+// hooks/useDocumentByType.ts
+export const useDocumentByType = (
+  type: string,
+  isTemplate = false,
+  enabled = true
+) => {
+  return useQuery({
+    queryKey: documentQueryKeys.list({ type, "is-template": isTemplate }),
+    queryFn: async () => {
+      const res = await queryApi.getPaginated<DocumentForm>("/documents", {
+        type,
+        "is-template": isTemplate,
+      });
+
+      return {
+        data: Array.isArray(res.data) ? res.data : [],
+        pagination: res.pagination || {},
+      };
+    },
+    enabled,
+    retry: false,
+    throwOnError: false,
   });
 };
 
