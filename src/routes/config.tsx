@@ -65,7 +65,12 @@ import GeneralComingSoon from "@/pages/ComingSoon";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
 import Meetings from "@/pages/Council/Meetings";
 import ProjectApproval from "@/pages/Council/ProjectApproval";
-import FormRegister from "@/pages/FormRegister";
+// import FormRegister from "@/pages/FormRegister";
+import FormsOverview from "@/pages/FormRegister/FormsOverview";
+import FormCreate from "@/pages/FormRegister/FormCreate";
+import FormView from "@/pages/FormRegister/FormView";
+import FormEdit from "@/pages/FormRegister/FormEdit";
+import MyProject from "@/pages/PrincipalInvestigator";
 
 /**
  * Main application routes configuration
@@ -76,7 +81,7 @@ export const routes: RouteObject[] = [
     element: (
       <AuthProvider>
         <GlobalAuthListener />
-        <NavigationGuard />
+<NavigationGuard />
         <Outlet />
       </AuthProvider>
     ),
@@ -201,7 +206,7 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId",
             element: <ProjectDetail />,
-          },
+},
           {
             path: "project/:projectId/enroll",
             element: <ProjectEnroll />,
@@ -219,13 +224,10 @@ export const routes: RouteObject[] = [
             path: "notifications",
             element: <GeneralComingSoon />,
           },
-          {
-            path: "forms",
-            element: <FormRegister />,
-          },
+
           {
             path: "my-projects",
-            element: <ProjectDetail />,
+            element: <MyProject />,
           },
           {
             path: "forms",
@@ -330,7 +332,7 @@ export const routes: RouteObject[] = [
       },
       // Council routes
       {
-        path: "council",
+path: "council",
         element: (
           <AuthGuard requiredRoles={[UserRole.APPRAISAL_COUNCIL]}>
             <UserLayout />
@@ -453,7 +455,7 @@ export const routes: RouteObject[] = [
       // Unauthorized page
       {
         path: "unauthorized",
-        element: <Unauthorized />,
+element: <Unauthorized />,
       },
       // Scientific CV routes (accessible by all authenticated users)
       {
