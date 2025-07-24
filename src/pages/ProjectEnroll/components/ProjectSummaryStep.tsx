@@ -2,7 +2,11 @@ import React, { useRef, useEffect, useState } from "react";
 import { Editor } from "@tinymce/tinymce-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowRight } from "lucide-react";
+import { FileText, ArrowRight, File } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { queryApi } from "@/services/query-client";
+import { DocumentForm } from "@/types/document";
+import { documentQueryKeys } from "@/hooks/queries/useDocuments";
 
 type EditorInstance = {
   getContent: () => string;
@@ -10,231 +14,301 @@ type EditorInstance = {
 } | null;
 
 interface ProjectSummaryStepProps {
-  projectId: string;
-  bm1Content: string;
   onContentChange: (content: string) => void;
   onNext: () => void;
 }
 
 export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
-  projectId,
-  bm1Content,
   onContentChange,
   onNext,
 }) => {
   const editorRef = useRef<EditorInstance>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [formContent, setFormContent] = useState<string>("");
   const [formStyles, setFormStyles] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(true);
   const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
 
-  // Load BM1 template and any existing content
-  useEffect(() => {
-    const loadBM1Template = async () => {
+  // Fetch BM1 templates from API with error handling
+  const {
+    data: documentsResponse,
+    isLoading: documentsLoading,
+    error: documentsError,
+  } = useQuery({
+    queryKey: documentQueryKeys.list({ type: "BM1", "is-template": true }),
+    queryFn: async () => {
       try {
-        setIsLoading(true);
-
-        // Try to fetch existing BM1 content for this project
-        // In a real app, this would be an API call
-        // const existingContent = await fetchBM1Content(projectId);
-
-        // Load BM1 template
-        const templateResponse = await fetch("/templates/BM1.html");
-        const templateContent = await templateResponse.text();
-
-        const stylesResponse = await fetch("/templates/BM1.css");
-        const stylesContent = await stylesResponse.text();
-
-        setFormStyles(stylesContent);
-
-        // Use existing content if available, otherwise use template
-        const contentToUse = bm1Content || templateContent;
-        setFormContent(contentToUse);
-
-        // Update parent component
-        if (!bm1Content && templateContent) {
-          onContentChange(templateContent);
-        }
+        console.log("Attempting to fetch BM1 templates from API...");
+        const result = await queryApi.getPaginated<DocumentForm>("/document", {
+          type: "BM1",
+          "is-template": true,
+        });
+        console.log("API call successful:", result);
+        return result;
       } catch (error) {
-        console.error("Failed to load BM1 template:", error);
-        // Fallback content
-        const fallbackContent = `
-          <h1>Project Summary</h1>
-          <h2>1. Project Overview</h2>
-          <p>Please provide a comprehensive overview of your research project...</p>
-          
-          <h2>2. Research Objectives</h2>
-          <p>List the main objectives of your research...</p>
-          
-          <h2>3. Methodology</h2>
-          <p>Describe the research methodology you plan to use...</p>
-          
-          <h2>4. Expected Outcomes</h2>
-          <p>What are the expected outcomes and impact of this research?</p>
-          
-          <h2>5. Timeline</h2>
-          <p>Provide a detailed timeline for your research project...</p>
-        `;
-        setFormContent(fallbackContent);
-        onContentChange(fallbackContent);
-      } finally {
-        setIsLoading(false);
+        console.error("Error fetching BM1 templates:", error);
+        // Return empty result instead of throwing
+        return {
+          data: [],
+          pagination: {
+            page: 1,
+            limit: 10,
+            total: 0,
+            totalPages: 0,
+            hasNext: false,
+            hasPrev: false,
+          },
+        };
       }
-    };
+    },
+    throwOnError: false,
+    retry: false,
+    enabled: true, // Always try to fetch
+  });
 
-    loadBM1Template();
-  }, [projectId, bm1Content, onContentChange]);
+  // Load BM1 template from API
+  useEffect(() => {
+    console.log("ProjectSummaryStep - Template loading effect:", {
+      documentsLoading,
+      documentsResponse,
+      documentsError,
+      hasData: documentsResponse?.data?.length || 0,
+    });
+
+    if (!documentsLoading) {
+      const defaultContent = `<h2>Project Summary (BM1)</h2><p><strong>Project Title:</strong> [Enter project title]</p><p><strong>Project Description:</strong></p><p>[Enter detailed project description here]</p><p><strong>Objectives:</strong></p><ul><li>[Objective 1]</li><li>[Objective 2]</li></ul><p><strong>Methodology:</strong></p><p>[Enter methodology here]</p><p><strong>Expected Outcomes:</strong></p><p>[Enter expected outcomes here]</p>`;
+
+      if (documentsError) {
+        console.error("Error loading BM1 templates:", documentsError);
+        console.log("Using default content due to API error");
+        setFormContent(defaultContent);
+        onContentChange(defaultContent);
+        setFormStyles("");
+        setIsLoading(false);
+        return;
+      }
+
+      if (
+        documentsResponse &&
+        documentsResponse.data &&
+        documentsResponse.data.length > 0
+      ) {
+        console.log("Found BM1 templates:", documentsResponse.data);
+        const templateDoc = documentsResponse.data[0];
+        const htmlContent =
+          templateDoc["content-html"] || templateDoc.contentHtml || "";
+
+        console.log("Template HTML content:", htmlContent);
+
+        if (htmlContent) {
+          const styleMatch = htmlContent.match(
+            /<style[^>]*>([\s\S]*?)<\/style>/i
+          );
+          const extractedStyles = styleMatch ? styleMatch[1] : "";
+          setFormStyles(extractedStyles);
+
+          const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+          const content = bodyMatch
+            ? bodyMatch[1]
+            : htmlContent.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
+
+          console.log("Extracted styles:", extractedStyles);
+          console.log("Extracted content:", content);
+
+          setFormContent(content);
+          onContentChange(content);
+        } else {
+          console.log("No HTML content found in template, using default");
+          setFormContent(defaultContent);
+          onContentChange(defaultContent);
+          setFormStyles("");
+        }
+      } else {
+        console.log("No BM1 templates found, using default content");
+        setFormContent(defaultContent);
+        onContentChange(defaultContent);
+        setFormStyles("");
+      }
+      setIsLoading(false);
+    }
+  }, [documentsLoading, documentsResponse, documentsError, onContentChange]);
 
   const handleEditorChange = (content: string) => {
     onContentChange(content);
   };
 
   const handleNext = () => {
-    // Save current content before proceeding
     const currentContent = editorRef.current?.getContent() || "";
     onContentChange(currentContent);
     onNext();
   };
+  const handleSave = () => {
+    const currentContent = editorRef.current?.getContent() || "";
+    onContentChange(currentContent);
+  };
 
   return (
     <div className="space-y-6">
-      {/* Step Header */}
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Project Registration
-        </h2>
-        <p className="text-gray-600 max-w-2xl mx-auto">
-          Provide a comprehensive of your research project.
-        </p>
-      </div>
-
-      {/* Editor Card */}
       <Card className="border-0 shadow-lg bg-white pt-0">
         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
           <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2 pt-5">
             <FileText className="w-5 h-5 text-blue-600" />
             Project Summary Document
           </CardTitle>
-          <p className="text-sm text-gray-600 mt-1">
-            Complete the form below with your project details and research
-            information.
-          </p>
         </CardHeader>
+
         <CardContent className="p-0">
-          {/* TinyMCE Editor */}
-          <div className="min-h-[800px]">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-[800px]">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading BM1 template...</p>
-                </div>
+          {isLoading || documentsLoading ? (
+            <div className="flex items-center justify-center h-[800px]">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading BM1 template...</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  API Status: {documentsError ? "Error" : "Loading..."}
+                </p>
               </div>
-            ) : (
-              <Editor
-                key={formContent + formStyles}
-                apiKey={apiKey}
-                onInit={(_, editor) => (editorRef.current = editor)}
-                initialValue={formContent}
-                onEditorChange={handleEditorChange}
-                init={{
-                  height: 800,
-                  width: "100%",
-                  menubar: true,
-                  plugins: [
-                    "advlist",
-                    "autolink",
-                    "lists",
-                    "link",
-                    "image",
-                    "charmap",
-                    "preview",
-                    "anchor",
-                    "searchreplace",
-                    "visualblocks",
-                    "code",
-                    "fullscreen",
-                    "insertdatetime",
-                    "media",
-                    "table",
-                    "help",
-                    "wordcount",
-                    "paste",
-                  ],
-                  toolbar: [
-                    "undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify",
-                    "bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | help",
-                  ].join(" | "),
-                  content_style: `
-                    html, body {
-                      width: 100% !important;
-                      min-height: 800px !important;
-                      background: #fff !important;
-                      margin: 0 auto !important;
-                      font-family: Arial, Helvetica, sans-serif;
-                      font-size: 14px;
-                      line-height: 1.6;
-                      color: #333;
-                      padding: 20px;
-                      box-sizing: border-box !important;
-                    }
-                    ${formStyles}
-                    * {
-                      max-width: 100% !important;
-                      box-sizing: border-box !important;
-                    }
-                    table {
-                      border-collapse: collapse;
-                      width: 100%;
-                      margin: 1em 0;
-                    }
-                    table td, table th {
-                      border: 1px solid #ddd;
-                      padding: 8px;
-                      text-align: left;
-                    }
-                    table th {
-                      background-color: #f2f2f2;
-                      font-weight: bold;
-                    }
-                    h1, h2, h3, h4, h5, h6 {
-                      color: #333;
-                      margin-top: 1.5em;
-                      margin-bottom: 0.5em;
-                    }
-                    h1 { font-size: 2em; }
-                    h2 { font-size: 1.5em; }
-                    h3 { font-size: 1.3em; }
-                    p { margin-bottom: 1em; }
-                  `,
-                  paste_data_images: true,
-                  paste_as_text: false,
-                  paste_webkit_styles:
-                    "font-weight font-style color text-decoration",
-                  paste_retain_style_properties:
-                    "color font-size font-family font-weight font-style text-decoration",
-                  branding: false,
-                  promotion: false,
-                  resize: false,
-                  statusbar: true,
-                  elementpath: false,
-                }}
-              />
-            )}
-          </div>
+            </div>
+          ) : documentsError ? (
+            <div className="flex items-center justify-center h-[800px]">
+              <div className="text-center">
+                <div className="text-red-500 mb-4">⚠️</div>
+                <p className="text-gray-600 mb-2">
+                  API Error - Using Default Template
+                </p>
+                <p className="text-xs text-gray-500">
+                  Error: {documentsError.message || "Unknown error"}
+                </p>
+                <Editor
+                  key={formContent + formStyles}
+                  apiKey={apiKey}
+                  onInit={(_, editor) => (editorRef.current = editor)}
+                  initialValue={formContent}
+                  onEditorChange={handleEditorChange}
+                  init={{
+                    height: 600,
+                    width: "100%",
+                    menubar: true,
+                    plugins: [
+                      "advlist",
+                      "autolink",
+                      "lists",
+                      "link",
+                      "image",
+                      "charmap",
+                      "preview",
+                      "anchor",
+                      "searchreplace",
+                      "visualblocks",
+                      "code",
+                      "fullscreen",
+                      "insertdatetime",
+                      "media",
+                      "table",
+                      "help",
+                      "wordcount",
+                    ],
+                    toolbar: [
+                      "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify",
+                      "bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen",
+                    ].join(" | "),
+                    content_style: `
+                      ${formStyles}
+                      body {
+                        font-family: "Times New Roman", Times, serif;
+                        font-size: 13px;
+                        line-height: 1.4;
+                        color: #333;
+                        padding: 20px;
+                      }
+                      table {
+                        width: 100%;
+                        border-collapse: collapse;
+                      }
+                      table, th, td {
+                        border: 1px solid #ccc;
+                      }
+                      th, td {
+                        padding: 8px;
+                        text-align: left;
+                      }
+                    `,
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            <Editor
+              key={formContent + formStyles}
+              apiKey={apiKey}
+              onInit={(_, editor) => (editorRef.current = editor)}
+              initialValue={formContent}
+              onEditorChange={handleEditorChange}
+              init={{
+                height: 800,
+                width: "100%",
+                menubar: true,
+                plugins: [
+                  "advlist",
+                  "autolink",
+                  "lists",
+                  "link",
+                  "image",
+                  "charmap",
+                  "preview",
+                  "anchor",
+                  "searchreplace",
+                  "visualblocks",
+                  "code",
+                  "fullscreen",
+                  "insertdatetime",
+                  "media",
+                  "table",
+                  "help",
+                  "wordcount",
+                ],
+                toolbar: [
+                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify",
+                  "bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen",
+                ].join(" | "),
+                content_style: `
+                  ${formStyles}
+                  body {
+                    font-family: "Times New Roman", Times, serif;
+                    font-size: 13px;
+                    line-height: 1.4;
+                    color: #333;
+                    padding: 20px;
+                  }
+                  table {
+                    width: 100%;
+                    border-collapse: collapse;
+                  }
+                  table, th, td {
+                    border: 1px solid #ccc;
+                  }
+                  th, td {
+                    padding: 8px;
+                    text-align: left;
+                  }
+                `,
+              }}
+            />
+          )}
         </CardContent>
       </Card>
 
-      {/* Navigation */}
       <div className="flex justify-end">
         <Button
-          onClick={handleNext}
+          variant="outline"
+          onClick={handleSave}
           size="lg"
-          className="px-8"
-          disabled={isLoading}
+          className="px-8 mr-3"
         >
-          Next Step
-          <ArrowRight className="w-4 h-4 ml-2" />
+          <File className="w-4 h-4 mr-2" />
+          Save
+        </Button>
+
+        <Button onClick={handleNext} size="lg" disabled={isLoading}>
+          Next Step <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
     </div>

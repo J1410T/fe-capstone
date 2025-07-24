@@ -2,7 +2,6 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { getStatusColor } from "../utils/statusHelpers";
 import { ArrowLeft, User } from "lucide-react";
 
@@ -29,25 +28,9 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   creator,
 }) => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-
-  const getBackPath = () => {
-    switch (user?.role) {
-      case UserRole.PRINCIPAL_INVESTIGATOR:
-        return "/pi/projects";
-      case UserRole.HOST_INSTITUTION:
-        return "/host/my-projects";
-      case UserRole.RESEARCHER:
-        return "/researcher/projects";
-      case UserRole.APPRAISAL_COUNCIL:
-        return "/council/projects";
-      default:
-        return "/home";
-    }
-  };
 
   const handleBack = () => {
-    navigate(getBackPath());
+    navigate(-1);
   };
 
   // Props are available for future use
@@ -60,7 +43,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         <img
           src={
             pictureUrl ||
-            "https://wx4.sinaimg.cn/large/005D0pgely1i3dp60wdiaj32dc3k0nph.jpg"
+            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSC_XtryB5OYUluF6iPg1reZRvaoFczfSOtog&s"
           }
           alt={englishTitle}
           className="h-full w-full object-cover"
