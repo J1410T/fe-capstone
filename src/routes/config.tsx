@@ -49,7 +49,6 @@ import MyProjects from "@/pages/HostInstitution/MyProjects";
 import ProjectHistory from "@/pages/HostInstitution/ProjectHistory";
 
 // Principal Investigator Pages
-import PIMyProjects from "@/pages/PrincipalInvestigator/MyProjects";
 
 // Council Pages
 import PendingEvaluations from "@/pages/Council/Evaluations";
@@ -66,12 +65,7 @@ import GeneralComingSoon from "@/pages/ComingSoon";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
 import Meetings from "@/pages/Council/Meetings";
 import ProjectApproval from "@/pages/Council/ProjectApproval";
-
-// Form Management Pages
-import FormsOverview from "@/pages/FormRegister/FormsOverview";
-import FormView from "@/pages/FormRegister/FormView";
-import FormEdit from "@/pages/FormRegister/FormEdit";
-import FormCreate from "@/pages/FormRegister/FormCreate";
+import FormRegister from "@/pages/FormRegister";
 
 /**
  * Main application routes configuration
@@ -224,6 +218,10 @@ export const routes: RouteObject[] = [
           {
             path: "notifications",
             element: <GeneralComingSoon />,
+          },
+          {
+            path: "forms",
+            element: <FormRegister />,
           },
           {
             path: "my-projects",
@@ -448,7 +446,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "my-projects",
-            element: <PIMyProjects />,
+            element: <MyProject />,
           },
         ],
       },

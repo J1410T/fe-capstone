@@ -3,6 +3,7 @@ import {
   getProjectListFilter,
   buildFilterParams,
   getProjectDetail,
+  getMyProjectList,
 } from "@/services/resources/project";
 import { SortOption } from "@/types/project";
 
@@ -45,5 +46,12 @@ export function useProject(projectId: string) {
     queryKey: ["project", projectId],
     queryFn: () => getProjectDetail(projectId),
     enabled: !!projectId,
+  });
+}
+
+export function useMyProject() {
+  return useQuery({
+    queryKey: ["my-projects"],
+    queryFn: getMyProjectList,
   });
 }

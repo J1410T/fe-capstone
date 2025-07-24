@@ -13,7 +13,7 @@ interface MilestoneTabProps {
     description: string | null;
     deadline: string | null;
     status: string;
-    tasks: ProjectTask[];
+    tasks: ProjectTask[] | null;
   }>;
 }
 
@@ -103,7 +103,10 @@ const MilestoneTab: React.FC<MilestoneTabProps> = ({
   const notStartedMilestones = milestones.filter(
     (m) => m.status === "Not Started"
   ).length;
-  const totalTasks = milestones.reduce((total, m) => total + m.tasks.length, 0);
+  const totalTasks = milestones.reduce(
+    (total, m) => total + (m.tasks?.length || 0),
+    0
+  );
 
   return (
     <Card className="bg-white shadow rounded-md border overflow-hidden">

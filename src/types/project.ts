@@ -195,3 +195,19 @@ export interface ProjectDetailResponse {
   "is-member": boolean;
   "role-in-project": string[];
 }
+
+export type MyProjectResponse = {
+  id: string;
+  "english-title": string;
+  "vietnamese-title": string;
+  category: string;
+  type: string;
+  genre: string;
+  status: string;
+  "created-at": string;
+  progress: number;
+  description: string | null;
+  "requirement-note": string | null;
+  "picture-url": string | null;
+  language: string;
+};

@@ -107,9 +107,17 @@ const NavigationGuard: React.FC = () => {
         currentPath.startsWith(pattern)
       );
 
-      if (isFirstNavigation || isPageReload || isAccessingAuthorizedRoute) {
+      // Skip checks for /home route as it's accessible to all authenticated users
+      const isAccessingHomeRoute = currentPath === "/home";
+
+      if (
+        isFirstNavigation ||
+        isPageReload ||
+        isAccessingAuthorizedRoute ||
+        isAccessingHomeRoute
+      ) {
         console.log(
-          "NavigationGuard: Skipping checks - first navigation, page reload, or authorized route access"
+          "NavigationGuard: Skipping checks - first navigation, page reload, authorized route access, or home route"
         );
         return;
       }
