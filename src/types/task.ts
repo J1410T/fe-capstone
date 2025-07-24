@@ -77,7 +77,15 @@ export type Milestone = {
   creator: Member | null;
   evaluations: Evaluation[] | null;
   // individualEvaluations: IndividualEvaluation[];
-  tasks: ProjectTask[];
+  tasks: ProjectTask[] | null;
+};
+
+export type ProjectTaskResponse = {
+  "page-index": number;
+  "page-size": number;
+  "total-count": number;
+  "total-page": number;
+  "data-list": ProjectTask[];
 };
 
 export type ProjectTask = {

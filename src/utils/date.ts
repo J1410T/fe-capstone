@@ -2,37 +2,26 @@
  * Date and time utility functions
  * Consolidated date handling utilities
  */
+import { format, parseISO } from "date-fns";
 
-/**
- * Formats a date into a human-readable string
- */
-export const formatDate = (
-  date: Date | string,
-  options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+// Format ISO string -> dd/MM/yyyy
+export const formatDate = (isoDate: string | undefined | null): string => {
+  if (!isoDate) return "";
+  try {
+    return format(parseISO(isoDate), "dd/MM/yyyy");
+  } catch {
+    return "";
   }
-): string => {
-  const d = new Date(date);
-  return d.toLocaleDateString("en-US", options);
 };
 
-/**
- * Formats a date and time into a human-readable string
- */
-export const formatDateTime = (
-  date: Date | string,
-  options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+// Format ISO string -> dd/MM/yyyy HH:mm (giờ phút)
+export const formatDateTime = (isoDate: string | undefined | null): string => {
+  if (!isoDate) return "";
+  try {
+    return format(parseISO(isoDate), "dd/MM/yyyy HH:mm");
+  } catch {
+    return "";
   }
-): string => {
-  const d = new Date(date);
-  return d.toLocaleString("en-US", options);
 };
 
 /**

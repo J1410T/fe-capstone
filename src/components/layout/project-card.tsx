@@ -1,10 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Tag, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ProjectCardProps } from "@/types/project";
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -14,55 +19,35 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   status,
   type,
   category,
-  description,
   tags = [],
+  logoUrl,
+  major,
   onViewDetails,
   getStatusColor,
 }) => {
   const { user } = useAuth();
 
-  // Only show projects with "done" or "created" status
   const allowedStatuses = ["done", "created"];
-  if (!allowedStatuses.includes(status.toLowerCase())) {
-    return null;
-  }
+  if (!allowedStatuses.includes(status.toLowerCase())) return null;
 
-  // Determine the correct route based on user role
   const getProjectDetailRoute = () => {
-    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR)
       return `/pi/project/${id}`;
-    } else if (user?.role === UserRole.HOST_INSTITUTION) {
-      return `/host/project/${id}`;
-    } else if (user?.role === UserRole.APPRAISAL_COUNCIL) {
+    if (user?.role === UserRole.HOST_INSTITUTION) return `/host/project/${id}`;
+    if (user?.role === UserRole.APPRAISAL_COUNCIL)
       return `/council/project/${id}`;
-    } else {
-      return `/project/${id}`;
-    }
+    return `/project/${id}`;
   };
 
-  // Default status color function if not provided
   const defaultGetStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
-      case "active":
-      case "in progress":
-        return "bg-emerald-100 text-emerald-800 border-emerald-300 ring-1 ring-emerald-200";
-      case "completed":
       case "done":
-        return "bg-blue-100 text-blue-800 border-blue-300 ring-1 ring-blue-200";
-      case "pending":
-        return "bg-amber-100 text-amber-800 border-amber-300 ring-1 ring-amber-200";
-      case "on hold":
-        return "bg-orange-100 text-orange-800 border-orange-300 ring-1 ring-orange-200";
-      case "approved":
-        return "bg-green-100 text-green-800 border-green-300 ring-1 ring-green-200";
-      case "submitted":
-        return "bg-indigo-100 text-indigo-800 border-indigo-300 ring-1 ring-indigo-200";
+      case "completed":
+        return "bg-emerald-100 text-emerald-800 border-emerald-300";
       case "created":
-        return "bg-purple-100 text-purple-800 border-purple-300 ring-1 ring-purple-200";
-      case "draft":
-        return "bg-gray-100 text-gray-800 border-gray-300 ring-1 ring-gray-200";
+        return "bg-blue-100 text-blue-800 border-blue-300";
       default:
-        return "bg-slate-100 text-slate-800 border-slate-300 ring-1 ring-slate-200";
+        return "bg-gray-100 text-gray-800 border-gray-300";
     }
   };
 
@@ -70,130 +55,151 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     ? getStatusColor(status)
     : defaultGetStatusColor(status);
 
-  const handleViewDetails = () => {
-    if (onViewDetails) {
-      onViewDetails(id);
-    }
-  };
+  const getDisplayStatus = (status: string) =>
+    status.toLowerCase() === "created" ? "Open" : status;
 
-  // Transform status display text
-  const getDisplayStatus = (status: string) => {
-    if (status.toLowerCase() === "created") {
-      return "Open";
+  const renderActionButton = () => {
+    const buttonClass =
+      "bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 text-sm transition-colors";
+
+    if (onViewDetails) {
+      return (
+        <Button
+          onClick={() => onViewDetails(id)}
+          size="sm"
+          className={buttonClass}
+        >
+          View Details
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      );
     }
-    return status;
+
+    return (
+      <Link to={getProjectDetailRoute()}>
+        <Button size="sm" className={buttonClass}>
+          View Details
+          <ArrowRight className="ml-2 h-4 w-4" />
+        </Button>
+      </Link>
+    );
   };
 
   return (
-    <Card className="group h-full flex flex-col bg-white border border-gray-200/80 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1">
-      {/* Header Section */}
-      <CardHeader className="p-4 pb-2">
-        <div className="space-y-2">
-          {/* Title and Status Row */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex-1">
-              <CardTitle className="text-base font-semibold text-gray-900 line-clamp-2 leading-snug group-hover:text-emerald-900 transition-colors">
-                {title}
-              </CardTitle>
-              {vietnameseTitle && (
-                <p className="text-sm text-gray-600 mt-1 line-clamp-1">
-                  {vietnameseTitle}
-                </p>
-              )}
-            </div>
+    <Card className="p-0 relative group w-full max-w-sm flex-col bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+      <CardHeader className="p-0">
+        <div className="relative h-48 w-full overflow-hidden">
+          <img
+            src={
+              logoUrl ||
+              "https://wx4.sinaimg.cn/large/005D0pgely1i3dp60wdiaj32dc3k0nph.jpg"
+            }
+            alt={title}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+            onError={(e) => {
+              const fallback =
+                "https://wx4.sinaimg.cn/large/005D0pgely1i3dp60wdiaj32dc3k0nph.jpg";
+              if (e.currentTarget.src !== fallback) {
+                e.currentTarget.src = fallback;
+              }
+            }}
+          />
+
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+
+          {/* Status Badge */}
+          <div className="absolute top-3 right-3">
             <Badge
-              className={`${statusColorClass} text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0`}
+              className={`${statusColorClass} font-medium text-xs px-2 py-0.5`}
             >
               {getDisplayStatus(status)}
             </Badge>
           </div>
 
-          {/* Metadata Tags */}
-          {(category || type) && (
-            <div className="flex flex-wrap items-center gap-1.5">
-              {category && (
-                <div className="flex items-center gap-1 bg-gray-50 rounded-md px-2 py-1">
-                  <Building2 className="h-3 w-3 text-gray-500" />
-                  <span className="text-xs font-medium text-gray-700">
-                    {category}
-                  </span>
-                </div>
-              )}
-              {type && (
-                <div className="flex items-center gap-1 bg-emerald-50 rounded-md px-2 py-1">
-                  <Tag className="h-3 w-3 text-emerald-600" />
-                  <span className="text-xs font-medium text-emerald-700">
-                    {type}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Title & Subtitle */}
+          <div className="absolute bottom-0 left-0 right-0 p-3">
+            <h3 className="text-base font-semibold text-white leading-tight line-clamp-2">
+              {title}
+            </h3>
+            {vietnameseTitle && (
+              <p className="text-xs text-gray-200 line-clamp-1">
+                {vietnameseTitle}
+              </p>
+            )}
+          </div>
         </div>
       </CardHeader>
 
-      {/* Content Section */}
-      <CardContent className="p-4 pt-0 flex-1 flex flex-col">
-        {description && (
-          <div className="mb-3 flex-1">
-            <p className="text-xs text-gray-600 line-clamp-3 leading-relaxed">
-              {description}
-            </p>
-          </div>
-        )}
-
-        {/* Project Tags */}
-        {tags.length > 0 && (
-          <div className="mb-3">
-            <div className="flex flex-wrap gap-1">
-              {tags.slice(0, 3).map((tag, index) => (
-                <Badge
-                  key={index}
-                  variant="secondary"
-                  className="text-xs px-2 py-0.5 bg-blue-50 text-blue-700 border-blue-200"
-                >
-                  {tag}
-                </Badge>
-              ))}
-              {tags.length > 3 && (
-                <Badge
-                  variant="secondary"
-                  className="text-xs px-2 py-0.5 bg-gray-50 text-gray-600"
-                >
-                  +{tags.length - 3}
-                </Badge>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* Action Button */}
-        <div className="flex justify-end mt-auto">
-          {onViewDetails ? (
-            <Button
-              onClick={handleViewDetails}
-              size="sm"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1.5 h-7 text-xs group/btn cursor-pointer"
+      <CardContent className="p-4 flex-1 space-y-3">
+        {/* Type & Category */}
+        <div className="flex flex-wrap gap-2">
+          {type && (
+            <Badge
+              variant="outline"
+              className="bg-blue-50 text-blue-700 border-blue-200"
             >
-              View Details
-              <ArrowRight className="ml-1 h-3 w-3 group-hover/btn:translate-x-0.5 transition-transform" />
-            </Button>
-          ) : (
-            <Link to={getProjectDetailRoute()}>
-              <Button
-                size="sm"
-                className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-3 py-1.5 h-7 text-xs group/btn"
-              >
-                View Details
-                <ArrowRight className="ml-1 h-3 w-3 group-hover/btn:translate-x-0.5 transition-transform" />
-              </Button>
-            </Link>
+              {type}
+            </Badge>
+          )}
+          {category && (
+            <Badge
+              variant="outline"
+              className="bg-purple-50 text-purple-700 border-purple-200"
+            >
+              {category}
+            </Badge>
           )}
         </div>
+
+        {/* Major & Field */}
+        {major && major.length > 0 && (
+          <div className="space-y-1 text-sm">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-gray-700">
+                <strong>Major:</strong>
+              </span>
+              <span className="text-gray-600">{major[0]?.name}</span>
+            </div>
+            {major[0]?.field?.name && (
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-gray-700">
+                  <strong>Field:</strong>
+                </span>
+                <span className="text-gray-600">{major[0].field.name}</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tags */}
+        {tags.length > 0 && (
+          <div className="flex flex-wrap gap-1">
+            {tags.slice(0, 3).map((tag, index) => (
+              <Badge
+                key={index}
+                variant="secondary"
+                className="text-xs px-2 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+              >
+                {tag}
+              </Badge>
+            ))}
+            {tags.length > 3 && (
+              <Badge
+                variant="secondary"
+                className="text-xs px-2 py-1 bg-gray-100 text-gray-600"
+              >
+                +{tags.length - 3} more
+              </Badge>
+            )}
+          </div>
+        )}
       </CardContent>
 
-      {/* Subtle border accent */}
-      <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-blue-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+      <CardFooter className="p-4 pt-0">{renderActionButton()}</CardFooter>
+
+      {/* Hover accent line */}
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-blue-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
     </Card>
   );
 };

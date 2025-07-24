@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { useAuthResponse } from "@/hooks/queries";
+import { useAuthResponse, useSetMyRole } from "@/hooks/queries";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -80,6 +80,9 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const { data: authData } = useAuthResponse();
 
+  // Always call hooks at the top level
+  const setMyRoleMutation = useSetMyRole();
+
   if (!user) return null;
 
   // Staff users cannot switch roles
@@ -97,32 +100,40 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
 
   const currentRoleConfig = roleConfig[user.role];
 
-  // Handle role switch with proper auth context integration
-  const handleRoleSwitch = async (newRole: UserRole) => {
+  // Handle role switch with API call and auth-response update
+  const handleRoleSwitch = (newRole: UserRole) => {
     if (newRole === user.role) {
       setIsOpen(false);
       return;
     }
 
-    try {
-      // Use the auth context's switchRole function
-      const success = await switchRole(newRole);
+    // Call the API to switch role and update auth-response
+    setMyRoleMutation.mutate(newRole, {
+      onSuccess: async () => {
+        // Update local auth context after successful API call
+        const success = await switchRole(newRole);
 
-      if (success) {
-        // Close the dropdown first
-        setIsOpen(false);
-        onRoleChange?.();
+        if (success) {
+          setIsOpen(false);
+          onRoleChange?.();
+          toast.success(`Switched to ${newRole} role`);
 
-        // Navigate immediately without loading delay
-        const newRoleConfig = roleConfig[newRole];
-        navigate(newRoleConfig.defaultRoute, { replace: true });
-      } else {
-        toast.error("Failed to switch role");
-      }
-    } catch (error) {
-      console.error("Failed to switch role:", error);
-      toast.error("Failed to switch role");
-    }
+          // Add a small delay to allow auth state to stabilize before navigation
+          // This prevents NavigationGuard from detecting it as unauthorized access
+          setTimeout(() => {
+            navigate("/home", { replace: true });
+          }, 100);
+        } else {
+          toast.error("Failed to update local role state");
+        }
+      },
+      onError: (error) => {
+        console.error("Failed to switch role:", error);
+        toast.error(
+          `Failed to switch role: ${error.message || "Unknown error"}`
+        );
+      },
+    });
   };
 
   // Mobile variant - simpler button with text

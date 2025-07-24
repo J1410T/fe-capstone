@@ -29,8 +29,8 @@ export type DocumentProject = {
   name: string;
   type: string;
   dateInDoc: string;
-  updatedAt: string;
-  uploadAt: string;
+  "updated-at": string;
+  "upload-at": string;
   status: string;
   uploaderId: string;
   projectId: string;

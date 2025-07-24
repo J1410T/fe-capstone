@@ -1,5 +1,5 @@
 import React from "react";
-import { Badge, Card, CardContent } from "@/components/ui";
+import { Badge } from "@/components/ui";
 import { CheckCircle, Clock, AlertTriangle, User } from "lucide-react";
 import { Task } from "../../shared/types";
 import { formatDate } from "../../shared/utils";
@@ -52,51 +52,61 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task }) => {
     new Date(task.dueDate) < new Date() && task.status !== "Completed";
 
   return (
-    <Card className="relative border-l-4 border-l-blue-500 shadow-sm">
-      <CardContent className="px-6 py-4">
-        <div className="flex justify-between gap-4">
+    <div className="relative border border-gray-200 rounded-md bg-white shadow-sm">
+      <div className="px-3 py-2">
+        <div className="flex justify-between items-start gap-2">
           {/* LEFT: Task content */}
-          <div className="flex-1 flex flex-col gap-2">
-            <div className="flex items-center gap-2">
+          <div className="flex-1 space-y-0.5">
+            <div className="flex items-center gap-1.5">
               {getStatusIcon(task.status)}
-              <h5 className="font-semibold text-base text-gray-900">
+              <h5 className="font-medium text-xs text-gray-900 truncate">
                 {task.title}
               </h5>
               <Badge
                 variant="outline"
-                className={`${getPriorityColor(task.priority)} text-sm`}
+                className={`${getPriorityColor(
+                  task.priority
+                )} text-[10px] px-1 py-0`}
               >
                 {task.priority}
               </Badge>
               {isOverdue && (
-                <Badge variant="destructive" className="text-sm">
+                <Badge variant="destructive" className="text-[10px] px-1 py-0">
                   Overdue
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-gray-600">{task.description}</p>
-            <p className="text-sm text-gray-600">
-              Due: {formatDate(task.dueDate)}
-            </p>
-            {task.assignedTo && (
-              <div className="flex items-center gap-1 text-sm text-gray-500">
-                <User className="w-4 h-4" />
-                <span>{task.assignedTo}</span>
-              </div>
+            {task.description && (
+              <p className="text-[10px] text-gray-600 line-clamp-1">
+                {task.description}
+              </p>
             )}
+            <div className="flex flex-wrap items-center gap-2 text-[10px] text-gray-500">
+              <span className="flex items-center gap-0.5">
+                <Clock className="w-2.5 h-2.5" />
+                {formatDate(task["start-date"])} →{" "}
+                {formatDate(task["end-date"])}
+              </span>
+              {task["member-tasks"] && (
+                <span className="flex items-center gap-0.5">
+                  <User className="w-2.5 h-2.5" />
+                  {task["member-tasks"]}
+                </span>
+              )}
+            </div>
           </div>
 
-          {/* RIGHT: Status Badge */}
-          <div className="flex flex-col items-end justify-start gap-2 min-w-[8rem]">
+          {/* RIGHT: Status */}
+          <div className="flex-shrink-0">
             <Badge
               variant="outline"
-              className={`${getStatusColor(task.status)} text-sm`}
+              className={`${getStatusColor(task.status)} text-[10px] px-1 py-0`}
             >
               {task.status}
             </Badge>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };

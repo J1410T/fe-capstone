@@ -11,9 +11,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { OverviewTab, ProjectHeader, TeamTab } from "./components";
 import BudgetTab from "./components/BudgetTab";
 import DocumentTab from "./components/DocumentTab";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 import MilestoneTab from "./components/MilestoneTab";
-import { ProjectEnrollModal } from "./components/ProjectEnrollModal";
 import { ArrowLeft } from "lucide-react";
 // import { useProjectMajors } from "@/hooks/queries/major";
 import { useProject } from "@/hooks/queries/project";
@@ -25,8 +24,6 @@ function ProjectDetail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
-  const [showEnrollModal, setShowEnrollModal] = useState(false);
-  const [enrollLoading, setEnrollLoading] = useState(false);
   const { data: majorProject } = useProjectMajors(projectId || "");
 
   // Use React Query hooks
@@ -40,22 +37,10 @@ function ProjectDetail() {
   //   projectId || ""
   // );
 
-  const handleEnrollProject = async (data: {
-    role: "Principal" | "Researcher";
-    message?: string;
-  }) => {
-    setEnrollLoading(true);
-    try {
-      console.log("Enrolling in project:", { projectId, ...data });
-      // API call would go here
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setShowEnrollModal(false);
-      // Refetch project data after enrollment
-    } catch (error) {
-      console.error("Failed to enroll in project:", error);
-    } finally {
-      setEnrollLoading(false);
-    }
+  const handleEnrollProject = () => {
+    // Navigate to enrollment page
+    const enrollPath = `${location.pathname}/enroll`;
+    navigate(enrollPath);
   };
 
   // Determine visible tabs based on membership
@@ -98,36 +83,6 @@ function ProjectDetail() {
 
   console.log("Member project", project.members);
 
-  // Prepare project data for components
-  // const projectData = {
-  //   id: project.id,
-  //   title: project["english-title"],
-  //   vietnameseTitle: project["vietnamese-title"],
-  //   logoUrl: project["logo-url"],
-  //   category: project.category,
-  //   type: project.type,
-  //   description: project.description || "",
-  //   abbreviations: project.abbreviations || "",
-  //   requirementNote: project["requirement-note"] || "",
-  //   language: project.language || "None",
-  //   maximumMember: project["maximum-member"] || 0,
-  //   status: project.status,
-  //   progress: project.progress || 0,
-  //   fieldName: majorProject?.["data-list"]?.[0]?.major?.field?.name || "",
-  //   majorName: majorProject?.["data-list"]?.[0]?.major?.name || "",
-  //   team:
-  //     project.members?.map((member) => ({
-  //       name: `Member ${member.id.substring(0, 8)}`, // You might need to fetch actual names
-  //       role: roleInProject.includes("Principal Investigator")
-  //         ? "Principal Investigator"
-  //         : "Researcher",
-  //       department: "Unknown", // Add if available in your data
-  //       email: `${member["accountId"]}@example.com`, // Replace with actual email if available
-  //     })) || [],
-  //   majors: project.majors || [],
-  //   tags: project["project-tags"]?.map((tag) => tag.name) || [],
-  // };
-
   const projectData = {
     id: project.id,
     title: project["english-title"],
@@ -161,7 +116,7 @@ function ProjectDetail() {
         email: member.email || `None`,
         avartar:
           member["avatar-url"] ||
-          "https://c8.alamy.com/comp/R5RMNF/image-of-chemical-technology-abstract-background-science-wallpaper-with-school-chemistry-formulas-and-structures-R5RMNF.jpg",
+          "https://wx4.sinaimg.cn/large/005D0pgely1i3dp60wdiaj32dc3k0nph.jpg",
       })) || [],
     majors: project.majors || [],
     tags: project["project-tags"]?.map((tag) => tag.name) || [],
@@ -183,6 +138,10 @@ function ProjectDetail() {
         status={project.status}
         isMember={isMember}
         roleInProject={roleInProject}
+        pictureUrl={project["picture-url"]}
+        englishTitle={project["english-title"]}
+        code={project.code}
+        creator={project.creator}
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -250,9 +209,7 @@ function ProjectDetail() {
             showEnrollButton={shouldShowEnrollButton}
             tags={projectData.tags}
             onEnrollProject={
-              project.status === "created"
-                ? () => setShowEnrollModal(true)
-                : undefined
+              project.status === "created" ? handleEnrollProject : undefined
             }
           />
         </TabsContent>
@@ -281,14 +238,6 @@ function ProjectDetail() {
           </TabsContent>
         )}
       </Tabs>
-
-      <ProjectEnrollModal
-        isOpen={showEnrollModal}
-        onClose={() => setShowEnrollModal(false)}
-        onEnroll={handleEnrollProject}
-        projectTitle={project["english-title"]}
-        isLoading={enrollLoading}
-      />
     </div>
   );
 }

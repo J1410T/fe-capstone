@@ -250,15 +250,18 @@ const ProjectsList: React.FC = () => {
                 key={project.id}
                 id={project.id}
                 title={project["english-title"] || "Untitled"}
-                vietnameseTitle={project["vietnamese-title"]}
+                vietnameseTitle={project["vietnamese-title"] ?? ""}
+                progress={project.progress}
                 status={project.status}
                 type={project.type}
                 category={project.category}
-                description={project.description || ""}
-                progress={project.progress}
+                description={project.description ?? ""}
                 tags={project["project-tags"]?.map((tag) => tag.name) || []}
                 onViewDetails={handleViewDetails}
                 getStatusColor={getStatusColor}
+                logoUrl={project["logo-url"] ?? undefined}
+                major={project.majors ?? []}
+                field={project.majors?.[0]?.field}
               />
             ))}
           </div>

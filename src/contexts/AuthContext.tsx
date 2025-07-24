@@ -312,7 +312,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         throw new Error(`Role ${newRole} is not available for this user`);
       }
 
-      // Update the auth-response data with new selected role
+      // Call the API to switch role - this will be handled by the RoleSwitcher component
+      // using the useSetMyRole mutation hook
+      // For now, just update local state as fallback
       const updatedAuthResponse = {
         ...authResponse,
         "selected-role": newRole,
@@ -327,13 +329,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Reset session activity since role switch is a user action
       simpleSessionManager.updateLastActivity();
 
-      // Show success notification
-      toast.success(`Switched to ${newRole} role`);
-
       return true;
     } catch (error) {
       console.error("Failed to switch role:", error);
-      toast.error("Failed to switch role");
       return false;
     }
   };

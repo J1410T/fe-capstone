@@ -19,14 +19,13 @@ import {
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
 import { FileText, Download, Eye, FolderOpen } from "lucide-react";
 import { DocumentProject } from "@/types/document";
 import { formatDateTime } from "@/utils";
+import { getStatusColor } from "../shared/utils";
 
 interface DocumentTabProps {
   documents: DocumentProject[];
@@ -37,215 +36,169 @@ const DocumentTab: React.FC<DocumentTabProps> = ({ documents }) => {
     React.useState<DocumentProject | null>(null);
   const [showViewDialog, setShowViewDialog] = React.useState(false);
 
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "approved":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "rejected":
-        return "bg-red-100 text-red-800 border-red-200";
-      case "draft":
-        return "bg-gray-100 text-gray-800 border-gray-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
-
   const handleViewDocument = (document: DocumentProject) => {
     setSelectedDocument(document);
     setShowViewDialog(true);
   };
 
   const handleDownloadDocument = (document: DocumentProject) => {
-    console.log("Downloading document:", document.name);
-    // TODO: Implement actual download functionality
+    console.log("Download", document.name);
+    // TODO: implement actual download
   };
 
   return (
     <Card className="shadow-sm">
+      {/* --- Table header --- */}
       <CardHeader className="pb-4 sm:pb-6">
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
-          <div className="flex-1 min-w-0">
-            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
-              Project Documents
-            </CardTitle>
-            <CardDescription className="text-sm sm:text-base mt-1">
-              View and manage all project-related documents
-            </CardDescription>
-          </div>
-        </div>
+        <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
+          Project Documents
+        </CardTitle>
+        <CardDescription className="text-sm sm:text-base mt-1">
+          View and manage all project-related documents
+        </CardDescription>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-[200px] sm:w-[300px]">
-                  Document
-                </TableHead>
-                <TableHead className="min-w-[120px]">Type</TableHead>
-                <TableHead className="min-w-[120px]">Upload Date</TableHead>
-                <TableHead className="min-w-[120px]">Updated</TableHead>
-                <TableHead className="text-right min-w-[120px]">
-                  Actions
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {documents.map((document) => (
-                <TableRow key={document.id}>
-                  <TableCell>
-                    <div className="flex items-center space-x-2">
-                      <FileText className="w-4 h-4 text-blue-600" />
-                      <div>
-                        <p className="font-medium text-sm sm:text-base break-words">
-                          {document.name}
-                        </p>
-                        <div className="flex items-center space-x-2 mt-1">
-                          <Badge
-                            variant="outline"
-                            className={`${getStatusColor(
-                              document.status
-                            )} text-xs`}
-                          >
-                            {document.status}
-                          </Badge>
-                        </div>
-                      </div>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-sm">{document.type}</TableCell>
-                  <TableCell className="text-sm">
-                    {formatDateTime(document.uploadAt)}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {formatDateTime(document.updatedAt)}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleViewDocument(document)}
-                      >
-                        <Eye className="w-3 h-3 mr-1" />
-                        <span className="hidden sm:inline">View</span>
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDownloadDocument(document)}
-                      >
-                        <Download className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
 
-          {documents.length === 0 && (
-            <div className="text-center py-8 text-gray-500">
-              <FolderOpen className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-lg font-medium mb-2">No documents found</p>
-              <p className="text-sm text-muted-foreground">
-                No documents have been uploaded for this project yet.
-              </p>
-            </div>
-          )}
-        </div>
+      {/* --- Document table --- */}
+      <CardContent className="pt-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Document</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Upload</TableHead>
+              <TableHead>Updated</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {documents.map((document) => (
+              <TableRow key={document.id}>
+                <TableCell>
+                  <div className="flex items-center space-x-2">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    <div>
+                      <p className="font-medium text-sm break-words">
+                        {document.name}
+                      </p>
+                      <Badge
+                        variant="outline"
+                        className={`${getStatusColor(document.status)} text-xs`}
+                      >
+                        {document.status}
+                      </Badge>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>{document.type}</TableCell>
+                <TableCell>{formatDateTime(document["upload-at"])}</TableCell>
+                <TableCell>
+                  {document["updated-at"]
+                    ? formatDateTime(document["updated-at"])
+                    : "Not updated"}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleViewDocument(document)}
+                    >
+                      <Eye className="w-3 h-3 mr-1" />
+                      <span className="hidden sm:inline">View</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadDocument(document)}
+                    >
+                      <Download className="w-3 h-3" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+
+        {documents.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            <FolderOpen className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+            <p className="text-lg font-medium mb-2">No documents found</p>
+            <p className="text-sm text-muted-foreground">
+              No documents have been uploaded for this project yet.
+            </p>
+          </div>
+        )}
       </CardContent>
 
+      {/* --- View Dialog --- */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
           <DialogHeader>
-            <DialogTitle>{selectedDocument?.name}</DialogTitle>
-            <DialogDescription>Document Details</DialogDescription>
+            <DialogTitle>
+              {selectedDocument ? selectedDocument.name : "Document"}
+            </DialogTitle>
           </DialogHeader>
-          {selectedDocument && (
+          {selectedDocument ? (
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4 text-sm">
                 <div>
-                  <p className="text-sm font-medium">Type</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedDocument.type}
-                  </p>
+                  <strong>Type:</strong> {selectedDocument.type}
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Status</p>
-                  <div className="mt-1">
-                    <Badge
-                      variant="outline"
-                      className={getStatusColor(selectedDocument.status)}
-                    >
-                      {selectedDocument.status}
-                    </Badge>
-                  </div>
+                  <strong>Date:</strong> {selectedDocument.dateInDoc}
                 </div>
                 <div>
-                  <p className="text-sm font-medium">Upload Date</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDateTime(selectedDocument.uploadAt)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Last Updated</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDateTime(selectedDocument.updatedAt)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Date in Document</p>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedDocument.dateInDoc}
-                  </p>
+                  <strong>Status:</strong> {selectedDocument.status}
                 </div>
               </div>
 
               {selectedDocument.documentFields &&
-                selectedDocument.documentFields.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium">Document Fields</p>
-                    <div className="mt-2 space-y-2">
-                      {selectedDocument.documentFields
-                        .slice(0, 3)
-                        .map((field) => (
-                          <div
-                            key={field.id}
-                            className="p-2 bg-gray-50 rounded"
-                          >
-                            <p className="text-xs font-medium">
-                              {field.chapter}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {field.title}
-                            </p>
+              selectedDocument.documentFields.length > 0 ? (
+                <div className="space-y-6">
+                  {selectedDocument.documentFields.map((field) => (
+                    <div key={field.id} className="border-b pb-4">
+                      {field.chapter && (
+                        <h2 className="text-xl font-semibold mb-2">
+                          {field.chapter}
+                        </h2>
+                      )}
+                      {field.title && (
+                        <h3 className="text-lg font-medium mb-2">
+                          {field.title}
+                        </h3>
+                      )}
+                      {field.subtitle && (
+                        <h4 className="text-md font-medium mb-2 text-gray-700">
+                          {field.subtitle}
+                        </h4>
+                      )}
+
+                      {field.fieldContents &&
+                        field.fieldContents.map((content) => (
+                          <div key={content.id} className="mb-4">
+                            {content.title && (
+                              <h5 className="font-medium mb-2">
+                                {content.title}
+                              </h5>
+                            )}
+                            {content.content && (
+                              <div className="prose prose-sm max-w-none">
+                                <p>{content.content}</p>
+                              </div>
+                            )}
                           </div>
                         ))}
-                      {selectedDocument.documentFields.length > 3 && (
-                        <p className="text-xs text-muted-foreground">
-                          +{selectedDocument.documentFields.length - 3} more
-                          fields
-                        </p>
-                      )}
                     </div>
-                  </div>
-                )}
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-500">No document content available.</p>
+              )}
             </div>
+          ) : (
+            <p className="text-gray-500">No document selected.</p>
           )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowViewDialog(false)}>
-              Close
-            </Button>
-            {selectedDocument && (
-              <Button onClick={() => handleDownloadDocument(selectedDocument)}>
-                <Download className="w-3 h-3 mr-1" />
-                Download
-              </Button>
-            )}
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>
