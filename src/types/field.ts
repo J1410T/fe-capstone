@@ -6,3 +6,7 @@ export type FieldItem = {
   id: string;
   name: string;
 };
+
+export type FieldRequest = {
+  name: string;
+};
