@@ -1,4 +1,4 @@
-export type FormHostRegister = {
+export interface FormHostRegister {
   englishTitle: string;
   vietnameseTitle: string;
   abbreviations: string;
@@ -11,4 +11,5 @@ export type FormHostRegister = {
   type: string;
   field: string;
   major: string;
-};
+  tags: string[];
+}
