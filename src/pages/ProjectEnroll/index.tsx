@@ -159,7 +159,7 @@ const ProjectEnroll: React.FC = () => {
                   Enroll in Project
                 </h1>
                 <p className="text-sm text-gray-600">
-                  {project["english-title"]}
+                  {project["project-detail"]["english-title"]}
                 </p>
               </div>
             </div>
@@ -201,7 +201,7 @@ const ProjectEnroll: React.FC = () => {
         {currentStep === 3 && (
           <ReviewSubmitStep
             enrollmentData={enrollmentData}
-            projectTitle={project["english-title"]}
+            projectTitle={project["project-detail"]["english-title"]}
             onPrevious={handlePrevious}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}

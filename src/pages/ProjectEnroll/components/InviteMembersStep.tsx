@@ -10,7 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SimpleInvitedUser, UserSearchInput } from "@/components/common";
+import {
+  SimpleInvitedUser,
+  UserSearchInput,
+  InvitedUser,
+  UserSearchResult,
+} from "@/components/common";
 import {
   Users,
   ArrowLeft,
@@ -38,7 +43,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   const [showAddMember, setShowAddMember] = useState(false);
   const [inviteSlots, setInviteSlots] = useState(5);
 
-  const handleUserSelect = (user: any) => {
+  const handleUserSelect = (user: UserSearchResult) => {
     // Check if user is already invited
     if (collaborators.some((u) => u.email === user.email)) {
       return;
@@ -51,7 +56,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     const newUser: InvitedUser = {
       ...user,
       role,
-      isInvitation: user.role === "Invited",
+      isInvitation: !user.id || user.id.startsWith("invite-"),
     };
 
     onCollaboratorsChange([...collaborators, newUser]);

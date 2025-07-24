@@ -11,7 +11,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { OverviewTab, ProjectHeader, TeamTab } from "./components";
 import BudgetTab from "./components/BudgetTab";
 import DocumentTab from "./components/DocumentTab";
-import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import MilestoneTab from "./components/MilestoneTab";
 import { ArrowLeft } from "lucide-react";
 // import { useProjectMajors } from "@/hooks/queries/major";

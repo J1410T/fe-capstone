@@ -80,7 +80,6 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
                 width: "100%",
                 menubar: false,
                 toolbar: false,
-                readonly: true,
                 content_style: `
                   body {
                     font-family: Arial, Helvetica, sans-serif;
@@ -162,7 +161,7 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
 
               {/* Members List */}
               <div className="max-h-[400px] overflow-y-auto space-y-3">
-                {collaborators.map((user, index) => (
+                {collaborators.map((user) => (
                   <div
                     key={user.id}
                     className="flex items-center justify-between p-4 border rounded-lg bg-gray-50"

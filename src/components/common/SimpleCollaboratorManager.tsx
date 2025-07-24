@@ -3,8 +3,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { SimpleUserSearch, UserSearchResult, InvitedUser } from "./SimpleUserSearch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  SimpleUserSearch,
+  UserSearchResult,
+  InvitedUser,
+} from "./SimpleUserSearch";
 import { Crown, User, X, Plus, Users, AlertCircle } from "lucide-react";
 
 interface SimpleCollaboratorManagerProps {
@@ -14,28 +24,25 @@ interface SimpleCollaboratorManagerProps {
   className?: string;
 }
 
-export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps> = ({
-  invitedUsers,
-  onUsersChange,
-  maxMembers = 10,
-  className
-}) => {
+export const SimpleCollaboratorManager: React.FC<
+  SimpleCollaboratorManagerProps
+> = ({ invitedUsers, onUsersChange, maxMembers = 10, className }) => {
   const [showAddMember, setShowAddMember] = useState(false);
 
   const handleUserSelect = (user: UserSearchResult) => {
     // Check if user is already invited
-    if (invitedUsers.some(u => u.email === user.email)) {
+    if (invitedUsers.some((u) => u.email === user.email)) {
       return;
     }
 
     // Determine role - first user becomes leader if no leader exists
-    const hasLeader = invitedUsers.some(u => u.role === "Leader");
+    const hasLeader = invitedUsers.some((u) => u.role === "Leader");
     const role = !hasLeader ? "Leader" : "Member";
 
     const newUser: InvitedUser = {
       ...user,
       role,
-      isInvitation: user.role === "Invited"
+      isInvitation: user.role === "Invited",
     };
 
     onUsersChange([...invitedUsers, newUser]);
@@ -44,8 +51,12 @@ export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps>
 
   const handleRoleChange = (userId: string, newRole: "Leader" | "Member") => {
     // If changing to Leader, demote current leader to Member
-    let updatedUsers = invitedUsers.map(user => {
-      if (newRole === "Leader" && user.role === "Leader" && user.id !== userId) {
+    const updatedUsers = invitedUsers.map((user) => {
+      if (
+        newRole === "Leader" &&
+        user.role === "Leader" &&
+        user.id !== userId
+      ) {
         return { ...user, role: "Member" as const };
       }
       if (user.id === userId) {
@@ -58,7 +69,7 @@ export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps>
   };
 
   const handleRemoveUser = (userId: string) => {
-    const updatedUsers = invitedUsers.filter(user => user.id !== userId);
+    const updatedUsers = invitedUsers.filter((user) => user.id !== userId);
     onUsersChange(updatedUsers);
   };
 
@@ -71,7 +82,7 @@ export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps>
   };
 
   const canAddMore = invitedUsers.length < maxMembers;
-  const leaderCount = invitedUsers.filter(u => u.role === "Leader").length;
+  const leaderCount = invitedUsers.filter((u) => u.role === "Leader").length;
 
   return (
     <Card className={className}>
@@ -92,7 +103,10 @@ export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps>
           <div className="flex items-start space-x-2">
             <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-800">
-              <p><strong>Requirements:</strong> At least one Leader is required. You can add up to {maxMembers} members total.</p>
+              <p>
+                <strong>Requirements:</strong> At least one Leader is required.
+                You can add up to {maxMembers} members total.
+              </p>
             </div>
           </div>
         </div>
@@ -101,7 +115,9 @@ export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps>
         {showAddMember ? (
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-gray-700">Search and Add Member</h4>
+              <h4 className="text-sm font-medium text-gray-700">
+                Search and Add Member
+              </h4>
               <Button
                 variant="ghost"
                 size="sm"
@@ -113,7 +129,7 @@ export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps>
             <SimpleUserSearch
               placeholder="Type name or email to search..."
               onUserSelect={handleUserSelect}
-              excludeUserIds={invitedUsers.map(u => u.id)}
+              excludeUserIds={invitedUsers.map((u) => u.id)}
             />
           </div>
         ) : (
@@ -144,7 +160,10 @@ export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps>
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={user.avatar} />
                     <AvatarFallback className="bg-blue-100 text-blue-700">
-                      {user.name.split(' ').map(n => n[0]).join('')}
+                      {user.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
@@ -160,9 +179,7 @@ export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps>
                     </div>
                     <p className="text-sm text-gray-500">{user.email}</p>
                     {user.department && !user.isInvitation && (
-                      <p className="text-xs text-gray-400">
-                        {user.department}
-                      </p>
+                      <p className="text-xs text-gray-400">{user.department}</p>
                     )}
                   </div>
                 </div>
@@ -171,7 +188,7 @@ export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps>
                   {/* Role Selector */}
                   <Select
                     value={user.role}
-                    onValueChange={(value: "Leader" | "Member") => 
+                    onValueChange={(value: "Leader" | "Member") =>
                       handleRoleChange(user.id, value)
                     }
                   >
@@ -218,7 +235,8 @@ export const SimpleCollaboratorManager: React.FC<SimpleCollaboratorManagerProps>
             <div className="flex items-start space-x-2">
               <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
               <p className="text-sm text-amber-800">
-                <strong>Action Required:</strong> Please assign at least one member as Leader.
+                <strong>Action Required:</strong> Please assign at least one
+                member as Leader.
               </p>
             </div>
           </div>

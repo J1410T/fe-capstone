@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from "react";
 import { Editor } from "@tinymce/tinymce-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowRight, Info } from "lucide-react";
+import { FileText, ArrowRight } from "lucide-react";
 
 type EditorInstance = {
   getContent: () => string;
