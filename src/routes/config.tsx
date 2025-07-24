@@ -17,7 +17,7 @@ import {
   DocumentFormsManagement,
   PaymentManagement,
   StaffDashboard,
-  StaffProjectRegistration,
+  // StaffProjectRegistration,
   ProjectManagementOverview,
   UserAccessControl,
   FieldsManagement,
@@ -81,7 +81,7 @@ export const routes: RouteObject[] = [
     element: (
       <AuthProvider>
         <GlobalAuthListener />
-<NavigationGuard />
+        <NavigationGuard />
         <Outlet />
       </AuthProvider>
     ),
@@ -136,7 +136,7 @@ export const routes: RouteObject[] = [
               },
               {
                 path: "register",
-                element: <StaffProjectRegistration />,
+                element: <RegisterProject />,
               },
               {
                 path: "overview",
@@ -206,7 +206,7 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId",
             element: <ProjectDetail />,
-},
+          },
           {
             path: "project/:projectId/enroll",
             element: <ProjectEnroll />,
@@ -332,7 +332,7 @@ export const routes: RouteObject[] = [
       },
       // Council routes
       {
-path: "council",
+        path: "council",
         element: (
           <AuthGuard requiredRoles={[UserRole.APPRAISAL_COUNCIL]}>
             <UserLayout />
@@ -455,7 +455,7 @@ path: "council",
       // Unauthorized page
       {
         path: "unauthorized",
-element: <Unauthorized />,
+        element: <Unauthorized />,
       },
       // Scientific CV routes (accessible by all authenticated users)
       {

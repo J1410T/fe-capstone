@@ -211,3 +211,43 @@ export type MyProjectResponse = {
   "picture-url": string | null;
   language: string;
 };
+
+export interface CreateProjectRequest {
+  "english-title": string;
+  "vietnamese-title": string;
+  abbreviations?: string;
+  duration: number;
+  description: string;
+  "requirement-note"?: string;
+  "maximum-member": number;
+  language: string;
+  category: string;
+  type: string;
+}
+
+export interface CreateProjectResponse {
+  id: string;
+}
+
+export interface CreateProjectMajorRequest {
+  "project-id": string;
+  "major-id": string;
+}
+
+export interface CreateProjectMajorResponse {
+  "project-id": string;
+  "major-id": string;
+  project: ProjectItem | null;
+  major: ProjectMajor | null;
+}
+
+export interface CreateProjectTagRequest {
+  names: string[];
+  "project-id": string;
+}
+
+export interface ProjectTag {
+  id?: string;
+  name: string;
+  "project-id"?: string;
+}

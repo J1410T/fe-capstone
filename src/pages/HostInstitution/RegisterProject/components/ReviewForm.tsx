@@ -8,7 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, CheckCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Tag } from "lucide-react";
 import { useFieldList } from "@/hooks/queries/field";
 import { useMajorsByField } from "@/hooks/queries/major";
 import { FormHostRegister } from "@/types/form";
@@ -17,12 +17,14 @@ interface ReviewFormProps {
   formData: FormHostRegister;
   onPrevStep: () => void;
   onSubmit: (e: React.FormEvent) => void;
+  isLoading?: boolean;
 }
 
 export const ReviewForm: React.FC<ReviewFormProps> = ({
   formData,
   onPrevStep,
   onSubmit,
+  isLoading = false,
 }) => {
   const { data: fields } = useFieldList();
   const { data: majors } = useMajorsByField(formData.field);
@@ -124,17 +126,40 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                 </p>
               </div>
             )}
+            {formData.tags.length > 0 && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground mb-2">
+                  Project Tags
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map((tag, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-1 bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full text-sm"
+                    >
+                      <Tag className="h-3 w-3" />
+                      <span>{tag}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </CardContent>
       <CardFooter className="flex justify-between">
-        <Button type="button" variant="outline" onClick={onPrevStep}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onPrevStep}
+          disabled={isLoading}
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Previous Step
         </Button>
-        <Button type="submit" onClick={onSubmit}>
+        <Button type="submit" onClick={onSubmit} disabled={isLoading}>
           <CheckCircle className="mr-2 h-4 w-4" />
-          Submit Project
+          {isLoading ? "Submitting..." : "Submit Project"}
         </Button>
       </CardFooter>
     </Card>
