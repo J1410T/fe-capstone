@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Mail, Plus } from "lucide-react";
 
@@ -36,15 +34,15 @@ const mockUsers: UserSearchResult[] = [
     email: "john.smith@university.edu",
     avatar: "/avatars/john.jpg",
     department: "Computer Science",
-    role: "Professor"
+    role: "Professor",
   },
   {
-    id: "2", 
+    id: "2",
     name: "John Doe",
     email: "john.doe@university.edu",
     avatar: "/avatars/john-doe.jpg",
     department: "Mathematics",
-    role: "Associate Professor"
+    role: "Associate Professor",
   },
   {
     id: "3",
@@ -52,15 +50,15 @@ const mockUsers: UserSearchResult[] = [
     email: "jane.smith@university.edu",
     avatar: "/avatars/jane.jpg",
     department: "Physics",
-    role: "Researcher"
+    role: "Researcher",
   },
   {
     id: "4",
     name: "Alice Johnson",
     email: "alice.johnson@university.edu",
     department: "Chemistry",
-    role: "PhD Student"
-  }
+    role: "PhD Student",
+  },
 ];
 
 export const SimpleUserSearch: React.FC<SimpleUserSearchProps> = ({
@@ -68,7 +66,7 @@ export const SimpleUserSearch: React.FC<SimpleUserSearchProps> = ({
   onUserSelect,
   excludeUserIds = [],
   className,
-  disabled = false
+  disabled = false,
 }) => {
   const [searchValue, setSearchValue] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<UserSearchResult[]>([]);
@@ -82,9 +80,9 @@ export const SimpleUserSearch: React.FC<SimpleUserSearchProps> = ({
       return;
     }
 
-    const filtered = mockUsers.filter(user => {
+    const filtered = mockUsers.filter((user) => {
       if (excludeUserIds.includes(user.id)) return false;
-      
+
       const searchLower = searchValue.toLowerCase();
       return (
         user.name.toLowerCase().includes(searchLower) ||
@@ -112,9 +110,9 @@ export const SimpleUserSearch: React.FC<SimpleUserSearchProps> = ({
     // Create invitation user
     const invitationUser: UserSearchResult = {
       id: `invitation-${Date.now()}`,
-      name: searchValue.split('@')[0], // Use email prefix as name
+      name: searchValue.split("@")[0], // Use email prefix as name
       email: searchValue,
-      role: "Invited"
+      role: "Invited",
     };
 
     onUserSelect(invitationUser);
@@ -127,8 +125,9 @@ export const SimpleUserSearch: React.FC<SimpleUserSearchProps> = ({
     return emailRegex.test(email);
   };
 
-  const showEmailInvitation = searchValue.trim() && 
-    isValidEmail(searchValue) && 
+  const showEmailInvitation =
+    searchValue.trim() &&
+    isValidEmail(searchValue) &&
     filteredUsers.length === 0;
 
   return (
@@ -165,7 +164,10 @@ export const SimpleUserSearch: React.FC<SimpleUserSearchProps> = ({
                     <Avatar className="h-8 w-8">
                       <AvatarImage src={user.avatar} />
                       <AvatarFallback className="bg-blue-100 text-blue-700 text-xs">
-                        {user.name.split(' ').map(n => n[0]).join('')}
+                        {user.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
@@ -213,20 +215,22 @@ export const SimpleUserSearch: React.FC<SimpleUserSearchProps> = ({
             )}
 
             {/* No Results */}
-            {filteredUsers.length === 0 && !showEmailInvitation && searchValue.trim() && (
-              <div className="p-4 text-center text-gray-500">
-                <p className="text-sm">No users found</p>
-                <p className="text-xs mt-1">Try searching by name or email</p>
-              </div>
-            )}
+            {filteredUsers.length === 0 &&
+              !showEmailInvitation &&
+              searchValue.trim() && (
+                <div className="p-4 text-center text-gray-500">
+                  <p className="text-sm">No users found</p>
+                  <p className="text-xs mt-1">Try searching by name or email</p>
+                </div>
+              )}
           </CardContent>
         </Card>
       )}
 
       {/* Click outside to close */}
       {showResults && (
-        <div 
-          className="fixed inset-0 z-40" 
+        <div
+          className="fixed inset-0 z-40"
           onClick={() => setShowResults(false)}
         />
       )}
