@@ -1,11 +1,19 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getProjectListFilter,
   buildFilterParams,
   getProjectDetail,
   getMyProjectList,
+  createProject,
+  createProjectMajor,
+  createProjectTag,
 } from "@/services/resources/project";
-import { SortOption } from "@/types/project";
+import {
+  CreateProjectMajorRequest,
+  CreateProjectRequest,
+  CreateProjectTagRequest,
+  SortOption,
+} from "@/types/project";
 
 export function useProjectListFilter(
   filters: {
@@ -53,5 +61,29 @@ export function useMyProject() {
   return useQuery({
     queryKey: ["my-projects"],
     queryFn: getMyProjectList,
+  });
+}
+
+export function useCreateProject() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateProjectRequest) => createProject(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["project-list-filter"] });
+      queryClient.invalidateQueries({ queryKey: ["my-projects"] });
+    },
+  });
+}
+
+export function useCreateProjectMajor() {
+  return useMutation({
+    mutationFn: (data: CreateProjectMajorRequest) => createProjectMajor(data),
+  });
+}
+
+export function useCreateProjectTag() {
+  return useMutation({
+    mutationFn: (data: CreateProjectTagRequest) => createProjectTag(data),
   });
 }

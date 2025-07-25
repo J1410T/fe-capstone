@@ -15,6 +15,7 @@ import {
   UserSearchInput,
   InvitedUser,
   UserSearchResult,
+  SimpleCollaboratorManager,
 } from "@/components/common";
 import {
   Users,
@@ -32,6 +33,7 @@ interface InviteMembersStepProps {
   onCollaboratorsChange: (collaborators: SimpleInvitedUser[]) => void;
   onNext: () => void;
   onPrevious: () => void;
+  mode?: "detailed" | "simple";
 }
 
 export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
@@ -39,17 +41,14 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   onCollaboratorsChange,
   onNext,
   onPrevious,
+  mode = "detailed",
 }) => {
   const [showAddMember, setShowAddMember] = useState(false);
   const [inviteSlots, setInviteSlots] = useState(5);
 
   const handleUserSelect = (user: UserSearchResult) => {
-    // Check if user is already invited
-    if (collaborators.some((u) => u.email === user.email)) {
-      return;
-    }
+    if (collaborators.some((u) => u.email === user.email)) return;
 
-    // Determine role - first user becomes leader if no leader exists
     const hasLeader = collaborators.some((u) => u.role === "Leader");
     const role = !hasLeader ? "Leader" : "Member";
 
@@ -64,7 +63,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   };
 
   const handleRoleChange = (userId: string, newRole: "Leader" | "Member") => {
-    // If changing to Leader, demote current leader to Member
     const updatedUsers = collaborators.map((user) => {
       if (
         newRole === "Leader" &&
@@ -107,6 +105,41 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   const leaderCount = collaborators.filter((u) => u.role === "Leader").length;
   const availableSlots = inviteSlots - collaborators.length;
 
+  // --- SIMPLE MODE: Show SimpleCollaboratorManager only ---
+  if (mode === "simple") {
+    return (
+      <div className="space-y-6">
+        <SimpleCollaboratorManager
+          invitedUsers={collaborators}
+          onUsersChange={onCollaboratorsChange}
+          maxMembers={10}
+        />
+        <div className="flex justify-between">
+          <Button
+            variant="outline"
+            onClick={onPrevious}
+            size="lg"
+            className="px-8"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Previous
+          </Button>
+
+          <Button
+            onClick={onNext}
+            size="lg"
+            className="px-8"
+            disabled={!canProceed()}
+          >
+            Next Step
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // --- DETAILED MODE ---
   return (
     <div className="space-y-6">
       {/* Step Header */}
@@ -120,23 +153,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
         </p>
       </div>
 
-      {/* GitHub-style Info Card */}
-      <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
-        <CardContent className="p-4">
-          <div className="flex items-start space-x-3">
-            <div className="text-sm text-purple-800">
-              <p className="font-medium mb-1">GitHub-style Collaboration</p>
-              <p>
-                Search by name or email to find existing users. If someone isn't
-                in the system, you can invite them by email. Duplicate names
-                will show a selection popup.
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Main Invitation Card */}
+      {/* Main Card */}
       <Card className="border-0 shadow-lg">
         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
           <CardTitle className="text-xl font-bold text-gray-800 flex items-center justify-between">
@@ -149,25 +166,24 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
             </Badge>
           </CardTitle>
         </CardHeader>
+
         <CardContent className="p-6">
           {/* Requirements */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div className="flex items-start space-x-2">
-              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
               <div className="text-sm text-blue-800">
                 <p className="font-medium mb-1">Requirements:</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>At least one Leader is required</li>
-                  <li>
-                    You can invite up to {inviteSlots} collaborators total
-                  </li>
-                  <li>Members can be promoted to Leader role</li>
+                  <li>You can invite up to {inviteSlots} collaborators</li>
+                  <li>Members can be promoted to Leader</li>
                 </ul>
               </div>
             </div>
           </div>
 
-          {/* Invited Users List */}
+          {/* Collaborators List */}
           {collaborators.length > 0 && (
             <div className="space-y-4 mb-6">
               <h4 className="text-lg font-semibold text-gray-900">
@@ -213,7 +229,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                     </div>
 
                     <div className="flex items-center space-x-3">
-                      {/* Role Selector */}
                       <Select
                         value={user.role}
                         onValueChange={(value: "Leader" | "Member") =>
@@ -227,20 +242,11 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                           </div>
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Leader">
-                            <div className="flex items-center gap-2">
-                              Leader
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="Member">
-                            <div className="flex items-center gap-2">
-                              Member
-                            </div>
-                          </SelectItem>
+                          <SelectItem value="Leader">Leader</SelectItem>
+                          <SelectItem value="Member">Member</SelectItem>
                         </SelectContent>
                       </Select>
 
-                      {/* Remove Button */}
                       <Button
                         variant="ghost"
                         size="sm"
@@ -256,7 +262,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
             </div>
           )}
 
-          {/* Add Member Section */}
+          {/* Add Member */}
           {showAddMember ? (
             <div className="space-y-4 mb-6">
               <div className="flex items-center justify-between">
@@ -305,11 +311,11 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
             )
           )}
 
-          {/* Validation Messages */}
+          {/* Warnings */}
           {leaderCount === 0 && collaborators.length > 0 && (
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
               <div className="flex items-start space-x-2">
-                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
                 <p className="text-sm text-amber-800">
                   <strong>Action Required:</strong> Please assign at least one
                   collaborator as Leader to proceed.
@@ -339,7 +345,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
           <ArrowLeft className="w-4 h-4 mr-2" />
           Previous
         </Button>
-
         <Button
           onClick={onNext}
           size="lg"

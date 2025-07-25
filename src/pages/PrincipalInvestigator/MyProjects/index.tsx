@@ -274,8 +274,6 @@ const MyProject: React.FC = () => {
                   <TableHead>Category</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Progress</TableHead>
-                  <TableHead>Language</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -316,18 +314,7 @@ const MyProject: React.FC = () => {
                         {capitalize(project.status)}
                       </Badge>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <div className="w-16 h-2 bg-gray-200 rounded-full">
-                          <div
-                            className="h-2 bg-primary rounded-full"
-                            style={{ width: `${project.progress}%` }}
-                          />
-                        </div>
-                        <span className="text-sm">{project.progress}%</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{project.language}</TableCell>
+
                     <TableCell>
                       <div className="text-sm">
                         {formatDate(project["created-at"])}

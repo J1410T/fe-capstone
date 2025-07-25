@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,9 +8,9 @@ import { useProject } from "@/hooks/queries/project";
 import { Loading } from "@/components/ui";
 import { StepperHeader } from "./components/StepperHeader";
 import { ProjectSummaryStep } from "./components/ProjectSummaryStep";
-import { SimpleInviteMembersStep } from "./components/SimpleInviteMembersStep";
 import { ReviewSubmitStep } from "./components/ReviewSubmitStep";
 import { SimpleInvitedUser } from "@/components/common";
+import { InviteMembersStep } from "./components/InviteMembersStep";
 
 export interface EnrollmentData {
   bm1Content: string;
@@ -22,6 +22,8 @@ const ProjectEnroll: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
+  const [collaborators, setCollaborators] = useState<SimpleInvitedUser[]>([]);
+
   const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>({
     bm1Content: "",
     collaborators: [],
@@ -36,13 +38,6 @@ const ProjectEnroll: React.FC = () => {
   } = useProject(projectId || "");
 
   const project = projectResponse?.data;
-
-  // Redirect if user is already a member or project doesn't exist
-  useEffect(() => {
-    if (project && project["is-member"]) {
-      navigate(getProjectDetailRoute(), { replace: true });
-    }
-  }, [project, navigate]);
 
   const getBackPath = () => {
     switch (user?.role) {
@@ -59,7 +54,7 @@ const ProjectEnroll: React.FC = () => {
     }
   };
 
-  const getProjectDetailRoute = () => {
+  const getProjectDetailRoute = useCallback(() => {
     if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR)
       return `/pi/project/${projectId}`;
     if (user?.role === UserRole.HOST_INSTITUTION)
@@ -67,7 +62,16 @@ const ProjectEnroll: React.FC = () => {
     if (user?.role === UserRole.APPRAISAL_COUNCIL)
       return `/council/project/${projectId}`;
     return `/researcher/project/${projectId}`;
-  };
+  }, [user?.role, projectId]);
+
+  const hasRedirectedRef = useRef(false);
+
+  useEffect(() => {
+    if (project && project["is-member"] && !hasRedirectedRef.current) {
+      hasRedirectedRef.current = true;
+      navigate(getProjectDetailRoute(), { replace: true });
+    }
+  }, [project, navigate, getProjectDetailRoute]);
 
   const handleBack = () => {
     navigate(getBackPath());
@@ -178,8 +182,6 @@ const ProjectEnroll: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {currentStep === 1 && (
           <ProjectSummaryStep
-            projectId={projectId!}
-            bm1Content={enrollmentData.bm1Content}
             onContentChange={(content) =>
               updateEnrollmentData({ bm1Content: content })
             }
@@ -188,13 +190,12 @@ const ProjectEnroll: React.FC = () => {
         )}
 
         {currentStep === 2 && (
-          <SimpleInviteMembersStep
-            collaborators={enrollmentData.collaborators}
-            onCollaboratorsChange={(collaborators) =>
-              updateEnrollmentData({ collaborators })
-            }
+          <InviteMembersStep
+            collaborators={collaborators}
+            onCollaboratorsChange={setCollaborators}
             onNext={handleNext}
             onPrevious={handlePrevious}
+            mode="simple" // or "detailed"
           />
         )}
 

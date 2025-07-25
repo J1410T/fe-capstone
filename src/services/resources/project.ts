@@ -1,10 +1,14 @@
 import {
+  CreateProjectMajorRequest,
+  CreateProjectMajorResponse,
   CreateProjectRequest,
+  CreateProjectTagRequest,
   MyProjectResponse,
   ProjectDetailResponse,
   ProjectFilterRequest,
   ProjectFilterResponse,
-  ProjectItem,
+  // ProjectItem,
+  ProjectTag,
   SortOption,
 } from "@/types/project";
 import { axiosClient, getAccessToken } from "../api";
@@ -113,17 +117,58 @@ export const buildFilterParams = (filters: {
 
 export const createProject = async (
   data: CreateProjectRequest
-): Promise<ProjectItem> => {
+): Promise<string> => {
   try {
     const accessToken = getAccessToken();
-    const res = await axiosClient.post<ProjectItem>(`/project`, data, {
+    const res = await axiosClient.post<string>(`/project`, data, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
       },
     });
     return res.data;
   } catch (error) {
     console.error("createProject error:", error);
+    throw error;
+  }
+};
+
+export const createProjectMajor = async (
+  data: CreateProjectMajorRequest
+): Promise<CreateProjectMajorResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    const res = await axiosClient.post<CreateProjectMajorResponse>(
+      `/project-major`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.error("createProjectMajor error:", error);
+    throw error;
+  }
+};
+
+export const createProjectTag = async (
+  data: CreateProjectTagRequest
+): Promise<ProjectTag[]> => {
+  try {
+    const accessToken = getAccessToken();
+    const res = await axiosClient.post<ProjectTag[]>(`/project-tag`, data, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.error("createProjectTag error:", error);
     throw error;
   }
 };

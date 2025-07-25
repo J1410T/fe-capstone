@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import {
   Card,
   CardContent,
@@ -26,6 +26,7 @@ import { FileText, Download, Eye, FolderOpen } from "lucide-react";
 import { DocumentProject } from "@/types/document";
 import { formatDateTime } from "@/utils";
 import { getStatusColor } from "../shared/utils";
+import { Editor } from "@tinymce/tinymce-react";
 
 interface DocumentTabProps {
   documents: DocumentProject[];
@@ -45,6 +46,8 @@ const DocumentTab: React.FC<DocumentTabProps> = ({ documents }) => {
     console.log("Download", document.name);
     // TODO: implement actual download
   };
+  type EditorInstance = { getContent: () => string } | null;
+  const editorRef = useRef<EditorInstance>(null);
 
   return (
     <Card className="shadow-sm">
@@ -133,11 +136,9 @@ const DocumentTab: React.FC<DocumentTabProps> = ({ documents }) => {
 
       {/* --- View Dialog --- */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-auto">
+        <DialogContent className="w-screen max-w-none px-4">
           <DialogHeader>
-            <DialogTitle>
-              {selectedDocument ? selectedDocument.name : "Document"}
-            </DialogTitle>
+            <DialogTitle>{selectedDocument?.name || "Document"}</DialogTitle>
           </DialogHeader>
           {selectedDocument ? (
             <div className="space-y-4">
@@ -152,52 +153,49 @@ const DocumentTab: React.FC<DocumentTabProps> = ({ documents }) => {
                   <strong>Status:</strong> {selectedDocument.status}
                 </div>
               </div>
-
-              {selectedDocument.documentFields &&
-              selectedDocument.documentFields.length > 0 ? (
-                <div className="space-y-6">
-                  {selectedDocument.documentFields.map((field) => (
-                    <div key={field.id} className="border-b pb-4">
-                      {field.chapter && (
-                        <h2 className="text-xl font-semibold mb-2">
-                          {field.chapter}
-                        </h2>
-                      )}
-                      {field.title && (
-                        <h3 className="text-lg font-medium mb-2">
-                          {field.title}
-                        </h3>
-                      )}
-                      {field.subtitle && (
-                        <h4 className="text-md font-medium mb-2 text-gray-700">
-                          {field.subtitle}
-                        </h4>
-                      )}
-
-                      {field.fieldContents &&
-                        field.fieldContents.map((content) => (
-                          <div key={content.id} className="mb-4">
-                            {content.title && (
-                              <h5 className="font-medium mb-2">
-                                {content.title}
-                              </h5>
-                            )}
-                            {content.content && (
-                              <div className="prose prose-sm max-w-none">
-                                <p>{content.content}</p>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500">No document content available.</p>
-              )}
+              <div className="w-full">
+                {selectedDocument?.["content-html"] ? (
+                  <Editor
+                    key={selectedDocument.id}
+                    apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
+                    initialValue={selectedDocument?.["content-html"] ?? ""}
+                    onInit={(_, editor) => (editorRef.current = editor)}
+                    disabled={true}
+                    init={{
+                      height: 600,
+                      width: "100%",
+                      menubar: false,
+                      toolbar: false,
+                      statusbar: false,
+                      plugins: [
+                        "advlist autolink lists link image charmap preview anchor",
+                        "searchreplace visualblocks media table wordcount",
+                      ],
+                      content_style: `
+      body {
+        font-family: Arial;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #333;
+        padding: 20px;
+      }
+    `,
+                      setup: (editor) => {
+                        editor.on("init", () => {
+                          editor
+                            .getBody()
+                            .setAttribute("contenteditable", "false");
+                        });
+                      },
+                    }}
+                  />
+                ) : (
+                  <p className="text-gray-500">No content available.</p>
+                )}
+              </div>
             </div>
           ) : (
-            <p className="text-gray-500">No document selected.</p>
+            <p className="text-gray-500">Loading document...</p>
           )}
         </DialogContent>
       </Dialog>

@@ -21,28 +21,16 @@ import { ArrowRight } from "lucide-react";
 import { Textarea } from "@/components/ui";
 import { useFieldList } from "@/hooks/queries/field";
 import { useMajorsByField } from "@/hooks/queries/major";
-
-interface FormData {
-  englishTitle: string;
-  vietnameseTitle: string;
-  abbreviations: string;
-  duration: string;
-  description: string;
-  requirementNote: string;
-  maximumMember: string;
-  language: string;
-  category: string;
-  type: string;
-  field: string;
-  major: string;
-}
+import { FormHostRegister } from "@/types/form";
+import { TagInput } from "@/components/layout/TagInput";
 
 interface ProjectInfoFormProps {
-  formData: FormData;
+  formData: FormHostRegister;
   onInputChange: (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
   onSelectChange: (name: string, value: string) => void;
+  onTagsChange: (tags: string[]) => void;
   onNextStep: () => void;
 }
 
@@ -50,6 +38,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
   formData,
   onInputChange,
   onSelectChange,
+  onTagsChange,
   onNextStep,
 }) => {
   const { data: fields, isLoading: fieldsLoading } = useFieldList();
@@ -119,6 +108,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
                 value={formData.duration}
                 onChange={onInputChange}
                 required
+                min={1}
               />
             </div>
           </div>
@@ -159,6 +149,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
                 value={formData.maximumMember}
                 onChange={onInputChange}
                 required
+                min={1}
               />
             </div>
             <div className="space-y-2">
@@ -168,7 +159,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
                 onValueChange={(value) => onSelectChange("language", value)}
                 required
               >
-                <SelectTrigger id="language">
+                <SelectTrigger id="language" className="w-full">
                   <SelectValue placeholder="Select language" />
                 </SelectTrigger>
                 <SelectContent>
@@ -187,7 +178,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
                 onValueChange={(value) => onSelectChange("category", value)}
                 required
               >
-                <SelectTrigger id="category">
+                <SelectTrigger id="category" className="w-full">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -205,7 +196,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
                 onValueChange={(value) => onSelectChange("type", value)}
                 required
               >
-                <SelectTrigger id="type">
+                <SelectTrigger id="type" className="w-full">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -224,7 +215,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
                 onValueChange={handleFieldChange}
                 required
               >
-                <SelectTrigger id="field">
+                <SelectTrigger id="field" className="w-full">
                   <SelectValue placeholder="Select field" />
                 </SelectTrigger>
                 <SelectContent>
@@ -251,7 +242,7 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
                 disabled={!formData.field || majorsLoading}
                 required
               >
-                <SelectTrigger id="major">
+                <SelectTrigger id="major" className="w-full">
                   <SelectValue placeholder="Select major" />
                 </SelectTrigger>
                 <SelectContent>
@@ -270,6 +261,13 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
               </Select>
             </div>
           </div>
+
+          <TagInput
+            tags={formData.tags}
+            onTagsChange={onTagsChange}
+            label="Project Tags"
+            placeholder="Enter project tags and press Enter..."
+          />
         </div>
       </CardContent>
       <CardFooter className="flex justify-end">
