@@ -92,13 +92,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           <img
             src={
               logoUrl ||
-              "https://wx4.sinaimg.cn/large/005D0pgely1i3dp60wdiaj32dc3k0nph.jpg"
+              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSC_XtryB5OYUluF6iPg1reZRvaoFczfSOtog&s"
             }
             alt={title}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
               const fallback =
-                "https://wx4.sinaimg.cn/large/005D0pgely1i3dp60wdiaj32dc3k0nph.jpg";
+                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSC_XtryB5OYUluF6iPg1reZRvaoFczfSOtog&s";
               if (e.currentTarget.src !== fallback) {
                 e.currentTarget.src = fallback;
               }
