@@ -80,9 +80,10 @@ export const useDocuments = (filters?: DocumentFilters) => {
 export const useDocument = (id: string, enabled = true) => {
   return useQuery({
     queryKey: documentQueryKeys.detail(id),
-    queryFn: () => queryApi.get<DocumentForm>(`/document/${id}`),
+    queryFn: () => queryApi.get<DocumentForm>(`/documents/${id}`),
     enabled: enabled && !!id,
-    throwOnError: true,
+    throwOnError: false, // Don't throw errors to prevent component crashes
+    retry: 1, // Only retry once
   });
 };
 

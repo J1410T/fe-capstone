@@ -38,7 +38,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
     queryFn: async () => {
       try {
         console.log("Attempting to fetch BM1 templates from API...");
-        const result = await queryApi.getPaginated<DocumentForm>("/document", {
+        const result = await queryApi.getPaginated<DocumentForm>("/documents", {
           type: "BM1",
           "is-template": true,
         });
