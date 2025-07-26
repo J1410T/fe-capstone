@@ -327,6 +327,7 @@ const MyProject: React.FC = () => {
                           size="sm"
                           onClick={() => handleViewProject(project.id)}
                         >
+                          View
                           <Eye className="h-4 w-4" />
                         </Button>
                       </div>

@@ -45,7 +45,6 @@ import EditScientificCV from "@/pages/Profile/ScientificCV/EditScientificCV";
 
 // Host Institution Pages
 import RegisterProject from "@/pages/HostInstitution/RegisterProject";
-import MyProjects from "@/pages/HostInstitution/MyProjects";
 import ProjectHistory from "@/pages/HostInstitution/ProjectHistory";
 
 // Principal Investigator Pages
@@ -278,10 +277,6 @@ export const routes: RouteObject[] = [
           {
             path: "register-project",
             element: <RegisterProject />,
-          },
-          {
-            path: "my-projects",
-            element: <MyProjects />,
           },
           {
             path: "projects",

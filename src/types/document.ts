@@ -96,3 +96,10 @@ export type ContentTable = {
   createdAt: string;
   fieldContentId: string;
 };
+export interface DocumentListResponse {
+  "page-index": number;
+  "page-size": number;
+  "total-count": number;
+  "total-page": number;
+  "data-list": DocumentForm[];
+}

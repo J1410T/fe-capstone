@@ -195,7 +195,7 @@ const ProjectEnroll: React.FC = () => {
             onCollaboratorsChange={setCollaborators}
             onNext={handleNext}
             onPrevious={handlePrevious}
-            mode="simple" // or "detailed"
+            mode="detailed" // Using detailed mode to show CV request functionality
           />
         )}
 
