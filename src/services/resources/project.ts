@@ -3,6 +3,7 @@ import {
   CreateProjectMajorResponse,
   CreateProjectRequest,
   CreateProjectTagRequest,
+  EnrollProjectResponse,
   MyProjectResponse,
   ProjectDetailResponse,
   ProjectFilterRequest,
@@ -189,4 +190,26 @@ export const getMyProjectList = async () => {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+};
+
+export const enrollProjectAsPrincipal = async (
+  projectId: string
+): Promise<EnrollProjectResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    const res = await axiosClient.post<EnrollProjectResponse>(
+      `/project/enroll-as-principal/${projectId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.error("enrollProjectAsPrincipal error:", error);
+    throw error;
+  }
 };

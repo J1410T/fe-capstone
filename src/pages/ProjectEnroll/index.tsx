@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ export interface EnrollmentData {
 const ProjectEnroll: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
+  // const location = useLocation();
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [collaborators, setCollaborators] = useState<SimpleInvitedUser[]>([]);
@@ -29,6 +30,9 @@ const ProjectEnroll: React.FC = () => {
     collaborators: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Track if user came from enrollment process to prevent auto-redirect
+  // const [isEnrollmentProcess, setIsEnrollmentProcess] = useState(false);
 
   // Fetch project data
   const {
@@ -43,12 +47,8 @@ const ProjectEnroll: React.FC = () => {
     switch (user?.role) {
       case UserRole.PRINCIPAL_INVESTIGATOR:
         return "/pi/projects";
-      case UserRole.HOST_INSTITUTION:
-        return "/host/projects";
       case UserRole.RESEARCHER:
         return "/researcher/projects";
-      case UserRole.APPRAISAL_COUNCIL:
-        return "/council/projects";
       default:
         return "/home";
     }
@@ -57,21 +57,53 @@ const ProjectEnroll: React.FC = () => {
   const getProjectDetailRoute = useCallback(() => {
     if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR)
       return `/pi/project/${projectId}`;
-    if (user?.role === UserRole.HOST_INSTITUTION)
-      return `/host/project/${projectId}`;
-    if (user?.role === UserRole.APPRAISAL_COUNCIL)
-      return `/council/project/${projectId}`;
-    return `/researcher/project/${projectId}`;
+    else {
+      return `/researcher/project/${projectId}`;
+    }
   }, [user?.role, projectId]);
 
-  const hasRedirectedRef = useRef(false);
+  // const hasRedirectedRef = useRef(false);
+
+  // Check if user came from enrollment process (via state or URL pattern)
+  // useEffect(() => {
+  //   // If user navigated here directly via enrollment flow, set flag
+  //   if (location.pathname.includes("/enroll")) {
+  //     setIsEnrollmentProcess(true);
+  //   }
+  // }, [location.pathname]);
+
+  // useEffect(() => {
+  //   // Only redirect if user is already a member AND didn't come from enrollment process
+  //   if (
+  //     project &&
+  //     project["is-member"] &&
+  //     !hasRedirectedRef.current &&
+  //     !isEnrollmentProcess
+  //   ) {
+  //     hasRedirectedRef.current = true;
+  //     navigate(getProjectDetailRoute(), { replace: true });
+  //   }
+  // }, [project, navigate, getProjectDetailRoute, isEnrollmentProcess]);
 
   useEffect(() => {
-    if (project && project["is-member"] && !hasRedirectedRef.current) {
-      hasRedirectedRef.current = true;
-      navigate(getProjectDetailRoute(), { replace: true });
+    // If user navigated here directly via enrollment flow, set flag
+    if (location.pathname.includes("/enroll")) {
+      // setIsEnrollmentProcess(true);
     }
-  }, [project, navigate, getProjectDetailRoute]);
+  }, [location.pathname]);
+
+  // useEffect(() => {
+  //   // Only redirect if user is already a member AND didn't come from enrollment process
+  //   if (
+  //     project &&
+  //     project["is-member"] &&
+  //     !hasRedirectedRef.current &&
+  //     !isEnrollmentProcess
+  //   ) {
+  //     hasRedirectedRef.current = true;
+  //     navigate(getProjectDetailRoute(), { replace: true });
+  //   }
+  // }, [project, navigate, getProjectDetailRoute, isEnrollmentProcess]);
 
   const handleBack = () => {
     navigate(getBackPath());
@@ -101,6 +133,9 @@ const ProjectEnroll: React.FC = () => {
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
+
+      // After successful enrollment, reset the enrollment process flag
+      // setIsEnrollmentProcess(false);
 
       // Redirect to project detail page after successful enrollment
       navigate(getProjectDetailRoute());

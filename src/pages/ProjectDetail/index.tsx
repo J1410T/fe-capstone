@@ -11,13 +11,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import { OverviewTab, ProjectHeader, TeamTab } from "./components";
 import BudgetTab from "./components/BudgetTab";
 import DocumentTab from "./components/DocumentTab";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 import MilestoneTab from "./components/MilestoneTab";
 import { ArrowLeft } from "lucide-react";
-// import { useProjectMajors } from "@/hooks/queries/major";
-import { useProject } from "@/hooks/queries/project";
+import {
+  useProject,
+  useEnrollProjectAsPrincipal,
+} from "@/hooks/queries/project";
 import { useProjectMajors } from "@/hooks/queries/major";
-// import { useProject, useProjectMajors } from "@/hooks/project";
 
 function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -33,14 +34,22 @@ function ProjectDetail() {
     error,
   } = useProject(projectId || "");
 
-  // const { data: majorResponse, isLoading: majorsLoading } = useProjectMajors(
-  //   projectId || ""
-  // );
+  const enrollProjectMutation = useEnrollProjectAsPrincipal();
 
-  const handleEnrollProject = () => {
-    // Navigate to enrollment page
-    const enrollPath = `${location.pathname}/enroll`;
-    navigate(enrollPath);
+  const handleEnrollProject = async (projectId: string) => {
+    try {
+      const enrolledProject = await enrollProjectMutation.mutateAsync(
+        projectId
+      );
+      console.log("Enrolled project:", enrolledProject);
+      // Navigate to enrollment page with the enrolled project's ID
+      if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+        navigate(`/pi/project/${enrolledProject.id}/enroll`);
+      }
+    } catch (error) {
+      console.error("Failed to enroll project:", error);
+      // Handle error (show toast, etc.)
+    }
   };
 
   // Determine visible tabs based on membership
@@ -57,7 +66,12 @@ function ProjectDetail() {
 
   const visibleTabs = getVisibleTabs();
   const isMember = projectResponse?.data["is-member"] || false;
-  const shouldShowEnrollButton = Boolean(user && !isMember);
+  const shouldShowEnrollButton = Boolean(
+    user &&
+      !isMember &&
+      user.role === UserRole.PRINCIPAL_INVESTIGATOR &&
+      projectResponse?.data["project-detail"]?.status === "created"
+  );
 
   if (isLoading) {
     return <Loading />;
@@ -80,8 +94,6 @@ function ProjectDetail() {
 
   const project = projectResponse.data["project-detail"];
   const roleInProject = projectResponse.data["role-in-project"];
-
-  console.log("Member project", project.members);
 
   const projectData = {
     id: project.id,
@@ -188,6 +200,7 @@ function ProjectDetail() {
 
         <TabsContent value="overview" className="space-y-4">
           <OverviewTab
+            projectId={project.id}
             category={project.category}
             type={project.type}
             description={project.description || "No description available"}
@@ -208,9 +221,7 @@ function ProjectDetail() {
             majorName={projectData.majorName}
             showEnrollButton={shouldShowEnrollButton}
             tags={projectData.tags}
-            onEnrollProject={
-              project.status === "created" ? handleEnrollProject : undefined
-            }
+            onEnrollProject={handleEnrollProject}
           />
         </TabsContent>
 
