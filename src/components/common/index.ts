@@ -26,7 +26,6 @@ export type { UserSearchResult, InvitedUser } from "./UserSearchInput";
 
 // Simplified user search components
 export { SimpleUserSearch } from "./SimpleUserSearch";
-export { SimpleCollaboratorManager } from "./SimpleCollaboratorManager";
 export type {
   UserSearchResult as SimpleUserResult,
   InvitedUser as SimpleInvitedUser,
