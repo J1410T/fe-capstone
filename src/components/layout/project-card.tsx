@@ -85,20 +85,20 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     );
   };
 
+  const fallbackLogo =
+    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSC_XtryB5OYUluF6iPg1reZRvaoFczfSOtog&s";
+
   return (
     <Card className="p-0 relative group w-full max-w-sm flex-col bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
       <CardHeader className="p-0">
         <div className="relative h-48 w-full overflow-hidden">
           <img
-            src={
-              logoUrl ||
-              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSC_XtryB5OYUluF6iPg1reZRvaoFczfSOtog&s"
-            }
+            src={logoUrl || fallbackLogo}
             alt={title}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
-              const fallback =
-                "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSC_XtryB5OYUluF6iPg1reZRvaoFczfSOtog&s";
+              const fallback = fallbackLogo;
+
               if (e.currentTarget.src !== fallback) {
                 e.currentTarget.src = fallback;
               }
@@ -131,7 +131,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         </div>
       </CardHeader>
 
-      <CardContent className="p-4 flex-1 space-y-3">
+      <CardContent className="p-4 pt-0 flex-1 space-y-3">
         {/* Type & Category */}
         <div className="flex flex-wrap gap-2">
           {type && (
@@ -155,20 +155,31 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         {/* Major & Field */}
         {major && major.length > 0 && (
           <div className="space-y-1 text-sm">
-            <div className="flex items-center gap-2">
+            <div className="flex items-start gap-2">
               <span className="font-medium text-gray-700">
-                <strong>Major:</strong>
+                <strong>Majors:</strong>
               </span>
-              <span className="text-gray-600">{major[0]?.name}</span>
+              <span className="text-gray-600">
+                {major.map((m) => m.name).join(", ")}
+              </span>
             </div>
-            {major[0]?.field?.name && (
-              <div className="flex items-center gap-2">
-                <span className="font-medium text-gray-700">
-                  <strong>Field:</strong>
-                </span>
-                <span className="text-gray-600">{major[0].field.name}</span>
-              </div>
-            )}
+
+            {/* Lấy distinct field names */}
+            <div className="flex items-start gap-2">
+              <span className="font-medium text-gray-700">
+                <strong>
+                  Field
+                  {Array.from(new Set(major.map((m) => m.field.name))).length >
+                  1
+                    ? "s"
+                    : ""}
+                  :
+                </strong>
+              </span>
+              <span className="text-gray-600">
+                {[...new Set(major.map((m) => m.field.name))].join(", ")}
+              </span>
+            </div>
           </div>
         )}
 
