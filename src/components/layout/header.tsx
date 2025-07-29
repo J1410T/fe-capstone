@@ -123,6 +123,7 @@ const menuItemsByRole = {
   ],
   [UserRole.APPRAISAL_COUNCIL]: [
     { name: "Home", path: "/home", icon: Home },
+    { name: "My Council", path: "/council/my-council", icon: Briefcase },
     {
       name: "Project Approval",
       path: "/council/project-approval",
@@ -228,6 +229,22 @@ function Header() {
         return "text-amber-600 bg-amber-50";
       default:
         return "text-gray-600 bg-gray-50";
+    }
+  };
+
+  const handleViewAllNotifications = () => {
+    // Navigate to role-specific notifications page
+    if (user?.role === UserRole.STAFF) {
+      navigate("/staff/notifications");
+    } else if (user?.role === UserRole.HOST_INSTITUTION) {
+      navigate("/host/notifications");
+    } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+      navigate("/pi/notifications");
+    } else if (user?.role === UserRole.APPRAISAL_COUNCIL) {
+      navigate("/council/notifications");
+    } else {
+      // Default to researcher notifications
+      navigate("/researcher/notifications");
     }
   };
 
@@ -379,7 +396,10 @@ function Header() {
               {notifications.length > 0 && (
                 <>
                   <Separator />
-                  <DropdownMenuItem className="p-3 text-center text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 font-medium cursor-pointer">
+                  <DropdownMenuItem
+                    className="p-3 text-center text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 font-medium cursor-pointer"
+                    onClick={handleViewAllNotifications}
+                  >
                     <MessageSquare className="w-4 h-4 mr-2" />
                     View all notifications
                   </DropdownMenuItem>

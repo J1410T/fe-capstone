@@ -21,6 +21,7 @@ import {
   useDeleteField,
 } from "@/hooks/queries/field";
 import { useMajorsByField } from "@/hooks/queries/major";
+import { Loading } from "@/components/ui/loaders";
 
 // Component to handle major count for individual field
 // Fixed MajorCount component with better error handling
@@ -28,7 +29,11 @@ const MajorCount: React.FC<{ fieldId: string }> = ({ fieldId }) => {
   const { data, isLoading, error } = useMajorsByField(fieldId);
 
   if (isLoading) {
-    return <div className="text-center text-muted-foreground">Loading...</div>;
+    return (
+      <div className="flex justify-center py-2">
+        <Loading className="w-full max-w-xs scale-75" />
+      </div>
+    );
   }
 
   if (error) {

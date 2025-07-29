@@ -29,14 +29,7 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({
     // Check if this is a role switch navigation (using replace)
     const isRoleSwitch = navigationType === "REPLACE";
 
-    if (isRoleSwitch) {
-      // For role switching, don't show loading - just update content immediately
-      setContent(children);
-      setIsLoading(false);
-      return;
-    }
-
-    // For normal navigation, show loading
+    // For all navigation (including role switching), show loading
     startLoading();
 
     // 2. Prepare content in memory but don't display yet
@@ -44,10 +37,11 @@ export const LoadingProvider: React.FC<LoadingProviderProps> = ({
       setContent(children);
     }, 100);
 
-    // 3. Wait 1.5s before hiding loading and showing content
+    // 3. Wait for loading duration based on navigation type
+    const loadingDuration = isRoleSwitch ? 2000 : 1500; // Longer for role switch
     const hideLoadingTimer = setTimeout(() => {
       setIsLoading(false);
-    }, 1500);
+    }, loadingDuration);
 
     return () => {
       clearTimeout(prepareContentTimer);

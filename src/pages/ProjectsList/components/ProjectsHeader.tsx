@@ -12,6 +12,7 @@ import {
 import { useMajorsByField } from "@/hooks/queries/major";
 import { useFieldList } from "@/hooks/queries/field";
 import { ProjectsHeaderProps } from "@/types/project";
+import { Loading } from "@/components/ui/loaders";
 
 export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
   searchTerm,
@@ -87,7 +88,10 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
             <SelectItem value="all">All Fields</SelectItem>
             {fieldsLoading ? (
               <SelectItem value="loading" disabled>
-                Loading...
+                <div className="flex items-center gap-2">
+                  <Loading className="w-4 h-4 scale-50" />
+                  <span>Loading fields...</span>
+                </div>
               </SelectItem>
             ) : (
               Array.isArray(fields) &&

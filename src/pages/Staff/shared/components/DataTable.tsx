@@ -38,6 +38,7 @@ import {
   ArrowDown,
 } from "lucide-react";
 import { cn, debounce, getPaginationInfo } from "../utils";
+import { Loading } from "@/components/ui/loaders";
 import {
   TABLE_STYLES,
   DEFAULT_PAGE_SIZE,
@@ -240,7 +241,9 @@ export function DataTable<TData>({
                   colSpan={columns.length}
                   className={TABLE_STYLES.emptyState}
                 >
-                  Loading...
+                  <div className="flex justify-center py-8">
+                    <Loading className="w-full max-w-xs" />
+                  </div>
                 </TableCell>
               </TableRow>
             ) : table.getRowModel().rows?.length ? (
