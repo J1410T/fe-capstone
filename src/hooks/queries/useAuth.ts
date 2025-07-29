@@ -5,8 +5,10 @@ import { getAuthResponse, setAuthResponse } from "@/utils/cookie-manager";
 import { getAccessToken } from "@/services";
 import {
   getAccountById,
+  getAllRoles,
   getMyAccountInfo,
   getRoleById,
+  searchAccounts,
   setMyRole,
 } from "@/services/resources/auth";
 
@@ -59,5 +61,22 @@ export function useSetMyRole() {
     onError: (error) => {
       console.error("Failed to switch role:", error);
     },
+  });
+}
+
+export function useSearchAccounts(input: string) {
+  return useQuery({
+    queryKey: ["search-accounts", input],
+    queryFn: () => searchAccounts(input),
+    enabled: !!input && input.trim().length > 0, // Only search if input has at least 2 characters
+    staleTime: 30000, // Cache for 30 seconds
+  });
+}
+
+export function useAllRoles() {
+  return useQuery({
+    queryKey: ["all-roles"],
+    queryFn: getAllRoles,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 }

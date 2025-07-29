@@ -11,10 +11,12 @@ import { ProjectSummaryStep } from "./components/ProjectSummaryStep";
 import { ReviewSubmitStep } from "./components/ReviewSubmitStep";
 import { SimpleInvitedUser } from "@/components/common";
 import { InviteMembersStep } from "./components/InviteMembersStep";
+import { GroupMember } from "@/types/auth";
 
 export interface EnrollmentData {
   bm1Content: string;
   collaborators: SimpleInvitedUser[];
+  groupMembers: GroupMember[];
 }
 
 const ProjectEnroll: React.FC = () => {
@@ -24,10 +26,12 @@ const ProjectEnroll: React.FC = () => {
   const { user } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [collaborators, setCollaborators] = useState<SimpleInvitedUser[]>([]);
+  const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
 
   const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>({
     bm1Content: "",
     collaborators: [],
+    groupMembers: [],
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -121,23 +125,43 @@ const ProjectEnroll: React.FC = () => {
     }
   };
 
+  // const handleSubmit = async () => {
+  //   setIsSubmitting(true);
+  //   try {
+  //     // API call to submit enrollment
+  //     console.log("Submitting enrollment:", {
+  //       projectId,
+  //       bm1Content: enrollmentData.bm1Content,
+  //       collaborators: enrollmentData.collaborators,
+  //     });
+
+  //     // Simulate API call
+  //     await new Promise((resolve) => setTimeout(resolve, 2000));
+
+  //     // After successful enrollment, reset the enrollment process flag
+  //     // setIsEnrollmentProcess(false);
+
+  //     // Redirect to project detail page after successful enrollment
+  //     navigate(getProjectDetailRoute());
+  //   } catch (error) {
+  //     console.error("Failed to submit enrollment:", error);
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
+
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // API call to submit enrollment
       console.log("Submitting enrollment:", {
         projectId,
         bm1Content: enrollmentData.bm1Content,
         collaborators: enrollmentData.collaborators,
+        groupMembers: groupMembers, // Add this
       });
 
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // After successful enrollment, reset the enrollment process flag
-      // setIsEnrollmentProcess(false);
-
-      // Redirect to project detail page after successful enrollment
       navigate(getProjectDetailRoute());
     } catch (error) {
       console.error("Failed to submit enrollment:", error);
@@ -228,9 +252,11 @@ const ProjectEnroll: React.FC = () => {
           <InviteMembersStep
             collaborators={collaborators}
             onCollaboratorsChange={setCollaborators}
+            groupMembers={groupMembers} // Add this prop
+            onGroupMembersChange={setGroupMembers} // Add this prop
             onNext={handleNext}
             onPrevious={handlePrevious}
-            mode="detailed" // Using detailed mode to show CV request functionality
+            mode="detailed"
           />
         )}
 

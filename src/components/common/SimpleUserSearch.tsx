@@ -3,19 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Mail, Plus } from "lucide-react";
-
-export interface UserSearchResult {
-  id: string;
-  name: string;
-  email: string;
-  avatar?: string;
-  department?: string;
-  role?: string;
-}
+import { UserSearchResult } from "@/types/auth";
 
 export interface InvitedUser extends UserSearchResult {
   isInvitation?: boolean; // true if user doesn't exist in system
-  role: "Leader" | "Member";
+  role: "Leader" | "Researcher" | "Secretary";
 }
 
 interface SimpleUserSearchProps {
@@ -25,41 +17,6 @@ interface SimpleUserSearchProps {
   className?: string;
   disabled?: boolean;
 }
-
-// Mock user data - in real app, this would come from an API
-const mockUsers: UserSearchResult[] = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john.smith@university.edu",
-    avatar: "/avatars/john.jpg",
-    department: "Computer Science",
-    role: "Professor",
-  },
-  {
-    id: "2",
-    name: "John Doe",
-    email: "john.doe@university.edu",
-    avatar: "/avatars/john-doe.jpg",
-    department: "Mathematics",
-    role: "Associate Professor",
-  },
-  {
-    id: "3",
-    name: "Jane Smith",
-    email: "jane.smith@university.edu",
-    avatar: "/avatars/jane.jpg",
-    department: "Physics",
-    role: "Researcher",
-  },
-  {
-    id: "4",
-    name: "Alice Johnson",
-    email: "alice.johnson@university.edu",
-    department: "Chemistry",
-    role: "PhD Student",
-  },
-];
 
 export const SimpleUserSearch: React.FC<SimpleUserSearchProps> = ({
   placeholder = "Search by name or email...",
@@ -80,17 +37,17 @@ export const SimpleUserSearch: React.FC<SimpleUserSearchProps> = ({
       return;
     }
 
-    const filtered = mockUsers.filter((user) => {
-      if (excludeUserIds.includes(user.id)) return false;
+    // const filtered = mockUsers.filter((user) => {
+    //   if (excludeUserIds.includes(user.id)) return false;
 
-      const searchLower = searchValue.toLowerCase();
-      return (
-        user.name.toLowerCase().includes(searchLower) ||
-        user.email.toLowerCase().includes(searchLower)
-      );
-    });
+    //   const searchLower = searchValue.toLowerCase();
+    //   return (
+    //     user.name.toLowerCase().includes(searchLower) ||
+    //     user.email.toLowerCase().includes(searchLower)
+    //   );
+    // });
 
-    setFilteredUsers(filtered);
+    // setFilteredUsers(filtered);
     setShowResults(true);
   }, [searchValue, excludeUserIds]);
 
@@ -112,7 +69,7 @@ export const SimpleUserSearch: React.FC<SimpleUserSearchProps> = ({
       id: `invitation-${Date.now()}`,
       name: searchValue.split("@")[0], // Use email prefix as name
       email: searchValue,
-      role: "Invited",
+      role: "Researcher",
     };
 
     onUserSelect(invitationUser);

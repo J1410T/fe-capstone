@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { SimpleInvitedUser, UserSearchResult } from "@/components/common";
+import { SimpleInvitedUser } from "@/components/common";
 import {
   Users,
   ArrowLeft,
@@ -28,11 +28,14 @@ import {
   Clock,
   Loader2,
   FileText,
+  UserCheck,
 } from "lucide-react";
 import {
   CVRequestStatus,
   mockCreateCVRequest,
 } from "@/hooks/queries/useCVRequests";
+import { useSearchAccounts, useAllRoles } from "@/hooks/queries/useAuth";
+import { GroupMember } from "@/types/auth";
 
 // Extended user interface with CV request status
 export interface InvitedUserWithCV extends SimpleInvitedUser {
@@ -44,59 +47,84 @@ export interface InvitedUserWithCV extends SimpleInvitedUser {
 interface InviteMembersStepProps {
   collaborators: SimpleInvitedUser[];
   onCollaboratorsChange: (collaborators: SimpleInvitedUser[]) => void;
+  groupMembers?: GroupMember[];
+  onGroupMembersChange?: (groupMembers: GroupMember[]) => void;
   onNext: () => void;
   onPrevious: () => void;
   mode?: "detailed" | "simple";
 }
 
-// Mock user data - in real app, this would come from an API
-const mockUsers: UserSearchResult[] = [
-  {
-    id: "1",
-    name: "John Smith",
-    email: "john.smith@university.edu",
-    avatar: "/avatars/john.jpg",
-    department: "Computer Science",
-    role: "Professor",
-  },
-  {
-    id: "2",
-    name: "John Doe",
-    email: "john.doe@university.edu",
-    avatar: "/avatars/john-doe.jpg",
-    department: "Mathematics",
-    role: "Associate Professor",
-  },
-  {
-    id: "3",
-    name: "Jane Smith",
-    email: "jane.smith@university.edu",
-    avatar: "/avatars/jane.jpg",
-    department: "Physics",
-    role: "Researcher",
-  },
-  {
-    id: "4",
-    name: "Alice Johnson",
-    email: "alice.johnson@university.edu",
-    department: "Chemistry",
-    role: "PhD Student",
-  },
-];
-
 export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   collaborators,
   onCollaboratorsChange,
+  groupMembers: initialGroupMembers = [],
+  onGroupMembersChange,
   onNext,
   onPrevious,
   mode = "detailed",
 }) => {
   const [searchValue, setSearchValue] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState<UserSearchResult[]>([]);
   const [showResults, setShowResults] = useState(false);
   const [collaboratorsWithCV, setCollaboratorsWithCV] = useState<
     InvitedUserWithCV[]
   >([]);
+  const [groupMembers, setGroupMembers] =
+    useState<GroupMember[]>(initialGroupMembers);
+
+  // API hooks - search only when input length >= 2
+  const { data: searchResults = [], isLoading: isSearching } =
+    useSearchAccounts(searchValue.trim().length > 0 ? searchValue.trim() : "");
+  const { data: allRoles = [], isLoading: isLoadingRoles } = useAllRoles();
+
+  // Filter roles to only show Researcher, Secretary, Leader
+  const allowedRoles = useMemo(() => {
+    return allRoles.filter((role) =>
+      ["Researcher", "Secretary", "Leader"].includes(role.name)
+    );
+  }, [allRoles]);
+
+  // Get available roles for a user (excluding single-person roles already taken)
+  const getAvailableRoles = (currentUserId: string) => {
+    const currentUserRole = groupMembers.find(
+      (m) => m.id === currentUserId
+    )?.role;
+
+    return allowedRoles.filter((role) => {
+      if (role.name === "Researcher") return true; // Multiple researchers allowed
+
+      // For Secretary and Leader, check if already taken by someone else
+      const isRoleTaken = groupMembers.some(
+        (member) => member.role === role.name && member.id !== currentUserId
+      );
+
+      return !isRoleTaken || currentUserRole === role.name;
+    });
+  };
+
+  // Convert search results to filtered format with default avatar
+  const filteredUsers = useMemo(() => {
+    if (!searchValue.trim() || searchValue.trim().length < 1 || !searchResults)
+      return [];
+
+    return searchResults
+      .filter((user) => !groupMembers.some((m) => m.email === user.email))
+      .map((user) => ({
+        id: user.id,
+        name: user["full-name"],
+        email: user.email,
+        avatar:
+          user["avatar-url"] ||
+          "https://regionalneurological.com/wp-content/uploads/2020/03/Regional-Neurological_Brain-Science.jpeg",
+      }));
+  }, [searchResults, searchValue, groupMembers]);
+
+  // Show search results when there are results or when loading
+  useEffect(() => {
+    const shouldShow =
+      searchValue.trim().length >= 2 &&
+      (filteredUsers.length > 0 || isSearching);
+    setShowResults(shouldShow);
+  }, [searchValue, filteredUsers.length, isSearching]);
 
   // Convert collaborators to collaborators with CV status
   useEffect(() => {
@@ -107,28 +135,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     }));
     setCollaboratorsWithCV(updatedCollaborators);
   }, [collaborators]);
-
-  // Filter users based on search input
-  useEffect(() => {
-    if (!searchValue.trim()) {
-      setFilteredUsers([]);
-      setShowResults(false);
-      return;
-    }
-
-    const filtered = mockUsers.filter((user) => {
-      if (collaborators.some((c) => c.email === user.email)) return false;
-
-      const searchLower = searchValue.toLowerCase();
-      return (
-        user.name.toLowerCase().includes(searchLower) ||
-        user.email.toLowerCase().includes(searchLower)
-      );
-    });
-
-    setFilteredUsers(filtered);
-    setShowResults(true);
-  }, [searchValue, collaborators]);
 
   // CV request function using mock API
   const requestCV = async (userId: string): Promise<void> => {
@@ -188,19 +194,60 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     }
   };
 
-  const handleUserSelect = (user: UserSearchResult) => {
-    if (collaborators.some((u) => u.email === user.email)) return;
+  const handleUserSelect = (user: {
+    id: string;
+    name: string;
+    email: string;
+    avatar?: string;
+  }) => {
+    if (groupMembers.some((u) => u.email === user.email)) return;
 
-    const hasLeader = collaborators.some((u) => u.role === "Leader");
-    const role = !hasLeader ? "Leader" : "Member";
+    // Determine default role - Leader if none exists, otherwise Researcher
+    const hasLeader = groupMembers.some((u) => u.role === "Leader");
+    const defaultRole: "Researcher" | "Secretary" | "Leader" = !hasLeader
+      ? "Leader"
+      : "Researcher";
+    const defaultRoleId =
+      allowedRoles.find((r) => r.name === defaultRole)?.id || "";
 
-    const newUser: SimpleInvitedUser = {
-      ...user,
-      role,
+    const newMember: GroupMember = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      role: defaultRole,
+      roleId: defaultRoleId,
       isInvitation: !user.id || user.id.startsWith("invite-"),
+      // Add required fields from Member interface
+      code: "",
+      groupName: "",
+      isOfficial: null,
+      expireDate: null,
+      createdAt: null,
+      status: null,
+      accountId: user.id,
+      "full-name": user.name,
+      phoneNumber: null,
+      address: null,
+      companyName: null,
+      "avatar-url": user.avatar || null,
+      projectId: null,
+      appraisalCouncilId: null,
     };
 
-    onCollaboratorsChange([...collaborators, newUser]);
+    setGroupMembers([...groupMembers, newMember]);
+
+    // Update collaborators for backward compatibility
+    const newCollaborator: SimpleInvitedUser = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar,
+      role: defaultRole,
+      isInvitation: newMember.isInvitation,
+    };
+
+    onCollaboratorsChange([...collaborators, newCollaborator]);
     setSearchValue("");
     setShowResults(false);
 
@@ -214,50 +261,102 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(searchValue)) return;
 
-    const invitationUser: UserSearchResult = {
+    const invitationUser = {
       id: `invitation-${Date.now()}`,
       name: searchValue.split("@")[0],
       email: searchValue,
-      role: "Invited",
+      avatar:
+        "https://regionalneurological.com/wp-content/uploads/2020/03/Regional-Neurological_Brain-Science.jpeg",
     };
 
     handleUserSelect(invitationUser);
   };
 
-  const handleRoleChange = (userId: string, newRole: "Leader" | "Member") => {
-    const updatedUsers = collaborators.map((user) => {
+  const handleRoleChange = (userId: string, newRoleName: string) => {
+    const newRole = allowedRoles.find((r) => r.name === newRoleName);
+    if (!newRole) return;
+
+    const updatedMembers = groupMembers.map((member) => {
+      // If assigning a single-person role, remove it from others
       if (
-        newRole === "Leader" &&
-        user.role === "Leader" &&
-        user.id !== userId
+        (newRoleName === "Leader" || newRoleName === "Secretary") &&
+        member.role === newRoleName &&
+        member.id !== userId
       ) {
-        return { ...user, role: "Member" as const };
+        // Assign them to Researcher role
+        const researcherRole = allowedRoles.find(
+          (r) => r.name === "Researcher"
+        );
+        return {
+          ...member,
+          role: "Researcher" as const,
+          roleId: researcherRole?.id || "",
+        };
       }
-      if (user.id === userId) {
-        return { ...user, role: newRole };
+
+      if (member.id === userId) {
+        return {
+          ...member,
+          role: newRoleName as "Researcher" | "Secretary" | "Leader",
+          roleId: newRole.id,
+        };
       }
-      return user;
+      return member;
     });
 
-    onCollaboratorsChange(updatedUsers);
+    setGroupMembers(updatedMembers);
+
+    // Call parent callback if provided
+    if (onGroupMembersChange) {
+      onGroupMembersChange(updatedMembers);
+    }
+
+    // Update collaborators for backward compatibility
+    const updatedCollaborators = updatedMembers.map((member) => ({
+      id: member.id,
+      name: member.name || "",
+      email: member.email || "",
+      avatar: member.avatar,
+      role: member.role as "Researcher" | "Secretary" | "Leader",
+      isInvitation: member.isInvitation,
+    }));
+
+    onCollaboratorsChange(updatedCollaborators);
   };
 
   const handleRemoveUser = (userId: string) => {
-    const updatedUsers = collaborators.filter((user) => user.id !== userId);
-    onCollaboratorsChange(updatedUsers);
+    const updatedMembers = groupMembers.filter(
+      (member) => member.id !== userId
+    );
+    setGroupMembers(updatedMembers);
+
+    // Call parent callback if provided
+    if (onGroupMembersChange) {
+      onGroupMembersChange(updatedMembers);
+    }
+
+    // Update collaborators for backward compatibility
+    const updatedCollaborators = collaborators.filter(
+      (user) => user.id !== userId
+    );
+    onCollaboratorsChange(updatedCollaborators);
   };
 
   const canProceed = () => {
-    const hasLeader = collaborators.some((u) => u.role === "Leader");
-    return collaborators.length > 0 && hasLeader;
+    const hasLeader = groupMembers.some((u) => u.role === "Leader");
+    return groupMembers.length > 0 && hasLeader;
   };
 
-  const getRoleIcon = (role: "Leader" | "Member") => {
-    return role === "Leader" ? (
-      <Crown className="w-4 h-4 text-amber-600" />
-    ) : (
-      <User className="w-4 h-4 text-blue-600" />
-    );
+  const getRoleIcon = (
+    role: "Leader" | "Member" | "Researcher" | "Secretary"
+  ) => {
+    if (role === "Leader") {
+      return <Crown className="w-4 h-4 text-amber-600" />;
+    } else if (role === "Secretary") {
+      return <UserCheck className="w-4 h-4 text-green-600" />;
+    } else {
+      return <User className="w-4 h-4 text-blue-600" />;
+    }
   };
 
   const getCVStatusBadge = (status: CVRequestStatus) => {
@@ -311,9 +410,10 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   };
 
   const showEmailInvitation =
-    searchValue.trim() &&
+    searchValue.trim().length >= 2 &&
     isValidEmail(searchValue) &&
-    filteredUsers.length === 0;
+    filteredUsers.length === 0 &&
+    !isSearching;
 
   if (mode === "simple") {
     return (
@@ -366,7 +466,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
               Team Members
             </div>
             <Badge variant="outline" className="bg-white">
-              {collaborators.length} members
+              {groupMembers.length} members
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -380,33 +480,42 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                 <p className="font-medium mb-1">Requirements:</p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>At least one Leader is required</li>
+                  <li>Only one Secretary and one Leader allowed</li>
+                  <li>Multiple Researchers are allowed</li>
                   <li>
                     Scientific CV will be automatically requested for each
                     member
                   </li>
-                  <li>Members can be promoted to Leader</li>
                 </ul>
               </div>
             </div>
           </div>
 
           {/* Search Input */}
-          <div className="mb-6">
+          <div className="relative w-full mb-6">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
               <Input
                 type="text"
-                placeholder="Search by name or email to add members..."
+                placeholder="Search by name or email to add members (minimum 2 characters)..."
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
                 className="pl-10 pr-4 py-3 text-base border-2 border-gray-200 focus:border-blue-500 rounded-lg"
               />
+              {isSearching && (
+                <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 animate-spin" />
+              )}
             </div>
 
             {/* Search Results */}
             {showResults && (
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                {filteredUsers.length > 0 ? (
+                {isSearching ? (
+                  <div className="py-4 px-4 text-center text-gray-500 text-sm">
+                    <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
+                    Searching...
+                  </div>
+                ) : filteredUsers.length > 0 ? (
                   <div className="py-2">
                     {filteredUsers.map((user) => (
                       <div
@@ -428,11 +537,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                             {user.name}
                           </p>
                           <p className="text-xs text-gray-600">{user.email}</p>
-                          {user.department && (
-                            <p className="text-xs text-gray-500">
-                              {user.department} • {user.role}
-                            </p>
-                          )}
                         </div>
                         <Plus className="w-4 h-4 text-gray-400" />
                       </div>
@@ -468,10 +572,10 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
           </div>
 
           {/* Selected Members List */}
-          {collaboratorsWithCV.length > 0 && (
+          {groupMembers.length > 0 && (
             <div className="space-y-4 mb-6">
               <h4 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                Selected Members ({collaboratorsWithCV.length})
+                Selected Members ({groupMembers.length})
                 <Badge
                   variant="outline"
                   className="bg-blue-50 text-blue-700 border-blue-300"
@@ -480,105 +584,117 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                 </Badge>
               </h4>
               <div className="space-y-3">
-                {collaboratorsWithCV.map((user) => (
-                  <div
-                    key={user.id}
-                    className="flex items-center justify-between p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors shadow-sm"
-                  >
-                    <div className="flex items-center space-x-4 flex-1">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={user.avatar} />
-                        <AvatarFallback className="bg-blue-100 text-blue-700">
-                          {user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-semibold text-gray-900 truncate">
-                            {user.name}
+                {groupMembers.map((member) => {
+                  const collaboratorWithCV = collaboratorsWithCV.find(
+                    (c) => c.id === member.id
+                  );
+                  const availableRoles = getAvailableRoles(member.id);
+
+                  return (
+                    <div
+                      key={member.id}
+                      className="flex items-center justify-between p-4 border rounded-lg bg-white hover:bg-gray-50 transition-colors shadow-sm"
+                    >
+                      <div className="flex items-center space-x-4 flex-1">
+                        <Avatar className="h-12 w-12">
+                          <AvatarImage src={member.avatar || undefined} />
+                          <AvatarFallback className="bg-blue-100 text-blue-700">
+                            {(member.name || "")
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {member.name}
+                            </p>
+                            {member.isInvitation && (
+                              <Badge
+                                variant="outline"
+                                className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300 flex-shrink-0"
+                              >
+                                Invitation
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600 truncate">
+                            {member.email}
                           </p>
-                          {user.isInvitation && (
-                            <Badge
-                              variant="outline"
-                              className="text-xs bg-yellow-50 text-yellow-700 border-yellow-300 flex-shrink-0"
-                            >
-                              Invitation
-                            </Badge>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-3 flex-shrink-0">
+                        {/* CV Status */}
+                        <div className="flex flex-col items-center gap-1">
+                          {getCVStatusBadge(
+                            collaboratorWithCV?.cvRequestStatus || "none"
+                          )}
+                          {collaboratorWithCV?.cvRequestStatus ===
+                            "pending" && (
+                            <Loader2 className="w-3 h-3 text-yellow-600 animate-spin" />
                           )}
                         </div>
-                        <p className="text-sm text-gray-600 truncate">
-                          {user.email}
-                        </p>
-                        {user.department && !user.isInvitation && (
-                          <p className="text-xs text-gray-500 mt-1 truncate">
-                            {user.department} • {user.role}
-                          </p>
-                        )}
+
+                        {/* Role Selection */}
+                        <Select
+                          value={member.role}
+                          onValueChange={(value: string) =>
+                            handleRoleChange(member.id, value)
+                          }
+                          disabled={isLoadingRoles}
+                        >
+                          <SelectTrigger className="w-38">
+                            <div className="flex items-center gap-2">
+                              {getRoleIcon(member.role)}
+                              <SelectValue />
+                            </div>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableRoles.map((role) => (
+                              <SelectItem key={role.id} value={role.name}>
+                                <div className="flex items-center gap-2">
+                                  {role.name}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {/* Remove Button */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveUser(member.id)}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
-
-                    <div className="flex items-center space-x-3 flex-shrink-0">
-                      {/* CV Status */}
-                      <div className="flex flex-col items-center gap-1">
-                        {getCVStatusBadge(user.cvRequestStatus)}
-                        {user.cvRequestStatus === "pending" && (
-                          <Loader2 className="w-3 h-3 text-yellow-600 animate-spin" />
-                        )}
-                      </div>
-
-                      {/* Role Selection */}
-                      <Select
-                        value={user.role}
-                        onValueChange={(value: "Leader" | "Member") =>
-                          handleRoleChange(user.id, value)
-                        }
-                      >
-                        <SelectTrigger className="w-32">
-                          <div className="flex items-center gap-2">
-                            {getRoleIcon(user.role)}
-                            <SelectValue />
-                          </div>
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Leader">Leader</SelectItem>
-                          <SelectItem value="Member">Member</SelectItem>
-                        </SelectContent>
-                      </Select>
-
-                      {/* Remove Button */}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveUser(user.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
 
           {/* Warnings */}
-          {collaborators.length === 0 && (
+          {groupMembers.length === 0 && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
               <div className="flex items-start space-x-2">
                 <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
                 <p className="text-sm text-blue-800">
                   <strong>Get Started:</strong> Use the search field above to
-                  find and add team members to your project.
+                  find and add team members to your project. Enter at least 2
+                  characters to start searching.
                 </p>
               </div>
             </div>
           )}
 
-          {!collaborators.some((u) => u.role === "Leader") &&
-            collaborators.length > 0 && (
+          {!groupMembers.some((u) => u.role === "Leader") &&
+            groupMembers.length > 0 && (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
                 <div className="flex items-start space-x-2">
                   <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
@@ -641,7 +757,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
         </CardContent>
       </Card>
 
-      {/* Navigation */}
+      {/* Navigation Buttons */}
       <div className="flex justify-between">
         <Button
           variant="outline"
@@ -652,6 +768,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
           <ArrowLeft className="w-4 h-4 mr-2" />
           Previous
         </Button>
+
         <Button
           onClick={onNext}
           size="lg"
