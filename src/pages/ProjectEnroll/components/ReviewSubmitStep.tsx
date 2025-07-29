@@ -35,15 +35,29 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
   const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const { bm1Content, collaborators } = enrollmentData;
 
-  const getRoleIcon = (role: "Leader" | "Member") =>
-    role === "Leader" ? (
-      <Crown className="w-4 h-4 text-amber-600" />
-    ) : (
-      <User className="w-4 h-4 text-blue-600" />
-    );
+  const getRoleIcon = (role: "Leader" | "Researcher" | "Secretary") => {
+    switch (role) {
+      case "Leader":
+        return <Crown className="w-4 h-4 text-amber-600" />;
+      case "Secretary":
+        return <User className="w-4 h-4 text-purple-600" />;
+      case "Researcher":
+      default:
+        return <User className="w-4 h-4 text-blue-600" />;
+    }
+  };
 
-  const getRoleBadgeVariant = (role: "Leader" | "Member") =>
-    role === "Leader" ? "default" : "secondary";
+  const getRoleBadgeVariant = (role: "Leader" | "Researcher" | "Secretary") => {
+    switch (role) {
+      case "Leader":
+        return "default";
+      case "Secretary":
+        return "outline";
+      case "Researcher":
+      default:
+        return "secondary";
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -154,7 +168,7 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
             </span>
             <span className="flex items-center gap-1">
               <User className="w-4 h-4 text-blue-600" />
-              {collaborators.filter((u) => u.role === "Member").length}{" "}
+              {collaborators.filter((u) => u.role === "Researcher").length}{" "}
               Member(s)
             </span>
           </div>

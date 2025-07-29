@@ -7,6 +7,7 @@ import {
   createProject,
   createProjectMajor,
   createProjectTag,
+  enrollProjectAsPrincipal,
 } from "@/services/resources/project";
 import {
   CreateProjectMajorRequest,
@@ -85,5 +86,19 @@ export function useCreateProjectMajor() {
 export function useCreateProjectTag() {
   return useMutation({
     mutationFn: (data: CreateProjectTagRequest) => createProjectTag(data),
+  });
+}
+
+export function useEnrollProjectAsPrincipal() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (projectId: string) => enrollProjectAsPrincipal(projectId),
+    onSuccess: (data) => {
+      // Invalidate relevant queries after successful enrollment
+      queryClient.invalidateQueries({ queryKey: ["project", data.id] });
+      queryClient.invalidateQueries({ queryKey: ["project-list-filter"] });
+      queryClient.invalidateQueries({ queryKey: ["my-projects"] });
+    },
   });
 }

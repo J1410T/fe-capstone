@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { UserPlus } from "lucide-react";
 
 interface OverviewTabProps {
+  projectId: string;
   category: string;
   type: string;
   description: string;
@@ -24,10 +25,11 @@ interface OverviewTabProps {
   majorName: string;
   tags: string[];
   showEnrollButton?: boolean;
-  onEnrollProject?: () => void;
+  onEnrollProject?: (projectId: string) => void;
 }
 
 export const OverviewTab: React.FC<OverviewTabProps> = ({
+  projectId,
   category,
   type,
   description,
@@ -42,6 +44,12 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
   showEnrollButton,
   onEnrollProject,
 }) => {
+  const handleEnrollClick = () => {
+    if (onEnrollProject) {
+      onEnrollProject(projectId);
+    }
+  };
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-4 sm:pb-6">
@@ -58,7 +66,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           </div>
           {showEnrollButton && (
             <Button
-              onClick={onEnrollProject}
+              onClick={handleEnrollClick}
               className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto text-sm sm:text-base"
             >
               <UserPlus className="w-4 h-4 mr-2" />

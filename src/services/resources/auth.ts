@@ -1,4 +1,9 @@
-import { AuthInfo, AuthResponse, RoleItem } from "@/types/auth";
+import {
+  AuthInfo,
+  AuthResponse,
+  RoleItem,
+  SearchAccountResult,
+} from "@/types/auth";
 import { axiosClient, getAccessToken } from "../api";
 
 export const getMyAccountInfo = async () => {
@@ -70,6 +75,45 @@ export const setMyRole = async (roleName: string) => {
     );
   } catch (error) {
     console.error("Error in setMyRole:", error);
+    throw error;
+  }
+};
+
+export const searchAccounts = async (
+  input: string
+): Promise<SearchAccountResult[]> => {
+  try {
+    const accessToken = getAccessToken();
+
+    const res = await axiosClient.get<SearchAccountResult[]>(
+      `/account/search?input=${encodeURIComponent(input)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("searchAccounts error:", error);
+    throw error;
+  }
+};
+
+export const getAllRoles = async (): Promise<RoleItem[]> => {
+  try {
+    const accessToken = getAccessToken();
+
+    const res = await axiosClient.get<RoleItem[]>("/role", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    console.error("getAllRoles error:", error);
     throw error;
   }
 };

@@ -251,3 +251,38 @@ export interface ProjectTag {
   name: string;
   "project-id"?: string;
 }
+
+export interface EnrollProjectResponse {
+  id: string;
+  "logo-url": string | null;
+  "picture-url": string | null;
+  code: string;
+  "english-title": string;
+  "vietnamese-title": string;
+  abbreviations: string | null;
+  duration: number | null;
+  "start-date": string | null;
+  "end-date": string | null;
+  description: string | null;
+  "requirement-note": string | null;
+  budget: number;
+  progress: number;
+  "maximum-member": number;
+  language: string;
+  category: string;
+  type: string;
+  genre: string;
+  "created-at": string;
+  "updated-at": string;
+  status: string;
+  "creator-id": string;
+  creator: Member | null;
+  members: Member[] | null;
+  milestones: Milestone[] | null;
+  evaluations: Evaluation[] | null;
+  "project-similarity": unknown | null;
+  majors: ProjectMajor[];
+  "project-tags": ProjectTag[] | null;
+  documents: DocumentProject[] | null;
+  transactions: Transaction[] | null;
+}
