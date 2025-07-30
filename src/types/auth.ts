@@ -91,6 +91,26 @@ export interface UserRoleResponse {
   "data-list": UserRole[];
 }
 
+export interface CreateUserRoleRequest {
+  "account-id": string;
+  "role-id": string;
+  "project-id": string;
+}
+
+export interface UpdateUserRoleRequest {
+  "account-id": string;
+  "role-id": string;
+  "project-id": string;
+}
+
+export interface UserRoleFilterRequest {
+  "account-id"?: string;
+  "project-id"?: string;
+  status?: string;
+  "page-index": number;
+  "page-size": number;
+}
+
 export interface CreateTaskRequest {
   name: string;
   description: string;

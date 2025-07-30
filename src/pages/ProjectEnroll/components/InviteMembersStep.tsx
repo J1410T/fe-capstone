@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -27,22 +28,19 @@ import {
   XCircle,
   Clock,
   Loader2,
-  FileText,
   UserCheck,
 } from "lucide-react";
 import {
-  CVRequestStatus,
-  mockCreateCVRequest,
-} from "@/hooks/queries/useCVRequests";
-import { useSearchAccounts, useAllRoles } from "@/hooks/queries/useAuth";
+  useSearchAccounts,
+  useAllRoles,
+  useMyAccountInfo,
+} from "@/hooks/queries/useAuth";
 import { GroupMember } from "@/types/auth";
-
-// Extended user interface with CV request status
-export interface InvitedUserWithCV extends SimpleInvitedUser {
-  cvRequestStatus: CVRequestStatus;
-  cvRequestId?: string;
-  hasCV?: boolean;
-}
+import { UserRoleStatus } from "@/types/notification";
+import {
+  useCreateUserRole,
+  useInviteMember,
+} from "@/hooks/queries/notification";
 
 interface InviteMembersStepProps {
   collaborators: SimpleInvitedUser[];
@@ -63,18 +61,56 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   onPrevious,
   mode = "detailed",
 }) => {
+  const { projectId } = useParams<{ projectId: string }>();
   const [searchValue, setSearchValue] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [collaboratorsWithCV, setCollaboratorsWithCV] = useState<
-    InvitedUserWithCV[]
-  >([]);
   const [groupMembers, setGroupMembers] =
     useState<GroupMember[]>(initialGroupMembers);
+  const [memberInvitationStatus, setMemberInvitationStatus] = useState<
+    Record<string, UserRoleStatus>
+  >({});
+  const [invitingMembers, setInvitingMembers] = useState<Set<string>>(
+    new Set()
+  );
 
   // API hooks - search only when input length >= 2
   const { data: searchResults = [], isLoading: isSearching } =
     useSearchAccounts(searchValue.trim().length > 0 ? searchValue.trim() : "");
   const { data: allRoles = [], isLoading: isLoadingRoles } = useAllRoles();
+  const { data: myAccountInfo } = useMyAccountInfo();
+
+  // Invitation hooks
+  const inviteMemberMutation = useInviteMember();
+  const createUserRoleMutation = useCreateUserRole();
+
+  // Track UserRole status for each member
+  useEffect(() => {
+    if (!projectId) return;
+
+    const interval = setInterval(() => {
+      groupMembers.forEach((member) => {
+        if (
+          !member.isInvitation &&
+          memberInvitationStatus[member.id] === "pending"
+        ) {
+          // Check UserRole status for this member
+          // This would be implemented with useUserRoleByAccountAndProject hook
+          // For now, we'll simulate status updates
+          const randomUpdate = Math.random();
+          if (randomUpdate > 0.95) {
+            // 5% chance of status change
+            const newStatus = Math.random() > 0.7 ? "approved" : "rejected";
+            setMemberInvitationStatus((prev) => ({
+              ...prev,
+              [member.id]: newStatus,
+            }));
+          }
+        }
+      });
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [projectId, groupMembers, memberInvitationStatus]);
 
   // Filter roles to only show Researcher, Secretary, Leader
   const allowedRoles = useMemo(() => {
@@ -125,74 +161,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
       (filteredUsers.length > 0 || isSearching);
     setShowResults(shouldShow);
   }, [searchValue, filteredUsers.length, isSearching]);
-
-  // Convert collaborators to collaborators with CV status
-  useEffect(() => {
-    const updatedCollaborators = collaborators.map((collaborator) => ({
-      ...collaborator,
-      cvRequestStatus: "none" as CVRequestStatus,
-      hasCV: false,
-    }));
-    setCollaboratorsWithCV(updatedCollaborators);
-  }, [collaborators]);
-
-  // CV request function using mock API
-  const requestCV = async (userId: string): Promise<void> => {
-    try {
-      // Set status to pending immediately for UI feedback
-      setCollaboratorsWithCV((prev) =>
-        prev.map((user) =>
-          user.id === userId
-            ? { ...user, cvRequestStatus: "pending" as CVRequestStatus }
-            : user
-        )
-      );
-
-      // Make the mock API call
-      const cvRequest = await mockCreateCVRequest(userId);
-
-      // Update with the actual request ID
-      setCollaboratorsWithCV((prev) =>
-        prev.map((user) =>
-          user.id === userId
-            ? {
-                ...user,
-                cvRequestStatus: cvRequest.status,
-                cvRequestId: cvRequest.id,
-              }
-            : user
-        )
-      );
-
-      // Simulate random status changes after some time (for demo purposes)
-      setTimeout(() => {
-        const randomStatus: CVRequestStatus =
-          Math.random() > 0.7
-            ? "approved"
-            : Math.random() > 0.5
-            ? "rejected"
-            : "pending";
-
-        setCollaboratorsWithCV((prev) =>
-          prev.map((user) =>
-            user.id === userId
-              ? { ...user, cvRequestStatus: randomStatus }
-              : user
-          )
-        );
-      }, 3000 + Math.random() * 5000); // Random delay between 3-8 seconds
-    } catch (error) {
-      console.error("Failed to request CV:", error);
-      // Reset status on error
-      setCollaboratorsWithCV((prev) =>
-        prev.map((user) =>
-          user.id === userId
-            ? { ...user, cvRequestStatus: "none" as CVRequestStatus }
-            : user
-        )
-      );
-    }
-  };
 
   const handleUserSelect = (user: {
     id: string;
@@ -250,11 +218,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     onCollaboratorsChange([...collaborators, newCollaborator]);
     setSearchValue("");
     setShowResults(false);
-
-    // Automatically request CV for the new user
-    if (user.id && !user.id.startsWith("invitation-")) {
-      setTimeout(() => requestCV(user.id), 100);
-    }
   };
 
   const handleEmailInvitation = () => {
@@ -342,9 +305,62 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     onCollaboratorsChange(updatedCollaborators);
   };
 
+  // Handle member invitation
+  const handleInviteMember = async (memberId: string) => {
+    if (!projectId || !myAccountInfo) return;
+
+    // Find the member to get their role information
+    const member = groupMembers.find((m) => m.id === memberId);
+    if (!member || !member.roleId) return;
+
+    setInvitingMembers((prev) => new Set(prev).add(memberId));
+    setMemberInvitationStatus((prev) => ({
+      ...prev,
+      [memberId]: "pending",
+    }));
+
+    try {
+      // Step 1: Send notification
+      const notificationResult = await inviteMemberMutation.mutateAsync({
+        projectId,
+        accountId: memberId,
+      });
+
+      if (notificationResult.success) {
+        // Step 2: Create UserRole
+        await createUserRoleMutation.mutateAsync({
+          "account-id": memberId,
+          "role-id": member.roleId,
+          "project-id": projectId,
+        });
+
+        setMemberInvitationStatus((prev) => ({
+          ...prev,
+          [memberId]: "pending",
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to invite member:", error);
+      setMemberInvitationStatus((prev) => ({
+        ...prev,
+        [memberId]: "none",
+      }));
+    } finally {
+      setInvitingMembers((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(memberId);
+        return newSet;
+      });
+    }
+  };
+
   const canProceed = () => {
     const hasLeader = groupMembers.some((u) => u.role === "Leader");
-    return groupMembers.length > 0 && hasLeader;
+    const allMembersApproved = groupMembers.every((member) => {
+      const status = memberInvitationStatus[member.id];
+      return status === "approved" || member.isInvitation; // Allow invitations to proceed
+    });
+    return groupMembers.length > 0 && hasLeader && allMembersApproved;
   };
 
   const getRoleIcon = (
@@ -359,7 +375,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     }
   };
 
-  const getCVStatusBadge = (status: CVRequestStatus) => {
+  const getInvitationStatusBadge = (status: UserRoleStatus) => {
     switch (status) {
       case "pending":
         return (
@@ -397,8 +413,8 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
             variant="outline"
             className="bg-gray-50 text-gray-600 border-gray-300"
           >
-            <FileText className="w-3 h-3 mr-1" />
-            No Request
+            <Mail className="w-3 h-3 mr-1" />
+            Not Invited
           </Badge>
         );
     }
@@ -585,9 +601,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
               </h4>
               <div className="space-y-3">
                 {groupMembers.map((member) => {
-                  const collaboratorWithCV = collaboratorsWithCV.find(
-                    (c) => c.id === member.id
-                  );
                   const availableRoles = getAvailableRoles(member.id);
 
                   return (
@@ -626,16 +639,36 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                       </div>
 
                       <div className="flex items-center space-x-3 flex-shrink-0">
-                        {/* CV Status */}
+                        {/* Invitation Status */}
                         <div className="flex flex-col items-center gap-1">
-                          {getCVStatusBadge(
-                            collaboratorWithCV?.cvRequestStatus || "none"
-                          )}
-                          {collaboratorWithCV?.cvRequestStatus ===
-                            "pending" && (
-                            <Loader2 className="w-3 h-3 text-yellow-600 animate-spin" />
+                          {getInvitationStatusBadge(
+                            memberInvitationStatus[member.id] || "none"
                           )}
                         </div>
+
+                        {/* Invite Button */}
+                        {!member.isInvitation && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleInviteMember(member.id)}
+                            disabled={
+                              invitingMembers.has(member.id) ||
+                              memberInvitationStatus[member.id] === "pending" ||
+                              memberInvitationStatus[member.id] === "approved"
+                            }
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            {invitingMembers.has(member.id) ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Mail className="w-4 h-4" />
+                            )}
+                            {invitingMembers.has(member.id)
+                              ? "Inviting..."
+                              : "Invite"}
+                          </Button>
+                        )}
 
                         {/* Role Selection */}
                         <Select
@@ -705,55 +738,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                 </div>
               </div>
             )}
-
-          {/* CV Request Status Summary */}
-          {collaboratorsWithCV.length > 0 && (
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <FileText className="w-5 h-5 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-700">
-                    CV Request Status
-                  </span>
-                </div>
-                <div className="flex items-center space-x-4 text-xs">
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-3 h-3 text-yellow-600" />
-                    <span className="text-yellow-700">
-                      {
-                        collaboratorsWithCV.filter(
-                          (u) => u.cvRequestStatus === "pending"
-                        ).length
-                      }{" "}
-                      Pending
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <CheckCircle className="w-3 h-3 text-green-600" />
-                    <span className="text-green-700">
-                      {
-                        collaboratorsWithCV.filter(
-                          (u) => u.cvRequestStatus === "approved"
-                        ).length
-                      }{" "}
-                      Approved
-                    </span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <XCircle className="w-3 h-3 text-red-600" />
-                    <span className="text-red-700">
-                      {
-                        collaboratorsWithCV.filter(
-                          (u) => u.cvRequestStatus === "rejected"
-                        ).length
-                      }{" "}
-                      Rejected
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </CardContent>
       </Card>
 
