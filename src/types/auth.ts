@@ -65,6 +65,83 @@ export type RoleItem = {
   status: string;
 };
 
+export interface UserRole {
+  id: string;
+  code: string;
+  "group-name": string;
+  "is-official": boolean;
+  "expire-date": string | null;
+  "created-at": string;
+  status: string;
+  "account-id": string;
+  "full-name": string;
+  email: string;
+  "avatar-url": string | null;
+  "role-id": string;
+  name: string;
+  "project-id": string;
+  "appraisal-council-id": string | null;
+}
+
+export interface UserRoleResponse {
+  "page-index": number;
+  "page-size": number;
+  "total-count": number;
+  "total-page": number;
+  "data-list": UserRole[];
+}
+
+export interface CreateTaskRequest {
+  name: string;
+  description: string;
+  "start-date": string;
+  "end-date": string;
+  priority: "Low" | "Medium" | "High";
+  progress: number;
+  "meeting-url": string | null;
+  note: string;
+  "milestone-id": string;
+}
+
+export interface CreateTaskResponse {
+  id: string;
+  code: string;
+  name: string;
+  description: string;
+  "start-date": string;
+  "end-date": string;
+  "delivery-date": string | null;
+  priority: string;
+  progress: number;
+  overdue: number;
+  "meeting-url": string | null;
+  note: string;
+  status: string;
+  "milestone-id": string;
+  "creator-id": string;
+  "member-tasks": unknown[] | null;
+}
+
+export interface CreateMemberTaskRequest {
+  progress: number;
+  overdue: number;
+  note: string;
+  "member-id": string;
+  "task-id": string;
+}
+
+export interface CreateMemberTaskResponse {
+  id: string;
+  progress: number;
+  overdue: number;
+  note: string;
+  "delivery-date": string | null;
+  "joined-at": string;
+  status: string;
+  "member-id": string;
+  "task-id": string;
+}
+
 // types/auth.ts - Add these new types to existing file
 
 export interface SearchAccountResult {
