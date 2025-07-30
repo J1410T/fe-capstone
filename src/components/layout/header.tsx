@@ -19,8 +19,6 @@ import {
   BellRing,
   Clock,
   MessageSquare,
-  AlertTriangle,
-  X,
   ChevronRight,
 } from "lucide-react";
 import RoleSwitcher from "./RoleSwitcher";
@@ -46,54 +44,10 @@ import { Separator } from "@/components/ui/separator";
 import { useAccessToken, useAuthResponse } from "@/hooks/queries";
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { AuthResponse } from "@/types/auth";
-
-const mockNotifications = [
-  {
-    id: 1,
-    title: "Project Update Required",
-    message: "Your quarterly report for ML Research Project is due in 3 days.",
-    type: "reminder" as const,
-    time: "2 hours ago",
-    read: false,
-    icon: FileText,
-  },
-  {
-    id: 2,
-    title: "New Team RESEARCHER Added",
-    message: "Sarah Johnson has been added to your Engineering Project team.",
-    type: "info" as const,
-    time: "4 hours ago",
-    read: false,
-    icon: User,
-  },
-  {
-    id: 3,
-    title: "Meeting Scheduled",
-    message: "Project review meeting scheduled for tomorrow at 2:00 PM.",
-    type: "meeting" as const,
-    time: "6 hours ago",
-    read: true,
-    icon: Calendar,
-  },
-  {
-    id: 4,
-    title: "Task Completed",
-    message: "Data analysis task has been marked as completed by John Doe.",
-    type: "success" as const,
-    time: "1 day ago",
-    read: true,
-    icon: CheckCircle,
-  },
-  {
-    id: 5,
-    title: "Budget Alert",
-    message: "Project budget has reached 80% utilization threshold.",
-    type: "warning" as const,
-    time: "2 days ago",
-    read: false,
-    icon: AlertTriangle,
-  },
-];
+import {
+  useMarkNotification,
+  useNotificationList,
+} from "@/hooks/queries/notification";
 
 const menuItemsByRole = {
   [UserRole.RESEARCHER]: [
@@ -144,9 +98,13 @@ function Header() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [notifications, setNotifications] = useState(mockNotifications);
   const { data: authData } = useAuthResponse();
   const accessToken = useAccessToken();
+
+  // Use real notification API
+  const { data: notificationData, refetch: refetchNotifications } =
+    useNotificationList(1, 10);
+  const markNotificationMutation = useMarkNotification();
 
   console.log("token: ", accessToken);
 
@@ -186,14 +144,18 @@ function Header() {
     setIsOpen(false);
   };
 
-  const markAsRead = (notificationId: number) => {
-    setNotifications((prev) =>
-      prev.map((notification) =>
-        notification.id === notificationId
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
+  // Get notifications from API data
+  const notifications = notificationData?.["data-list"] || [];
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      await markNotificationMutation.mutateAsync({
+        notification: notificationId,
+      });
+      refetchNotifications();
+    } catch (error) {
+      console.error("Failed to mark notification as read:", error);
+    }
   };
 
   useEffect(() => {
@@ -201,19 +163,16 @@ function Header() {
     console.log("🍪 Auth response result:", result);
   });
 
-  const markAllAsRead = () => {
-    setNotifications((prev) =>
-      prev.map((notification) => ({ ...notification, read: true }))
-    );
+  const markAllAsRead = async () => {
+    try {
+      await markNotificationMutation.mutateAsync({});
+      refetchNotifications();
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+    }
   };
 
-  const removeNotification = (notificationId: number) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== notificationId)
-    );
-  };
-
-  const unreadCount = notifications.filter((n) => !n.read).length;
+  const unreadCount = notifications.filter((n) => !n["is-read"]).length;
 
   const getNotificationTypeColor = (type: string) => {
     switch (type) {
@@ -332,7 +291,39 @@ function Header() {
                   </div>
                 ) : (
                   notifications.map((notification) => {
-                    const IconComponent = notification.icon;
+                    // Map notification type to icon
+                    const getNotificationIcon = (type: string) => {
+                      switch (type) {
+                        case "project":
+                          return FolderOpen;
+                        case "meeting":
+                          return Calendar;
+                        case "task":
+                          return ClipboardList;
+                        default:
+                          return Bell;
+                      }
+                    };
+
+                    const IconComponent = getNotificationIcon(
+                      notification.type
+                    );
+
+                    // Format date
+                    const formatDate = (dateString: string) => {
+                      const date = new Date(dateString);
+                      const now = new Date();
+                      const diffInHours = Math.floor(
+                        (now.getTime() - date.getTime()) / (1000 * 60 * 60)
+                      );
+
+                      if (diffInHours < 1) return "Just now";
+                      if (diffInHours < 24) return `${diffInHours} hours ago`;
+                      const diffInDays = Math.floor(diffInHours / 24);
+                      if (diffInDays < 7) return `${diffInDays} days ago`;
+                      return date.toLocaleDateString();
+                    };
+
                     return (
                       <DropdownMenuItem
                         key={notification.id}
@@ -341,7 +332,7 @@ function Header() {
                       >
                         <div
                           className={`w-full p-4 border-b border-gray-100 last:border-0 ${
-                            !notification.read ? "bg-blue-50/30" : ""
+                            !notification["is-read"] ? "bg-blue-50/30" : ""
                           } hover:bg-gray-50 transition-colors`}
                         >
                           <div className="flex items-start gap-3">
@@ -356,32 +347,20 @@ function Header() {
                               <div className="flex items-start justify-between gap-2">
                                 <h4
                                   className={`text-sm font-medium text-gray-900 ${
-                                    !notification.read ? "font-semibold" : ""
+                                    !notification["is-read"]
+                                      ? "font-semibold"
+                                      : ""
                                   }`}
                                 >
                                   {notification.title}
                                 </h4>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    removeNotification(notification.id);
-                                  }}
-                                  className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600 rounded-full transition-all"
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
                               </div>
-                              <p className="text-xs text-gray-600 mt-1 line-clamp-2 leading-relaxed">
-                                {notification.message}
-                              </p>
                               <div className="flex items-center gap-1 mt-2">
                                 <Clock className="w-3 h-3 text-gray-400" />
                                 <span className="text-xs text-gray-400">
-                                  {notification.time}
+                                  {formatDate(notification["create-date"])}
                                 </span>
-                                {!notification.read && (
+                                {!notification["is-read"] && (
                                   <div className="w-2 h-2 bg-blue-500 rounded-full ml-auto animate-pulse"></div>
                                 )}
                               </div>

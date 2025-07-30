@@ -1,8 +1,13 @@
 import {
   AuthInfo,
   AuthResponse,
+  CreateUserRoleRequest,
   RoleItem,
   SearchAccountResult,
+  UpdateUserRoleRequest,
+  UserRole,
+  UserRoleFilterRequest,
+  UserRoleResponse,
 } from "@/types/auth";
 import { axiosClient, getAccessToken } from "../api";
 
@@ -147,6 +152,85 @@ export const getUserRolesByProjectId = async (
     return res.data;
   } catch (error) {
     console.error("getUserRolesByProjectId error:", error);
+    throw error;
+  }
+};
+
+export const getUserRoleByFilter = async (
+  request: UserRoleFilterRequest
+): Promise<UserRoleResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.post<UserRoleResponse>(
+      "/user-role/filter",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getUserRoleByFilter error:", error);
+    throw error;
+  }
+};
+
+export const createUserRole = async (
+  request: CreateUserRoleRequest
+): Promise<UserRole> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.post<UserRole>("/user-role", request, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json-patch+json",
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    console.error("createUserRole error:", error);
+    throw error;
+  }
+};
+
+export const updateUserRoleStatus = async (
+  userRoleId: string,
+  status: string,
+  request: UpdateUserRoleRequest
+): Promise<UserRole> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.put<UserRole>(
+      `/user-role/${userRoleId}?Status=${status}`,
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("updateUserRoleStatus error:", error);
     throw error;
   }
 };
