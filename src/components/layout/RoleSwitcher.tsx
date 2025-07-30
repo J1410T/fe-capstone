@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { useAuthResponse, useSetMyRole } from "@/hooks/queries";
+import { useLoading } from "@/contexts/loading-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,6 +23,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ButtonLoading } from "@/components/ui/loaders";
 
 // Role configurations with icons and routes
 const roleConfig = {
@@ -76,9 +78,11 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
   onRoleChange,
 }) => {
   const { user, switchRole } = useAuth();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const { data: authData } = useAuthResponse();
+  const { startLoading } = useLoading();
 
   // Always call hooks at the top level
   const setMyRoleMutation = useSetMyRole();
@@ -107,6 +111,10 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
       return;
     }
 
+    if (isLoading) return; // Prevent multiple clicks
+
+    setIsLoading(true);
+
     // Call the API to switch role and update auth-response
     setMyRoleMutation.mutate(newRole, {
       onSuccess: async () => {
@@ -116,15 +124,23 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
         if (success) {
           setIsOpen(false);
           onRoleChange?.();
+
+          // Start the loading overlay immediately
+          startLoading();
+
+          // Show success toast
           toast.success(`Switched to ${newRole} role`);
 
-          // Add a small delay to allow auth state to stabilize before navigation
-          // This prevents NavigationGuard from detecting it as unauthorized access
+          // Wait a moment for the toast to show, then reload the page
           setTimeout(() => {
-            navigate("/home", { replace: true });
-          }, 100);
+            // Get the default route for the new role
+            const defaultRoute = roleConfig[newRole].defaultRoute;
+            // Force a full page reload to ensure clean state
+            window.location.href = defaultRoute;
+          }, 500);
         } else {
           toast.error("Failed to update local role state");
+          setIsLoading(false);
         }
       },
       onError: (error) => {
@@ -132,6 +148,7 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
         toast.error(
           `Failed to switch role: ${error.message || "Unknown error"}`
         );
+        setIsLoading(false);
       },
     });
   };
@@ -162,10 +179,14 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
                 className={`cursor-pointer p-3 ${
                   isCurrentRole ? "bg-muted" : ""
                 }`}
-                disabled={isCurrentRole}
+                disabled={isCurrentRole || isLoading}
               >
                 <div className="flex items-center gap-3 w-full">
-                  <config.icon className="h-4 w-4 text-muted-foreground" />
+                  {isLoading && !isCurrentRole ? (
+                    <ButtonLoading />
+                  ) : (
+                    <config.icon className="h-4 w-4 text-muted-foreground" />
+                  )}
                   <div className="flex-1">
                     <div className="font-medium text-sm">{config.label}</div>
                     <div className="text-xs text-muted-foreground">
@@ -178,6 +199,11 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
                       className="text-xs flex-shrink-0"
                     >
                       Current
+                    </Badge>
+                  )}
+                  {isLoading && !isCurrentRole && (
+                    <Badge variant="outline" className="text-xs flex-shrink-0">
+                      Switching...
                     </Badge>
                   )}
                 </div>
@@ -211,7 +237,7 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
                 key={role}
                 onClick={() => handleRoleSwitch(role)}
                 className={`cursor-pointer ${isCurrentRole ? "bg-muted" : ""}`}
-                disabled={isCurrentRole}
+                disabled={isCurrentRole || isLoading}
               >
                 <div className="items-center gap-3 w-full">
                   <config.icon className="h-4 w-4 text-muted-foreground" />
@@ -252,7 +278,7 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
               key={role}
               onClick={() => handleRoleSwitch(role)}
               className={`cursor-pointer ${isCurrentRole ? "bg-muted" : ""}`}
-              disabled={isCurrentRole}
+              disabled={isCurrentRole || isLoading}
             >
               <div className="flex items-center gap-3 w-full">
                 <config.icon className="h-4 w-4 text-muted-foreground flex-shrink-0" />

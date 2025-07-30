@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -18,15 +19,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Calendar, User, Flag, Tag } from "lucide-react";
+import { Calendar, User, Flag, Tag, X } from "lucide-react";
 import { DatePicker } from "../ui";
 import {
   getInputClassName,
   getTextareaClassName,
-  getSelectClassName,
   UI_CONSTANTS,
   getDialogClassName,
 } from "@/lib/ui-constants";
+import { useUserRolesByProjectId } from "@/hooks/queries/useAuth";
+import { useCreateTask, useCreateMemberTask } from "@/hooks/queries/task";
+import { UserRole } from "@/types/auth";
+import { toast } from "sonner";
 
 interface Task {
   title: string;
@@ -47,78 +51,89 @@ interface CreateTaskModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreate: (task: Omit<Task, "id" | "createdAt" | "updatedAt">) => void;
+  selectedProjectId?: string;
+  selectedMilestoneId?: string;
 }
 
-// Mock team RESEARCHERs data
-const mockTeamResearchers = [
-  {
-    id: "user1",
-    name: "Sarah Chen",
-    avatar: "",
-    email: "sarah.chen@company.com",
-  },
-  {
-    id: "user2",
-    name: "Michael Rodriguez",
-    avatar: "",
-    email: "michael.rodriguez@company.com",
-  },
-  {
-    id: "user3",
-    name: "Emily Johnson",
-    avatar: "",
-    email: "emily.johnson@company.com",
-  },
-  {
-    id: "user4",
-    name: "David Kim",
-    avatar: "",
-    email: "david.kim@company.com",
-  },
-];
-
-const projectTags = [
-  "Backend API",
-  "Frontend",
-  "Database",
-  "Documentation",
-  "Performance",
-  "Mobile",
-  "Testing",
-  "Security",
-  "DevOps",
-  "UI/UX",
-];
+// Removed mock data as we're now using real API data
 
 export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
   open,
   onOpenChange,
   onCreate,
+  selectedProjectId = "",
+  selectedMilestoneId = "",
 }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    status: "Not Started" as Task["status"],
-    dueDate: "",
-    priority: "Medium" as Task["priority"],
-    projectTag: "",
-    assignedToId: "",
+    startDate: "",
+    endDate: "",
+    priority: "Medium" as "Low" | "Medium" | "High",
+    note: "",
+    hasMeetingUrl: false,
+    meetingUrl: "",
   });
-  const [selectedDueDate, setSelectedDueDate] = useState<Date | undefined>(
-    formData.dueDate ? new Date(formData.dueDate) : undefined
-  );
+  const [selectedStartDate, setSelectedStartDate] = useState<
+    Date | undefined
+  >();
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | undefined>();
+  const [selectedMembers, setSelectedMembers] = useState<UserRole[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // Sync selectedDueDate with formData.dueDate
+  // API hooks
+  const { data: userRolesData } = useUserRolesByProjectId(selectedProjectId);
+  const createTaskMutation = useCreateTask();
+  const createMemberTaskMutation = useCreateMemberTask();
+
+  // Process user roles data to filter duplicates and prioritize non-Researcher roles
+  const availableMembers = React.useMemo(() => {
+    if (!userRolesData?.["data-list"]) return [];
+
+    const memberMap = new Map<string, UserRole>();
+
+    // First pass: collect all roles for each account
+    userRolesData["data-list"].forEach((userRole: UserRole) => {
+      const accountId = userRole["account-id"];
+      const existing = memberMap.get(accountId);
+
+      if (!existing) {
+        memberMap.set(accountId, userRole);
+      } else {
+        // If person has multiple roles, prioritize non-Researcher roles
+        if (existing.name === "Researcher" && userRole.name !== "Researcher") {
+          memberMap.set(accountId, userRole);
+        }
+      }
+    });
+
+    return Array.from(memberMap.values()).filter(
+      (member) =>
+        !selectedMembers.some(
+          (selected) => selected["account-id"] === member["account-id"]
+        )
+    );
+  }, [userRolesData, selectedMembers]);
+
+  // Sync date fields
   useEffect(() => {
-    if (selectedDueDate) {
+    if (selectedStartDate) {
       setFormData((prev) => ({
         ...prev,
-        dueDate: selectedDueDate.toISOString(),
+        startDate: selectedStartDate.toISOString().split("T")[0],
       }));
     }
-  }, [selectedDueDate]);
+  }, [selectedStartDate]);
+
+  useEffect(() => {
+    if (selectedEndDate) {
+      setFormData((prev) => ({
+        ...prev,
+        endDate: selectedEndDate.toISOString().split("T")[0],
+      }));
+    }
+  }, [selectedEndDate]);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -131,16 +146,30 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
       newErrors.description = "Task description is required";
     }
 
-    if (!formData.dueDate && !selectedDueDate) {
-      newErrors.dueDate = "Due date is required";
+    if (!formData.startDate && !selectedStartDate) {
+      newErrors.startDate = "Start date is required";
     }
 
-    if (!formData.projectTag) {
-      newErrors.projectTag = "Project tag is required";
+    if (!formData.endDate && !selectedEndDate) {
+      newErrors.endDate = "End date is required";
     }
 
-    if (!formData.assignedToId) {
-      newErrors.assignedToId = "Assignee is required";
+    // Validate that end date is not equal to start date and not in the past
+    if (selectedStartDate && selectedEndDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (selectedStartDate < today) {
+        newErrors.startDate = "Start date cannot be in the past";
+      }
+
+      if (selectedEndDate <= selectedStartDate) {
+        newErrors.endDate = "End date must be after start date";
+      }
+    }
+
+    if (formData.hasMeetingUrl && !formData.meetingUrl.trim()) {
+      newErrors.meetingUrl = "Meeting URL is required when enabled";
     }
 
     setErrors(newErrors);
@@ -151,52 +180,123 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
     e.preventDefault();
 
     if (!validateForm()) return;
+    if (!selectedMilestoneId) {
+      toast.error("Milestone is required");
+      return;
+    }
 
     setIsLoading(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      const assignedTo = mockTeamResearchers.find(
-        (researcher) => researcher.id === formData.assignedToId
-      );
-      if (!assignedTo) return;
-
-      const newTask = {
-        title: formData.title,
+    try {
+      // Create task
+      const taskData = {
+        name: formData.title,
         description: formData.description,
-        status: formData.status,
-        dueDate: selectedDueDate
-          ? selectedDueDate.toISOString()
-          : new Date(formData.dueDate).toISOString(),
+        "start-date": selectedStartDate!.toISOString(),
+        "end-date": selectedEndDate!.toISOString(),
         priority: formData.priority,
-        projectTag: formData.projectTag,
-        assignedTo,
+        progress: 0,
+        "meeting-url": formData.hasMeetingUrl ? formData.meetingUrl : null,
+        note: formData.note,
+        "milestone-id": selectedMilestoneId,
       };
 
-      onCreate(newTask);
-      setIsLoading(false);
-      onOpenChange(false);
+      const createdTask = await createTaskMutation.mutateAsync(taskData);
+
+      // Assign members to task if any selected
+      if (selectedMembers.length > 0) {
+        const memberTaskPromises = selectedMembers.map((member) =>
+          createMemberTaskMutation.mutateAsync({
+            progress: 0,
+            overdue: 0,
+            note: "",
+            "member-id": member["account-id"],
+            "task-id": createdTask.id,
+          })
+        );
+
+        await Promise.all(memberTaskPromises);
+      }
 
       // Reset form
       setFormData({
         title: "",
         description: "",
-        status: "Not Started",
-        dueDate: "",
+        startDate: "",
+        endDate: "",
         priority: "Medium",
-        projectTag: "",
-        assignedToId: "",
+        note: "",
+        hasMeetingUrl: false,
+        meetingUrl: "",
       });
-      setSelectedDueDate(undefined);
+      setSelectedStartDate(undefined);
+      setSelectedEndDate(undefined);
+      setSelectedMembers([]);
       setErrors({});
-    }, 1000);
+
+      onOpenChange(false);
+
+      // Call the onCreate callback for compatibility
+      onCreate({
+        title: formData.title,
+        description: formData.description,
+        status: "Not Started" as Task["status"],
+        dueDate: selectedEndDate!.toISOString(),
+        priority: formData.priority as Task["priority"],
+        projectTag: "Task",
+        assignedTo: {
+          id: selectedMembers[0]?.["account-id"] || "",
+          name:
+            getDisplayName(selectedMembers[0]?.["full-name"]) || "Unassigned",
+          avatar: selectedMembers[0]?.["avatar-url"] || "",
+          email: selectedMembers[0]?.email || "",
+        },
+      });
+
+      toast.success("Task created successfully");
+    } catch (error) {
+      console.error("Error creating task:", error);
+      toast.error("Failed to create task");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
+  };
+
+  const handleMemberSelect = (member: UserRole) => {
+    if (
+      !selectedMembers.some(
+        (selected) => selected["account-id"] === member["account-id"]
+      )
+    ) {
+      setSelectedMembers((prev) => [...prev, member]);
+    }
+  };
+
+  const handleMemberRemove = (accountId: string) => {
+    setSelectedMembers((prev) =>
+      prev.filter((member) => member["account-id"] !== accountId)
+    );
+  };
+
+  // Helper function to safely get display name
+  const getDisplayName = (fullName: string | null | undefined): string => {
+    return fullName || "Unknown User";
+  };
+
+  // Default avatar URL for broken or missing avatars
+  const DEFAULT_AVATAR_URL =
+    "https://img.lovepik.com/background/20211021/large/lovepik-abstract-background-of-science-and-technology-image_400135542.jpg";
+
+  // Helper function to handle avatar image errors
+  const handleAvatarError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = DEFAULT_AVATAR_URL;
   };
 
   return (
@@ -263,27 +363,38 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
 
           {/* Form Grid - Responsive */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Due Date */}
+            {/* Start Date */}
             <div className="space-y-2">
               <Label className="flex items-center space-x-1">
                 <Calendar className="w-4 h-4" />
-                <span>Due Date *</span>
+                <span>Start Date *</span>
               </Label>
               <DatePicker
-                date={selectedDueDate}
-                onDateChange={setSelectedDueDate}
-                placeholder="Select a date"
+                date={selectedStartDate}
+                onDateChange={setSelectedStartDate}
+                placeholder="Select start date"
                 disablePastDates={true}
               />
-              {errors.dueDate && (
-                <p className="text-sm text-red-500">{errors.dueDate}</p>
+              {errors.startDate && (
+                <p className="text-sm text-red-500">{errors.startDate}</p>
               )}
-              <p className="text-sm text-muted-foreground">
-                Selected:{" "}
-                {selectedDueDate
-                  ? selectedDueDate.toLocaleDateString()
-                  : "None"}
-              </p>
+            </div>
+
+            {/* End Date */}
+            <div className="space-y-2">
+              <Label className="flex items-center space-x-1">
+                <Calendar className="w-4 h-4" />
+                <span>End Date *</span>
+              </Label>
+              <DatePicker
+                date={selectedEndDate}
+                onDateChange={setSelectedEndDate}
+                placeholder="Select end date"
+                disablePastDates={true}
+              />
+              {errors.endDate && (
+                <p className="text-sm text-red-500">{errors.endDate}</p>
+              )}
             </div>
 
             {/* Priority */}
@@ -307,75 +418,157 @@ export const CreateTaskModal: React.FC<CreateTaskModalProps> = ({
               </Select>
             </div>
 
-            {/* Project Tag */}
+            {/* Meeting URL Switch */}
             <div className="space-y-2">
-              <Label className="flex items-center space-x-1">
-                <Tag className="w-4 h-4" />
-                <span>Project Tag *</span>
-              </Label>
-              <Select
-                value={formData.projectTag}
-                onValueChange={(value) =>
-                  handleInputChange("projectTag", value)
-                }
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="meeting-url-switch"
+                  checked={formData.hasMeetingUrl}
+                  onCheckedChange={(checked) =>
+                    handleInputChange("hasMeetingUrl", checked)
+                  }
+                />
+                <Label htmlFor="meeting-url-switch">Include Meeting URL</Label>
+              </div>
+            </div>
+          </div>
+
+          {/* Meeting URL Input (conditional) */}
+          {formData.hasMeetingUrl && (
+            <div className={UI_CONSTANTS.SPACING.formField}>
+              <Label
+                htmlFor="meetingUrl"
+                className={UI_CONSTANTS.TYPOGRAPHY.label}
               >
-                <SelectTrigger
-                  className={getSelectClassName(!!errors.projectTag)}
-                >
-                  <SelectValue placeholder="Select project tag" />
-                </SelectTrigger>
-                <SelectContent>
-                  {projectTags.map((tag) => (
-                    <SelectItem key={tag} value={tag}>
-                      {tag}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.projectTag && (
-                <p className="text-sm text-red-500">{errors.projectTag}</p>
+                Meeting URL *
+              </Label>
+              <Input
+                id="meetingUrl"
+                placeholder="Enter meeting URL..."
+                value={formData.meetingUrl}
+                onChange={(e) =>
+                  handleInputChange("meetingUrl", e.target.value)
+                }
+                className={getInputClassName(!!errors.meetingUrl)}
+              />
+              {errors.meetingUrl && (
+                <p className={UI_CONSTANTS.TYPOGRAPHY.error}>
+                  {errors.meetingUrl}
+                </p>
               )}
             </div>
+          )}
 
-            {/* Assigned To */}
-            <div className="space-y-2">
-              <Label className="flex items-center space-x-1">
-                <User className="w-4 h-4" />
-                <span>Assign To *</span>
-              </Label>
-              <Select
-                value={formData.assignedToId}
-                onValueChange={(value) =>
-                  handleInputChange("assignedToId", value)
-                }
-              >
-                <SelectTrigger
-                  className={getSelectClassName(!!errors.assignedToId)}
-                >
-                  <SelectValue placeholder="Select team RESEARCHER" />
-                </SelectTrigger>
-                <SelectContent>
-                  {mockTeamResearchers.map((researcher) => (
-                    <SelectItem key={researcher.id} value={researcher.id}>
+          {/* Note Field */}
+          <div className={UI_CONSTANTS.SPACING.formField}>
+            <Label htmlFor="note" className={UI_CONSTANTS.TYPOGRAPHY.label}>
+              Note
+            </Label>
+            <Textarea
+              id="note"
+              placeholder="Add any additional notes (optional)..."
+              value={formData.note}
+              onChange={(e) => handleInputChange("note", e.target.value)}
+              className="min-h-[80px]"
+            />
+          </div>
+
+          {/* Assign Members */}
+          <div className={UI_CONSTANTS.SPACING.formField}>
+            <Label className="flex items-center space-x-1">
+              <User className="w-4 h-4" />
+              <span>Assign Members</span>
+            </Label>
+
+            {/* Member Selection */}
+            <Select
+              onValueChange={(value) => {
+                const member = availableMembers.find(
+                  (m) => m["account-id"] === value
+                );
+                if (member) handleMemberSelect(member);
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select team members" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableMembers.map((member) => (
+                  <SelectItem
+                    key={member["account-id"]}
+                    value={member["account-id"]}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
+                        <img
+                          src={member["avatar-url"] || DEFAULT_AVATAR_URL}
+                          alt={getDisplayName(member["full-name"])}
+                          className="w-6 h-6 rounded-full"
+                          onError={handleAvatarError}
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {getDisplayName(member["full-name"])}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {member.email || "No email"}
+                        </span>
+                        <span className="text-xs text-blue-600">
+                          {member.name || "No role"}
+                        </span>
+                      </div>
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Selected Members List */}
+            {selectedMembers.length > 0 && (
+              <div className="mt-3 space-y-2">
+                <Label className="text-sm font-medium">Selected Members:</Label>
+                <div className="space-y-2">
+                  {selectedMembers.map((member) => (
+                    <div
+                      key={member["account-id"]}
+                      className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
+                    >
                       <div className="flex items-center space-x-2">
                         <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-medium text-blue-600">
-                            {researcher.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
+                          <img
+                            src={member["avatar-url"] || DEFAULT_AVATAR_URL}
+                            alt={getDisplayName(member["full-name"])}
+                            className="w-6 h-6 rounded-full"
+                            onError={handleAvatarError}
+                          />
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-sm">
+                            {getDisplayName(member["full-name"])}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {member.email || "No email"}
+                          </span>
+                          <span className="text-xs text-blue-600">
+                            {member.name || "No role"}
                           </span>
                         </div>
-                        <span>{researcher.name}</span>
                       </div>
-                    </SelectItem>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleMemberRemove(member["account-id"])}
+                        className="h-6 w-6 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
                   ))}
-                </SelectContent>
-              </Select>
-              {errors.assignedToId && (
-                <p className="text-sm text-red-500">{errors.assignedToId}</p>
-              )}
-            </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>

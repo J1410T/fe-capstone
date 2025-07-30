@@ -6,58 +6,82 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { OverviewTab, ProjectHeader, TeamTab } from "./components";
 import BudgetTab from "./components/BudgetTab";
 import DocumentTab from "./components/DocumentTab";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 import MilestoneTab from "./components/MilestoneTab";
 import { ArrowLeft } from "lucide-react";
-// import { useProjectMajors } from "@/hooks/queries/major";
-import { useProject } from "@/hooks/queries/project";
+import {
+  useProject,
+  useEnrollProjectAsPrincipal,
+} from "@/hooks/queries/project";
 import { useProjectMajors } from "@/hooks/queries/major";
-// import { useProject, useProjectMajors } from "@/hooks/project";
+import {
+  getEvaluationStagesByProject,
+  getEvaluationSummaryByProject,
+} from "./data/mockEvaluationData";
+import EvaluationBoardTab from "./components/EvaluationBoardTab";
+import { EvaluationStage, EvaluationSummary } from "@/types/task";
 
 function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
-  const { data: majorProject } = useProjectMajors(projectId || "");
+  const [evaluationStages, setEvaluationStages] = useState<EvaluationStage[]>(
+    []
+  );
+  const [evaluationSummary, setEvaluationSummary] =
+    useState<EvaluationSummary | null>(null);
 
-  // Use React Query hooks
+  const { data: majorProject } = useProjectMajors(projectId || "");
   const {
     data: projectResponse,
     isLoading,
     error,
   } = useProject(projectId || "");
+  const enrollProjectMutation = useEnrollProjectAsPrincipal();
 
-  // const { data: majorResponse, isLoading: majorsLoading } = useProjectMajors(
-  //   projectId || ""
-  // );
+  useEffect(() => {
+    if (projectId) {
+      getEvaluationStagesByProject(projectId).then(setEvaluationStages);
+      getEvaluationSummaryByProject(projectId).then(setEvaluationSummary);
+    }
+  }, [projectId]);
 
-  const handleEnrollProject = () => {
-    // Navigate to enrollment page
-    const enrollPath = `${location.pathname}/enroll`;
-    navigate(enrollPath);
+  const handleEnrollProject = async () => {
+    if (!projectId) return;
+    try {
+      const enrolledProject = await enrollProjectMutation.mutateAsync(
+        projectId
+      );
+      if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+        navigate(`/pi/project/${enrolledProject.id}/enroll`);
+      }
+    } catch (err) {
+      console.error("Failed to enroll:", err);
+    }
   };
 
-  // Determine visible tabs based on membership
   const getVisibleTabs = () => {
     const baseTabs = ["overview"];
-
     if (projectResponse?.data["is-member"]) {
-      // If user is a member, show all tabs
-      baseTabs.push("team", "milestones", "documents", "budget");
+      baseTabs.push("team", "milestones", "documents", "budget", "evaluation");
     }
-
     return baseTabs;
   };
 
   const visibleTabs = getVisibleTabs();
   const isMember = projectResponse?.data["is-member"] || false;
-  const shouldShowEnrollButton = Boolean(user && !isMember);
+  const shouldShowEnrollButton = Boolean(
+    user &&
+      !isMember &&
+      user.role === UserRole.PRINCIPAL_INVESTIGATOR &&
+      projectResponse?.data["project-detail"]?.status === "created"
+  );
 
   if (isLoading) {
     return <Loading />;
@@ -81,8 +105,6 @@ function ProjectDetail() {
   const project = projectResponse.data["project-detail"];
   const roleInProject = projectResponse.data["role-in-project"];
 
-  console.log("Member project", project.members);
-
   const projectData = {
     id: project.id,
     title: project["english-title"],
@@ -97,9 +119,21 @@ function ProjectDetail() {
     maximumMember: project["maximum-member"] || 0,
     status: project.status,
     progress: project.progress || 0,
-    fieldName: majorProject?.["data-list"]?.[0]?.major?.field?.name || "",
-    majorName: majorProject?.["data-list"]?.[0]?.major?.name || "",
-    // Clean team mapping that matches TeamResearcher interface
+    fieldName: majorProject?.["data-list"]
+      ? [
+          ...new Set(
+            majorProject["data-list"]
+              .map((item) => item.major?.field?.name)
+              .filter(Boolean)
+          ),
+        ].join(", ")
+      : "",
+    majorName: majorProject?.["data-list"]
+      ? majorProject["data-list"]
+          .map((item) => item.major?.name)
+          .filter(Boolean)
+          .join(", ")
+      : "",
     team:
       project.members?.map((member) => ({
         id: member.id,
@@ -126,7 +160,6 @@ function ProjectDetail() {
       description: milestone.description,
       deadline: milestone.endDate,
       status: milestone.status,
-      // progress: milestone.progress,
       tasks: milestone.tasks,
     })),
   };
@@ -147,47 +180,28 @@ function ProjectDetail() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList
           className={`grid w-full ${
-            visibleTabs.length === 1
-              ? "grid-cols-1"
-              : visibleTabs.length === 2
-              ? "grid-cols-2"
-              : visibleTabs.length === 3
-              ? "grid-cols-3"
-              : visibleTabs.length === 4
-              ? "grid-cols-2 sm:grid-cols-4"
-              : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-5"
+            visibleTabs.length <= 3
+              ? `grid-cols-${visibleTabs.length}`
+              : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
           } gap-1`}
         >
-          {visibleTabs.includes("overview") && (
-            <TabsTrigger value="overview" className="text-xs sm:text-sm">
-              <span className="hidden sm:inline">Overview</span>
-              <span className="sm:hidden">Info</span>
+          {visibleTabs.map((tab) => (
+            <TabsTrigger key={tab} value={tab} className="text-xs sm:text-sm">
+              {tab === "overview" ? (
+                <>
+                  <span className="hidden sm:inline">Overview</span>
+                  <span className="sm:hidden">Info</span>
+                </>
+              ) : (
+                tab.charAt(0).toUpperCase() + tab.slice(1)
+              )}
             </TabsTrigger>
-          )}
-          {visibleTabs.includes("team") && (
-            <TabsTrigger value="team" className="text-xs sm:text-sm">
-              Team
-            </TabsTrigger>
-          )}
-          {visibleTabs.includes("milestones") && (
-            <TabsTrigger value="milestones" className="text-xs sm:text-sm">
-              Milestones
-            </TabsTrigger>
-          )}
-          {visibleTabs.includes("documents") && (
-            <TabsTrigger value="documents" className="text-xs sm:text-sm">
-              Documents
-            </TabsTrigger>
-          )}
-          {visibleTabs.includes("budget") && (
-            <TabsTrigger value="budget" className="text-xs sm:text-sm">
-              Budget
-            </TabsTrigger>
-          )}
+          ))}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <OverviewTab
+            projectId={project.id}
             category={project.category}
             type={project.type}
             description={project.description || "No description available"}
@@ -208,9 +222,7 @@ function ProjectDetail() {
             majorName={projectData.majorName}
             showEnrollButton={shouldShowEnrollButton}
             tags={projectData.tags}
-            onEnrollProject={
-              project.status === "created" ? handleEnrollProject : undefined
-            }
+            onEnrollProject={handleEnrollProject}
           />
         </TabsContent>
 
@@ -235,6 +247,24 @@ function ProjectDetail() {
         {visibleTabs.includes("budget") && (
           <TabsContent value="budget" className="space-y-4">
             <BudgetTab transactions={project.transactions || []} />
+          </TabsContent>
+        )}
+
+        {visibleTabs.includes("evaluation") && (
+          <TabsContent value="evaluation" className="space-y-4">
+            {evaluationSummary && evaluationStages.length >= 0 ? (
+              <EvaluationBoardTab
+                evaluationStages={evaluationStages}
+                evaluationSummary={evaluationSummary}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
+                  <p className="text-gray-600">Loading evaluation data...</p>
+                </div>
+              </div>
+            )}
           </TabsContent>
         )}
       </Tabs>

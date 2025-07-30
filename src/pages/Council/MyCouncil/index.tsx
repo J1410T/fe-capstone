@@ -25,19 +25,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Search,
-  // Users,
-  Briefcase,
-  ArrowUpDown,
-  Eye,
-} from "lucide-react";
+import { Search, Briefcase, ArrowUpDown, Eye } from "lucide-react";
 import { useMyProject } from "@/hooks/queries/project";
-import { useAuth } from "@/contexts";
+import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/contexts/auth-types";
 import { Loading } from "@/components/ui/loaders";
 
-const MyProject: React.FC = () => {
+const MyCouncil: React.FC = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -50,42 +44,22 @@ const MyProject: React.FC = () => {
   const { data: projectsResponse, isLoading, error } = useMyProject();
   const projects = projectsResponse?.data || [];
 
-  // Get status color
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "active":
-      case "approved":
-        return "text-emerald-700 border-emerald-200 bg-emerald-50";
-      case "completed":
-      case "finished":
-        return "text-indigo-700 border-indigo-200 bg-indigo-50";
-      case "created":
-      case "planning":
-        return "text-blue-700 border-blue-200 bg-blue-50";
-      case "on hold":
-      case "suspended":
-        return "text-orange-700 border-orange-200 bg-orange-50";
-      case "rejected":
-        return "text-red-700 border-red-200 bg-red-50";
-      default:
-        return "text-gray-700 border-gray-200 bg-gray-50";
-    }
-  };
+  // Get unique values for filters
+  const uniqueStatuses = [...new Set(projects.map((p) => p.status))];
+  const uniqueCategories = [...new Set(projects.map((p) => p.category))];
+  const uniqueTypes = [...new Set(projects.map((p) => p.type))];
 
-  // Filter and sort projects
+  // Filter projects
   const filteredProjects = projects
     .filter((project) => {
       const matchesSearch =
+        searchTerm === "" ||
         project["english-title"]
-          .toLowerCase()
+          ?.toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
         project["vietnamese-title"]
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        (project.description
           ?.toLowerCase()
-          .includes(searchTerm.toLowerCase()) ??
-          false);
+          .includes(searchTerm.toLowerCase());
 
       const matchesStatus =
         statusFilter === "All" || project.status === statusFilter;
@@ -96,27 +70,43 @@ const MyProject: React.FC = () => {
       return matchesSearch && matchesStatus && matchesCategory && matchesType;
     })
     .sort((a, b) => {
-      let aValue: string = "";
-      let bValue: string = "";
+      let aValue: string | number;
+      let bValue: string | number;
 
-      if (sortBy === "englishTitle") {
-        aValue = a["english-title"];
-        bValue = b["english-title"];
-      } else if (sortBy === "vietnameseTitle") {
-        aValue = a["vietnamese-title"];
-        bValue = b["vietnamese-title"];
-      } else if (sortBy === "createdAt") {
-        aValue = a["created-at"];
-        bValue = b["created-at"];
-      } else {
-        aValue = String(a[sortBy as keyof typeof a] ?? "");
-        bValue = String(b[sortBy as keyof typeof b] ?? "");
+      switch (sortBy) {
+        case "englishTitle":
+          aValue = a["english-title"] || "";
+          bValue = b["english-title"] || "";
+          break;
+        case "category":
+          aValue = a.category;
+          bValue = b.category;
+          break;
+        case "type":
+          aValue = a.type;
+          bValue = b.type;
+          break;
+        case "status":
+          aValue = a.status;
+          bValue = b.status;
+          break;
+        case "createdAt":
+          aValue = new Date(a["created-at"]).getTime();
+          bValue = new Date(b["created-at"]).getTime();
+          break;
+        default:
+          aValue = a["english-title"] || "";
+          bValue = b["english-title"] || "";
       }
 
-      if (sortOrder === "asc") {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      if (typeof aValue === "string" && typeof bValue === "string") {
+        return sortOrder === "asc"
+          ? aValue.localeCompare(bValue)
+          : bValue.localeCompare(aValue);
       } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        return sortOrder === "asc"
+          ? (aValue as number) - (bValue as number)
+          : (bValue as number) - (aValue as number);
       }
     });
 
@@ -134,115 +124,150 @@ const MyProject: React.FC = () => {
       navigate(`/pi/project/${id}`);
     } else if (user?.role === UserRole.HOST_INSTITUTION) {
       navigate(`/host/project/${id}`);
+    } else if (user?.role === UserRole.APPRAISAL_COUNCIL) {
+      navigate(`/council/project/${id}`);
     } else {
       navigate(`/researcher/project/${id}`);
     }
   };
 
-  // Get unique values for filters
-  const uniqueStatuses = Array.from(new Set(projects.map((p) => p.status)));
-  const uniqueCategories = Array.from(new Set(projects.map((p) => p.category)));
-  const uniqueTypes = Array.from(new Set(projects.map((p) => p.type)));
-
-  // Format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "active":
+      case "approved":
+        return "bg-green-100 text-green-800";
+      case "pending":
+      case "submitted":
+        return "bg-yellow-100 text-yellow-800";
+      case "draft":
+        return "bg-gray-100 text-gray-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "under review":
+        return "bg-blue-100 text-blue-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
   };
 
-  // Capitalize first letter
-  const capitalize = (str: string) => {
-    return str.charAt(0).toUpperCase() + str.slice(1);
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
   };
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loading className="w-full max-w-md" />
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <Loading className="w-full max-w-md" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-8">
-        <div className="text-red-600 mb-2">Error loading projects</div>
-        <p className="text-muted-foreground">Please try again later</p>
+      <div className="container mx-auto py-6 space-y-6">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading projects</p>
+            <Button onClick={() => window.location.reload()}>Try Again</Button>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">My Projects</h1>
-          <p className="text-muted-foreground">
-            Manage and track your research projects as Principal Investigator
-          </p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Briefcase className="h-8 w-8 text-blue-600" />
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">My Council</h1>
+            <p className="text-gray-600">
+              Projects assigned to you for evaluation and review
+            </p>
+          </div>
+        </div>
+        <div className="text-sm text-gray-500">
+          {filteredProjects.length} of {projects.length} projects
         </div>
       </div>
 
       {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Filter & Search</CardTitle>
+          <CardTitle>Filter Projects</CardTitle>
+          <CardDescription>
+            Use the filters below to find specific projects
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search projects..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search projects..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Filter by status" />
+              <SelectTrigger>
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Status</SelectItem>
                 {uniqueStatuses.map((status) => (
                   <SelectItem key={status} value={status}>
-                    {capitalize(status)}
+                    {status}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-
             <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Filter by category" />
+              <SelectTrigger>
+                <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Categories</SelectItem>
                 {uniqueCategories.map((category) => (
                   <SelectItem key={category} value={category}>
-                    {capitalize(category)}
+                    {category}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Filter by type" />
+              <SelectTrigger>
+                <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="All">All Types</SelectItem>
                 {uniqueTypes.map((type) => (
                   <SelectItem key={type} value={type}>
-                    {capitalize(type)}
+                    {type}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearchTerm("");
+                setStatusFilter("All");
+                setCategoryFilter("All");
+                setTypeFilter("All");
+              }}
+            >
+              Clear Filters
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -281,80 +306,57 @@ const MyProject: React.FC = () => {
                 {filteredProjects.map((project) => (
                   <TableRow key={project.id}>
                     <TableCell className="font-medium">
-                      <div>
+                      <div className="space-y-1">
                         <div className="font-semibold">
-                          {project["english-title"]}
+                          {project["english-title"] || "Untitled Project"}
                         </div>
-                        <div className="text-sm text-muted-foreground">
-                          {project["vietnamese-title"]}
-                        </div>
-                        {project.description && (
-                          <div className="text-sm text-muted-foreground mt-1">
-                            {project.description}
+                        {project["vietnamese-title"] && (
+                          <div className="text-sm text-gray-600">
+                            {project["vietnamese-title"]}
                           </div>
                         )}
                       </div>
                     </TableCell>
+                    <TableCell>{project.category}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">
-                        {capitalize(project.category)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {capitalize(project.type)}
-                      </Badge>
+                      <Badge variant="outline">{project.type}</Badge>
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
                         className={getStatusColor(project.status)}
                       >
-                        {capitalize(project.status)}
+                        {project.status}
                       </Badge>
                     </TableCell>
-
+                    <TableCell>{formatDate(project["created-at"])}</TableCell>
                     <TableCell>
-                      <div className="text-sm">
-                        {formatDate(project["created-at"])}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleViewProject(project.id)}
-                        >
-                          View
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewProject(project.id)}
+                        className="flex items-center gap-2"
+                      >
+                        <Eye className="h-4 w-4" />
+                        View Detail
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))}
+                {filteredProjects.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      No projects found.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </div>
-
-          {filteredProjects.length === 0 && (
-            <div className="text-center py-8">
-              <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No projects found</h3>
-              <p className="text-muted-foreground mb-4">
-                {searchTerm ||
-                statusFilter !== "All" ||
-                categoryFilter !== "All" ||
-                typeFilter !== "All"
-                  ? "Try adjusting your search criteria"
-                  : "You haven't created any projects yet"}
-              </p>
-            </div>
-          )}
         </CardContent>
       </Card>
     </div>
   );
 };
 
-export default MyProject;
+export default MyCouncil;

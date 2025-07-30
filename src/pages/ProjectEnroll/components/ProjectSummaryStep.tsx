@@ -2,7 +2,13 @@ import React, { useRef, useEffect, useState } from "react";
 import { Editor } from "@tinymce/tinymce-react";
 import type { Editor as TinyMCEEditor } from "tinymce";
 import { useDocumentsByFilter } from "@/hooks/queries/useDocumentsByFilter";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, ArrowRight, File } from "lucide-react";
 import { DocumentForm } from "@/types/document";
@@ -66,13 +72,16 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   `;
 
   return (
-    <div className="space-y-6">
-      <Card className="border-0 shadow-lg bg-white pt-0">
+    <div>
+      <Card className="border-0 shadow-lg bg-white pt-0 p-0">
         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
           <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2 pt-5">
             <FileText className="w-5 h-5 text-blue-600" />
             Project Summary Document
           </CardTitle>
+          <CardDescription>
+            Create and edit project summary documents using templates
+          </CardDescription>
         </CardHeader>
 
         <CardContent className="p-0 mt-0 pt-0">

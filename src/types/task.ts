@@ -144,4 +144,47 @@ export type IndividualEvaluation = {
   reviewerId: string;
   projectId: string;
   milestoneId: string;
+  evaluator?: string; // Evaluator name for display
+  documentId?: string; // Associated document ID
+};
+
+export type EvaluationType =
+  | "milestone"
+  | "midterm"
+  | "summary"
+  | "final"
+  | "proposal";
+
+export type ProjectEvaluation = {
+  id: string;
+  title: string;
+  type: EvaluationType;
+  description?: string;
+  projectId: string;
+  milestoneId?: string;
+  createdAt: string;
+  dueDate?: string;
+  status: "active" | "completed" | "cancelled" | "pending";
+  stages: EvaluationStage[];
+};
+
+export type EvaluationStage = {
+  id: string;
+  title: string;
+  description?: string;
+  evaluationId: string;
+  order: number;
+  createdAt: string;
+  status: "active" | "completed" | "cancelled";
+  individualEvaluations: IndividualEvaluation[];
+};
+
+export type EvaluationSummary = {
+  totalEvaluations: number;
+  totalStages: number;
+  completedEvaluations: number;
+  pendingEvaluations: number;
+  averageScore?: number;
+  overallStatus: "not_started" | "in_progress" | "completed";
+  evaluationsByType: Record<EvaluationType, number>;
 };

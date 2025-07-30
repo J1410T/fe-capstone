@@ -22,11 +22,8 @@ export { DataCard, UnifiedDataCard } from "./DataCard";
 // User search and invitation components
 export { UserSearchInput } from "./UserSearchInput";
 export { CollaboratorInvitation } from "./CollaboratorInvitation";
-export type { UserSearchResult, InvitedUser } from "./UserSearchInput";
+export type { InvitedUser } from "./UserSearchInput";
 
 // Simplified user search components
 export { SimpleUserSearch } from "./SimpleUserSearch";
-export type {
-  UserSearchResult as SimpleUserResult,
-  InvitedUser as SimpleInvitedUser,
-} from "./SimpleUserSearch";
+export type { InvitedUser as SimpleInvitedUser } from "./SimpleUserSearch";

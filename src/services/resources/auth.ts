@@ -1,4 +1,9 @@
-import { AuthInfo, AuthResponse, RoleItem } from "@/types/auth";
+import {
+  AuthInfo,
+  AuthResponse,
+  RoleItem,
+  SearchAccountResult,
+} from "@/types/auth";
 import { axiosClient, getAccessToken } from "../api";
 
 export const getMyAccountInfo = async () => {
@@ -70,6 +75,78 @@ export const setMyRole = async (roleName: string) => {
     );
   } catch (error) {
     console.error("Error in setMyRole:", error);
+    throw error;
+  }
+};
+
+export const searchAccounts = async (
+  input: string
+): Promise<SearchAccountResult[]> => {
+  try {
+    const accessToken = getAccessToken();
+
+    const res = await axiosClient.get<SearchAccountResult[]>(
+      `/account/search?input=${encodeURIComponent(input)}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("searchAccounts error:", error);
+    throw error;
+  }
+};
+
+export const getAllRoles = async (): Promise<RoleItem[]> => {
+  try {
+    const accessToken = getAccessToken();
+
+    const res = await axiosClient.get<RoleItem[]>("/role", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    console.error("getAllRoles error:", error);
+    throw error;
+  }
+};
+
+export const getUserRolesByProjectId = async (
+  projectId: string,
+  pageIndex: number = 1,
+  pageSize: number = 100
+) => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.post(
+      "/user-role/filter",
+      {
+        "project-id": projectId,
+        "page-index": pageIndex,
+        "page-size": pageSize,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getUserRolesByProjectId error:", error);
     throw error;
   }
 };

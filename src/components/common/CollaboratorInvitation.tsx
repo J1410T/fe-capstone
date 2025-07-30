@@ -12,11 +12,12 @@ import {
 } from "@/components/ui/select";
 import {
   UserSearchInput,
-  UserSearchResult,
+  // UserSearchResult,
   InvitedUser,
 } from "./UserSearchInput";
 import { Crown, User, X, Plus, Users } from "lucide-react";
 import { cn } from "@/utils";
+import { UserSearchResult } from "@/types/auth";
 
 interface CollaboratorInvitationProps {
   invitedUsers: InvitedUser[];
@@ -41,7 +42,7 @@ export const CollaboratorInvitation: React.FC<CollaboratorInvitationProps> = ({
 
     // Determine role - first user becomes leader if no leader exists
     const hasLeader = invitedUsers.some((u) => u.role === "Leader");
-    const role = !hasLeader ? "Leader" : "Member";
+    const role = !hasLeader ? "Leader" : "Researcher";
 
     const newUser: InvitedUser = {
       ...user,
@@ -53,15 +54,18 @@ export const CollaboratorInvitation: React.FC<CollaboratorInvitationProps> = ({
     setShowAddMember(false);
   };
 
-  const handleRoleChange = (userId: string, newRole: "Leader" | "Member") => {
-    // If changing to Leader, demote current leader to Member
+  const handleRoleChange = (
+    userId: string,
+    newRole: "Leader" | "Researcher"
+  ) => {
+    // If changing to Leader, demote current leader to Researcher
     const updatedUsers = invitedUsers.map((user) => {
       if (
         newRole === "Leader" &&
         user.role === "Leader" &&
         user.id !== userId
       ) {
-        return { ...user, role: "Member" as const };
+        return { ...user, role: "Researcher" as const };
       }
       if (user.id === userId) {
         return { ...user, role: newRole };
@@ -77,12 +81,11 @@ export const CollaboratorInvitation: React.FC<CollaboratorInvitationProps> = ({
     onUsersChange(updatedUsers);
   };
 
-  const getRoleIcon = (role: "Leader" | "Member") => {
-    return role === "Leader" ? (
-      <Crown className="w-4 h-4 text-amber-600" />
-    ) : (
-      <User className="w-4 h-4 text-blue-600" />
-    );
+  const getRoleIcon = (role: "Leader" | "Researcher" | "Secretary") => {
+    if (role === "Leader") {
+      return <Crown className="w-4 h-4 text-amber-600" />;
+    }
+    return <User className="w-4 h-4 text-blue-600" />;
   };
 
   // const getRoleBadgeVariant = (role: "Leader" | "Member") => {
@@ -156,14 +159,16 @@ export const CollaboratorInvitation: React.FC<CollaboratorInvitationProps> = ({
                 <div className="flex items-center space-x-2">
                   {/* Role Selector */}
                   <Select
-                    value={user.role}
-                    onValueChange={(value: "Leader" | "Member") =>
+                    value={user.role === "Secretary" ? "Researcher" : user.role}
+                    onValueChange={(value: "Leader" | "Researcher") =>
                       handleRoleChange(user.id, value)
                     }
                   >
                     <SelectTrigger className="w-32">
                       <div className="flex items-center gap-2">
-                        {getRoleIcon(user.role)}
+                        {getRoleIcon(
+                          user.role === "Secretary" ? "Researcher" : user.role
+                        )}
                         <SelectValue />
                       </div>
                     </SelectTrigger>
@@ -174,15 +179,14 @@ export const CollaboratorInvitation: React.FC<CollaboratorInvitationProps> = ({
                           Leader
                         </div>
                       </SelectItem>
-                      <SelectItem value="Member">
+                      <SelectItem value="Researcher">
                         <div className="flex items-center gap-2">
                           <User className="w-4 h-4 text-blue-600" />
-                          Member
+                          Researcher
                         </div>
                       </SelectItem>
                     </SelectContent>
                   </Select>
-
                   {/* Remove Button */}
                   <Button
                     variant="ghost"

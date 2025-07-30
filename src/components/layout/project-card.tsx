@@ -98,7 +98,6 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             onError={(e) => {
               const fallback = fallbackLogo;
-
               if (e.currentTarget.src !== fallback) {
                 e.currentTarget.src = fallback;
               }

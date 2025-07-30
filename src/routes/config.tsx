@@ -70,6 +70,11 @@ import FormCreate from "@/pages/FormRegister/FormCreate";
 import FormView from "@/pages/FormRegister/FormView";
 import FormEdit from "@/pages/FormRegister/FormEdit";
 import MyProject from "@/pages/PrincipalInvestigator";
+import IndividualEvaluationDetail from "@/pages/ProjectDetail/components/IndividualEvaluationDetail";
+import EvaluationListPage from "@/pages/ProjectDetail/components/EvaluationListPage";
+import StageViewPage from "@/pages/ProjectDetail/components/StageViewPage";
+import MyCouncil from "@/pages/Council/MyCouncil";
+import { ViewAllNotifications } from "@/pages/Notifications";
 
 /**
  * Main application routes configuration
@@ -181,6 +186,10 @@ export const routes: RouteObject[] = [
             element: <Profile />,
           },
           {
+            path: "notifications",
+            element: <ViewAllNotifications />,
+          },
+          {
             path: "*",
             element: <StaffDashboard />,
           },
@@ -211,6 +220,22 @@ export const routes: RouteObject[] = [
             element: <ProjectEnroll />,
           },
           {
+            path: "projects/:projectId/evaluation-board/:stageId/:individualId",
+            element: <IndividualEvaluationDetail />,
+          },
+          {
+            path: "project/:projectId/detail/evaluation",
+            element: <EvaluationListPage />,
+          },
+          {
+            path: "evaluation/:evaluationId/stage/:stageId",
+            element: <StageViewPage />,
+          },
+          {
+            path: "evaluation/:evaluationId/stage/:stageId/individual/:individualId",
+            element: <IndividualEvaluationDetail />,
+          },
+          {
             path: "tasks",
             element: <UserTaskManagement />,
           },
@@ -221,7 +246,7 @@ export const routes: RouteObject[] = [
 
           {
             path: "notifications",
-            element: <GeneralComingSoon />,
+            element: <ViewAllNotifications />,
           },
 
           {
@@ -299,6 +324,10 @@ export const routes: RouteObject[] = [
             element: <Profile />,
           },
           {
+            path: "notifications",
+            element: <ViewAllNotifications />,
+          },
+          {
             path: "forms",
             children: [
               {
@@ -365,6 +394,11 @@ export const routes: RouteObject[] = [
           },
 
           {
+            path: "my-council",
+            element: <MyCouncil />,
+          },
+
+          {
             path: "project/:projectId",
             element: <ProjectDetail />,
           },
@@ -375,6 +409,10 @@ export const routes: RouteObject[] = [
           {
             path: "profile",
             element: <Profile />,
+          },
+          {
+            path: "notifications",
+            element: <ViewAllNotifications />,
           },
         ],
       },
@@ -404,12 +442,32 @@ export const routes: RouteObject[] = [
             element: <ProjectEnroll />,
           },
           {
+            path: "projects/:projectId/evaluation-board/:stageId/:individualId",
+            element: <IndividualEvaluationDetail />,
+          },
+          {
+            path: "project/:projectId/detail/evaluation",
+            element: <EvaluationListPage />,
+          },
+          {
+            path: "evaluation/:evaluationId/stage/:stageId",
+            element: <StageViewPage />,
+          },
+          {
+            path: "evaluation/:evaluationId/stage/:stageId/individual/:individualId",
+            element: <IndividualEvaluationDetail />,
+          },
+          {
             path: "project-enroll-form",
             element: <ProjectRegistration />,
           },
           {
             path: "profile",
             element: <Profile />,
+          },
+          {
+            path: "notifications",
+            element: <ViewAllNotifications />,
           },
           {
             path: "meetings",
