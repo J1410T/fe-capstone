@@ -372,18 +372,16 @@ function Header() {
                   })
                 )}
               </div>
-              {notifications.length > 0 && (
-                <>
-                  <Separator />
-                  <DropdownMenuItem
-                    className="p-3 text-center text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 font-medium cursor-pointer"
-                    onClick={handleViewAllNotifications}
-                  >
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    View all notifications
-                  </DropdownMenuItem>
-                </>
-              )}
+              <>
+                <Separator />
+                <DropdownMenuItem
+                  className="p-3 text-center text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 font-medium cursor-pointer"
+                  onClick={handleViewAllNotifications}
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  View all notifications
+                </DropdownMenuItem>
+              </>
             </DropdownMenuContent>
           </DropdownMenu>
 

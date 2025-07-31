@@ -83,31 +83,52 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   const inviteMemberMutation = useInviteMember();
   const createUserRoleMutation = useCreateUserRole();
 
-  // Track UserRole status for each member
+  // Track UserRole status for each member using real API
   useEffect(() => {
     if (!projectId) return;
 
-    const interval = setInterval(() => {
-      groupMembers.forEach((member) => {
+    const checkUserRoleStatus = async () => {
+      for (const member of groupMembers) {
         if (
           !member.isInvitation &&
           memberInvitationStatus[member.id] === "pending"
         ) {
-          // Check UserRole status for this member
-          // This would be implemented with useUserRoleByAccountAndProject hook
-          // For now, we'll simulate status updates
-          const randomUpdate = Math.random();
-          if (randomUpdate > 0.95) {
-            // 5% chance of status change
-            const newStatus = Math.random() > 0.7 ? "approved" : "rejected";
-            setMemberInvitationStatus((prev) => ({
-              ...prev,
-              [member.id]: newStatus,
-            }));
+          try {
+            const { getUserRoleByFilter } = await import(
+              "@/services/resources/auth"
+            );
+            const userRoleResponse = await getUserRoleByFilter({
+              "account-id": member.id,
+              "project-id": projectId,
+              "page-index": 1,
+              "page-size": 10,
+            });
+
+            if (userRoleResponse["data-list"].length > 0) {
+              const userRole = userRoleResponse["data-list"][0];
+              const apiStatus = userRole.status as UserRoleStatus;
+              const currentStatus = memberInvitationStatus[member.id];
+
+              if (
+                currentStatus !== apiStatus &&
+                (apiStatus === "approved" || apiStatus === "rejected")
+              ) {
+                setMemberInvitationStatus((prev) => ({
+                  ...prev,
+                  [member.id]: apiStatus,
+                }));
+              }
+            }
+          } catch (error) {
+            console.error("Failed to check user role status:", error);
           }
         }
-      });
-    }, 5000); // Check every 5 seconds
+      }
+    };
+
+    // Check immediately and then every 3 seconds
+    checkUserRoleStatus();
+    const interval = setInterval(checkUserRoleStatus, 3000);
 
     return () => clearInterval(interval);
   }, [projectId, groupMembers, memberInvitationStatus]);
@@ -161,7 +182,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
       (filteredUsers.length > 0 || isSearching);
     setShowResults(shouldShow);
   }, [searchValue, filteredUsers.length, isSearching]);
-
   const handleUserSelect = (user: {
     id: string;
     name: string;
@@ -676,7 +696,12 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                           onValueChange={(value: string) =>
                             handleRoleChange(member.id, value)
                           }
-                          disabled={isLoadingRoles}
+                          disabled={
+                            isLoadingRoles ||
+                            memberInvitationStatus[member.id] === "pending" ||
+                            memberInvitationStatus[member.id] === "approved" ||
+                            memberInvitationStatus[member.id] === "rejected"
+                          }
                         >
                           <SelectTrigger className="w-38">
                             <div className="flex items-center gap-2">
