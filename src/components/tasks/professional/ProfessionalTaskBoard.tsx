@@ -27,7 +27,7 @@ const mockTasks: Task[] = [
     title: "Q4 Financial Report Review",
     description:
       "Review and analyze Q4 financial statements for board presentation",
-    status: "To Do",
+    status: "ToDo",
     priority: "High",
     assignee: {
       id: "user1",
@@ -45,7 +45,7 @@ const mockTasks: Task[] = [
     title: "Client Onboarding Process Update",
     description:
       "Streamline the client onboarding workflow and update documentation",
-    status: "In Progress",
+    status: "InProgress",
     priority: "Medium",
     assignee: {
       id: "user2",
@@ -98,7 +98,7 @@ const mockTasks: Task[] = [
     title: "Team Performance Review",
     description:
       "Conduct quarterly team performance reviews and feedback sessions",
-    status: "To Do",
+    status: "ToDo",
     priority: "Low",
     assignee: {
       id: "user2",
@@ -138,8 +138,8 @@ const mockTeamResearchers = [
 ];
 
 const TASK_STATUSES: TaskStatus[] = [
-  "To Do",
-  "In Progress",
+  "ToDo",
+  "InProgress",
   "Completed",
   "Overdue",
 ];
@@ -202,8 +202,8 @@ export const ProfessionalTaskBoard: React.FC = () => {
   // Calculate statistics for displayed tasks only
   const stats = {
     total: filteredTasks.length,
-    toDo: tasksByStatus["To Do"].length,
-    inProgress: tasksByStatus["In Progress"].length,
+    toDo: tasksByStatus["ToDo"].length,
+    inProgress: tasksByStatus["InProgress"].length,
     completed: tasksByStatus["Completed"].length,
     overdue: tasksByStatus["Overdue"].length,
   };
@@ -255,7 +255,7 @@ export const ProfessionalTaskBoard: React.FC = () => {
         id: Date.now().toString(),
         title: data.title,
         description: data.description,
-        status: "To Do",
+        status: "ToDo",
         priority: data.priority,
         assignee,
         createdAt: new Date().toISOString(),

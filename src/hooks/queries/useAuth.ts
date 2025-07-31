@@ -95,3 +95,17 @@ export function useUserRolesByProjectId(
     enabled: !!projectId && !!accessToken,
   });
 }
+
+export function useUserRoleById(userRoleId: string) {
+  const accessToken = useAccessToken();
+
+  return useQuery({
+    queryKey: ["user-role", userRoleId],
+    queryFn: () =>
+      import("@/services/resources/auth").then(({ getUserRoleById }) =>
+        getUserRoleById(userRoleId)
+      ),
+    enabled: !!userRoleId && !!accessToken,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+}

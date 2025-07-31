@@ -12,3 +12,7 @@ export { TaskFilterBar } from "./TaskFilterBar";
 export { TaskStatsCards } from "./TaskStatsCards";
 export { SharedTaskBoard } from "./SharedTaskBoard";
 export { CreateTaskModal } from "./CreateTaskModal";
+export { TaskModal } from "./TaskModal";
+
+// Export member info components
+export { MemberInfo, MemberList } from "./MemberInfo";

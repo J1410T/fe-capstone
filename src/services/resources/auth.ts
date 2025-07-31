@@ -234,3 +234,25 @@ export const updateUserRoleStatus = async (
     throw error;
   }
 };
+
+export const getUserRoleById = async (
+  userRoleId: string
+): Promise<UserRole> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.get<UserRole>(`/user-role/${userRoleId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    console.error("getUserRoleById error:", error);
+    throw error;
+  }
+};
