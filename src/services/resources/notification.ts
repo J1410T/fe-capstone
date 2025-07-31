@@ -110,10 +110,10 @@ export const markNotification = async (
 
     // Build URL with query parameter if notification ID is provided
     const url = request.notification
-      ? `/notification?notification=${request.notification}`
-      : "/notification";
+      ? `/notification/status?notification=${request.notification}`
+      : "/notification/status";
 
-    const response = await axiosClient.patch<string>(url, null, {
+    const response = await axiosClient.put<string>(url, null, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

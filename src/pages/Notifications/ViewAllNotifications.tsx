@@ -17,7 +17,42 @@ import { toast } from "sonner";
 import {
   useNotificationList,
   useUpdateUserRoleStatus,
+  useMarkNotification,
 } from "@/hooks/queries/notification";
+import { useProject } from "@/hooks/queries/project";
+
+// Component to display project name for project notifications
+const ProjectNotificationTitle: React.FC<{
+  notification: {
+    id: string;
+    title: string;
+    type: string;
+    "type-object-id": string | null;
+  };
+}> = ({ notification }) => {
+  const { data: project } = useProject(notification["type-object-id"] || "");
+
+  if (notification.type === "project" && project) {
+    return (
+      <div>
+        <h4 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+          {notification.title}
+        </h4>
+        <p className="text-sm text-blue-600 font-medium">
+          Project:{" "}
+          {project.data?.["project-detail"]?.["english-title"] ||
+            "Unknown Project"}
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <h4 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+      {notification.title}
+    </h4>
+  );
+};
 
 const ViewAllNotifications: React.FC = () => {
   const navigate = useNavigate();
@@ -27,7 +62,7 @@ const ViewAllNotifications: React.FC = () => {
     Set<string>
   >(new Set());
 
-  // API hooks for notifications
+  // API hooks for notifications with proper filtering and continuous updates
   const { data: allNotificationsData, refetch: refetchAll } =
     useNotificationList(
       currentPage,
@@ -42,14 +77,31 @@ const ViewAllNotifications: React.FC = () => {
       true // Only read notifications for "read" tab
     );
 
-  // Mutation for updating user role status
+  const { data: unreadNotificationsData, refetch: refetchUnread } =
+    useNotificationList(
+      currentPage,
+      10,
+      false // Only unread notifications for "unread" tab
+    );
+
+  // Hook for updating user role status and marking notifications
   const updateUserRoleStatusMutation = useUpdateUserRoleStatus();
+  const markNotificationMutation = useMarkNotification();
 
   const handleBack = () => navigate(-1);
 
-  const markAllAsRead = () => {
-    // TODO: Implement mark all as read API call
-    console.log("Mark all as read functionality not implemented yet");
+  const markAllAsRead = async () => {
+    try {
+      await markNotificationMutation.mutateAsync({});
+      // Refetch all notification lists
+      refetchAll();
+      refetchRead();
+      refetchUnread();
+      toast.success("All notifications marked as read");
+    } catch (error) {
+      console.error("Failed to mark all notifications as read:", error);
+      toast.error("Failed to mark all notifications as read");
+    }
   };
 
   const getNotificationTypeColor = (type: string) => {
@@ -73,11 +125,15 @@ const ViewAllNotifications: React.FC = () => {
   const currentNotifications =
     activeTab === "all"
       ? allNotificationsData?.["data-list"] || []
-      : readNotificationsData?.["data-list"] || [];
+      : activeTab === "read"
+      ? readNotificationsData?.["data-list"] || []
+      : unreadNotificationsData?.["data-list"] || [];
 
   const unreadCount =
     allNotificationsData?.["data-list"]?.filter((n) => !n["is-read"]).length ||
     0;
+
+  const unreadTabCount = unreadNotificationsData?.["total-count"] || 0;
 
   const handleApprove = async (
     notificationId: string,
@@ -116,9 +172,15 @@ const ViewAllNotifications: React.FC = () => {
 
         toast.success("User role approved successfully");
 
+        // Mark notification as read
+        await markNotificationMutation.mutateAsync({
+          notification: notificationId,
+        });
+
         // Refetch notifications
         refetchAll();
         refetchRead();
+        refetchUnread();
       }
     } catch (error) {
       console.error("Failed to approve user role:", error);
@@ -169,9 +231,15 @@ const ViewAllNotifications: React.FC = () => {
 
         toast.success("User role rejected successfully");
 
+        // Mark notification as read
+        await markNotificationMutation.mutateAsync({
+          notification: notificationId,
+        });
+
         // Refetch notifications
         refetchAll();
         refetchRead();
+        refetchUnread();
       }
     } catch (error) {
       console.error("Failed to reject user role:", error);
@@ -237,9 +305,7 @@ const ViewAllNotifications: React.FC = () => {
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <h4 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-                        {n.title}
-                      </h4>
+                      <ProjectNotificationTitle notification={n} />
                       <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
                         <Clock className="w-3 h-3" />
                         <span>
@@ -261,15 +327,21 @@ const ViewAllNotifications: React.FC = () => {
                     <div className="flex gap-3 mt-4 pt-3 border-t border-gray-100">
                       <Button
                         size="sm"
-                        disabled={isProcessing}
-                        className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-xl px-4 py-2 disabled:opacity-50"
+                        disabled={isProcessing || n["is-read"]}
+                        className={`${
+                          n["is-read"]
+                            ? "bg-gray-400 text-gray-600 cursor-not-allowed opacity-50"
+                            : "bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-md hover:shadow-lg"
+                        } transition-all duration-200 rounded-xl px-4 py-2 disabled:opacity-50`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleApprove(
-                            n.id,
-                            n["type-object-id"],
-                            n["account-id"]
-                          );
+                          if (!n["is-read"]) {
+                            handleApprove(
+                              n.id,
+                              n["type-object-id"],
+                              n["account-id"]
+                            );
+                          }
                         }}
                       >
                         {isProcessing ? (
@@ -281,15 +353,21 @@ const ViewAllNotifications: React.FC = () => {
                       </Button>
                       <Button
                         size="sm"
-                        disabled={isProcessing}
-                        className="bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-md hover:shadow-lg transition-all duration-200 rounded-xl px-4 py-2 disabled:opacity-50"
+                        disabled={isProcessing || n["is-read"]}
+                        className={`${
+                          n["is-read"]
+                            ? "bg-gray-400 text-gray-600 cursor-not-allowed opacity-50"
+                            : "bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white shadow-md hover:shadow-lg"
+                        } transition-all duration-200 rounded-xl px-4 py-2 disabled:opacity-50`}
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleReject(
-                            n.id,
-                            n["type-object-id"],
-                            n["account-id"]
-                          );
+                          if (!n["is-read"]) {
+                            handleReject(
+                              n.id,
+                              n["type-object-id"],
+                              n["account-id"]
+                            );
+                          }
                         }}
                       >
                         {isProcessing ? (
@@ -356,7 +434,7 @@ const ViewAllNotifications: React.FC = () => {
             onValueChange={setActiveTab}
             className="w-full py-0"
           >
-            <TabsList className="grid grid-cols-2 w-full bg-gray-50/50 rounded-none h-14">
+            <TabsList className="grid grid-cols-3 w-full bg-gray-50/50 rounded-none h-14">
               <TabsTrigger
                 value="all"
                 className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-xl mx-2 my-2"
@@ -370,6 +448,18 @@ const ViewAllNotifications: React.FC = () => {
                 )}
               </TabsTrigger>
               <TabsTrigger
+                value="unread"
+                className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-xl mx-2 my-2"
+              >
+                <BellRing className="w-4 h-4" />
+                Unread
+                {unreadTabCount > 0 && (
+                  <Badge className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white text-xs px-2 py-1 rounded-full">
+                    {unreadTabCount}
+                  </Badge>
+                )}
+              </TabsTrigger>
+              <TabsTrigger
                 value="read"
                 className="flex items-center gap-2 text-sm font-medium data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-xl mx-2 my-2"
               >
@@ -379,6 +469,9 @@ const ViewAllNotifications: React.FC = () => {
             </TabsList>
 
             <TabsContent value="all" className="p-4 pt-4">
+              {renderNotificationList(currentNotifications)}
+            </TabsContent>
+            <TabsContent value="unread" className="p-4 pt-4">
               {renderNotificationList(currentNotifications)}
             </TabsContent>
             <TabsContent value="read" className="p-4 pt-4">

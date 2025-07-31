@@ -81,7 +81,9 @@ export function useNotificationList(
       return getNotificationList(request);
     },
     enabled: !!email,
-    staleTime: 30000, // Cache for 30 seconds
+    staleTime: 10000, // Cache for 10 seconds for real-time updates
+    refetchInterval: 15000, // Refetch every 15 seconds for real-time updates
+    refetchIntervalInBackground: true, // Continue refetching in background
   });
 }
 
@@ -95,8 +97,10 @@ export function useMarkNotification() {
     mutationFn: (request: MarkNotificationRequest = {}) =>
       markNotification(request),
     onSuccess: () => {
-      // Invalidate notification list to refresh data
+      // Invalidate notification list to refresh data immediately
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      // Also refetch to ensure immediate updates
+      queryClient.refetchQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
       console.error("Failed to mark notification:", error);
@@ -105,11 +109,12 @@ export function useMarkNotification() {
 }
 
 /**
- * Hook to get user role by account ID and project ID
+ * Hook to get user role by account ID and project ID with real-time updates
  */
 export function useUserRoleByAccountAndProject(
   accountId: string,
-  projectId: string
+  projectId: string,
+  enabled: boolean = true
 ) {
   return useQuery({
     queryKey: ["user-role", accountId, projectId],
@@ -119,19 +124,19 @@ export function useUserRoleByAccountAndProject(
       const request: UserRoleFilterRequest = {
         "account-id": accountId,
         "project-id": projectId,
-        status: "pending",
         "page-index": 1,
         "page-size": 10,
       };
 
       const response: UserRoleResponse = await getUserRoleByFilter(request);
 
-      // Return the first user role found
+      // Return the first user role found (regardless of status for real-time updates)
       return response["data-list"][0] || null;
     },
-    enabled: !!accountId && !!projectId,
-    staleTime: 10000, // Cache for 10 seconds for real-time updates
-    refetchInterval: 5000, // Refetch every 5 seconds for status updates
+    enabled: !!accountId && !!projectId && enabled,
+    staleTime: 5000, // Cache for 5 seconds for real-time updates
+    refetchInterval: 3000, // Refetch every 3 seconds for immediate status updates
+    refetchIntervalInBackground: true, // Continue refetching in background
   });
 }
 
@@ -173,6 +178,8 @@ export function useUpdateUserRoleStatus() {
       // Invalidate user role and notification queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["user-role"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      // Also refetch to ensure immediate updates
+      queryClient.refetchQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
       console.error("Failed to update user role status:", error);
@@ -202,7 +209,6 @@ export function useInviteMember() {
         status: "pending",
         "objec-notification-id": projectId,
       };
-
       const notificationResponse = await createNotificationMutation.mutateAsync(
         notificationRequest
       );
