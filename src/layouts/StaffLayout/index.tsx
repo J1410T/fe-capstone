@@ -6,6 +6,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { Outlet } from "react-router-dom";
+import { ScrollToTopButton } from "@/components/common/ScrollToTopButton";
 
 /**
  * Staff layout with sidebar only (no header) for staff users
@@ -29,6 +30,7 @@ function StaffLayout() {
             </div>
           </div>
         </main>
+        <ScrollToTopButton />
       </SidebarInset>
     </SidebarProvider>
   );

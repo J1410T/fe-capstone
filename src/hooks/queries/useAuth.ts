@@ -1,7 +1,11 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { AuthResponse } from "@/types/auth";
 
-import { getAuthResponse, setAuthResponse } from "@/utils/cookie-manager";
+import {
+  getAuthResponse,
+  setAuthResponse,
+  setAccessToken,
+} from "@/utils/cookie-manager";
 import { getAccessToken } from "@/services";
 import {
   getAccountById,
@@ -57,6 +61,12 @@ export function useSetMyRole() {
       // Update the auth-response data with the new response from API
       if (response.data) {
         setAuthResponse(response.data);
+
+        // Update the access token cookie with the new token from the auth response
+        if (response.data.token) {
+          setAccessToken(response.data.token);
+          console.log("🔄 Access token updated after role switch");
+        }
       }
     },
     onError: (error) => {

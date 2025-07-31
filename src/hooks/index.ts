@@ -5,6 +5,7 @@
 
 // Auth hooks
 export { useAuth } from "@/contexts/AuthContext";
+export { useScrollToTop } from "./useScrollToTop";
 
 // Form hooks (commented out until created)
 // export { useFormField } from "@/components/ui/form-hooks";

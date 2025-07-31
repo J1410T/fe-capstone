@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import AuthGuard from "@/components/auth/AuthGuard";
 import { useSimpleSession } from "@/contexts/simple-session-manager";
 import { useEffect } from "react";
+import { ScrollToTopButton } from "@/components/common/ScrollToTopButton";
 
 function UserLayout() {
   const location = useLocation();
@@ -46,6 +47,7 @@ function UserLayout() {
             </div>
           )}
         </main>
+        <ScrollToTopButton />
       </div>
     </AuthGuard>
   );

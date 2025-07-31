@@ -27,3 +27,6 @@ export type { InvitedUser } from "./UserSearchInput";
 // Simplified user search components
 export { SimpleUserSearch } from "./SimpleUserSearch";
 export type { InvitedUser as SimpleInvitedUser } from "./SimpleUserSearch";
+
+export { ScrollToTopButton } from "./ScrollToTopButton";
+export { ScrollRestoration } from "./ScrollRestoration";
