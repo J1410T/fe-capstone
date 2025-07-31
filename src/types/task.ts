@@ -1,13 +1,13 @@
 import { User } from "@/contexts/AuthContext";
 import { Member } from "./auth";
 
-export type TaskStatus = "To Do" | "In Progress" | "Completed" | "Overdue";
+export type TaskStatus = "ToDo" | "InProgress" | "Completed" | "Overdue";
 export type UserTaskStatus =
   | "Not Started"
   | "In Progress"
   | "Complete"
   | "Overdue";
-export type KanbanStatus = "To Do" | "In Progress" | "Completed" | "Overdue";
+export type KanbanStatus = "ToDo" | "InProgress" | "Completed" | "Overdue";
 export type TaskPriority = "Low" | "Medium" | "High";
 
 export interface Task {
@@ -119,6 +119,15 @@ export type MemberTask = {
   taskId: string;
 };
 
+// Response type for getting member tasks by task ID
+export type MemberTaskResponse = {
+  "page-index": number;
+  "page-size": number;
+  "total-count": number;
+  "total-page": number;
+  "data-list": MemberTask[];
+};
+
 export type Evaluation = {
   id: string;
   code: string;
@@ -188,3 +197,26 @@ export type EvaluationSummary = {
   overallStatus: "not_started" | "in_progress" | "completed";
   evaluationsByType: Record<EvaluationType, number>;
 };
+
+// New types for task management operations
+export interface UpdateTaskRequest {
+  name: string;
+  description: string;
+  "start-date": string;
+  "end-date": string;
+  priority: string;
+  progress: number;
+  overdue: number;
+  "meeting-url": string | null;
+  note: string;
+  "milestone-id": string;
+}
+
+export interface UpdateTaskStatusRequest {
+  taskId: string;
+  status: string;
+}
+
+export interface DeleteMemberTaskRequest {
+  memberTaskId: string;
+}

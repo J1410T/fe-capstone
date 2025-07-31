@@ -10,7 +10,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Select,
   SelectContent,
@@ -18,12 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, Edit, X, Save, Trash2 } from "lucide-react";
+import { Calendar, X, Save, Users, Flag, Tag, Link } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { DatePicker } from "@/components/ui/date-picker";
-import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import { useMemberTasksByTaskId } from "@/hooks/queries/task";
+import { MemberInfoByAccount } from "./MemberInfo";
 
-// Task interface
+// Task interface - updated to match TaskModal structure
 interface Task {
   id: string;
   title: string;
@@ -32,23 +32,30 @@ interface Task {
   dueDate: string;
   priority: "Low" | "Medium" | "High";
   projectTag: string;
+  projectId: string;
+  milestoneId: string;
   assignedTo: {
     id: string;
     name: string;
     avatar: string;
     email: string;
   };
+  memberTaskIds?: string[]; // Array of member IDs assigned to this task
+  memberTasks?: Array<{ id: string; memberId: string }>; // Array of member task objects with IDs
   createdAt: string;
   updatedAt: string;
+  startDate?: string;
+  endDate?: string;
+  note?: string;
+  meetingUrl?: string;
 }
 
 interface TaskDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  task: Task | null;
-  onUpdate?: (task: Task) => void;
-  onDelete?: (taskId: string) => void;
-  isLeader?: boolean;
+  task: Omit<Task, "projectId" | "milestoneId"> | null;
+  onUpdate?: (task: Omit<Task, "projectId" | "milestoneId">) => void;
+  projectId?: string;
 }
 
 export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
@@ -56,18 +63,32 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
   onOpenChange,
   task,
   onUpdate,
-  onDelete,
-  isLeader = true,
+  projectId = "",
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState<Partial<Task>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [selectedDueDate, setSelectedDueDate] = useState<Date | undefined>();
+  const [selectedStartDate, setSelectedStartDate] = useState<
+    Date | undefined
+  >();
+
+  // Fetch member tasks for this task
+  const { data: memberTasksData } = useMemberTasksByTaskId(
+    task?.id || "",
+    1,
+    100
+  );
+  const currentMemberTasks = memberTasksData?.["data-list"] || [];
+  const memberIds = currentMemberTasks.map((memberTask) => memberTask.memberId);
 
   useEffect(() => {
     if (task) {
       setEditData(task);
       setSelectedDueDate(task.dueDate ? parseISO(task.dueDate) : undefined);
+      setSelectedStartDate(
+        task.startDate ? parseISO(task.startDate) : undefined
+      );
       setErrors({});
       setIsEditing(false);
     }
@@ -152,10 +173,6 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
     setIsEditing(false);
   };
 
-  const handleEditClick = () => {
-    setIsEditing(true);
-  };
-
   const priorityConfig = getPriorityConfig(task.priority);
   const statusConfig = getStatusConfig(task.status);
 
@@ -231,34 +248,97 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
           {/* Task Metadata Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Status */}
+            {/* Start Date */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Status
+              <label className="text-sm font-medium text-slate-700 flex items-center space-x-1">
+                <Calendar className="w-4 h-4" />
+                <span>Start Date</span>
               </label>
               {isEditing ? (
-                <Select
-                  value={editData.status || task.status}
-                  onValueChange={(value) => handleInputChange("status", value)}
-                >
-                  <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Not Started">Not Started</SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                    <SelectItem value="Complete">Complete</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div>
+                  <DatePicker
+                    date={selectedStartDate}
+                    onDateChange={(date) => {
+                      setSelectedStartDate(date);
+                      handleInputChange(
+                        "startDate",
+                        date ? date.toISOString() : ""
+                      );
+                    }}
+                    placeholder="Select start date"
+                    disablePastDates={false}
+                    inDialog={true}
+                    className={`${
+                      errors.startDate
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    }`}
+                  />
+                  {errors.startDate && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.startDate}
+                    </p>
+                  )}
+                </div>
               ) : (
-                <Badge className={statusConfig.color}>{task.status}</Badge>
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-700">
+                    {task.startDate
+                      ? format(parseISO(task.startDate), "MMM dd, yyyy")
+                      : "Not set"}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* End Date */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 flex items-center space-x-1">
+                <Calendar className="w-4 h-4" />
+                <span>End Date</span>
+              </label>
+              {isEditing ? (
+                <div>
+                  <DatePicker
+                    date={selectedDueDate}
+                    onDateChange={(date) => {
+                      setSelectedDueDate(date);
+                      handleInputChange(
+                        "dueDate",
+                        date ? date.toISOString() : ""
+                      );
+                    }}
+                    placeholder="Select end date"
+                    disablePastDates={false}
+                    inDialog={true}
+                    className={`${
+                      errors.dueDate
+                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
+                        : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                    }`}
+                  />
+                  {errors.dueDate && (
+                    <p className="text-sm text-red-600 mt-1">
+                      {errors.dueDate}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Calendar className="w-4 h-4 text-slate-400" />
+                  <span className="text-slate-700">
+                    {format(parseISO(task.dueDate), "MMM dd, yyyy")}
+                  </span>
+                </div>
               )}
             </div>
 
             {/* Priority */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Priority
+              <label className="text-sm font-medium text-slate-700 flex items-center space-x-1">
+                <Flag className="w-4 h-4" />
+                <span>Priority</span>
               </label>
               {isEditing ? (
                 <Select
@@ -283,99 +363,108 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
               )}
             </div>
 
-            {/* Due Date */}
+            {/* Status */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Due Date
+              <label className="text-sm font-medium text-slate-700 flex items-center space-x-1">
+                <Tag className="w-4 h-4" />
+                <span>Status</span>
               </label>
               {isEditing ? (
-                <div>
-                  <DatePicker
-                    date={selectedDueDate}
-                    onDateChange={(date) => {
-                      setSelectedDueDate(date);
-                      handleInputChange(
-                        "dueDate",
-                        date ? date.toISOString() : ""
-                      );
-                    }}
-                    placeholder="Select due date"
-                    disablePastDates={true}
-                    inDialog={true}
-                    className={`${
-                      errors.dueDate
-                        ? "border-red-300 focus:border-red-500 focus:ring-red-500"
-                        : "border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                    }`}
-                  />
-                  {errors.dueDate && (
-                    <p className="text-sm text-red-600 mt-1">
-                      {errors.dueDate}
-                    </p>
-                  )}
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-4 h-4 text-slate-400" />
-                  <span className="text-slate-700">
-                    {format(parseISO(task.dueDate), "MMM dd, yyyy")}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Category */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Category
-              </label>
-              {isEditing ? (
-                <Input
-                  value={editData.projectTag || ""}
-                  onChange={(e) =>
-                    handleInputChange("projectTag", e.target.value)
-                  }
-                  className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
-                  placeholder="Enter category"
-                />
-              ) : (
-                <Badge
-                  variant="secondary"
-                  className="bg-slate-100 text-slate-700"
+                <Select
+                  value={editData.status || task.status}
+                  onValueChange={(value) => handleInputChange("status", value)}
                 >
-                  {task.projectTag}
-                </Badge>
+                  <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Not Started">Not Started</SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                    <SelectItem value="Complete">Complete</SelectItem>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Badge className={statusConfig.color}>{task.status}</Badge>
               )}
             </div>
           </div>
 
-          {/* Assigned To */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700">
-              Assigned To
-            </label>
-            <div className="flex items-center space-x-3 p-3 bg-slate-50 rounded-lg">
-              <Avatar className="w-10 h-10">
-                <AvatarImage
-                  src={task.assignedTo.avatar}
-                  alt={task.assignedTo.name}
+          {/* Meeting URL */}
+          {(task.meetingUrl || isEditing) && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700 flex items-center space-x-1">
+                <Link className="w-4 h-4" />
+                <span>Meeting URL</span>
+              </label>
+              {isEditing ? (
+                <Input
+                  value={editData.meetingUrl || ""}
+                  onChange={(e) =>
+                    handleInputChange("meetingUrl", e.target.value)
+                  }
+                  className="border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                  placeholder="Enter meeting URL"
                 />
-                <AvatarFallback className="bg-slate-100 text-slate-600">
-                  {task.assignedTo.name
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <div className="font-medium text-slate-900">
-                  {task.assignedTo.name}
-                </div>
-                <div className="text-sm text-slate-500">
-                  {task.assignedTo.email}
-                </div>
-              </div>
+              ) : task.meetingUrl ? (
+                <a
+                  href={task.meetingUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline break-all"
+                >
+                  {task.meetingUrl}
+                </a>
+              ) : (
+                <span className="text-slate-500">No meeting URL</span>
+              )}
             </div>
+          )}
+
+          {/* Note */}
+          {(task.note || isEditing) && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-700">Note</label>
+              {isEditing ? (
+                <Textarea
+                  value={editData.note || ""}
+                  onChange={(e) => handleInputChange("note", e.target.value)}
+                  className="border-slate-300 focus:border-blue-500 focus:ring-blue-500 min-h-[80px]"
+                  placeholder="Add any additional notes"
+                />
+              ) : (
+                <p className="text-slate-700 bg-slate-50 p-3 rounded-lg">
+                  {task.note || "No additional notes"}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Assigned Members */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 flex items-center space-x-2">
+              <Users className="w-4 h-4" />
+              <span>Assigned Members</span>
+            </label>
+            {memberIds && memberIds.length > 0 ? (
+              <div className="space-y-2">
+                {memberIds.map((memberId) => (
+                  <div key={memberId} className="p-3 bg-slate-50 rounded-lg">
+                    <MemberInfoByAccount
+                      accountId={memberId}
+                      projectId={projectId}
+                      showRole={true}
+                      size="md"
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-3 bg-slate-50 rounded-lg text-center">
+                <p className="text-sm text-slate-500">
+                  No members assigned to this task
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Task Metadata */}
@@ -395,27 +484,6 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
 
         {/* Action Buttons */}
         <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-          {/* Delete Button - Left Side */}
-          {!isEditing && isLeader && onDelete && (
-            <ConfirmDialog
-              trigger={
-                <Button
-                  variant="outline"
-                  className="border-red-300 text-red-700 hover:bg-red-50"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Task
-                </Button>
-              }
-              onConfirm={() => onDelete(task.id)}
-              title="Delete Task"
-              description={`Are you sure you want to delete "${task.title}"? This action cannot be undone.`}
-              confirmText="Delete"
-              cancelText="Cancel"
-              variant="destructive"
-            />
-          )}
-
           {/* Main Action Buttons - Right Side */}
           <div className="flex items-center space-x-3">
             {isEditing ? (
@@ -445,22 +513,13 @@ export const TaskDetailModal: React.FC<TaskDetailModalProps> = ({
                 >
                   Close
                 </Button>
-                {isLeader && (
-                  <ConfirmDialog
-                    trigger={
-                      <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                        <Edit className="w-4 h-4 mr-2" />
-                        Edit Task
-                      </Button>
-                    }
-                    onConfirm={handleEditClick}
-                    title="Edit Task"
-                    description={`Are you sure you want to edit "${task.title}"?`}
-                    confirmText="Edit"
-                    cancelText="Cancel"
-                    variant="default"
-                  />
-                )}
+                <Button
+                  onClick={() => setIsEditing(true)}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  <Save className="w-4 h-4 mr-2" />
+                  Edit Task
+                </Button>
               </>
             )}
           </div>

@@ -55,23 +55,23 @@ const convertToProfessionalTask = (task: KanbanTask): ProfessionalTask => ({
 });
 
 const STATUS_MAPPING = {
-  "Not Started": "To Do",
-  "In Progress": "In Progress",
+  "Not Started": "ToDo",
+  "In Progress": "InProgress",
   Complete: "Completed",
   Overdue: "Overdue",
 } as const;
 
 const REVERSE_STATUS_MAPPING = {
-  "To Do": "Not Started",
-  "In Progress": "In Progress",
+  ToDo: "Not Started",
+  InProgress: "In Progress",
   Completed: "Complete",
   Overdue: "Overdue",
 } as const;
 
-type KanbanStatus = "To Do" | "In Progress" | "Completed" | "Overdue";
+type KanbanStatus = "ToDo" | "InProgress" | "Completed" | "Overdue";
 const KANBAN_STATUSES: KanbanStatus[] = [
-  "To Do",
-  "In Progress",
+  "ToDo",
+  "InProgress",
   "Completed",
   "Overdue",
 ];
@@ -114,8 +114,8 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
   const stats = useMemo(
     () => ({
       total: kanbanTasks.length,
-      toDo: tasksByStatus["To Do"].length,
-      inProgress: tasksByStatus["In Progress"].length,
+      toDo: tasksByStatus["ToDo"].length,
+      inProgress: tasksByStatus["InProgress"].length,
       completed: tasksByStatus["Completed"].length,
       overdue: tasksByStatus["Overdue"].length,
     }),

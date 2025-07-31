@@ -16,7 +16,7 @@ interface TaskColumnProps {
 
 const getColumnConfig = (status: TaskStatus) => {
   switch (status) {
-    case "To Do":
+    case "ToDo":
       return {
         icon: Clock,
         bgColor: "bg-slate-50",
@@ -24,8 +24,9 @@ const getColumnConfig = (status: TaskStatus) => {
         headerColor: "bg-slate-100",
         textColor: "text-slate-700",
         badgeColor: "bg-slate-200 text-slate-700",
+        displayName: "To Do",
       };
-    case "In Progress":
+    case "InProgress":
       return {
         icon: PlayCircle,
         bgColor: "bg-blue-50",
@@ -33,6 +34,7 @@ const getColumnConfig = (status: TaskStatus) => {
         headerColor: "bg-blue-100",
         textColor: "text-blue-700",
         badgeColor: "bg-blue-200 text-blue-700",
+        displayName: "In Progress",
       };
     case "Completed":
       return {
@@ -42,6 +44,7 @@ const getColumnConfig = (status: TaskStatus) => {
         headerColor: "bg-green-100",
         textColor: "text-green-700",
         badgeColor: "bg-green-200 text-green-700",
+        displayName: "Completed",
       };
     case "Overdue":
       return {
@@ -51,6 +54,7 @@ const getColumnConfig = (status: TaskStatus) => {
         headerColor: "bg-red-100",
         textColor: "text-red-700",
         badgeColor: "bg-red-200 text-red-700",
+        displayName: "Overdue",
       };
     default:
       return {
@@ -60,6 +64,7 @@ const getColumnConfig = (status: TaskStatus) => {
         headerColor: "bg-slate-100",
         textColor: "text-slate-700",
         badgeColor: "bg-slate-200 text-slate-700",
+        displayName: "To Do",
       };
   }
 };
@@ -96,7 +101,7 @@ export const TaskColumn: React.FC<TaskColumnProps> = ({
             <h3
               className={`font-semibold text-xs sm:text-sm ${config.textColor} truncate`}
             >
-              {status}
+              {config.displayName}
             </h3>
           </div>
           <span
