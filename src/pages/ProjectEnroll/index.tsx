@@ -12,6 +12,7 @@ import { ReviewSubmitStep } from "./components/ReviewSubmitStep";
 import { SimpleInvitedUser } from "@/components/common";
 import { InviteMembersStep } from "./components/InviteMembersStep";
 import { GroupMember } from "@/types/auth";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface EnrollmentData {
   bm1Content: string;
@@ -27,6 +28,7 @@ const ProjectEnroll: React.FC = () => {
   const [currentStep, setCurrentStep] = useState(1);
   const [collaborators, setCollaborators] = useState<SimpleInvitedUser[]>([]);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+  const queryClient = useQueryClient();
 
   const [enrollmentData, setEnrollmentData] = useState<EnrollmentData>({
     bm1Content: "",
@@ -44,6 +46,11 @@ const ProjectEnroll: React.FC = () => {
     isLoading,
     error,
   } = useProject(projectId || "");
+
+  const handleDocumentCreated = () => {
+    // Refetch project data to get the newly created document
+    queryClient.invalidateQueries({ queryKey: ["project", projectId] });
+  };
 
   const project = projectResponse?.data;
 
@@ -245,6 +252,8 @@ const ProjectEnroll: React.FC = () => {
               updateEnrollmentData({ bm1Content: content })
             }
             onNext={handleNext}
+            projectDocuments={project?.["project-detail"]?.documents}
+            onDocumentCreated={handleDocumentCreated}
           />
         )}
 

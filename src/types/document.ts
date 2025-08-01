@@ -103,3 +103,15 @@ export interface DocumentListResponse {
   "total-page": number;
   "data-list": DocumentForm[];
 }
+
+export interface CreateDocumentRequest {
+  name: string;
+  type: string;
+  "is-template": boolean;
+  "content-html": string;
+  "project-id": string;
+}
+
+export interface CreateDocumentResponse {
+  id: string;
+}

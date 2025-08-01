@@ -1,0 +1,34 @@
+// hooks/useDocumentsByFilter.ts
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  createDocument,
+  getDocumentsByFilter,
+} from "@/services/resources/document";
+import { CreateDocumentRequest } from "@/types/document";
+
+export function useDocumentsByFilter(
+  type: string,
+  isTemplate: boolean = true,
+  pageIndex: number = 1,
+  pageSize: number = 10,
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: ["document", type, isTemplate, pageIndex, pageSize],
+    queryFn: () => getDocumentsByFilter(type, isTemplate, pageIndex, pageSize),
+    enabled: !!type && enabled,
+  });
+}
+export function useCreateDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: CreateDocumentRequest) => createDocument(data),
+    onSuccess: (_, variables) => {
+      // Invalidate project query to refresh documents list
+      queryClient.invalidateQueries({
+        queryKey: ["project", variables["project-id"]],
+      });
+    },
+  });
+}

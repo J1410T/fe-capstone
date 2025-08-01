@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
-import { useDocumentsByFilter } from "@/hooks/queries/useDocumentsByFilter";
+import { useDocumentsByFilter } from "@/hooks/queries/document";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, FileText } from "lucide-react";

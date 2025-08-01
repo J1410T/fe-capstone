@@ -1,7 +1,11 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Editor } from "@tinymce/tinymce-react";
 import type { Editor as TinyMCEEditor } from "tinymce";
-import { useDocumentsByFilter } from "@/hooks/queries/useDocumentsByFilter";
+import { useParams } from "react-router-dom";
+import {
+  useDocumentsByFilter,
+  useCreateDocument,
+} from "@/hooks/queries/document";
 import {
   Card,
   CardContent,
@@ -11,34 +15,95 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, ArrowRight, File } from "lucide-react";
-import { DocumentForm } from "@/types/document";
+import { DocumentForm, DocumentProject } from "@/types/document";
 
 type EditorInstance = TinyMCEEditor | null;
 
 interface ProjectSummaryStepProps {
   onContentChange: (content: string) => void;
   onNext: () => void;
+  projectDocuments?: DocumentProject[] | null;
+  onDocumentCreated?: () => void;
 }
 
 export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   onContentChange,
   onNext,
+  projectDocuments,
+  onDocumentCreated,
 }) => {
+  const { projectId } = useParams<{ projectId: string }>();
   const editorRef = useRef<EditorInstance>(null);
   const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
 
-  const { data, isLoading, error } = useDocumentsByFilter("BM1", true, 1, 1);
   const [formContent, setFormContent] = useState<string>("");
+  const [isCreatingDocument, setIsCreatingDocument] = useState(false);
+  const [documentCreated, setDocumentCreated] = useState(false);
+
+  // Find BM1 document in project documents
+  const bm1Document = projectDocuments?.find((doc) => doc.type === "BM1");
+  const shouldFetchTemplate =
+    !bm1Document && projectDocuments !== undefined && !documentCreated;
+
+  // Only fetch template when needed
+  const { data: templateData, isLoading: isLoadingTemplate } =
+    useDocumentsByFilter("BM1", true, 1, 1, shouldFetchTemplate);
+
+  const createDocumentMutation = useCreateDocument();
+
+  const createDocumentFromTemplate = useCallback(async () => {
+    if (
+      !shouldFetchTemplate ||
+      !templateData?.data?.["data-list"]?.length ||
+      isCreatingDocument ||
+      documentCreated ||
+      !projectId
+    ) {
+      return;
+    }
+
+    setIsCreatingDocument(true);
+    const templateDoc: DocumentForm = templateData.data["data-list"][0];
+    const templateContent = templateDoc["content-html"].replace(/\\"/g, '"');
+
+    try {
+      await createDocumentMutation.mutateAsync({
+        name: "Registration form",
+        type: "BM1",
+        "is-template": false,
+        "content-html": templateContent,
+        "project-id": projectId,
+      });
+
+      setDocumentCreated(true);
+      onDocumentCreated?.();
+    } catch (error) {
+      console.error("Failed to create document:", error);
+      // Fallback: use template content directly
+      setFormContent(templateContent);
+    } finally {
+      setIsCreatingDocument(false);
+    }
+  }, [
+    shouldFetchTemplate,
+    templateData,
+    isCreatingDocument,
+    documentCreated,
+    projectId,
+    createDocumentMutation,
+    onDocumentCreated,
+  ]);
 
   useEffect(() => {
-    const documentList: DocumentForm[] = data?.data?.["data-list"] ?? [];
-    const firstDoc: DocumentForm | undefined = documentList[0];
-    if (firstDoc?.["content-html"]) {
-      // Giải mã chuỗi JSON có \\\" thành "
-      const unescapedHtml = firstDoc["content-html"].replace(/\\"/g, '"');
+    if (bm1Document) {
+      // Use existing BM1 document from project
+      const unescapedHtml = bm1Document["content-html"].replace(/\\"/g, '"');
       setFormContent(unescapedHtml);
+    } else {
+      // Create document from template
+      createDocumentFromTemplate();
     }
-  }, [data]);
+  }, [bm1Document, createDocumentFromTemplate]);
 
   const handleEditorChange = (content: string) => {
     onContentChange(content);
@@ -49,6 +114,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
     onContentChange(currentContent);
     onNext();
   };
+
   const handleSave = () => {
     const currentContent = editorRef.current?.getContent() || "";
     onContentChange(currentContent);
@@ -71,6 +137,9 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
     }
   `;
 
+  const isLoading =
+    isLoadingTemplate || isCreatingDocument || createDocumentMutation.isPending;
+
   return (
     <div>
       <Card className="border-0 shadow-lg bg-white pt-0 p-0">
@@ -89,12 +158,17 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
             <div className="flex items-center justify-center h-[800px]">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Loading BM1 template...</p>
+                <p className="text-gray-600">
+                  {isCreatingDocument
+                    ? "Creating document..."
+                    : "Loading BM1 template..."}
+                </p>
               </div>
             </div>
-          ) : error ? (
+          ) : createDocumentMutation.isError ? (
             <div className="text-center text-red-500 p-6">
-              ⚠️ API Error: {(error as Error).message}
+              ⚠️ Error creating document:{" "}
+              {createDocumentMutation.error?.message}
             </div>
           ) : (
             <Editor
@@ -140,6 +214,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
           onClick={handleSave}
           size="lg"
           className="px-8 mr-4"
+          disabled={isLoading}
         >
           <File className="w-4 h-4 mr-2" />
           Save
