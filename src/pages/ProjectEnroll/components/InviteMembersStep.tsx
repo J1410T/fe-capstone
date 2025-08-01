@@ -12,6 +12,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { SimpleInvitedUser } from "@/components/common";
 import {
   Users,
@@ -34,11 +42,12 @@ import {
   useSearchAccounts,
   useAllRoles,
   useMyAccountInfo,
+  useCreateUserRole,
+  useDeleteUserRole,
 } from "@/hooks/queries/useAuth";
-import { GroupMember } from "@/types/auth";
+import { GroupMember, UserRole } from "@/types/auth";
 import { UserRoleStatus } from "@/types/notification";
 import {
-  useCreateUserRole,
   useInviteMember,
   useCreateNotification,
   useSendNotification,
@@ -74,6 +83,8 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   const [invitingMembers, setInvitingMembers] = useState<Set<string>>(
     new Set()
   );
+  const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
+  const [isRemovingMember, setIsRemovingMember] = useState(false);
 
   // API hooks - search only when input length >= 2
   const { data: searchResults = [], isLoading: isSearching } =
@@ -86,6 +97,89 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   const createUserRoleMutation = useCreateUserRole();
   const createNotificationMutation = useCreateNotification();
   const sendNotificationMutation = useSendNotification();
+  const deleteUserRoleMutation = useDeleteUserRole();
+
+  // Initialize group members from UserRole data, excluding current user
+  useEffect(() => {
+    if (projectId && myAccountInfo?.id && allRoles.length > 0) {
+      const currentUserId = myAccountInfo.id;
+
+      const fetchUserRoles = async () => {
+        try {
+          const { getUserRolesByProjectId } = await import(
+            "@/services/resources/auth"
+          );
+          const userRolesResponse = await getUserRolesByProjectId(
+            projectId,
+            1,
+            100
+          );
+
+          if (userRolesResponse["data-list"]) {
+            // Filter out current user based on account-id in UserRole
+            const filteredUserRoles = userRolesResponse["data-list"].filter(
+              (userRole: UserRole) => userRole["account-id"] !== currentUserId
+            );
+
+            // Convert UserRole data to GroupMember format
+            const membersFromUserRoles: GroupMember[] = filteredUserRoles.map(
+              (userRole: UserRole) => {
+                // Find the role name from role-id
+                const memberRole = allRoles.find(
+                  (role) => role.id === userRole["role-id"]
+                );
+                const roleName = memberRole?.name || "Researcher";
+
+                return {
+                  id: userRole["account-id"],
+                  name: userRole["full-name"] || "",
+                  email: userRole.email || "",
+                  avatar: userRole["avatar-url"] || undefined,
+                  role: roleName as "Researcher" | "Secretary" | "Leader",
+                  roleId: userRole["role-id"],
+                  isInvitation: false, // These are existing UserRole members
+                  // Required fields from Member interface
+                  code: userRole.code,
+                  groupName: userRole["group-name"],
+                  isOfficial: userRole["is-official"],
+                  expireDate: userRole["expire-date"],
+                  createdAt: userRole["created-at"],
+                  status: userRole.status,
+                  accountId: userRole["account-id"],
+                  "full-name": userRole["full-name"],
+                  phoneNumber: null,
+                  address: null,
+                  companyName: null,
+                  "avatar-url": userRole["avatar-url"],
+                  projectId: userRole["project-id"],
+                  appraisalCouncilId: userRole["appraisal-council-id"],
+                };
+              }
+            );
+
+            setGroupMembers((prev) => {
+              // Merge with any manually added members (isInvitation: true)
+              const manualMembers = prev.filter((m) => m.isInvitation);
+              return [...membersFromUserRoles, ...manualMembers];
+            });
+
+            // Set the member status from UserRole data
+            const statusMap: Record<string, UserRoleStatus> = {};
+            membersFromUserRoles.forEach((member) => {
+              if (member.status) {
+                statusMap[member.id] = member.status as UserRoleStatus;
+              }
+            });
+            setMemberInvitationStatus((prev) => ({ ...prev, ...statusMap }));
+          }
+        } catch (error) {
+          console.error("Failed to fetch user roles:", error);
+        }
+      };
+
+      fetchUserRoles();
+    }
+  }, [projectId, myAccountInfo, allRoles]);
 
   // Track UserRole status for each member using real API
   useEffect(() => {
@@ -93,65 +187,79 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
 
     const checkUserRoleStatus = async () => {
       for (const member of groupMembers) {
-        if (
-          !member.isInvitation &&
-          memberInvitationStatus[member.id] === "pending"
-        ) {
-          try {
-            const { getUserRoleByFilter } = await import(
-              "@/services/resources/auth"
-            );
-            const userRoleResponse = await getUserRoleByFilter({
-              "account-id": member.id,
-              "project-id": projectId,
-              "page-index": 1,
-              "page-size": 10,
-            });
+        try {
+          const { getUserRoleByFilter } = await import(
+            "@/services/resources/auth"
+          );
+          const userRoleResponse = await getUserRoleByFilter({
+            "account-id": member.id,
+            "project-id": projectId,
+            "page-index": 1,
+            "page-size": 10,
+          });
 
-            if (userRoleResponse["data-list"].length > 0) {
-              const userRole = userRoleResponse["data-list"][0];
-              const apiStatus = userRole.status as UserRoleStatus;
-              const currentStatus = memberInvitationStatus[member.id];
+          if (userRoleResponse["data-list"].length > 0) {
+            const userRole = userRoleResponse["data-list"][0];
+            const apiStatus = userRole.status as UserRoleStatus;
+            const currentStatus = memberInvitationStatus[member.id];
 
-              if (
-                currentStatus !== apiStatus &&
-                (apiStatus === "approved" || apiStatus === "rejected")
-              ) {
-                setMemberInvitationStatus((prev) => ({
-                  ...prev,
-                  [member.id]: apiStatus,
-                }));
+            // Update member invitation status
+            if (currentStatus !== apiStatus) {
+              setMemberInvitationStatus((prev) => ({
+                ...prev,
+                [member.id]: apiStatus,
+              }));
+            }
 
-                // Send notification when status changes to approved
-                if (apiStatus === "approved") {
-                  try {
-                    // Step 1: Create notification with 'create' status
-                    const notificationResponse =
-                      await createNotificationMutation.mutateAsync({
-                        title:
-                          "Please Submit your Scientific Resume to the project you have agreed to join in My Project",
-                        type: "project",
-                        status: "create",
-                        "objec-notification-id": projectId,
-                      });
+            // Update member role information from UserRole data
+            if (!member.isInvitation) {
+              setGroupMembers((prev) =>
+                prev.map((m) =>
+                  m.id === member.id
+                    ? {
+                        ...m,
+                        roleId: userRole["role-id"],
+                        role: userRole.name as
+                          | "Researcher"
+                          | "Secretary"
+                          | "Leader",
+                      }
+                    : m
+                )
+              );
+            }
 
-                    // Step 2: Send notification to the approved member
-                    await sendNotificationMutation.mutateAsync({
-                      "list-account-id": [member.id],
-                      "notification-id": notificationResponse.id,
-                    });
-                  } catch (error) {
-                    console.error(
-                      "Failed to send approval notification:",
-                      error
-                    );
-                  }
-                }
+            // Send notification when status changes to approved for any member
+            if (currentStatus !== apiStatus && apiStatus === "approved") {
+              try {
+                // Step 1: Create notification with 'create' status
+                const notificationResponse =
+                  await createNotificationMutation.mutateAsync({
+                    title:
+                      "Please Submit your Scientific Resume to the project you have agreed to join in My Project",
+                    type: "project",
+                    status: "create",
+                    "objec-notification-id": projectId,
+                  });
+
+                // Step 2: Send notification to the approved member
+                await sendNotificationMutation.mutateAsync({
+                  "list-account-id": [member.id],
+                  "notification-id": notificationResponse.id,
+                });
+              } catch (error) {
+                console.error("Failed to send approval notification:", error);
               }
             }
-          } catch (error) {
-            console.error("Failed to check user role status:", error);
+          } else if (!member.isInvitation) {
+            // For existing members without UserRole, set default status
+            setMemberInvitationStatus((prev) => ({
+              ...prev,
+              [member.id]: "none",
+            }));
           }
+        } catch (error) {
+          console.error("Failed to check user role status:", error);
         }
       }
     };
@@ -344,21 +452,70 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   };
 
   const handleRemoveUser = (userId: string) => {
-    const updatedMembers = groupMembers.filter(
-      (member) => member.id !== userId
-    );
-    setGroupMembers(updatedMembers);
+    setMemberToRemove(userId);
+  };
 
-    // Call parent callback if provided
-    if (onGroupMembersChange) {
-      onGroupMembersChange(updatedMembers);
+  const confirmRemoveUser = async () => {
+    if (!memberToRemove) return;
+
+    const memberToDelete = groupMembers.find((m) => m.id === memberToRemove);
+    if (!memberToDelete) return;
+
+    setIsRemovingMember(true);
+
+    try {
+      // If this is an existing member (not an invitation), delete their UserRole
+      if (!memberToDelete.isInvitation && projectId) {
+        // First, get the UserRole ID for this member
+        const { getUserRoleByFilter } = await import(
+          "@/services/resources/auth"
+        );
+        const userRoleResponse = await getUserRoleByFilter({
+          "account-id": memberToDelete.id,
+          "project-id": projectId,
+          "page-index": 1,
+          "page-size": 10,
+        });
+
+        if (userRoleResponse["data-list"].length > 0) {
+          const userRole = userRoleResponse["data-list"][0];
+          await deleteUserRoleMutation.mutateAsync(userRole.id);
+        }
+      }
+
+      // Remove from local state
+      const updatedMembers = groupMembers.filter(
+        (member) => member.id !== memberToRemove
+      );
+      setGroupMembers(updatedMembers);
+
+      // Call parent callback if provided
+      if (onGroupMembersChange) {
+        onGroupMembersChange(updatedMembers);
+      }
+
+      // Update collaborators for backward compatibility
+      const updatedCollaborators = collaborators.filter(
+        (user) => user.id !== memberToRemove
+      );
+      onCollaboratorsChange(updatedCollaborators);
+
+      // Clear invitation status
+      setMemberInvitationStatus((prev) => {
+        const updated = { ...prev };
+        delete updated[memberToRemove];
+        return updated;
+      });
+    } catch (error) {
+      console.error("Failed to remove member:", error);
+    } finally {
+      setIsRemovingMember(false);
+      setMemberToRemove(null);
     }
+  };
 
-    // Update collaborators for backward compatibility
-    const updatedCollaborators = collaborators.filter(
-      (user) => user.id !== userId
-    );
-    onCollaboratorsChange(updatedCollaborators);
+  const cancelRemoveUser = () => {
+    setMemberToRemove(null);
   };
 
   // Handle member invitation
@@ -369,6 +526,14 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     const member = groupMembers.find((m) => m.id === memberId);
     if (!member || !member.roleId) return;
 
+    const currentStatus = memberInvitationStatus[memberId];
+
+    // Don't call update API if status is rejected
+    if (currentStatus === "rejected") {
+      console.log("Cannot invite member with rejected status");
+      return;
+    }
+
     setInvitingMembers((prev) => new Set(prev).add(memberId));
     setMemberInvitationStatus((prev) => ({
       ...prev,
@@ -376,6 +541,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     }));
 
     try {
+      // For new invitations or members without existing UserRole
       // Step 1: Send notification
       const notificationResult = await inviteMemberMutation.mutateAsync({
         projectId,
@@ -437,7 +603,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
         return (
           <Badge
             variant="outline"
-            className="bg-yellow-50 text-yellow-700 border-yellow-300"
+            className="bg-yellow-50 text-yellow-700 border-yellow-300 font-medium"
           >
             <Clock className="w-3 h-3 mr-1" />
             Pending
@@ -447,7 +613,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
         return (
           <Badge
             variant="outline"
-            className="bg-green-50 text-green-700 border-green-300"
+            className="bg-green-50 text-green-700 border-green-300 font-medium"
           >
             <CheckCircle className="w-3 h-3 mr-1" />
             Approved
@@ -457,22 +623,15 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
         return (
           <Badge
             variant="outline"
-            className="bg-red-50 text-red-700 border-red-300"
+            className="bg-red-50 text-red-700 border-red-300 font-medium"
           >
             <XCircle className="w-3 h-3 mr-1" />
             Rejected
           </Badge>
         );
       default:
-        return (
-          <Badge
-            variant="outline"
-            className="bg-gray-50 text-gray-600 border-gray-300"
-          >
-            <Mail className="w-3 h-3 mr-1" />
-            Not Invited
-          </Badge>
-        );
+        // Return null for members without valid UserRole status
+        return null;
     }
   };
 
@@ -695,12 +854,18 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                       </div>
 
                       <div className="flex items-center space-x-3 flex-shrink-0">
-                        {/* Invitation Status */}
-                        <div className="flex flex-col items-center gap-1">
-                          {getInvitationStatusBadge(
-                            memberInvitationStatus[member.id] || "none"
+                        {/* UserRole Status */}
+                        {memberInvitationStatus[member.id] &&
+                          memberInvitationStatus[member.id] !== "none" && (
+                            <div className="flex flex-col items-center gap-1">
+                              <span className="text-xs text-gray-500 font-medium">
+                                Status
+                              </span>
+                              {getInvitationStatusBadge(
+                                memberInvitationStatus[member.id]
+                              )}
+                            </div>
                           )}
-                        </div>
 
                         {/* Invite Button */}
                         {!member.isInvitation && (
@@ -711,7 +876,9 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                             disabled={
                               invitingMembers.has(member.id) ||
                               memberInvitationStatus[member.id] === "pending" ||
-                              memberInvitationStatus[member.id] === "approved"
+                              memberInvitationStatus[member.id] ===
+                                "approved" ||
+                              memberInvitationStatus[member.id] === "rejected"
                             }
                             className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                           >
@@ -824,6 +991,45 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
           <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
+
+      {/* Confirmation Modal */}
+      <Dialog
+        open={!!memberToRemove}
+        onOpenChange={(open) => !open && cancelRemoveUser()}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Remove Member</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove this member from the project? This
+              action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={cancelRemoveUser}
+              disabled={isRemovingMember}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={confirmRemoveUser}
+              disabled={isRemovingMember}
+            >
+              {isRemovingMember ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                "Remove"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

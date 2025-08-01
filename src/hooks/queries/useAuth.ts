@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { AuthResponse } from "@/types/auth";
 
 import {
@@ -15,7 +15,18 @@ import {
   getUserRolesByProjectId,
   searchAccounts,
   setMyRole,
+  getUserRoleByFilter,
+  createUserRole,
+  updateUserRoleStatus,
+  deleteUserRole,
 } from "@/services/resources/auth";
+import {
+  UserRole,
+  UserRoleResponse,
+  CreateUserRoleRequest,
+  UpdateUserRoleRequest,
+  UserRoleFilterRequest,
+} from "@/types/auth";
 
 export function useAuthResponse() {
   const data = getAuthResponse<AuthResponse>();
@@ -117,5 +128,107 @@ export function useUserRoleById(userRoleId: string) {
       ),
     enabled: !!userRoleId && !!accessToken,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+}
+
+/**
+ * Hook to get user role by account ID and project ID with real-time updates
+ */
+export function useUserRoleByAccountAndProject(
+  accountId: string,
+  projectId: string,
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: ["user-role", accountId, projectId],
+    queryFn: async (): Promise<UserRole | null> => {
+      if (!accountId || !projectId) return null;
+
+      const request: UserRoleFilterRequest = {
+        "account-id": accountId,
+        "project-id": projectId,
+        "page-index": 1,
+        "page-size": 10,
+      };
+
+      const response: UserRoleResponse = await getUserRoleByFilter(request);
+
+      // Return the first user role found (regardless of status for real-time updates)
+      return response["data-list"][0] || null;
+    },
+    enabled: !!accountId && !!projectId && enabled,
+    staleTime: 5000, // Cache for 5 seconds for real-time updates
+    refetchInterval: 3000, // Refetch every 3 seconds for immediate status updates
+    refetchIntervalInBackground: true, // Continue refetching in background
+  });
+}
+
+/**
+ * Hook to create a user role
+ */
+export function useCreateUserRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: CreateUserRoleRequest) => createUserRole(request),
+    onSuccess: () => {
+      // Invalidate user role queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["user-role"] });
+    },
+    onError: (error) => {
+      console.error("Failed to create user role:", error);
+    },
+  });
+}
+
+/**
+ * Hook to update user role status
+ */
+export function useUpdateUserRoleStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      userRoleId,
+      status,
+      request,
+    }: {
+      userRoleId: string;
+      status: string;
+      request: UpdateUserRoleRequest;
+    }) => updateUserRoleStatus(userRoleId, status, request),
+    onSuccess: () => {
+      // Invalidate user role and all notification queries to refresh data across all tabs
+      queryClient.invalidateQueries({ queryKey: ["user-role"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      // Also refetch all notification queries to ensure immediate updates across all tabs
+      queryClient.refetchQueries({ queryKey: ["notifications"] });
+    },
+    onError: (error) => {
+      console.error("Failed to update user role status:", error);
+    },
+  });
+}
+
+/**
+ * Hook to delete a user role
+ */
+export function useDeleteUserRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (userRoleId: string) => deleteUserRole(userRoleId),
+    onSuccess: () => {
+      // Invalidate user role and all notification queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["user-role"] });
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["project"] });
+      // Also refetch all queries to ensure immediate updates
+      queryClient.refetchQueries({ queryKey: ["notifications"] });
+      queryClient.refetchQueries({ queryKey: ["project"] });
+    },
+    onError: (error) => {
+      console.error("Failed to delete user role:", error);
+    },
   });
 }

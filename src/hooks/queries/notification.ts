@@ -11,18 +11,7 @@ import {
   NotificationListRequest,
   MarkNotificationRequest,
 } from "@/types/notification";
-import {
-  UserRole,
-  UserRoleResponse,
-  CreateUserRoleRequest,
-  UpdateUserRoleRequest,
-  UserRoleFilterRequest,
-} from "@/types/auth";
-import {
-  getUserRoleByFilter,
-  createUserRole,
-  updateUserRoleStatus,
-} from "@/services/resources/auth";
+
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { AuthResponse } from "@/types/auth";
 
@@ -81,8 +70,8 @@ export function useNotificationList(
       return getNotificationList(request);
     },
     enabled: !!email,
-    staleTime: 10000, // Cache for 10 seconds for real-time updates
-    refetchInterval: 15000, // Refetch every 15 seconds for real-time updates
+    // staleTime: 60000, // Cache for 60 seconds for real-time updates
+    // refetchInterval: 60000, // Refetch every 15 seconds for real-time updates
     refetchIntervalInBackground: true, // Continue refetching in background
   });
 }
@@ -104,85 +93,6 @@ export function useMarkNotification() {
     },
     onError: (error) => {
       console.error("Failed to mark notification:", error);
-    },
-  });
-}
-
-/**
- * Hook to get user role by account ID and project ID with real-time updates
- */
-export function useUserRoleByAccountAndProject(
-  accountId: string,
-  projectId: string,
-  enabled: boolean = true
-) {
-  return useQuery({
-    queryKey: ["user-role", accountId, projectId],
-    queryFn: async (): Promise<UserRole | null> => {
-      if (!accountId || !projectId) return null;
-
-      const request: UserRoleFilterRequest = {
-        "account-id": accountId,
-        "project-id": projectId,
-        "page-index": 1,
-        "page-size": 10,
-      };
-
-      const response: UserRoleResponse = await getUserRoleByFilter(request);
-
-      // Return the first user role found (regardless of status for real-time updates)
-      return response["data-list"][0] || null;
-    },
-    enabled: !!accountId && !!projectId && enabled,
-    staleTime: 5000, // Cache for 5 seconds for real-time updates
-    refetchInterval: 3000, // Refetch every 3 seconds for immediate status updates
-    refetchIntervalInBackground: true, // Continue refetching in background
-  });
-}
-
-/**
- * Hook to create a user role
- */
-export function useCreateUserRole() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (request: CreateUserRoleRequest) => createUserRole(request),
-    onSuccess: () => {
-      // Invalidate user role queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["user-role"] });
-    },
-    onError: (error) => {
-      console.error("Failed to create user role:", error);
-    },
-  });
-}
-
-/**
- * Hook to update user role status
- */
-export function useUpdateUserRoleStatus() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({
-      userRoleId,
-      status,
-      request,
-    }: {
-      userRoleId: string;
-      status: string;
-      request: UpdateUserRoleRequest;
-    }) => updateUserRoleStatus(userRoleId, status, request),
-    onSuccess: () => {
-      // Invalidate user role and all notification queries to refresh data across all tabs
-      queryClient.invalidateQueries({ queryKey: ["user-role"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      // Also refetch all notification queries to ensure immediate updates across all tabs
-      queryClient.refetchQueries({ queryKey: ["notifications"] });
-    },
-    onError: (error) => {
-      console.error("Failed to update user role status:", error);
     },
   });
 }

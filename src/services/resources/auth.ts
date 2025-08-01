@@ -217,6 +217,7 @@ export const updateUserRoleStatus = async (
       throw new Error("Access token not found");
     }
 
+    // Status is passed as query parameter, request body contains the user role data
     const res = await axiosClient.put<UserRole>(
       `/user-role/${userRoleId}?Status=${status}`,
       request,
@@ -253,6 +254,24 @@ export const getUserRoleById = async (
     return res.data;
   } catch (error) {
     console.error("getUserRoleById error:", error);
+    throw error;
+  }
+};
+
+export const deleteUserRole = async (userRoleId: string): Promise<void> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    await axiosClient.delete(`/user-role/${userRoleId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  } catch (error) {
+    console.error("deleteUserRole error:", error);
     throw error;
   }
 };
