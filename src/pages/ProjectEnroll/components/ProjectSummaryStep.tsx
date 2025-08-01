@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 import {
   useDocumentsByFilter,
   useCreateDocument,
+  useUpdateDocument,
 } from "@/hooks/queries/document";
 import {
   Card,
@@ -16,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { FileText, ArrowRight, File } from "lucide-react";
 import { DocumentForm, DocumentProject } from "@/types/document";
+import { toast } from "sonner";
 
 type EditorInstance = TinyMCEEditor | null;
 
@@ -50,6 +52,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
     useDocumentsByFilter("BM1", true, 1, 1, shouldFetchTemplate);
 
   const createDocumentMutation = useCreateDocument();
+  const updateDocumentMutation = useUpdateDocument();
 
   const createDocumentFromTemplate = useCallback(async () => {
     if (
@@ -115,9 +118,31 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
     onNext();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (!bm1Document || !projectId) {
+      toast.error("Document not found or project ID missing");
+      return;
+    }
+
     const currentContent = editorRef.current?.getContent() || "";
     onContentChange(currentContent);
+
+    try {
+      await updateDocumentMutation.mutateAsync({
+        id: bm1Document.id,
+        name: bm1Document.name,
+        type: bm1Document.type,
+        "is-template": false,
+        "content-html": currentContent,
+        status: "draft",
+        "project-id": projectId,
+      });
+
+      toast.success("Document saved successfully!");
+    } catch (error) {
+      console.error("Failed to save document:", error);
+      toast.error("Failed to save document. Please try again.");
+    }
   };
 
   const formStyles = `
@@ -214,10 +239,12 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
           onClick={handleSave}
           size="lg"
           className="px-8 mr-4"
-          disabled={isLoading}
+          disabled={
+            isLoading || updateDocumentMutation.isPending || !bm1Document
+          }
         >
           <File className="w-4 h-4 mr-2" />
-          Save
+          {updateDocumentMutation.isPending ? "Saving..." : "Save"}
         </Button>
         <Button onClick={handleNext} size="lg" disabled={isLoading}>
           Next Step <ArrowRight className="w-4 h-4 ml-2" />
