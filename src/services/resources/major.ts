@@ -283,7 +283,7 @@ export const getProjectMajors = async (
   try {
     const accessToken = getAccessToken();
     const res = await axiosClient.get<ProjectMajorFilterResponse>(
-      `/project-major/filter?ProjectId=${projectId}&PageSize=1`,
+      `/project-major/filter?ProjectId=${projectId}&PageSize=100`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
