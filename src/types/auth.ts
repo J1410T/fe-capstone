@@ -101,6 +101,7 @@ export interface UpdateUserRoleRequest {
   "account-id": string;
   "role-id": string;
   "project-id": string;
+  status?: string;
 }
 
 export interface UserRoleFilterRequest {

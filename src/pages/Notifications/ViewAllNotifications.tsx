@@ -32,9 +32,9 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import {
   useNotificationList,
-  useUpdateUserRoleStatus,
   useMarkNotification,
 } from "@/hooks/queries/notification";
+import { useUpdateUserRoleStatus } from "@/hooks/queries/useAuth";
 import { useProject } from "@/hooks/queries/project";
 
 // Component to display project name for project notifications
