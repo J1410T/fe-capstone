@@ -25,7 +25,7 @@ import {
   AlertCircle,
   CheckCircle,
 } from "lucide-react";
-import { useDocumentsByFilter } from "@/hooks/queries/useDocumentsByFilter";
+import { useDocumentsByFilter } from "@/hooks/queries/document";
 import { useCreateDocument } from "@/hooks/queries/useDocuments";
 import { DocumentForm } from "@/types/document";
 import { toast } from "sonner";
