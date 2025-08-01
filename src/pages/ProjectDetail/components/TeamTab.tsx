@@ -11,6 +11,7 @@ import { Briefcase, Mail } from "lucide-react";
 
 interface TeamResearcher {
   id?: string;
+  accountId?: string;
   name: string;
   role: "Researcher" | "Leader" | "Secretary" | "Principal Investigator";
   major: string;
@@ -23,6 +24,61 @@ interface TeamTabProps {
 }
 
 export const TeamTab: React.FC<TeamTabProps> = ({ team }) => {
+  // Function to filter and sort team members
+  const processTeamMembers = (members: TeamResearcher[]): TeamResearcher[] => {
+    // Group members by a unique identifier (accountId, or email+name as fallback)
+    const membersByIdentifier = new Map<string, TeamResearcher[]>();
+
+    members.forEach((member) => {
+      // Use accountId if available, otherwise create identifier from email+name
+      let identifier: string;
+      if (member.accountId && member.accountId.trim() !== "") {
+        identifier = member.accountId;
+      } else {
+        // Fallback to email+name combination for identification
+        identifier = `${member.email}|${member.name}`;
+      }
+
+      if (!membersByIdentifier.has(identifier)) {
+        membersByIdentifier.set(identifier, []);
+      }
+      membersByIdentifier.get(identifier)!.push(member);
+    });
+
+    // For each accountId, select the member with the highest priority role
+    const roleHierarchy = {
+      "Principal Investigator": 1,
+      Leader: 2,
+      Secretary: 3,
+      Researcher: 4,
+    };
+
+    const filteredMembers: TeamResearcher[] = [];
+
+    membersByIdentifier.forEach((membersGroup) => {
+      if (membersGroup.length === 1) {
+        filteredMembers.push(membersGroup[0]);
+      } else {
+        // Find the member with the highest priority role (lowest number)
+        const selectedMember = membersGroup.reduce((best, current) => {
+          const bestPriority = roleHierarchy[best.role] || 999;
+          const currentPriority = roleHierarchy[current.role] || 999;
+          return currentPriority < bestPriority ? current : best;
+        });
+        filteredMembers.push(selectedMember);
+      }
+    });
+
+    // Sort by role hierarchy
+    return filteredMembers.sort((a, b) => {
+      const aPriority = roleHierarchy[a.role] || 999;
+      const bPriority = roleHierarchy[b.role] || 999;
+      return aPriority - bPriority;
+    });
+  };
+
+  const processedTeam = processTeamMembers(team);
+
   const getRoleColor = (role: string) => {
     switch (role) {
       case "Principal Investigator":
@@ -70,7 +126,7 @@ export const TeamTab: React.FC<TeamTabProps> = ({ team }) => {
         </CardHeader>
         <CardContent className="pt-0">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {team.map((researcher, index) => (
+            {processedTeam.map((researcher, index) => (
               <div
                 key={index}
                 className="group relative bg-white border border-gray-200 rounded-lg p-3 sm:p-4 hover:shadow-md hover:border-gray-300 transition-all duration-200"

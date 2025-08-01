@@ -137,6 +137,7 @@ function ProjectDetail() {
     team:
       project.members?.map((member) => ({
         id: member.id,
+        accountId: member.accountId,
         name: member["full-name"] || `Member ${member.id.substring(0, 8)}`,
         role:
           member.name === "Principal Investigator"
