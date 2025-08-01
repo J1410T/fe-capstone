@@ -40,6 +40,8 @@ import { UserRoleStatus } from "@/types/notification";
 import {
   useCreateUserRole,
   useInviteMember,
+  useCreateNotification,
+  useSendNotification,
 } from "@/hooks/queries/notification";
 
 interface InviteMembersStepProps {
@@ -82,6 +84,8 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   // Invitation hooks
   const inviteMemberMutation = useInviteMember();
   const createUserRoleMutation = useCreateUserRole();
+  const createNotificationMutation = useCreateNotification();
+  const sendNotificationMutation = useSendNotification();
 
   // Track UserRole status for each member using real API
   useEffect(() => {
@@ -117,6 +121,32 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                   ...prev,
                   [member.id]: apiStatus,
                 }));
+
+                // Send notification when status changes to approved
+                if (apiStatus === "approved") {
+                  try {
+                    // Step 1: Create notification with 'create' status
+                    const notificationResponse =
+                      await createNotificationMutation.mutateAsync({
+                        title:
+                          "Please Submit your Scientific Resume to the project you have agreed to join in My Project",
+                        type: "project",
+                        status: "create",
+                        "objec-notification-id": projectId,
+                      });
+
+                    // Step 2: Send notification to the approved member
+                    await sendNotificationMutation.mutateAsync({
+                      "list-account-id": [member.id],
+                      "notification-id": notificationResponse.id,
+                    });
+                  } catch (error) {
+                    console.error(
+                      "Failed to send approval notification:",
+                      error
+                    );
+                  }
+                }
               }
             }
           } catch (error) {
@@ -131,7 +161,13 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     const interval = setInterval(checkUserRoleStatus, 3000);
 
     return () => clearInterval(interval);
-  }, [projectId, groupMembers, memberInvitationStatus]);
+  }, [
+    projectId,
+    groupMembers,
+    memberInvitationStatus,
+    createNotificationMutation,
+    sendNotificationMutation,
+  ]);
 
   // Filter roles to only show Researcher, Secretary, Leader
   const allowedRoles = useMemo(() => {
