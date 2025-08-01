@@ -115,3 +115,17 @@ export interface CreateDocumentRequest {
 export interface CreateDocumentResponse {
   id: string;
 }
+
+export interface UpdateDocumentRequest {
+  id: string;
+  name: string;
+  type: string;
+  "is-template": boolean;
+  "content-html": string;
+  status: string;
+  "project-id": string;
+}
+
+export interface UpdateDocumentResponse {
+  message: string;
+}

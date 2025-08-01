@@ -1,6 +1,10 @@
 // services/resources/document.ts
 import { axiosClient, getAccessToken } from "../api";
-import { CreateDocumentRequest, DocumentListResponse } from "@/types/document";
+import {
+  CreateDocumentRequest,
+  DocumentListResponse,
+  UpdateDocumentRequest,
+} from "@/types/document";
 
 export const getDocumentsByFilter = async (
   type: string,
@@ -33,6 +37,17 @@ export const createDocument = async (data: CreateDocumentRequest) => {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       "Content-Type": "application/json",
+    },
+  });
+};
+
+export const updateDocument = async (data: UpdateDocumentRequest) => {
+  const accessToken = getAccessToken();
+
+  return await axiosClient.put<string>("/document", data, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json-patch+json",
     },
   });
 };

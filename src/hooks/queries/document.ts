@@ -3,8 +3,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createDocument,
   getDocumentsByFilter,
+  updateDocument,
 } from "@/services/resources/document";
-import { CreateDocumentRequest } from "@/types/document";
+import { CreateDocumentRequest, UpdateDocumentRequest } from "@/types/document";
 
 export function useDocumentsByFilter(
   type: string,
@@ -24,6 +25,20 @@ export function useCreateDocument() {
 
   return useMutation({
     mutationFn: (data: CreateDocumentRequest) => createDocument(data),
+    onSuccess: (_, variables) => {
+      // Invalidate project query to refresh documents list
+      queryClient.invalidateQueries({
+        queryKey: ["project", variables["project-id"]],
+      });
+    },
+  });
+}
+
+export function useUpdateDocument() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: UpdateDocumentRequest) => updateDocument(data),
     onSuccess: (_, variables) => {
       // Invalidate project query to refresh documents list
       queryClient.invalidateQueries({
