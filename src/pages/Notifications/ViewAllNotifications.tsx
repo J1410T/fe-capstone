@@ -4,6 +4,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+import {
   ArrowLeft,
   Bell,
   BellRing,
@@ -57,7 +73,8 @@ const ProjectNotificationTitle: React.FC<{
 const ViewAllNotifications: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
-  const [currentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [processingNotifications, setProcessingNotifications] = useState<
     Set<string>
   >(new Set());
@@ -66,21 +83,21 @@ const ViewAllNotifications: React.FC = () => {
   const { data: allNotificationsData, refetch: refetchAll } =
     useNotificationList(
       currentPage,
-      10,
+      pageSize,
       undefined // Don't filter by read status for "all" tab
     );
 
   const { data: readNotificationsData, refetch: refetchRead } =
     useNotificationList(
       currentPage,
-      10,
+      pageSize,
       true // Only read notifications for "read" tab
     );
 
   const { data: unreadNotificationsData, refetch: refetchUnread } =
     useNotificationList(
       currentPage,
-      10,
+      pageSize,
       false // Only unread notifications for "unread" tab
     );
 
@@ -89,6 +106,21 @@ const ViewAllNotifications: React.FC = () => {
   const markNotificationMutation = useMarkNotification();
 
   const handleBack = () => navigate(-1);
+
+  // Pagination handlers
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when page size changes
+  };
+
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    setCurrentPage(1); // Reset to first page when tab changes
+  };
 
   const markAllAsRead = async () => {
     try {
@@ -128,6 +160,17 @@ const ViewAllNotifications: React.FC = () => {
       : activeTab === "read"
       ? readNotificationsData?.["data-list"] || []
       : unreadNotificationsData?.["data-list"] || [];
+
+  // Get pagination info based on active tab
+  const currentData =
+    activeTab === "all"
+      ? allNotificationsData
+      : activeTab === "read"
+      ? readNotificationsData
+      : unreadNotificationsData;
+
+  const totalPages = currentData?.["total-page"] || 1;
+  const totalCount = currentData?.["total-count"] || 0;
 
   const unreadCount =
     allNotificationsData?.["data-list"]?.filter((n) => !n["is-read"]).length ||
@@ -263,7 +306,7 @@ const ViewAllNotifications: React.FC = () => {
       "account-id": string;
       "is-read": boolean;
       "is-global-send": boolean;
-      status: "pending" | "approved" | "rejected";
+      status: "pending" | "approved" | "rejected" | "create";
     }>
   ) =>
     list.length === 0 ? (
@@ -321,6 +364,34 @@ const ViewAllNotifications: React.FC = () => {
                         )}
                       </div>
                     </div>
+                    {/* Read button for 'create' status notifications */}
+                    {n.status === "create" && !n["is-read"] && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="bg-blue-50 text-blue-600 border-blue-200 hover:bg-blue-100 hover:border-blue-300 transition-all duration-200 rounded-xl px-3 py-1"
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          try {
+                            await markNotificationMutation.mutateAsync({
+                              notification: n.id,
+                            });
+                            // Refetch all notification lists
+                            refetchAll();
+                            refetchRead();
+                            refetchUnread();
+                          } catch (error) {
+                            console.error(
+                              "Failed to mark notification as read:",
+                              error
+                            );
+                          }
+                        }}
+                      >
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Read
+                      </Button>
+                    )}
                   </div>
 
                   {n.status === "pending" && n.type === "project" && (
@@ -387,6 +458,110 @@ const ViewAllNotifications: React.FC = () => {
       </div>
     );
 
+  // Pagination component
+  const renderPagination = () => {
+    if (totalPages <= 1) return null;
+
+    const getVisiblePages = () => {
+      const delta = 2;
+      const range = [];
+      const rangeWithDots = [];
+
+      for (
+        let i = Math.max(2, currentPage - delta);
+        i <= Math.min(totalPages - 1, currentPage + delta);
+        i++
+      ) {
+        range.push(i);
+      }
+
+      if (currentPage - delta > 2) {
+        rangeWithDots.push(1, "...");
+      } else {
+        rangeWithDots.push(1);
+      }
+
+      rangeWithDots.push(...range);
+
+      if (currentPage + delta < totalPages - 1) {
+        rangeWithDots.push("...", totalPages);
+      } else if (totalPages > 1) {
+        rangeWithDots.push(totalPages);
+      }
+
+      return rangeWithDots;
+    };
+
+    return (
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-6 px-4">
+        <div className="flex items-center gap-2">
+          <p className="text-sm text-muted-foreground">Items per page</p>
+          <Select
+            value={pageSize.toString()}
+            onValueChange={(value) => handlePageSizeChange(parseInt(value))}
+          >
+            <SelectTrigger className="w-[80px]">
+              <SelectValue placeholder={pageSize.toString()} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="5">5</SelectItem>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="15">15</SelectItem>
+              <SelectItem value="20">20</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-sm text-muted-foreground">
+            Showing {Math.min((currentPage - 1) * pageSize + 1, totalCount)} to{" "}
+            {Math.min(currentPage * pageSize, totalCount)} of {totalCount}{" "}
+            notifications
+          </p>
+        </div>
+
+        <Pagination>
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                onClick={() => handlePageChange(currentPage - 1)}
+                className={
+                  currentPage === 1
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+
+            {getVisiblePages().map((page, index) => (
+              <PaginationItem key={index}>
+                {page === "..." ? (
+                  <PaginationEllipsis />
+                ) : (
+                  <PaginationLink
+                    onClick={() => handlePageChange(page as number)}
+                    isActive={currentPage === page}
+                    className="cursor-pointer"
+                  >
+                    {page}
+                  </PaginationLink>
+                )}
+              </PaginationItem>
+            ))}
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={() => handlePageChange(currentPage + 1)}
+                className={
+                  currentPage === totalPages
+                    ? "pointer-events-none opacity-50"
+                    : "cursor-pointer"
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div>
@@ -431,7 +606,7 @@ const ViewAllNotifications: React.FC = () => {
         <div className="py-0 bg-white/80 backdrop-blur-sm  border-white/20 overflow-hidden">
           <Tabs
             value={activeTab}
-            onValueChange={setActiveTab}
+            onValueChange={handleTabChange}
             className="w-full py-0"
           >
             <TabsList className="grid grid-cols-3 w-full bg-gray-50/50 rounded-none h-14">
@@ -470,12 +645,15 @@ const ViewAllNotifications: React.FC = () => {
 
             <TabsContent value="all" className="p-4 pt-4">
               {renderNotificationList(currentNotifications)}
+              {renderPagination()}
             </TabsContent>
             <TabsContent value="unread" className="p-4 pt-4">
               {renderNotificationList(currentNotifications)}
+              {renderPagination()}
             </TabsContent>
             <TabsContent value="read" className="p-4 pt-4">
               {renderNotificationList(currentNotifications)}
+              {renderPagination()}
             </TabsContent>
           </Tabs>
         </div>

@@ -97,9 +97,9 @@ export function useMarkNotification() {
     mutationFn: (request: MarkNotificationRequest = {}) =>
       markNotification(request),
     onSuccess: () => {
-      // Invalidate notification list to refresh data immediately
+      // Invalidate all notification queries to refresh data immediately
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      // Also refetch to ensure immediate updates
+      // Also refetch all notification queries to ensure immediate updates across all tabs
       queryClient.refetchQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {
@@ -175,10 +175,10 @@ export function useUpdateUserRoleStatus() {
       request: UpdateUserRoleRequest;
     }) => updateUserRoleStatus(userRoleId, status, request),
     onSuccess: () => {
-      // Invalidate user role and notification queries to refresh data
+      // Invalidate user role and all notification queries to refresh data across all tabs
       queryClient.invalidateQueries({ queryKey: ["user-role"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      // Also refetch to ensure immediate updates
+      // Also refetch all notification queries to ensure immediate updates across all tabs
       queryClient.refetchQueries({ queryKey: ["notifications"] });
     },
     onError: (error) => {

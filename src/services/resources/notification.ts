@@ -93,7 +93,24 @@ export const getNotificationList = async (
     );
 
     return response.data;
-  } catch (error) {
+  } catch (error: unknown) {
+    // Handle 404 errors silently - don't log them to console
+    const axiosError = error as {
+      response?: { status: number };
+      status?: number;
+    };
+    if (axiosError?.response?.status === 404 || axiosError?.status === 404) {
+      // Return empty notification list structure for 404 errors
+      return {
+        "data-list": [],
+        "total-count": 0,
+        "total-page": 1,
+        "page-index": request["page-index"],
+        "page-size": request["page-size"],
+      };
+    }
+
+    // Log and re-throw other errors
     console.error("getNotificationList error:", error);
     throw error;
   }
