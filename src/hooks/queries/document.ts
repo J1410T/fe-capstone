@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createDocument,
   getDocumentsByFilter,
+  getScientificCVByEmail,
   updateDocument,
 } from "@/services/resources/document";
 import { CreateDocumentRequest, UpdateDocumentRequest } from "@/types/document";
@@ -39,11 +40,19 @@ export function useUpdateDocument() {
 
   return useMutation({
     mutationFn: (data: UpdateDocumentRequest) => updateDocument(data),
-    onSuccess: (_, variables) => {
+    onSuccess: () => {
       // Invalidate project query to refresh documents list
       queryClient.invalidateQueries({
-        queryKey: ["project", variables["project-id"]],
+        queryKey: ["scientificCV"],
       });
     },
+  });
+}
+
+export function useScientificCVByEmail(email: string, enabled: boolean = true) {
+  return useQuery({
+    queryKey: ["scientificCV", email],
+    queryFn: () => getScientificCVByEmail(email),
+    enabled: !!email && enabled,
   });
 }
