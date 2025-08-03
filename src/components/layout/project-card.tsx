@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CheckCircle } from "lucide-react";
 import { ProjectCardProps } from "@/types/project";
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -27,8 +27,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   const { user } = useAuth();
 
-  const allowedStatuses = ["done", "created"];
-  if (!allowedStatuses.includes(status.toLowerCase())) return null;
+  const isAllowed = ["done", "created", "draft"].includes(status.toLowerCase());
+  if (!isAllowed) return null;
 
   const getProjectDetailRoute = () => {
     if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR)
@@ -40,23 +40,23 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
   };
 
   const defaultGetStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "done":
-      case "completed":
-        return "bg-emerald-100 text-emerald-800 border-emerald-300";
-      case "created":
-        return "bg-blue-100 text-blue-800 border-blue-300";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
+    const lowerStatus = status.toLowerCase();
+    if (["created", "draft", "done"].includes(lowerStatus)) {
+      return "bg-purple-100 text-purple-800 border-purple-300";
     }
+    return "bg-purple-100 text-purple-800 border-purple-300";
   };
 
   const statusColorClass = getStatusColor
     ? getStatusColor(status)
     : defaultGetStatusColor(status);
 
-  const getDisplayStatus = (status: string) =>
-    status.toLowerCase() === "created" ? "Open" : status;
+  const getDisplayStatus = (status: string) => {
+    if (["created", "draft", "done"].includes(status.toLowerCase())) {
+      return "Open";
+    }
+    return status;
+  };
 
   const renderActionButton = () => {
     const buttonClass =
@@ -132,22 +132,33 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
       <CardContent className="p-4 pt-0 flex-1 space-y-3">
         {/* Type & Category */}
-        <div className="flex flex-wrap gap-2">
-          {type && (
-            <Badge
-              variant="outline"
-              className="bg-blue-50 text-blue-700 border-blue-200"
-            >
-              {type}
-            </Badge>
-          )}
-          {category && (
-            <Badge
-              variant="outline"
-              className="bg-purple-50 text-purple-700 border-purple-200"
-            >
-              {category}
-            </Badge>
+        <div className="flex justify-between items-center flex-wrap gap-2">
+          {/* Left side: type + category */}
+          <div className="flex flex-wrap gap-2">
+            {type && (
+              <Badge
+                variant="outline"
+                className="bg-blue-50 text-blue-700 border-blue-200"
+              >
+                {type}
+              </Badge>
+            )}
+            {category && (
+              <Badge
+                variant="outline"
+                className="bg-purple-50 text-purple-700 border-purple-200"
+              >
+                {category}
+              </Badge>
+            )}
+          </div>
+
+          {/* Right side: Enrolled */}
+          {status.toLowerCase() === "draft" && (
+            <div className="flex items-center gap-1 text-sm text-green-700 font-medium">
+              <CheckCircle className="w-4 h-4" />
+              Enrolled
+            </div>
           )}
         </div>
 

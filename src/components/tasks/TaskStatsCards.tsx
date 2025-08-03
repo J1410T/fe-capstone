@@ -28,7 +28,7 @@ export const TaskStatsCards: React.FC<TaskStatsCardsProps> = ({
       title: "Total Tasks",
       value: stats.total,
       icon: BarChart3,
-      color: "bg-slate-100 text-slate-600",
+      color: "text-slate-600",
       iconColor: "text-slate-600",
     },
     {

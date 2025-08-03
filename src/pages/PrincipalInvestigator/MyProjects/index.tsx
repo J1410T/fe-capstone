@@ -270,6 +270,7 @@ const MyProject: React.FC = () => {
                       <ArrowUpDown className="ml-2 h-4 w-4" />
                     </Button>
                   </TableHead>
+                  <TableHead>Genre</TableHead>
                   <TableHead>Category</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Status</TableHead>
@@ -281,15 +282,15 @@ const MyProject: React.FC = () => {
                 {filteredProjects.map((project) => (
                   <TableRow key={project.id}>
                     <TableCell className="font-medium">
-                      <div>
-                        <div className="font-semibold">
+                      <div className="max-w-[330px]">
+                        <div className="font-semibold truncate">
                           {project["english-title"]}
                         </div>
-                        <div className="text-sm text-muted-foreground">
+                        <div className="text-sm text-muted-foreground truncate">
                           {project["vietnamese-title"]}
                         </div>
                         {project.description && (
-                          <div className="text-sm text-muted-foreground mt-1">
+                          <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
                             {project.description}
                           </div>
                         )}
@@ -297,7 +298,14 @@ const MyProject: React.FC = () => {
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">
-                        {capitalize(project.category)}
+                        {capitalize(project.genre)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {project.category?.includes("application")
+                          ? "application"
+                          : project.category}
                       </Badge>
                     </TableCell>
                     <TableCell>

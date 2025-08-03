@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
 import { useDocumentsByFilter } from "@/hooks/queries/document";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, FileText } from "lucide-react";
+import { ArrowLeft, Save, FileText, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateDocument } from "@/hooks/queries/useDocuments";
 import { toast } from "sonner";
@@ -151,6 +151,47 @@ const CreateScientificCV: React.FC = () => {
           </p>
         </div>
       </div>
+      {/* Requirements */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="flex items-start space-x-2">
+          <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+          <div className="text-sm text-blue-800">
+            <p className="font-medium mb-1">Requirements:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>
+                To upload your profile photo, click on the image frame at the
+                top-right, then use the <strong>Insert → Image</strong> option
+                from the toolbar.
+              </li>
+              <li>
+                <strong>Only image URLs are supported.</strong> You must upload
+                your image to a public image hosting service (e.g., Imgur,
+                Google Drive with public sharing) and paste the image URL into
+                the dialog.
+              </li>
+              {/* <li>
+                When the Insert Image dialog opens,{" "}
+                <strong>unlock the aspect ratio</strong> (unlink width and
+                height), then manually set:
+                <ul className="list-disc list-inside ml-4">
+                  <li>
+                    Width: <strong>113</strong>
+                  </li>
+                  <li>
+                    Height: <strong>151</strong>
+                  </li>
+                </ul>
+                This ensures the image fits the standard 3x4 cm (passport photo)
+                dimensions.
+              </li>
+              <li>
+                After inserting, the image will appear in the correct format in
+                the editor.
+              </li> */}
+            </ul>
+          </div>
+        </div>
+      </div>
 
       {/* Editor or Loading/Error */}
       <div className="max-w-5xl mx-auto w-full">
@@ -197,26 +238,28 @@ const CreateScientificCV: React.FC = () => {
                 "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen",
               content_style: formStyles,
 
-              // ✅ Thêm đoạn này:
               setup: (editor) => {
-                editor.on("ExecCommand", (e) => {
-                  if (e.command === "mceImage") {
-                    setTimeout(() => {
-                      const contentDom = editor.getBody();
+                // Khi chèn hình xong, resize nếu không phải ảnh khung
+                editor.on("NodeChange", (e) => {
+                  const imgs =
+                    e.element?.tagName === "IMG"
+                      ? [e.element as HTMLImageElement]
+                      : Array.from(editor.getBody().querySelectorAll("img"));
 
-                      const insertedImages = contentDom.querySelectorAll("img");
-                      const lastImg = insertedImages[insertedImages.length - 1];
+                  imgs.forEach((img) => {
+                    const isFrameImg = img.classList.contains("frame-image");
+                    const alreadySized =
+                      img.style.width === "113px" &&
+                      img.style.height === "151px";
 
-                      const frameImg = contentDom.querySelector(".frame-image");
-
-                      if (frameImg && lastImg && lastImg !== frameImg) {
-                        (frameImg as HTMLImageElement).src = (
-                          lastImg as HTMLImageElement
-                        ).src;
-                        lastImg.remove();
-                      }
-                    }, 100);
-                  }
+                    if (!alreadySized && !isFrameImg) {
+                      img.setAttribute("width", "113");
+                      img.setAttribute("height", "151");
+                      img.style.width = "113px";
+                      img.style.height = "151px";
+                      img.style.objectFit = "cover";
+                    }
+                  });
                 });
               },
             }}
