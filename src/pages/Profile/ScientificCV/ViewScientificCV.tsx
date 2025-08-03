@@ -10,54 +10,28 @@ import {
   Calendar,
   User,
   Edit,
-  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  useScientificCV,
-  useDeleteDocument,
-} from "@/hooks/queries/useDocuments";
-import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Loading } from "@/components";
+import { getAuthResponse } from "@/utils/cookie-manager";
+import { useScientificCVByEmail } from "@/hooks/queries/document";
 
 const ViewScientificCV: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+
+  // Get email from auth response cookie
+  const authResponse = getAuthResponse<{ email: string }>();
+  const userEmail = authResponse?.email || "";
+
   const {
     data: scientificCV,
     isLoading,
     error,
-  } = useScientificCV(user?.id || "");
-  const deleteDocument = useDeleteDocument();
+  } = useScientificCVByEmail(userEmail, !!userEmail);
 
   const handleBack = () => navigate("/profile");
   const handlePrint = () => window.print();
   const handleEdit = () => navigate("/profile/scientific-cv/edit");
-
-  const handleDelete = () => {
-    if (!scientificCV?.id) return;
-    deleteDocument.mutate(scientificCV.id, {
-      onSuccess: () => {
-        toast.success("Scientific CV deleted successfully!");
-        navigate("/profile");
-      },
-      onError: () => {
-        toast.error("Failed to delete Scientific CV");
-      },
-    });
-  };
 
   if (isLoading) {
     return (
@@ -91,8 +65,11 @@ const ViewScientificCV: React.FC = () => {
             <FileText className="w-5 h-5 text-emerald-600" />
             Scientific CV Document
             <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 ml-2">
-              {scientificCV.status?.charAt(0).toUpperCase() +
-                scientificCV.status?.slice(1) || "Created"}
+              {scientificCV.data.status !== undefined &&
+              scientificCV.data.status !== null
+                ? String(scientificCV.data.status).charAt(0).toUpperCase() +
+                  String(scientificCV.data.status).slice(1)
+                : "Created"}
             </Badge>
           </CardTitle>
         </CardHeader>
@@ -104,8 +81,11 @@ const ViewScientificCV: React.FC = () => {
                 <Calendar className="w-4 h-4" />
                 <span>
                   Created:{" "}
-                  {scientificCV.uploadAt
-                    ? format(new Date(scientificCV.uploadAt), "MMM dd, yyyy")
+                  {scientificCV.data["upload-at"]
+                    ? format(
+                        new Date(scientificCV.data["upload-at"]),
+                        "MMM dd, yyyy"
+                      )
                     : "Unknown"}
                 </span>
               </div>
@@ -113,20 +93,25 @@ const ViewScientificCV: React.FC = () => {
                 <User className="w-4 h-4" />
                 <span>
                   Last updated:{" "}
-                  {scientificCV.updatedAt
-                    ? format(new Date(scientificCV.updatedAt), "MMM dd, yyyy")
+                  {scientificCV.data["updated-at"]
+                    ? format(
+                        new Date(scientificCV.data["updated-at"]),
+                        "MMM dd, yyyy"
+                      )
                     : "Never"}
                 </span>
               </div>
             </div>
             <Badge variant="outline" className="text-xs">
-              Document Type: BM2
+              Document Type: ScienceCV
             </Badge>
           </div>
 
           <div
             className="prose max-w-none scientific-cv-content"
-            dangerouslySetInnerHTML={{ __html: scientificCV.contentHtml || "" }}
+            dangerouslySetInnerHTML={{
+              __html: scientificCV.data["content-html"] || "",
+            }}
             style={{
               fontFamily: '"Times New Roman", Times, serif',
               fontSize: "13px",
@@ -163,38 +148,6 @@ const ViewScientificCV: React.FC = () => {
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-red-300 text-red-600 px-6 hover:bg-red-50 hover:border-red-400"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Scientific CV</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this document? This action
-                  cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDelete}
-                  className="bg-red-600 hover:bg-red-700"
-                  disabled={deleteDocument.isPending}
-                >
-                  {deleteDocument.isPending ? "Deleting..." : "Delete"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
         </div>
       </div>
 

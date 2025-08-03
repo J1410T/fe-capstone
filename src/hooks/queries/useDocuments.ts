@@ -128,9 +128,7 @@ export const useCreateDocument = () => {
       // If it's a Scientific CV, invalidate the specific query
       if (newDocument.type === "BM2") {
         queryClient.invalidateQueries({
-          queryKey: documentQueryKeys.scientificCV(
-            newDocument.uploaderId || newDocument["uploader-id"]
-          ),
+          queryKey: documentQueryKeys.scientificCV(newDocument["uploader-id"]),
         });
       }
 
@@ -176,7 +174,7 @@ export const useUpdateDocument = () => {
       if (updatedDocument.type === "BM2") {
         queryClient.invalidateQueries({
           queryKey: documentQueryKeys.scientificCV(
-            updatedDocument.uploaderId || updatedDocument["uploader-id"]
+            updatedDocument["uploader-id"]
           ),
         });
       }

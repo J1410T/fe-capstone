@@ -12,16 +12,6 @@ export type DocumentForm = {
   "evaluation-id": string | null;
   "individual-evaluation-id": string | null;
   "transaction-id": string | null;
-  // Add computed properties for easier access
-  isTemplate?: boolean;
-  contentHtml?: string;
-  updatedAt?: string;
-  uploadAt?: string;
-  uploaderId?: string;
-  projectId?: string | null;
-  evaluationId?: string | null;
-  individualEvaluationId?: string | null;
-  transactionId?: string | null;
 };
 
 export type DocumentProject = {
@@ -122,10 +112,9 @@ export interface UpdateDocumentRequest {
   type: string;
   "is-template": boolean;
   "content-html": string;
-  status: string;
-  "project-id": string;
+  status?: string;
+  "project-id"?: string | null;
 }
-
 export interface UpdateDocumentResponse {
   message: string;
 }
