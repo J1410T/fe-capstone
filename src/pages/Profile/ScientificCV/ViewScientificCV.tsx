@@ -1,16 +1,16 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
-  Edit,
-  Trash2,
   FileText,
+  Download,
   Calendar,
   User,
-  Download,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,6 +18,7 @@ import {
   useScientificCV,
   useDeleteDocument,
 } from "@/hooks/queries/useDocuments";
+import { toast } from "sonner";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+import { Loading } from "@/components";
 
 const ViewScientificCV: React.FC = () => {
   const navigate = useNavigate();
@@ -41,44 +42,28 @@ const ViewScientificCV: React.FC = () => {
   } = useScientificCV(user?.id || "");
   const deleteDocument = useDeleteDocument();
 
-  const handleEdit = () => {
-    navigate("/profile/scientific-cv/edit");
-  };
+  const handleBack = () => navigate("/profile");
+  const handlePrint = () => window.print();
+  const handleEdit = () => navigate("/profile/scientific-cv/edit");
 
   const handleDelete = () => {
     if (!scientificCV?.id) return;
-
     deleteDocument.mutate(scientificCV.id, {
       onSuccess: () => {
         toast.success("Scientific CV deleted successfully!");
         navigate("/profile");
       },
-      onError: (error) => {
-        console.error("Failed to delete Scientific CV:", error);
+      onError: () => {
         toast.error("Failed to delete Scientific CV");
       },
     });
   };
 
-  const handleBack = () => {
-    // Go back to the previous page, or fallback to profile if no history
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate("/profile");
-    }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="flex items-center justify-center h-[800px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading Scientific CV...</p>
+          <Loading className="w-full max-w-md" />
         </div>
       </div>
     );
@@ -86,194 +71,136 @@ const ViewScientificCV: React.FC = () => {
 
   if (error || !scientificCV) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Scientific CV Not Found
-          </h2>
-          <p className="text-gray-600 mb-4">
-            Your Scientific CV could not be found or may have been deleted.
-          </p>
-          <Button
-            onClick={handleBack}
-            className="bg-emerald-600 hover:bg-emerald-700"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Profile
-          </Button>
-        </div>
+      <div className="text-center py-12 text-gray-600">
+        <FileText className="w-10 h-10 mx-auto mb-4 text-gray-400" />
+        <h2 className="text-lg font-semibold">Scientific CV Not Found</h2>
+        <p className="mb-4">Unable to load your Scientific CV document.</p>
+        <Button onClick={handleBack}>
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Profile
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200 sticky top-0 z-10 print:hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+    <div className="space-y-6">
+      <Card className="border-0 shadow-lg bg-white pt-0">
+        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-100">
+          <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2 pt-5">
+            <FileText className="w-5 h-5 text-emerald-600" />
+            Scientific CV Document
+            <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 ml-2">
+              {scientificCV.status?.charAt(0).toUpperCase() +
+                scientificCV.status?.slice(1) || "Created"}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="p-6">
+          <div className="flex justify-between mb-6 text-sm text-gray-600">
             <div className="flex items-center gap-4">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleBack}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Profile
-              </Button>
-              <div className="h-6 w-px bg-gray-300" />
               <div className="flex items-center gap-2">
-                <FileText className="w-5 h-5 text-emerald-600" />
-                <h1 className="text-lg font-semibold text-gray-900">
-                  Scientific CV
-                </h1>
-                <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
-                  {scientificCV.status?.charAt(0).toUpperCase() +
-                    scientificCV.status?.slice(1) || "Created"}
-                </Badge>
+                <Calendar className="w-4 h-4" />
+                <span>
+                  Created:{" "}
+                  {scientificCV.uploadAt
+                    ? format(new Date(scientificCV.uploadAt), "MMM dd, yyyy")
+                    : "Unknown"}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                <span>
+                  Last updated:{" "}
+                  {scientificCV.updatedAt
+                    ? format(new Date(scientificCV.updatedAt), "MMM dd, yyyy")
+                    : "Never"}
+                </span>
               </div>
             </div>
-
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                onClick={handlePrint}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Print/Download
-              </Button>
-              <Button
-                variant="outline"
-                onClick={handleEdit}
-                className="border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="border-red-300 text-red-600 hover:bg-red-50 hover:border-red-400"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Scientific CV</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete your Scientific CV? This
-                      action cannot be undone. You will be able to create a new
-                      Scientific CV after deletion.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleDelete}
-                      className="bg-red-600 hover:bg-red-700"
-                      disabled={deleteDocument.isPending}
-                    >
-                      {deleteDocument.isPending ? "Deleting..." : "Delete"}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
+            <Badge variant="outline" className="text-xs">
+              Document Type: BM2
+            </Badge>
           </div>
+
+          <div
+            className="prose max-w-none scientific-cv-content"
+            dangerouslySetInnerHTML={{ __html: scientificCV.contentHtml || "" }}
+            style={{
+              fontFamily: '"Times New Roman", Times, serif',
+              fontSize: "13px",
+              lineHeight: "1.4",
+              color: "#333",
+            }}
+          />
+        </CardContent>
+      </Card>
+
+      <div className="flex justify-between flex-wrap gap-3 print:hidden">
+        <Button
+          variant="outline"
+          onClick={handleBack}
+          size="lg"
+          className="px-6"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back
+        </Button>
+
+        <div className="flex gap-3">
+          <Button onClick={handlePrint} size="lg" className="px-6">
+            <Download className="w-4 h-4 mr-2" />
+            Print/Download
+          </Button>
+
+          <Button
+            onClick={handleEdit}
+            variant="outline"
+            size="lg"
+            className="px-6"
+          >
+            <Edit className="w-4 h-4 mr-2" />
+            Edit
+          </Button>
+
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="lg"
+                className="border-red-300 text-red-600 px-6 hover:bg-red-50 hover:border-red-400"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Delete Scientific CV</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Are you sure you want to delete this document? This action
+                  cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-red-600 hover:bg-red-700"
+                  disabled={deleteDocument.isPending}
+                >
+                  {deleteDocument.isPending ? "Deleting..." : "Delete"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </div>
 
-      {/* CV Metadata */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 print:hidden">
-        <Card className="border-0 shadow-sm bg-white">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-6 text-sm text-gray-600">
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span>
-                    Created:{" "}
-                    {scientificCV.uploadAt || scientificCV["upload-at"]
-                      ? format(
-                          new Date(
-                            scientificCV.uploadAt || scientificCV["upload-at"]
-                          ),
-                          "MMM dd, yyyy"
-                        )
-                      : "Unknown"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="w-4 h-4" />
-                  <span>
-                    Last updated:{" "}
-                    {scientificCV.updatedAt || scientificCV["updated-at"]
-                      ? format(
-                          new Date(
-                            scientificCV.updatedAt || scientificCV["updated-at"]
-                          ),
-                          "MMM dd, yyyy"
-                        )
-                      : "Never"}
-                  </span>
-                </div>
-              </div>
-              <Badge variant="outline" className="text-xs">
-                Document Type: BM2
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8 print:p-0 print:max-w-none">
-        <Card className="border-0 shadow-lg bg-white print:shadow-none print:border-none">
-          <CardContent className="p-8 print:p-0">
-            {/* CV Content */}
-            <div
-              className="prose max-w-none scientific-cv-content print:prose-print"
-              dangerouslySetInnerHTML={{
-                __html:
-                  scientificCV.contentHtml ||
-                  scientificCV["content-html"] ||
-                  "",
-              }}
-              style={{
-                fontFamily: '"Times New Roman", Times, serif',
-                fontSize: "13px",
-                lineHeight: "1.4",
-                color: "#333",
-              }}
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Print Styles */}
       <style>{`
         @media print {
-          .print\\:hidden {
-            display: none !important;
-          }
-          .print\\:p-0 {
-            padding: 0 !important;
-          }
-          .print\\:max-w-none {
-            max-width: none !important;
-          }
-          .print\\:shadow-none {
-            box-shadow: none !important;
-          }
-          .print\\:border-none {
-            border: none !important;
-          }
+          .print\\:hidden { display: none !important; }
           .scientific-cv-content {
             font-size: 13px !important;
             line-height: 1.4 !important;
@@ -286,11 +213,6 @@ const ViewScientificCV: React.FC = () => {
           .scientific-cv-content table th {
             border: 1px solid #222 !important;
             padding: 6px 8px !important;
-          }
-          .scientific-cv-content .dotted-line {
-            border-bottom: 1px dotted #222 !important;
-            display: inline-block !important;
-            min-width: 120px !important;
           }
         }
       `}</style>
