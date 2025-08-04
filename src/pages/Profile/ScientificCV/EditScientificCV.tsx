@@ -2,12 +2,19 @@ import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Save, FileText, AlertCircle } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import {
-  useScientificCV,
+  ArrowLeft,
+  Save,
+  FileText,
+  AlertCircle,
+  RotateCcw,
+} from "lucide-react";
+import { getAuthResponse } from "@/utils/cookie-manager";
+import {
+  useScientificCVByEmail,
   useUpdateDocument,
-} from "@/hooks/queries/useDocuments";
+  useDocumentsByFilter,
+} from "@/hooks/queries/document";
 import { toast } from "sonner";
 import { Loading } from "@/components";
 
@@ -18,38 +25,57 @@ type EditorInstance = {
 
 const EditScientificCV: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [formContent, setFormContent] = useState<string>("");
   const editorRef = useRef<EditorInstance>(null);
   const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+
+  // Get email from auth response cookie
+  const authResponse = getAuthResponse<{ email: string }>();
+  const userEmail = authResponse?.email || "";
 
   const {
     data: scientificCV,
     isLoading: isCVLoading,
     error,
-  } = useScientificCV(user?.id || "");
+  } = useScientificCVByEmail(userEmail, !!userEmail);
+
+  // Get BM2 template for reset functionality - only fetch when needed
+  const {
+    // data: bm2Template,
+    // isLoading: isTemplateLoading,
+    refetch: refetchTemplate,
+  } = useDocumentsByFilter("BM2", true, 1, 1, false);
 
   const updateDocument = useUpdateDocument();
 
   useEffect(() => {
-    if (!isCVLoading && scientificCV?.contentHtml) {
-      const hasFrame = scientificCV.contentHtml.includes('class="frame-image"');
+    if (!isCVLoading && scientificCV?.data?.["content-html"]) {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(
+        scientificCV.data["content-html"],
+        "text/html"
+      );
+      const hasImage = doc.querySelector("img") !== null;
+
       const frame = `
-        <div style="display: flex; justify-content: flex-end;">
-          <div class="image-frame" contenteditable="false">
-            <div contenteditable="true">
-              <img
-                src="https://via.placeholder.com/150"
-                class="frame-image"
-                style="max-width: 100%; max-height: 100%; object-fit: cover;"
-              />
-            </div>
+      <div style="display: flex; justify-content: flex-end;">
+        <div class="image-frame" contenteditable="false">
+          <div contenteditable="true">
+            <img
+              src="https://via.placeholder.com/150"
+              class="frame-image"
+              style="max-width: 100%; max-height: 100%; object-fit: cover;"
+            />
           </div>
-        </div>`;
-      const initial = hasFrame
-        ? scientificCV.contentHtml
-        : frame + scientificCV.contentHtml;
+        </div>
+      </div>`;
+
+      const initial = hasImage
+        ? scientificCV.data["content-html"]
+        : frame + scientificCV.data["content-html"];
+
       setFormContent(initial);
     }
   }, [scientificCV, isCVLoading]);
@@ -57,7 +83,7 @@ const EditScientificCV: React.FC = () => {
   const handleEditorChange = () => {};
 
   const handleSave = async () => {
-    if (!scientificCV?.id) {
+    if (!scientificCV?.data?.id) {
       toast.error("Scientific CV not found");
       return;
     }
@@ -72,8 +98,12 @@ const EditScientificCV: React.FC = () => {
 
     updateDocument.mutate(
       {
-        id: scientificCV.id,
-        data: { contentHtml: content },
+        id: scientificCV.data.id,
+        name: "CV",
+        type: "ScienceCV",
+        "is-template": false,
+        "content-html": content,
+        "project-id": null,
       },
       {
         onSuccess: () => {
@@ -89,6 +119,87 @@ const EditScientificCV: React.FC = () => {
         },
       }
     );
+  };
+
+  const handleResetCV = async () => {
+    if (!scientificCV?.data?.id) {
+      toast.error("Scientific CV not found");
+      return;
+    }
+
+    if (
+      !confirm(
+        "Are you sure you want to reset your CV to the original template? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    setIsResetting(true);
+
+    try {
+      // Fetch the BM2 template
+      const templateResponse = await refetchTemplate();
+
+      if (!templateResponse.data?.data?.["data-list"]?.[0]?.["content-html"]) {
+        toast.error("Template not found");
+        setIsResetting(false);
+        return;
+      }
+
+      const templateContent =
+        templateResponse.data.data["data-list"][0]["content-html"];
+
+      updateDocument.mutate(
+        {
+          id: scientificCV.data.id,
+          name: "CV",
+          type: "ScienceCV",
+          "is-template": false,
+          "content-html": templateContent,
+          "project-id": null,
+        },
+        {
+          onSuccess: () => {
+            toast.success(
+              "Scientific CV reset to original template successfully!"
+            );
+            // Update the editor content
+            const hasFrame = templateContent.includes('class="frame-image"');
+            const frame = `
+              <div style="display: flex; justify-content: flex-end;">
+                <div class="image-frame" contenteditable="false">
+                  <div contenteditable="true">
+                    <img
+                      src="https://via.placeholder.com/150"
+                      class="frame-image"
+                      style="max-width: 100%; max-height: 100%; object-fit: cover;"
+                    />
+                  </div>
+                </div>
+              </div>`;
+            const newContent = hasFrame
+              ? templateContent
+              : frame + templateContent;
+            setFormContent(newContent);
+            if (editorRef.current) {
+              editorRef.current.setContent(newContent);
+            }
+          },
+          onError: (error) => {
+            console.error("Failed to reset Scientific CV:", error);
+            toast.error("Failed to reset Scientific CV");
+          },
+          onSettled: () => {
+            setIsResetting(false);
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Failed to fetch template:", error);
+      toast.error("Failed to fetch template");
+      setIsResetting(false);
+    }
   };
 
   const formStyles = `
@@ -162,8 +273,14 @@ const EditScientificCV: React.FC = () => {
                 from the toolbar.
               </li>
               <li>
-                <strong>Only image URLs are supported.</strong> Upload your
-                image to a public image hosting service (e.g., Imgur).
+                <strong>Only image URLs are supported.</strong> You must upload
+                your image to a public image hosting service (e.g., Imgur,
+                Google Drive with public sharing) and paste the image URL into
+                the dialog.
+              </li>
+              <li>
+                To download your CV, go to <strong>File → Print</strong>, then
+                choose <strong>"Save"</strong> in the print dialog.
               </li>
             </ul>
           </div>
@@ -245,12 +362,22 @@ const EditScientificCV: React.FC = () => {
       <div className="flex justify-between mt-8 max-w-5xl mx-auto">
         <Button
           variant="outline"
-          onClick={() => navigate("/profile/scientific-cv/view")}
+          onClick={handleResetCV}
           size="lg"
-          className="px-8"
+          disabled={isResetting || isCVLoading}
+          className="px-8 text-red-600 border-red-300 hover:bg-red-50"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to View
+          {isResetting ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+              Resetting...
+            </>
+          ) : (
+            <>
+              <RotateCcw className="w-4 h-4 mr-2" />
+              Reset CV
+            </>
+          )}
         </Button>
         <Button
           onClick={handleSave}

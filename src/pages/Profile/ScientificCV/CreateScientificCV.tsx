@@ -169,25 +169,10 @@ const CreateScientificCV: React.FC = () => {
                 Google Drive with public sharing) and paste the image URL into
                 the dialog.
               </li>
-              {/* <li>
-                When the Insert Image dialog opens,{" "}
-                <strong>unlock the aspect ratio</strong> (unlink width and
-                height), then manually set:
-                <ul className="list-disc list-inside ml-4">
-                  <li>
-                    Width: <strong>113</strong>
-                  </li>
-                  <li>
-                    Height: <strong>151</strong>
-                  </li>
-                </ul>
-                This ensures the image fits the standard 3x4 cm (passport photo)
-                dimensions.
-              </li>
               <li>
-                After inserting, the image will appear in the correct format in
-                the editor.
-              </li> */}
+                To download your CV, go to <strong>File → Print</strong>, then
+                choose <strong>"Save"</strong> in the print dialog.
+              </li>
             </ul>
           </div>
         </div>

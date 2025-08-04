@@ -102,8 +102,8 @@ export const DIALOG_STYLES = {
   content: "sm:max-w-lg",
   header: "space-y-2",
   title: "text-lg font-semibold",
-  description: "text-sm text-muted-foreground",
-  footer: "flex justify-end space-x-3",
+  description: "text-sm text-muted-foreground pt-0 pb-2",
+  footer: "flex justify-end space-x-3 pt-4",
 } as const;
 
 // Button Variants

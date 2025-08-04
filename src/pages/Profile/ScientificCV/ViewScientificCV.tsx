@@ -1,63 +1,97 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Editor } from "@tinymce/tinymce-react";
+import { format } from "date-fns";
 import {
   ArrowLeft,
   FileText,
-  Download,
   Calendar,
   User,
-  Edit,
-  Trash2,
+  AlertCircle,
+  Pencil,
 } from "lucide-react";
-import { format } from "date-fns";
-import { useAuth } from "@/contexts/AuthContext";
-import {
-  useScientificCV,
-  useDeleteDocument,
-} from "@/hooks/queries/useDocuments";
-import { toast } from "sonner";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Loading } from "@/components";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Loading, ScrollToTopButton } from "@/components";
+import { getAuthResponse } from "@/utils/cookie-manager";
+import { useScientificCVByEmail } from "@/hooks/queries/document";
+
+type EditorInstance = {
+  getContent: () => string;
+  setContent: (content: string) => void;
+} | null;
 
 const ViewScientificCV: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const editorRef = useRef<EditorInstance>(null);
+  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
+
+  // Get user email and role from cookie
+  const authResponse = getAuthResponse<{
+    email: string;
+    "selected-role": string;
+  }>();
+  const userEmail = authResponse?.email || "";
+  const selectedRole = authResponse?.["selected-role"] || "";
+
   const {
     data: scientificCV,
     isLoading,
     error,
-  } = useScientificCV(user?.id || "");
-  const deleteDocument = useDeleteDocument();
+  } = useScientificCVByEmail(userEmail, !!userEmail);
 
-  const handleBack = () => navigate("/profile");
-  const handlePrint = () => window.print();
+  // Map role to path
+  const currentRole =
+    selectedRole === "council"
+      ? "council"
+      : selectedRole === "principal"
+      ? "pi"
+      : selectedRole === "researcher"
+      ? "researcher"
+      : ""; // fallback nếu không khớp
+
+  const handleBack = () => {
+    if (currentRole) {
+      navigate(`/${currentRole}/profile`);
+    } else {
+      navigate("/"); // fallback nếu không có role
+    }
+  };
+
   const handleEdit = () => navigate("/profile/scientific-cv/edit");
 
-  const handleDelete = () => {
-    if (!scientificCV?.id) return;
-    deleteDocument.mutate(scientificCV.id, {
-      onSuccess: () => {
-        toast.success("Scientific CV deleted successfully!");
-        navigate("/profile");
-      },
-      onError: () => {
-        toast.error("Failed to delete Scientific CV");
-      },
-    });
-  };
+  const formStyles = `
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #333;
+      padding: 20px;
+    }
+    .image-frame {
+      width: 150px;
+      height: 180px;
+      border: 2px dashed #999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+    .image-frame img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    table, th, td {
+      border: 1px solid #ccc;
+      padding: 6px 8px;
+    }
+  `;
 
   if (isLoading) {
     return (
@@ -84,138 +118,114 @@ const ViewScientificCV: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <Card className="border-0 shadow-lg bg-white pt-0">
-        <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-gray-100">
-          <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2 pt-5">
-            <FileText className="w-5 h-5 text-emerald-600" />
-            Scientific CV Document
-            <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 ml-2">
-              {scientificCV.status?.charAt(0).toUpperCase() +
-                scientificCV.status?.slice(1) || "Created"}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 px-6 py-4 print:bg-white">
+      <ScrollToTopButton />
 
-        <CardContent className="p-6">
-          <div className="flex justify-between mb-6 text-sm text-gray-600">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <span>
-                  Created:{" "}
-                  {scientificCV.uploadAt
-                    ? format(new Date(scientificCV.uploadAt), "MMM dd, yyyy")
-                    : "Unknown"}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                <span>
-                  Last updated:{" "}
-                  {scientificCV.updatedAt
-                    ? format(new Date(scientificCV.updatedAt), "MMM dd, yyyy")
-                    : "Never"}
-                </span>
-              </div>
-            </div>
-            <Badge variant="outline" className="text-xs">
-              Document Type: BM2
-            </Badge>
-          </div>
-
-          <div
-            className="prose max-w-none scientific-cv-content"
-            dangerouslySetInnerHTML={{ __html: scientificCV.contentHtml || "" }}
-            style={{
-              fontFamily: '"Times New Roman", Times, serif',
-              fontSize: "13px",
-              lineHeight: "1.4",
-              color: "#333",
-            }}
-          />
-        </CardContent>
-      </Card>
-
-      <div className="flex justify-between flex-wrap gap-3 print:hidden">
-        <Button
-          variant="outline"
-          onClick={handleBack}
-          size="lg"
-          className="px-6"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back
-        </Button>
-
-        <div className="flex gap-3">
-          <Button onClick={handlePrint} size="lg" className="px-6">
-            <Download className="w-4 h-4 mr-2" />
-            Print/Download
-          </Button>
-
+      {/* Header */}
+      <div className="bg-white/90 shadow-sm rounded-xl px-6 py-4 border mb-6 flex items-start justify-between gap-6 print:hidden">
+        <div className="flex items-center gap-3">
           <Button
-            onClick={handleEdit}
-            variant="outline"
-            size="lg"
-            className="px-6"
+            variant="ghost"
+            size="sm"
+            onClick={handleBack}
+            className="flex items-center gap-2 hover:bg-emerald-100 transition-colors rounded-lg px-4 py-2"
           >
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
+            <ArrowLeft className="w-4 h-4" />
+            Back
           </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-red-300 text-red-600 px-6 hover:bg-red-50 hover:border-red-400"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Scientific CV</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this document? This action
-                  cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleDelete}
-                  className="bg-red-600 hover:bg-red-700"
-                  disabled={deleteDocument.isPending}
-                >
-                  {deleteDocument.isPending ? "Deleting..." : "Delete"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+        </div>
+        <div className="flex-1">
+          <h1 className="text-2xl font-semibold text-gray-800 flex items-center gap-3">
+            <FileText className="w-6 h-6 text-emerald-600" />
+            View Scientific CV
+          </h1>
+          <p className="text-gray-600 text-sm mt-1">
+            Your academic profile document
+          </p>
         </div>
       </div>
 
-      <style>{`
-        @media print {
-          .print\\:hidden { display: none !important; }
-          .scientific-cv-content {
-            font-size: 13px !important;
-            line-height: 1.4 !important;
-          }
-          .scientific-cv-content table {
-            border-collapse: collapse !important;
-            width: 100% !important;
-          }
-          .scientific-cv-content table td,
-          .scientific-cv-content table th {
-            border: 1px solid #222 !important;
-            padding: 6px 8px !important;
-          }
-        }
-      `}</style>
+      <div className="bg-white rounded-xl border px-6 py-5 mb-6 flex flex-col gap-4 shadow-sm">
+        <div className="flex justify-between flex-wrap gap-4 text-sm text-gray-700">
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              <span>
+                Created:{" "}
+                {scientificCV.data["upload-at"]
+                  ? format(
+                      new Date(scientificCV.data["upload-at"]),
+                      "MMM dd, yyyy"
+                    )
+                  : "Unknown"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <User className="w-4 h-4 text-gray-500" />
+              <span>
+                Last Updated:{" "}
+                {scientificCV.data["updated-at"]
+                  ? format(
+                      new Date(scientificCV.data["updated-at"]),
+                      "MMM dd, yyyy"
+                    )
+                  : "Never"}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
+              Status:{" "}
+              {scientificCV.data.status
+                ? String(scientificCV.data.status).charAt(0).toUpperCase() +
+                  String(scientificCV.data.status).slice(1)
+                : "Created"}
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              Document Type: ScienceCV
+            </Badge>
+            <Button
+              variant="default"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg px-4 py-2"
+              onClick={handleEdit}
+            >
+              <Pencil className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-2 bg-blue-50 border border-blue-200 rounded-md p-3 mt-2">
+          <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+          <div className="text-sm text-blue-800">
+            <p className="font-medium mb-1">Instructions:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>
+                To download your CV, go to <strong>File → Print</strong>, then
+                choose <strong>"Save"</strong> in the print dialog.
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      {/* TinyMCE Viewer */}
+      <div className="bg-white rounded-xl border shadow-inner overflow-hidden max-w-5xl mx-auto w-full">
+        <Editor
+          apiKey={apiKey}
+          onInit={(_, editor) => (editorRef.current = editor)}
+          initialValue={scientificCV.data["content-html"] || ""}
+          disabled={true}
+          init={{
+            height: 800,
+            menubar: false,
+            toolbar: false,
+            plugins: ["table"],
+            content_style: formStyles,
+          }}
+        />
+      </div>
     </div>
   );
 };

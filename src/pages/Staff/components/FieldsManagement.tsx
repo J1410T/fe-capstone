@@ -6,11 +6,10 @@ import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   DataTable,
-  ActionButtons,
+  StatusBadge,
   PageHeader,
   FormDialog,
   ConfirmDialog,
-  createCommonActions,
   type FormConfig,
 } from "../shared";
 import { FieldItem } from "@/types/field";
@@ -21,19 +20,12 @@ import {
   useDeleteField,
 } from "@/hooks/queries/field";
 import { useMajorsByField } from "@/hooks/queries/major";
-import { Loading } from "@/components/ui/loaders";
 
-// Component to handle major count for individual field
-// Fixed MajorCount component with better error handling
 const MajorCount: React.FC<{ fieldId: string }> = ({ fieldId }) => {
   const { data, isLoading, error } = useMajorsByField(fieldId);
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-2">
-        <Loading className="w-full max-w-xs scale-75" />
-      </div>
-    );
+    return <span className="text-muted-foreground">Loading...</span>;
   }
 
   if (error) {
@@ -43,21 +35,22 @@ const MajorCount: React.FC<{ fieldId: string }> = ({ fieldId }) => {
         error.message.includes("not found") ||
         (error as unknown as { status?: number }).status === 404);
 
-    if (isNotFound) {
-      return <div className="text-center font-medium">0 majors</div>;
-    }
-
-    return <div className="text-center text-muted-foreground">Error</div>;
+    return (
+      <StatusBadge
+        status={isNotFound ? "0 majors" : "Error"}
+        variant="type"
+        size="sm"
+      />
+    );
   }
 
-  // Handle the case where data might not be an array or might be undefined
-  const majors = Array.isArray(data) ? data : [];
-  const majorCount = majors.length;
-
+  const count = Array.isArray(data) ? data.length : 0;
   return (
-    <div className="text-center font-medium">
-      {majorCount} {majorCount === 1 ? "major" : "majors"}
-    </div>
+    <StatusBadge
+      status={`${count} ${count === 1 ? "major" : "majors"}`}
+      variant="type"
+      size="sm"
+    />
   );
 };
 
@@ -67,18 +60,14 @@ const FieldsManagement: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-  });
+  const [formData, setFormData] = useState({ name: "" });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  // Queries and mutations
   const { data: fields = [], isLoading, error } = useFieldList();
   const createFieldMutation = useCreateField();
   const updateFieldMutation = useUpdateField();
   const deleteFieldMutation = useDeleteField();
 
-  // Table columns definition
   const columns = useMemo<ColumnDef<FieldItem>[]>(
     () => [
       {
@@ -102,12 +91,22 @@ const FieldsManagement: React.FC = () => {
         cell: ({ row }) => {
           const field = row.original;
           return (
-            <ActionButtons
-              actions={[
-                createCommonActions.edit(() => handleEdit(field)),
-                createCommonActions.delete(() => handleDelete(field)),
-              ]}
-            />
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEdit(field)}
+              >
+                Edit
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDelete(field)}
+              >
+                Delete
+              </Button>
+            </div>
           );
         },
       },
@@ -115,7 +114,6 @@ const FieldsManagement: React.FC = () => {
     []
   );
 
-  // Form configuration
   const formConfig: FormConfig = {
     title: selectedField ? "Edit Field" : "Create Field",
     description: selectedField
@@ -132,7 +130,6 @@ const FieldsManagement: React.FC = () => {
     ],
   };
 
-  // Handler functions
   const handleCreate = () => {
     setSelectedField(null);
     setFormData({ name: "" });
@@ -142,9 +139,7 @@ const FieldsManagement: React.FC = () => {
 
   const handleEdit = (field: FieldItem) => {
     setSelectedField(field);
-    setFormData({
-      name: field.name,
-    });
+    setFormData({ name: field.name });
     setFormErrors({});
     setIsEditDialogOpen(true);
   };
@@ -156,25 +151,19 @@ const FieldsManagement: React.FC = () => {
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
-
     if (!formData.name.trim()) {
       errors.name = "Field name is required";
     }
-
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
     try {
       if (selectedField) {
-        // Update existing field
         await updateFieldMutation.mutateAsync({
           id: selectedField.id,
           data: { name: formData.name },
@@ -182,7 +171,6 @@ const FieldsManagement: React.FC = () => {
         toast.success("Field updated successfully");
         setIsEditDialogOpen(false);
       } else {
-        // Create new field
         await createFieldMutation.mutateAsync({ name: formData.name });
         toast.success("Field created successfully");
         setIsCreateDialogOpen(false);
@@ -213,7 +201,6 @@ const FieldsManagement: React.FC = () => {
 
   const handleFormChange = (field: string, value: unknown) => {
     setFormData((prev) => ({ ...prev, [field]: value as string }));
-    // Clear error when user starts typing
     if (formErrors[field]) {
       setFormErrors((prev) => ({ ...prev, [field]: "" }));
     }
@@ -253,7 +240,6 @@ const FieldsManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
       <PageHeader
         title="Fields Management"
         description="Manage academic fields and their associated majors"
@@ -266,12 +252,11 @@ const FieldsManagement: React.FC = () => {
         }
       />
 
-      {/* Fields Table */}
       <DataTable
         data={fields}
         columns={columns}
         loading={isLoading}
-        searchable={true}
+        searchable
         searchPlaceholder="Search fields..."
         searchFields={["name"]}
         globalFilter={globalFilter}
@@ -279,13 +264,10 @@ const FieldsManagement: React.FC = () => {
         emptyMessage="No fields found. Get started by adding your first field."
       />
 
-      {/* Form Dialog */}
       <FormDialog
         open={isCreateDialogOpen || isEditDialogOpen}
         onOpenChange={(open) => {
-          if (!open) {
-            handleCloseDialog();
-          }
+          if (!open) handleCloseDialog();
         }}
         config={formConfig}
         data={formData}
@@ -297,12 +279,11 @@ const FieldsManagement: React.FC = () => {
         mode={selectedField ? "edit" : "create"}
       />
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         title="Delete Field"
-        description={`Are you sure you want to delete "${selectedField?.name}"? This action cannot be undone and will affect all associated majors.`}
+        description={`Are you sure you want to delete "${selectedField?.name}"? This action cannot be undone.`}
         confirmLabel="Delete"
         cancelLabel="Cancel"
         variant="destructive"
