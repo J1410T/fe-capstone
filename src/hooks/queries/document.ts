@@ -2,6 +2,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createDocument,
+  deleteDocumentById,
   getDocumentsByFilter,
   getScientificCVByEmail,
   updateDocument,
@@ -54,5 +55,27 @@ export function useScientificCVByEmail(email: string, enabled: boolean = true) {
     queryKey: ["scientificCV", email],
     queryFn: () => getScientificCVByEmail(email),
     enabled: !!email && enabled,
+  });
+}
+
+export function useDeleteDocumentById() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (documentId: string) => deleteDocumentById(documentId),
+    onSuccess: (_, documentId) => {
+      // Invalidate project queries to refresh documents list
+      queryClient.invalidateQueries({
+        queryKey: ["project"],
+      });
+      // Invalidate document queries
+      queryClient.invalidateQueries({
+        queryKey: ["document"],
+      });
+      console.log(`Document ${documentId} deleted successfully!`);
+    },
+    onError: (error) => {
+      console.error("Failed to delete document:", error);
+    },
   });
 }

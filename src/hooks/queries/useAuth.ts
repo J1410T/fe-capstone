@@ -231,3 +231,17 @@ export function useDeleteUserRole() {
     },
   });
 }
+
+export function useGetUserRoleById(userRoleId: string) {
+  const accessToken = useAccessToken();
+
+  return useQuery({
+    queryKey: ["get-user-role-by-id", userRoleId],
+    queryFn: () =>
+      import("@/services/resources/auth").then(({ getUserRoleById }) =>
+        getUserRoleById(userRoleId)
+      ),
+    enabled: !!userRoleId && !!accessToken,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+}

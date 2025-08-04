@@ -65,3 +65,13 @@ export const getScientificCVByEmail = async (email: string) => {
     }
   );
 };
+
+export const deleteDocumentById = async (documentId: string) => {
+  const accessToken = getAccessToken();
+
+  return await axiosClient.delete<string>(`/document/${documentId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
