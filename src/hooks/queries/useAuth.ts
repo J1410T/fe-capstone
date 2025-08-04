@@ -141,7 +141,7 @@ export function useUserRoleByAccountAndProject(
 ) {
   return useQuery({
     queryKey: ["user-role", accountId, projectId],
-    queryFn: async (): Promise<UserRole | null> => {
+    queryFn: async (): Promise<UserRole[] | null> => {
       if (!accountId || !projectId) return null;
 
       const request: UserRoleFilterRequest = {
@@ -153,8 +153,8 @@ export function useUserRoleByAccountAndProject(
 
       const response: UserRoleResponse = await getUserRoleByFilter(request);
 
-      // Return the first user role found (regardless of status for real-time updates)
-      return response["data-list"][0] || null;
+      // Return all user roles found (to handle cases with multiple roles)
+      return response["data-list"] || [];
     },
     enabled: !!accountId && !!projectId && enabled,
     staleTime: 5000, // Cache for 5 seconds for real-time updates
@@ -162,7 +162,6 @@ export function useUserRoleByAccountAndProject(
     refetchIntervalInBackground: true, // Continue refetching in background
   });
 }
-
 /**
  * Hook to create a user role
  */
