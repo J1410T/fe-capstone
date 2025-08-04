@@ -52,6 +52,14 @@ import {
   useCreateNotification,
   useSendNotification,
 } from "@/hooks/queries/notification";
+import { useProject } from "@/hooks/queries/project";
+import {
+  useScientificCVByEmail,
+  useCreateDocument,
+  useDeleteDocumentById,
+} from "@/hooks/queries/document";
+import { getAuthResponse } from "@/utils/cookie-manager";
+import { DocumentProject } from "@/types/document";
 
 interface InviteMembersStepProps {
   collaborators: SimpleInvitedUser[];
@@ -61,6 +69,10 @@ interface InviteMembersStepProps {
   onNext: () => void;
   onPrevious: () => void;
   mode?: "detailed" | "simple";
+}
+
+interface CVStatus {
+  [accountId: string]: "submitted" | "not-submitted";
 }
 
 export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
@@ -85,6 +97,11 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   );
   const [memberToRemove, setMemberToRemove] = useState<string | null>(null);
   const [isRemovingMember, setIsRemovingMember] = useState(false);
+  const [cvStatus, setCvStatus] = useState<CVStatus>({});
+  const [principalInvestigator, setPrincipalInvestigator] =
+    useState<UserRole | null>(null);
+  const [showUploadConfirmDialog, setShowUploadConfirmDialog] = useState(false);
+  const [isUploadingCV, setIsUploadingCV] = useState(false);
 
   // API hooks - search only when input length >= 2
   const { data: searchResults = [], isLoading: isSearching } =
@@ -92,12 +109,27 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   const { data: allRoles = [], isLoading: isLoadingRoles } = useAllRoles();
   const { data: myAccountInfo } = useMyAccountInfo();
 
+  // Fetch project data to get documents
+  const { data: projectResponse } = useProject(projectId || "");
+  const project = projectResponse?.data;
+
   // Invitation hooks
   const inviteMemberMutation = useInviteMember();
   const createUserRoleMutation = useCreateUserRole();
   const createNotificationMutation = useCreateNotification();
   const sendNotificationMutation = useSendNotification();
   const deleteUserRoleMutation = useDeleteUserRole();
+
+  // Document hooks
+  const createDocumentMutation = useCreateDocument();
+  const deleteDocumentMutation = useDeleteDocumentById();
+
+  // Get email from auth response cookie for CV upload
+  const authResponse = getAuthResponse<{ email: string }>();
+  const userEmail = authResponse?.email || "";
+
+  // Fetch user's Scientific CV by email
+  const { data: scientificCV } = useScientificCVByEmail(userEmail, !!userEmail);
 
   // Initialize group members from UserRole data, excluding current user
   useEffect(() => {
@@ -307,6 +339,161 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     createNotificationMutation,
     sendNotificationMutation,
   ]);
+
+  // Check CV status for approved members
+  useEffect(() => {
+    const checkCVStatus = async () => {
+      if (!project?.["project-detail"]?.documents || !projectId) return;
+
+      const documents = project["project-detail"].documents;
+      const scienceCVDocs = documents.filter(
+        (doc: DocumentProject) => doc.type === "ScienceCV"
+      );
+
+      // Get account IDs from ScienceCV documents
+      const cvSubmittedAccountIds = new Set<string>();
+
+      for (const doc of scienceCVDocs) {
+        if (doc["uploader-id"]) {
+          try {
+            const userRole = await import("@/services/resources/auth").then(
+              ({ getUserRoleById }) => getUserRoleById(doc["uploader-id"])
+            );
+            if (userRole["account-id"]) {
+              cvSubmittedAccountIds.add(userRole["account-id"]);
+            }
+          } catch (error) {
+            console.error("Failed to get user role for uploader:", error);
+          }
+        }
+      }
+
+      // Update CV status for all approved members
+      const newCvStatus: CVStatus = {};
+      for (const member of groupMembers) {
+        const memberStatus = memberInvitationStatus[member.id];
+        if (memberStatus === "approved") {
+          newCvStatus[member.id] = cvSubmittedAccountIds.has(member.id)
+            ? "submitted"
+            : "not-submitted";
+        }
+      }
+
+      setCvStatus(newCvStatus);
+    };
+
+    checkCVStatus();
+  }, [project, groupMembers, memberInvitationStatus, projectId]);
+
+  // Fetch Principal Investigator data
+  useEffect(() => {
+    const fetchPrincipalInvestigator = async () => {
+      if (!projectId || !allRoles.length) return;
+
+      try {
+        const { getUserRolesByProjectId } = await import(
+          "@/services/resources/auth"
+        );
+        const userRolesResponse = await getUserRolesByProjectId(
+          projectId,
+          1,
+          100
+        );
+
+        if (userRolesResponse["data-list"]) {
+          const piRole = allRoles.find(
+            (role) => role.name === "Principal Investigator"
+          );
+          if (piRole) {
+            const piUserRole = userRolesResponse["data-list"].find(
+              (userRole: UserRole) => userRole["role-id"] === piRole.id
+            );
+            if (piUserRole) {
+              setPrincipalInvestigator(piUserRole);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch Principal Investigator:", error);
+      }
+    };
+
+    fetchPrincipalInvestigator();
+  }, [projectId, allRoles]);
+
+  // Handle upload Scientific CV with confirmation and duplicate checking
+  const handleUploadScientificCV = () => {
+    setShowUploadConfirmDialog(true);
+  };
+
+  const handleConfirmUploadScientificCV = async () => {
+    if (!scientificCV?.data || !projectId || !myAccountInfo?.id) {
+      console.error(
+        "Scientific CV not found, project ID missing, or account info missing"
+      );
+      return;
+    }
+
+    setIsUploadingCV(true);
+    setShowUploadConfirmDialog(false);
+
+    try {
+      // Check for duplicate account-id in ScienceCV documents
+      if (project?.["project-detail"]?.documents) {
+        const documents = project["project-detail"].documents;
+        const scienceCVDocs = documents.filter(
+          (doc: DocumentProject) => doc.type === "ScienceCV"
+        );
+
+        // Find documents with duplicate account-id
+        const duplicateDoc = scienceCVDocs.find((doc: DocumentProject) => {
+          return doc["uploader-id"] === myAccountInfo.id;
+        });
+
+        // If duplicate found, delete it first
+        if (duplicateDoc) {
+          console.log(
+            "Duplicate ScienceCV document found, deleting:",
+            duplicateDoc.id
+          );
+          await deleteDocumentMutation.mutateAsync(duplicateDoc.id);
+        }
+      }
+
+      // Check for duplicate account-id with Principal Investigator role
+      if (
+        principalInvestigator &&
+        principalInvestigator["account-id"] === myAccountInfo.id
+      ) {
+        console.log(
+          "User is Principal Investigator, proceeding with CV upload"
+        );
+      }
+
+      // Create new document
+      await createDocumentMutation.mutateAsync({
+        name: scientificCV.data.name,
+        type: scientificCV.data.type,
+        "is-template": scientificCV.data["is-template"],
+        "content-html": scientificCV.data["content-html"],
+        "project-id": projectId,
+      });
+
+      console.log("Scientific CV uploaded successfully!");
+
+      // Refresh CV status after upload
+      if (principalInvestigator) {
+        setCvStatus((prev) => ({
+          ...prev,
+          [principalInvestigator["account-id"]]: "submitted",
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to upload Scientific CV:", error);
+    } finally {
+      setIsUploadingCV(false);
+    }
+  };
 
   // Filter roles to only show Researcher, Secretary, Leader
   const allowedRoles = useMemo(() => {
@@ -680,6 +867,36 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     }
   };
 
+  const getCVStatusBadge = (accountId: string) => {
+    const status = cvStatus[accountId];
+    if (!status) return null;
+
+    switch (status) {
+      case "submitted":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-300 font-medium"
+          >
+            <CheckCircle className="w-3 h-3 mr-1" />
+            CV Submitted
+          </Badge>
+        );
+      case "not-submitted":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-300 font-medium"
+          >
+            <XCircle className="w-3 h-3 mr-1" />
+            CV Not Submitted
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
   const isValidEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -766,6 +983,70 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
               </div>
             </div>
           </div>
+
+          {/* Principal Investigator Card */}
+          {principalInvestigator && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <h4 className="text-lg font-semibold text-gray-900 mb-3">
+                Principal Investigator
+              </h4>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <Avatar className="h-12 w-12">
+                    <AvatarImage
+                      src={principalInvestigator["avatar-url"] || undefined}
+                    />
+                    <AvatarFallback className="bg-blue-100 text-blue-700">
+                      {(principalInvestigator["full-name"] || "")
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">
+                      {principalInvestigator["full-name"]}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      {principalInvestigator.email}
+                    </p>
+                    <p className="text-xs text-blue-600 font-medium">
+                      Principal Investigator
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-3">
+                  {/* CV Status for PI */}
+                  {memberInvitationStatus[
+                    principalInvestigator["account-id"]
+                  ] === "approved" && (
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="text-xs text-gray-500 font-medium">
+                        CV Status
+                      </span>
+                      {getCVStatusBadge(principalInvestigator["account-id"])}
+                    </div>
+                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleUploadScientificCV}
+                    disabled={!scientificCV?.data || isUploadingCV}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                  >
+                    {isUploadingCV ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      "Upload Science CV"
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Search Input */}
           <div className="relative w-full mb-6">
@@ -911,6 +1192,16 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                               )}
                             </div>
                           )}
+
+                        {/* CV Status - only show for approved members */}
+                        {memberInvitationStatus[member.id] === "approved" && (
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="text-xs text-gray-500 font-medium">
+                              CV Status
+                            </span>
+                            {getCVStatusBadge(member.id)}
+                          </div>
+                        )}
 
                         {/* Invite Button */}
                         {!member.isInvitation && (
@@ -1070,6 +1361,45 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                 </>
               ) : (
                 "Remove"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Scientific CV Confirmation Dialog */}
+      <Dialog
+        open={showUploadConfirmDialog}
+        onOpenChange={setShowUploadConfirmDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Scientific CV</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to upload your Scientific CV to this
+              project? If you already have a Scientific CV uploaded, it will be
+              replaced with the new one.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowUploadConfirmDialog(false)}
+              disabled={isUploadingCV}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmUploadScientificCV}
+              disabled={isUploadingCV}
+            >
+              {isUploadingCV ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                "Confirm Upload"
               )}
             </Button>
           </DialogFooter>

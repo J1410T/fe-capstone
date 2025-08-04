@@ -19,23 +19,67 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FileText, Download, Eye, FolderOpen } from "lucide-react";
+import {
+  FileText,
+  Download,
+  Eye,
+  FolderOpen,
+  Upload,
+  Loader2,
+} from "lucide-react";
 import { DocumentProject } from "@/types/document";
 import { formatDateTime } from "@/utils";
 import { getStatusColor } from "../shared/utils";
 import { Editor } from "@tinymce/tinymce-react";
+import {
+  useScientificCVByEmail,
+  useCreateDocument,
+  useDeleteDocumentById,
+} from "@/hooks/queries/document";
+import { useMyAccountInfo } from "@/hooks/queries/useAuth";
+import { useProject } from "@/hooks/queries/project";
+import { getAuthResponse } from "@/utils/cookie-manager";
+import { toast } from "sonner";
 
 interface DocumentTabProps {
   documents: DocumentProject[];
+  projectId?: string;
+  isProposal?: boolean;
 }
 
-const DocumentTab: React.FC<DocumentTabProps> = ({ documents }) => {
+const DocumentTab: React.FC<DocumentTabProps> = ({
+  documents,
+  projectId,
+  isProposal,
+}) => {
   const [selectedDocument, setSelectedDocument] =
     React.useState<DocumentProject | null>(null);
   const [showViewDialog, setShowViewDialog] = React.useState(false);
+  const [isUploading, setIsUploading] = React.useState(false);
+  const [showUploadConfirmDialog, setShowUploadConfirmDialog] =
+    React.useState(false);
+
+  // Get email from auth response cookie
+  const authResponse = getAuthResponse<{ email: string }>();
+  const userEmail = authResponse?.email || "";
+
+  // Fetch user's Scientific CV by email
+  const { data: scientificCV, isLoading: isCVLoading } = useScientificCVByEmail(
+    userEmail,
+    !!userEmail && isProposal
+  );
+
+  // API hooks
+  const createDocument = useCreateDocument();
+  const deleteDocumentMutation = useDeleteDocumentById();
+  const { data: myAccountInfo } = useMyAccountInfo();
+  const { data: projectResponse } = useProject(projectId || "");
+  const project = projectResponse?.data;
 
   const handleViewDocument = (document: DocumentProject) => {
     setSelectedDocument(document);
@@ -46,6 +90,63 @@ const DocumentTab: React.FC<DocumentTabProps> = ({ documents }) => {
     console.log("Download", document.name);
     // TODO: implement actual download
   };
+
+  const handleUploadScientificCV = () => {
+    setShowUploadConfirmDialog(true);
+  };
+
+  const handleConfirmUploadScientificCV = async () => {
+    if (!scientificCV?.data || !projectId || !myAccountInfo?.id) {
+      toast.error(
+        "Scientific CV not found, project ID missing, or account info missing"
+      );
+      return;
+    }
+
+    setIsUploading(true);
+    setShowUploadConfirmDialog(false);
+
+    try {
+      // Check for duplicate account-id in ScienceCV documents
+      if (project?.["project-detail"]?.documents) {
+        const projectDocuments = project["project-detail"].documents;
+        const scienceCVDocs = projectDocuments.filter(
+          (doc: DocumentProject) => doc.type === "ScienceCV"
+        );
+
+        // Find documents with duplicate account-id
+        const duplicateDoc = scienceCVDocs.find((doc: DocumentProject) => {
+          return doc["uploader-id"] === myAccountInfo.id;
+        });
+
+        // If duplicate found, delete it first
+        if (duplicateDoc) {
+          console.log(
+            "Duplicate ScienceCV document found, deleting:",
+            duplicateDoc.id
+          );
+          await deleteDocumentMutation.mutateAsync(duplicateDoc.id);
+        }
+      }
+
+      // Create new document
+      await createDocument.mutateAsync({
+        name: scientificCV.data.name,
+        type: scientificCV.data.type,
+        "is-template": scientificCV.data["is-template"],
+        "content-html": scientificCV.data["content-html"],
+        "project-id": projectId,
+      });
+
+      toast.success("Scientific CV uploaded successfully!");
+    } catch (error) {
+      console.error("Failed to upload Scientific CV:", error);
+      toast.error("Failed to upload Scientific CV");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   type EditorInstance = { getContent: () => string } | null;
   const editorRef = useRef<EditorInstance>(null);
 
@@ -53,12 +154,26 @@ const DocumentTab: React.FC<DocumentTabProps> = ({ documents }) => {
     <Card className="shadow-sm">
       {/* --- Table header --- */}
       <CardHeader className="pb-4 sm:pb-6">
-        <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
-          Project Documents
-        </CardTitle>
-        <CardDescription className="text-sm sm:text-base mt-1">
-          View and manage all project-related documents
-        </CardDescription>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
+              Project Documents
+            </CardTitle>
+            <CardDescription className="text-sm sm:text-base mt-1">
+              View and manage all project-related documents
+            </CardDescription>
+          </div>
+          {isProposal && (
+            <Button
+              onClick={handleUploadScientificCV}
+              disabled={isUploading || isCVLoading || !scientificCV?.data}
+              className="ml-4"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              {isUploading ? "Uploading..." : "Upload Science CV"}
+            </Button>
+          )}
+        </div>
       </CardHeader>
 
       {/* --- Document table --- */}
@@ -197,6 +312,45 @@ const DocumentTab: React.FC<DocumentTabProps> = ({ documents }) => {
           ) : (
             <p className="text-gray-500">Loading document...</p>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Scientific CV Confirmation Dialog */}
+      <Dialog
+        open={showUploadConfirmDialog}
+        onOpenChange={setShowUploadConfirmDialog}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Upload Scientific CV</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to upload your Scientific CV to this
+              project? If you already have a Scientific CV uploaded, it will be
+              replaced with the new one.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowUploadConfirmDialog(false)}
+              disabled={isUploading}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirmUploadScientificCV}
+              disabled={isUploading}
+            >
+              {isUploading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                "Confirm Upload"
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Card>

@@ -68,7 +68,14 @@ function ProjectDetail() {
 
   const getVisibleTabs = () => {
     const baseTabs = ["overview"];
-    if (projectResponse?.data["is-member"]) {
+    const project = projectResponse?.data["project-detail"];
+    const isProposal = project?.genre === "proposal";
+
+    if (isProposal) {
+      // For Proposal projects: show Overview, Team, Document
+      baseTabs.push("team", "documents");
+    } else if (projectResponse?.data["is-member"]) {
+      // For other projects: show all tabs if member
       baseTabs.push("team", "milestones", "documents", "budget", "evaluation");
     }
     return baseTabs;
@@ -241,7 +248,11 @@ function ProjectDetail() {
 
         {visibleTabs.includes("documents") && (
           <TabsContent value="documents" className="space-y-4">
-            <DocumentTab documents={project.documents || []} />
+            <DocumentTab
+              documents={project.documents || []}
+              projectId={project.id}
+              isProposal={project.genre === "proposal"}
+            />
           </TabsContent>
         )}
 
