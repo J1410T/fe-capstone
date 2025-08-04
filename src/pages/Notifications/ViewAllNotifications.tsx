@@ -34,7 +34,10 @@ import {
   useNotificationList,
   useMarkNotification,
 } from "@/hooks/queries/notification";
-import { useUpdateUserRoleStatus } from "@/hooks/queries/useAuth";
+import {
+  useUpdateUserRoleStatus,
+  // useUserRoleByAccountAndProject,
+} from "@/hooks/queries/useAuth";
 import { useProject } from "@/hooks/queries/project";
 
 // Component to display project name for project notifications
@@ -188,8 +191,7 @@ const ViewAllNotifications: React.FC = () => {
     setProcessingNotifications((prev) => new Set(prev).add(notificationId));
 
     try {
-      // First get the user role to get the role details
-      // Note: We need to call the server function directly since we can't use hooks in async functions
+      // Get user roles using the updated hook that returns all roles
       const { getUserRoleByFilter } = await import("@/services/resources/auth");
       const userRoleResponse = await getUserRoleByFilter({
         "account-id": accountId,
@@ -199,21 +201,23 @@ const ViewAllNotifications: React.FC = () => {
         "page-size": 10,
       });
 
-      if (userRoleResponse["data-list"].length > 0) {
-        const userRole = userRoleResponse["data-list"][0];
+      const userRoles = userRoleResponse["data-list"];
 
-        // Update user role status to approved
-        await updateUserRoleStatusMutation.mutateAsync({
-          userRoleId: userRole.id,
-          status: "approved",
-          request: {
-            "account-id": userRole["account-id"],
-            "role-id": userRole["role-id"],
-            "project-id": userRole["project-id"],
-          },
-        });
+      if (userRoles.length > 0) {
+        // Update status for all UserRoles found
+        for (const userRole of userRoles) {
+          await updateUserRoleStatusMutation.mutateAsync({
+            userRoleId: userRole.id,
+            status: "approved",
+            request: {
+              "account-id": userRole["account-id"],
+              "role-id": userRole["role-id"],
+              "project-id": userRole["project-id"],
+            },
+          });
+        }
 
-        toast.success("User role approved successfully");
+        toast.success(`${userRoles.length} user role(s) approved successfully`);
 
         // Mark notification as read
         await markNotificationMutation.mutateAsync({
@@ -247,8 +251,7 @@ const ViewAllNotifications: React.FC = () => {
     setProcessingNotifications((prev) => new Set(prev).add(notificationId));
 
     try {
-      // First get the user role to get the role details
-      // Note: We need to call the server function directly since we can't use hooks in async functions
+      // Get user roles using the updated approach that handles multiple roles
       const { getUserRoleByFilter } = await import("@/services/resources/auth");
       const userRoleResponse = await getUserRoleByFilter({
         "account-id": accountId,
@@ -258,21 +261,23 @@ const ViewAllNotifications: React.FC = () => {
         "page-size": 10,
       });
 
-      if (userRoleResponse["data-list"].length > 0) {
-        const userRole = userRoleResponse["data-list"][0];
+      const userRoles = userRoleResponse["data-list"];
 
-        // Update user role status to rejected
-        await updateUserRoleStatusMutation.mutateAsync({
-          userRoleId: userRole.id,
-          status: "rejected",
-          request: {
-            "account-id": userRole["account-id"],
-            "role-id": userRole["role-id"],
-            "project-id": userRole["project-id"],
-          },
-        });
+      if (userRoles.length > 0) {
+        // Update status for all UserRoles found
+        for (const userRole of userRoles) {
+          await updateUserRoleStatusMutation.mutateAsync({
+            userRoleId: userRole.id,
+            status: "rejected",
+            request: {
+              "account-id": userRole["account-id"],
+              "role-id": userRole["role-id"],
+              "project-id": userRole["project-id"],
+            },
+          });
+        }
 
-        toast.success("User role rejected successfully");
+        toast.success(`${userRoles.length} user role(s) rejected successfully`);
 
         // Mark notification as read
         await markNotificationMutation.mutateAsync({

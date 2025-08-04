@@ -131,7 +131,12 @@ const MyProject: React.FC = () => {
 
   const handleViewProject = (id: string) => {
     if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
-      navigate(`/pi/project/${id}`);
+      const project = filteredProjects.find((p) => p.id === id);
+      if (project && project.genre?.toLowerCase() === "proposal") {
+        navigate(`/pi/project/${id}/enroll`);
+      } else {
+        navigate(`/pi/project/${id}`);
+      }
     } else if (user?.role === UserRole.HOST_INSTITUTION) {
       navigate(`/host/project/${id}`);
     } else {

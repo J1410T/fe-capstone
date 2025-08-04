@@ -2,6 +2,7 @@
 import { axiosClient, getAccessToken } from "../api";
 import {
   CreateDocumentRequest,
+  DocumentForm,
   DocumentListResponse,
   UpdateDocumentRequest,
 } from "@/types/document";
@@ -50,4 +51,17 @@ export const updateDocument = async (data: UpdateDocumentRequest) => {
       "Content-Type": "application/json-patch+json",
     },
   });
+};
+
+export const getScientificCVByEmail = async (email: string) => {
+  const accessToken = getAccessToken();
+
+  return await axiosClient.get<DocumentForm>(
+    `/document/science-cv?email=${encodeURIComponent(email)}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
 };
