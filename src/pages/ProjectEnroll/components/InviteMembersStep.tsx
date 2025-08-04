@@ -122,8 +122,8 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
             );
 
             // Convert UserRole data to GroupMember format
-            const membersFromUserRoles: GroupMember[] = filteredUserRoles.map(
-              (userRole: UserRole) => {
+            const allMembersFromUserRoles: GroupMember[] =
+              filteredUserRoles.map((userRole: UserRole) => {
                 // Find the role name from role-id
                 const memberRole = allRoles.find(
                   (role) => role.id === userRole["role-id"]
@@ -154,8 +154,39 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                   projectId: userRole["project-id"],
                   appraisalCouncilId: userRole["appraisal-council-id"],
                 };
-              }
+              });
+
+            // Filter members with same account-id: if there are 2 members with same account-id,
+            // show the one with role other than Researcher
+            const membersFromUserRoles: GroupMember[] = [];
+            const accountGroups = allMembersFromUserRoles.reduce(
+              (acc, member) => {
+                if (!acc[member.id]) {
+                  acc[member.id] = [];
+                }
+                acc[member.id].push(member);
+                return acc;
+              },
+              {} as Record<string, GroupMember[]>
             );
+
+            Object.values(accountGroups).forEach((members) => {
+              if (members.length === 1) {
+                // Only one role for this account, add it
+                membersFromUserRoles.push(members[0]);
+              } else {
+                // Multiple roles for same account, prefer non-Researcher role
+                const nonResearcherMember = members.find(
+                  (m) => m.role !== "Researcher"
+                );
+                if (nonResearcherMember) {
+                  membersFromUserRoles.push(nonResearcherMember);
+                } else {
+                  // All are Researcher roles, just take the first one
+                  membersFromUserRoles.push(members[0]);
+                }
+              }
+            });
 
             setGroupMembers((prev) => {
               // Merge with any manually added members (isInvitation: true)
@@ -549,12 +580,26 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
       });
 
       if (notificationResult.success) {
-        // Step 2: Create UserRole
+        // Step 2: Create UserRole for the selected role
         await createUserRoleMutation.mutateAsync({
           "account-id": memberId,
           "role-id": member.roleId,
           "project-id": projectId,
         });
+
+        // Step 3: If selected role is not Researcher, also create Researcher role
+        if (member.role !== "Researcher") {
+          const researcherRole = allRoles.find(
+            (role) => role.name === "Researcher"
+          );
+          if (researcherRole) {
+            await createUserRoleMutation.mutateAsync({
+              "account-id": memberId,
+              "role-id": researcherRole.id,
+              "project-id": projectId,
+            });
+          }
+        }
 
         setMemberInvitationStatus((prev) => ({
           ...prev,
