@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { getMemberTasksByTaskId, getTasksByMilestoneId } from "@/services/resources/task";
 import { MemberTask, ProjectTask } from "@/types/task";
-import { getAccountById } from "@/services/resources/auth";
+import { getAccountById, getUserRolesByProjectId } from "@/services/resources/auth";
+import { UserRole } from "@/types/auth";
 
 // Task interface compatible with TaskTable component
 interface TaskTableTask {
@@ -58,7 +59,7 @@ const transformTaskPriority = (priority: string): "Low" | "Medium" | "High" => {
   }
 };
 
-export function useTasksWithMembersByMilestoneId(milestoneId: string) {
+export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?: string) {
   const [tasks, setTasks] = useState<TaskTableTask[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +81,7 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string) {
 
         console.log("🔍 Enhanced hook - Raw tasks from API:", {
           milestoneId,
+          projectId,
           tasksCount: taskList.length,
           tasks: taskList.map(t => ({
             id: t.id,
@@ -89,53 +91,120 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string) {
           }))
         });
 
+        // If projectId is provided, fetch all user roles for the project to get member info efficiently
+        let projectUserRoles: UserRole[] = [];
+        if (projectId) {
+          try {
+            console.log("🔍 Fetching user roles for project:", projectId);
+            const userRolesResponse = await getUserRolesByProjectId(projectId, 1, 100);
+            projectUserRoles = userRolesResponse["data-list"] || [];
+            console.log("✅ Fetched user roles:", {
+              projectId,
+              userRolesCount: projectUserRoles.length,
+              userRoles: projectUserRoles.map(ur => ({
+                id: ur.id,
+                accountId: ur["account-id"],
+                fullName: ur["full-name"],
+                avatarUrl: ur["avatar-url"]
+              }))
+            });
+          } catch (userRoleError) {
+            console.error("❌ Error fetching user roles for project:", userRoleError);
+          }
+        }
+
         const enrichedTasks: TaskTableTask[] = await Promise.all(
           taskList.map(async (task: ProjectTask) => {
             try {
-              // Get member tasks for this task
-              const memberResponse = await getMemberTasksByTaskId(task.id);
-              const memberTasks: MemberTask[] = memberResponse["data-list"] || [];
+              // First, try to use member-tasks from the task response if available
+              let memberTasksWithDetails: Array<{
+                id: string;
+                "member-id": string;
+                member: {
+                  id: string;
+                  name: string;
+                  avatarUrl: string;
+                };
+              }> = [];
 
-              console.log(`🔍 Member tasks for task ${task.name} (${task.id}):`, {
-                memberTasksCount: memberTasks.length,
-                memberTasks: memberTasks.map(mt => ({
-                  id: mt.id,
-                  memberId: mt.memberId,
-                  status: mt.status
-                }))
-              });
+              if (task["member-tasks"] && task["member-tasks"].length > 0) {
+                console.log(`🔍 Using member-tasks from task response for ${task.name}:`, {
+                  memberTasksCount: task["member-tasks"].length,
+                  memberTasks: task["member-tasks"].map(mt => ({
+                    id: mt.id,
+                    memberId: mt.memberId,
+                    fullName: mt["full-name"],
+                    avatarUrl: mt["avatar-url"],
+                    roleName: mt["role-name"],
+                    status: mt.status
+                  }))
+                });
 
-              // Fetch member details for each member task
-              const memberTasksWithDetails = await Promise.all(
-                memberTasks.map(async (memberTask) => {
-                  try {
-                    // Fetch member details
-                    const memberDetails = await getAccountById(memberTask.memberId);
+                // Use member data directly from the task response (no additional API calls needed!)
+                memberTasksWithDetails = task["member-tasks"].map((memberTask) => {
+                  console.log(`✅ Using member data from API response for ${memberTask.memberId}:`, {
+                    fullName: memberTask["full-name"],
+                    avatarUrl: memberTask["avatar-url"],
+                    roleName: memberTask["role-name"]
+                  });
 
-                    return {
-                      id: memberTask.id,
-                      "member-id": memberTask.memberId,
-                      member: {
-                        id: memberTask.memberId,
-                        name: memberDetails["full-name"] || "Unknown Member",
-                        avatarUrl: memberDetails["avatar-url"] || "",
-                      },
-                    };
-                  } catch (memberError) {
-                    console.error(`Error fetching member details for ${memberTask.memberId}:`, memberError);
-                    // Return fallback member data
-                    return {
-                      id: memberTask.id,
-                      "member-id": memberTask.memberId,
-                      member: {
-                        id: memberTask.memberId,
-                        name: "Unknown Member",
-                        avatarUrl: "",
-                      },
-                    };
-                  }
-                })
-              );
+                  return {
+                    id: memberTask.id,
+                    "member-id": memberTask.memberId,
+                    member: {
+                      id: memberTask.memberId,
+                      name: memberTask["full-name"] || "Unknown Member",
+                      avatarUrl: memberTask["avatar-url"] || "",
+                    },
+                  };
+                });
+              } else {
+                // Fallback: Get member tasks separately if not included in task response
+                console.log(`🔍 Fetching member tasks separately for task ${task.name} (${task.id})`);
+                const memberResponse = await getMemberTasksByTaskId(task.id);
+                const memberTasks: MemberTask[] = memberResponse["data-list"] || [];
+
+                console.log(`🔍 Member tasks from separate API for task ${task.name}:`, {
+                  memberTasksCount: memberTasks.length,
+                  memberTasks: memberTasks.map(mt => ({
+                    id: mt.id,
+                    memberId: mt.memberId,
+                    status: mt.status
+                  }))
+                });
+
+                // Fetch member details for each member task
+                memberTasksWithDetails = await Promise.all(
+                  memberTasks.map(async (memberTask) => {
+                    try {
+                      // Fetch member details
+                      const memberDetails = await getAccountById(memberTask.memberId);
+
+                      return {
+                        id: memberTask.id,
+                        "member-id": memberTask.memberId,
+                        member: {
+                          id: memberTask.memberId,
+                          name: memberDetails["full-name"] || "Unknown Member",
+                          avatarUrl: memberDetails["avatar-url"] || "",
+                        },
+                      };
+                    } catch (memberError) {
+                      console.error(`Error fetching member details for ${memberTask.memberId}:`, memberError);
+                      // Return fallback member data
+                      return {
+                        id: memberTask.id,
+                        "member-id": memberTask.memberId,
+                        member: {
+                          id: memberTask.memberId,
+                          name: "Unknown Member",
+                          avatarUrl: "",
+                        },
+                      };
+                    }
+                  })
+                );
+              }
 
               // Transform ProjectTask to TaskTableTask format
               return {
@@ -195,7 +264,7 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string) {
     };
 
     fetchData();
-  }, [milestoneId]);
+  }, [milestoneId, projectId]);
 
   return { tasks, loading, error };
 }

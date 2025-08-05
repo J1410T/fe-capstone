@@ -123,6 +123,10 @@ export type MemberTask = {
   status: string;
   memberId: string;
   taskId: string;
+  // Additional fields returned when member-tasks are included in task response
+  "full-name"?: string;
+  "avatar-url"?: string | null;
+  "role-name"?: string;
 };
 
 // Response type for getting member tasks by task ID

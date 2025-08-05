@@ -35,6 +35,7 @@ import {
   TableHeader,
   TableRow,
   AvatarImage,
+  Loading,
 } from "@/components/ui";
 import {
   Search,
@@ -47,7 +48,6 @@ import {
   ArrowUp,
   ArrowDown,
   X,
-  Loader2,
   AlertCircle,
 } from "lucide-react";
 import { format, parseISO, isAfter, isValid } from "date-fns";
@@ -78,6 +78,8 @@ interface Task {
 interface TaskTableProps {
   // Option 1: Pass milestone ID to fetch tasks automatically
   milestoneId?: string;
+  // Project ID for efficient member data fetching
+  projectId?: string;
   // Option 2: Pass tasks directly (for backward compatibility)
   tasks?: Task[];
   onTaskEdit?: (task: Task) => void;
@@ -125,6 +127,7 @@ const isOverdue = (dueDate: string, status: string): boolean => {
 
 export const TaskTable: React.FC<TaskTableProps> = ({
   milestoneId,
+  projectId,
   tasks: propTasks,
   onTaskEdit,
   onTaskView,
@@ -135,7 +138,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
     tasks: fetchedTasks,
     loading: fetchingTasks,
     error: fetchError
-  } = useTasksWithMembersByMilestoneId(milestoneId || "");
+  } = useTasksWithMembersByMilestoneId(milestoneId || "", projectId);
 
   // Determine which tasks to use - wrapped in useMemo to prevent dependency issues
   const tasks = useMemo(() => {
@@ -350,18 +353,20 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             );
           }
 
-          return (
-            <div className="flex -space-x-2">
-              {memberTasks.map((mt) => (
-                <Avatar key={mt.id} className="w-6 h-6 border">
-                  {mt.member?.avatarUrl ? (
+          // If only one member, show avatar with name
+          if (memberTasks.length === 1) {
+            const member = memberTasks[0].member;
+            return (
+              <div className="flex items-center space-x-2">
+                <Avatar className="w-6 h-6 border">
+                  {member?.avatarUrl ? (
                     <AvatarImage
-                      src={mt.member.avatarUrl}
-                      alt={mt.member.name}
+                      src={member.avatarUrl}
+                      alt={member.name}
                     />
                   ) : (
-                    <AvatarFallback>
-                      {mt.member?.name
+                    <AvatarFallback className="text-xs">
+                      {member?.name
                         ?.split(" ")
                         .map((part) => part[0])
                         .join("")
@@ -369,7 +374,44 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                     </AvatarFallback>
                   )}
                 </Avatar>
-              ))}
+                <span className="text-sm text-slate-700 truncate max-w-[100px]">
+                  {member?.name || "Unknown"}
+                </span>
+              </div>
+            );
+          }
+
+          // If multiple members, show stacked avatars with count and names on hover
+          return (
+            <div className="flex items-center space-x-2">
+              <div className="flex -space-x-2" title={memberTasks.map(mt => mt.member?.name).join(", ")}>
+                {memberTasks.slice(0, 3).map((mt) => (
+                  <Avatar key={mt.id} className="w-6 h-6 border">
+                    {mt.member?.avatarUrl ? (
+                      <AvatarImage
+                        src={mt.member.avatarUrl}
+                        alt={mt.member.name}
+                      />
+                    ) : (
+                      <AvatarFallback className="text-xs">
+                        {mt.member?.name
+                          ?.split(" ")
+                          .map((part) => part[0])
+                          .join("")
+                          .toUpperCase()}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                ))}
+                {memberTasks.length > 3 && (
+                  <div className="w-6 h-6 rounded-full bg-slate-200 border flex items-center justify-center">
+                    <span className="text-xs text-slate-600">+{memberTasks.length - 3}</span>
+                  </div>
+                )}
+              </div>
+              <span className="text-xs text-slate-500">
+                {memberTasks.length} member{memberTasks.length > 1 ? 's' : ''}
+              </span>
             </div>
           );
         },
@@ -520,8 +562,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       <div className="space-y-6">
         <Card className="border-slate-200">
           <CardContent className="flex items-center justify-center p-8">
-            <Loader2 className="w-8 h-8 animate-spin mr-3" />
-            <span className="text-slate-600">Loading tasks and member details...</span>
+        <Loading className="w-full max-w-md" />
           </CardContent>
         </Card>
       </div>
