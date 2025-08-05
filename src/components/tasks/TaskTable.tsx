@@ -12,6 +12,7 @@ import {
   Header,
   Cell,
 } from "@tanstack/react-table";
+import { useTasksWithMembersByMilestoneId } from "@/hooks/queries/useTasksWithMembers";
 import {
   Card,
   CardContent,
@@ -33,6 +34,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  AvatarImage,
 } from "@/components/ui";
 import {
   Search,
@@ -45,10 +47,11 @@ import {
   ArrowUp,
   ArrowDown,
   X,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
 import { format, parseISO, isAfter, isValid } from "date-fns";
 import { getPriorityConfig as getPriorityConfigShared } from "@/utils";
-import { MemberInfo } from "./MemberInfo";
 
 // Task interface for the table
 interface Task {
@@ -59,18 +62,24 @@ interface Task {
   dueDate: string;
   priority: "Low" | "Medium" | "High";
   projectTag: string;
-  assignedTo: {
+  "member-tasks": Array<{
     id: string;
-    name: string;
-    avatar: string;
-    email: string;
-  };
+    "member-id": string;
+    member: {
+      id: string;
+      name: string;
+      avatarUrl: string;
+    };
+  }>;
   createdAt: string;
   updatedAt: string;
 }
 
 interface TaskTableProps {
-  tasks: Task[];
+  // Option 1: Pass milestone ID to fetch tasks automatically
+  milestoneId?: string;
+  // Option 2: Pass tasks directly (for backward compatibility)
+  tasks?: Task[];
   onTaskEdit?: (task: Task) => void;
   onTaskView?: (task: Task) => void;
   onTaskClick?: (task: Task) => void;
@@ -115,11 +124,43 @@ const isOverdue = (dueDate: string, status: string): boolean => {
 };
 
 export const TaskTable: React.FC<TaskTableProps> = ({
-  tasks,
+  milestoneId,
+  tasks: propTasks,
   onTaskEdit,
   onTaskView,
   onTaskClick,
 }) => {
+  // Use enhanced hook if milestoneId is provided, otherwise use passed tasks
+  const {
+    tasks: fetchedTasks,
+    loading: fetchingTasks,
+    error: fetchError
+  } = useTasksWithMembersByMilestoneId(milestoneId || "");
+
+  // Determine which tasks to use - wrapped in useMemo to prevent dependency issues
+  const tasks = useMemo(() => {
+    const finalTasks = milestoneId ? fetchedTasks : (propTasks || []);
+
+    // Debug logging
+    console.log("🔍 TaskTable Debug:", {
+      milestoneId,
+      usingEnhancedHook: !!milestoneId,
+      fetchedTasksCount: fetchedTasks.length,
+      finalTasksCount: finalTasks.length,
+      fetchingTasks,
+      fetchError,
+      sampleTask: finalTasks[0] ? {
+        id: finalTasks[0].id,
+        title: finalTasks[0].title,
+        memberTasksCount: finalTasks[0]["member-tasks"]?.length || 0,
+        memberTasksData: finalTasks[0]["member-tasks"]
+      } : null
+    });
+
+    return finalTasks;
+  }, [milestoneId, fetchedTasks, propTasks, fetchingTasks, fetchError]);
+
+  const isLoading = milestoneId ? fetchingTasks : false;
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
@@ -300,26 +341,38 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       {
         accessorKey: "assignedTo",
         header: "Assigned To",
-        cell: ({ row }: { row: Row<Task> }) => (
-          <div className="flex items-center space-x-2">
-            {row.original.assignedTo?.id ? (
-              <MemberInfo
-                memberId={row.original.assignedTo.id}
-                showRole={true}
-                size="sm"
-              />
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Avatar className="w-6 h-6">
-                  <AvatarFallback className="bg-slate-100 text-slate-600 text-xs">
-                    ?
-                  </AvatarFallback>
+        cell: ({ row }: { row: Row<Task> }) => {
+          const memberTasks = row.original["member-tasks"];
+
+          if (!memberTasks || memberTasks.length === 0) {
+            return (
+              <span className="text-muted-foreground text-xs">Unassigned</span>
+            );
+          }
+
+          return (
+            <div className="flex -space-x-2">
+              {memberTasks.map((mt) => (
+                <Avatar key={mt.id} className="w-6 h-6 border">
+                  {mt.member?.avatarUrl ? (
+                    <AvatarImage
+                      src={mt.member.avatarUrl}
+                      alt={mt.member.name}
+                    />
+                  ) : (
+                    <AvatarFallback>
+                      {mt.member?.name
+                        ?.split(" ")
+                        .map((part) => part[0])
+                        .join("")
+                        .toUpperCase()}
+                    </AvatarFallback>
+                  )}
                 </Avatar>
-                <span className="text-sm text-slate-700">Unassigned</span>
-              </div>
-            )}
-          </div>
-        ),
+              ))}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "status",
@@ -460,6 +513,37 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       },
     },
   });
+
+  // Show loading state when fetching tasks
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-slate-200">
+          <CardContent className="flex items-center justify-center p-8">
+            <Loader2 className="w-8 h-8 animate-spin mr-3" />
+            <span className="text-slate-600">Loading tasks and member details...</span>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Show error state when there's an error fetching tasks
+  if (fetchError) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-slate-200">
+          <CardContent className="flex items-center justify-center p-8">
+            <AlertCircle className="w-8 h-8 text-red-500 mr-3" />
+            <div>
+              <p className="text-red-800 font-medium">Error loading tasks</p>
+              <p className="text-red-600 text-sm">{fetchError}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

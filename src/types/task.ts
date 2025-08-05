@@ -23,6 +23,12 @@ export interface Task {
   projectId?: string;
 }
 
+export type MemberTaskFilterRequest = {
+  "task-id": string;
+  "page-index": number;
+  "page-size": number;
+};
+
 export interface TaskFilters {
   status?: TaskStatus | "All";
   search?: string;

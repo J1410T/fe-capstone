@@ -20,6 +20,8 @@ export const MemberInfo: React.FC<MemberInfoProps> = ({
   size = "md",
   className = "",
 }) => {
+  console.log("[MemberInfo] memberId:", memberId);
+
   const { data: userRole, isLoading, error } = useUserRoleById(memberId);
 
   if (isLoading) {

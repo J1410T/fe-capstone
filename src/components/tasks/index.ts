@@ -4,14 +4,10 @@ export * from "./professional";
 // Export shared task table component
 export { TaskTable } from "./TaskTable";
 
-// Export task detail modal
-export { TaskDetailModal } from "./TaskDetailModal";
-
 // Export reusable task components
 export { TaskFilterBar } from "./TaskFilterBar";
 export { TaskStatsCards } from "./TaskStatsCards";
 export { SharedTaskBoard } from "./SharedTaskBoard";
-export { CreateTaskModal } from "./CreateTaskModal";
 export { TaskModal } from "./TaskModal";
 
 // Export member info components

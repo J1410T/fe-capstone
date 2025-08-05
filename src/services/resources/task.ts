@@ -1,4 +1,8 @@
-import { ProjectTaskResponse, MemberTaskResponse } from "@/types/task";
+import {
+  ProjectTaskResponse,
+  MemberTaskResponse,
+  MemberTaskFilterRequest,
+} from "@/types/task";
 import { axiosClient, getAccessToken } from "../api";
 import {
   CreateMemberTaskRequest,
@@ -152,11 +156,19 @@ export const getMemberTasksByTaskId = async (
       throw new Error("Access token not found");
     }
 
-    const res = await axiosClient.get<MemberTaskResponse>(
-      `/member-task/filter?TaskId=${taskId}&PageIndex=${pageIndex}&PageSize=${pageSize}`,
+    const requestBody: MemberTaskFilterRequest = {
+      "task-id": taskId,
+      "page-index": pageIndex,
+      "page-size": pageSize,
+    };
+
+    const res = await axiosClient.post<MemberTaskResponse>(
+      "/member-task/filter",
+      requestBody,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
         },
       }
     );

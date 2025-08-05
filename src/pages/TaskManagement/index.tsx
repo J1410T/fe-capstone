@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
   TaskTable,
-  TaskDetailModal,
   SharedTaskBoard,
   TaskStatsCards,
   TaskModal,
@@ -39,6 +38,28 @@ import { isValid, parseISO } from "date-fns";
 
 // Import types from API
 import type { ProjectTask } from "@/types/task";
+
+// TaskTable-compatible Task interface
+interface TaskTableTask {
+  id: string;
+  title: string;
+  description: string;
+  status: "Not Started" | "In Progress" | "Complete" | "Overdue";
+  dueDate: string;
+  priority: "Low" | "Medium" | "High";
+  projectTag: string;
+  "member-tasks": Array<{
+    id: string;
+    "member-id": string;
+    member: {
+      id: string;
+      name: string;
+      avatarUrl: string;
+    };
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
 
 // Unified Task interface for component compatibility
 interface Task {
@@ -190,6 +211,7 @@ const UserTaskManagement: React.FC = () => {
   const [pageIndex] = useState(1);
   const [pageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
+
 
   // Role-based permissions (can be made dynamic based on user context)
   const isLeader = true;
@@ -372,32 +394,111 @@ const UserTaskManagement: React.FC = () => {
     return filteredTasks.map(convertTaskForComponents);
   }, [filteredTasks]);
 
-  // Task event handlers - these handle component-compatible tasks
-  const handleTaskEdit = (
-    componentTask: Omit<Task, "projectId" | "milestoneId">
-  ) => {
-    // Find the full task from our transformed data
-    const fullTask = filteredTasks.find((t: Task) => t.id === componentTask.id);
-    if (fullTask) {
-      setSelectedTask(fullTask);
-      setIsUpdateModalOpen(true);
-    }
+  // Debug logging for TaskTable props
+  useEffect(() => {
+    console.log("🔍 TaskManagement - Milestone selection:", {
+      selectedMilestoneId,
+      milestoneIdForTable: selectedMilestoneId && selectedMilestoneId !== "no-milestones" ? selectedMilestoneId : undefined,
+      isValidMilestone: selectedMilestoneId && selectedMilestoneId !== "no-milestones"
+    });
+  }, [selectedMilestoneId]);
+
+  // Task event handlers - these handle TaskTable tasks
+  const handleTaskEdit = (taskTableTask: TaskTableTask) => {
+    // Convert TaskTable task to our internal Task format for modals
+    const convertedTask: Task = {
+      id: taskTableTask.id,
+      title: taskTableTask.title,
+      description: taskTableTask.description,
+      status: taskTableTask.status,
+      dueDate: taskTableTask.dueDate,
+      priority: taskTableTask.priority,
+      projectTag: taskTableTask.projectTag,
+      projectId: selectedProjectId,
+      milestoneId: selectedMilestoneId,
+      assignedTo: {
+        id: taskTableTask["member-tasks"]?.[0]?.["member-id"] || "",
+        name: taskTableTask["member-tasks"]?.[0]?.member?.name || "Unassigned",
+        avatar: taskTableTask["member-tasks"]?.[0]?.member?.avatarUrl || "",
+        email: "",
+      },
+      memberTaskIds: taskTableTask["member-tasks"]?.map((mt) => mt["member-id"]) || [],
+      memberTasks: taskTableTask["member-tasks"]?.map((mt) => ({
+        id: mt.id,
+        memberId: mt["member-id"],
+      })) || [],
+      createdAt: taskTableTask.createdAt,
+      updatedAt: taskTableTask.updatedAt,
+    };
+
+    setSelectedTask(convertedTask);
+    setIsUpdateModalOpen(true);
   };
 
-  const handleTaskView = (
-    componentTask: Omit<Task, "projectId" | "milestoneId">
-  ) => {
-    // Find the full task from our transformed data
-    const fullTask = filteredTasks.find((t: Task) => t.id === componentTask.id);
-    if (fullTask) {
-      setSelectedTask(fullTask);
-      setIsDetailModalOpen(true);
-    }
+  const handleTaskView = (taskTableTask: TaskTableTask) => {
+    // Convert TaskTable task to our internal Task format for modals
+    const convertedTask: Task = {
+      id: taskTableTask.id,
+      title: taskTableTask.title,
+      description: taskTableTask.description,
+      status: taskTableTask.status,
+      dueDate: taskTableTask.dueDate,
+      priority: taskTableTask.priority,
+      projectTag: taskTableTask.projectTag,
+      projectId: selectedProjectId,
+      milestoneId: selectedMilestoneId,
+      assignedTo: {
+        id: taskTableTask["member-tasks"]?.[0]?.["member-id"] || "",
+        name: taskTableTask["member-tasks"]?.[0]?.member?.name || "Unassigned",
+        avatar: taskTableTask["member-tasks"]?.[0]?.member?.avatarUrl || "",
+        email: "",
+      },
+      memberTaskIds: taskTableTask["member-tasks"]?.map((mt) => mt["member-id"]) || [],
+      memberTasks: taskTableTask["member-tasks"]?.map((mt) => ({
+        id: mt.id,
+        memberId: mt["member-id"],
+      })) || [],
+      createdAt: taskTableTask.createdAt,
+      updatedAt: taskTableTask.updatedAt,
+    };
+
+    setSelectedTask(convertedTask);
+    setIsDetailModalOpen(true);
   };
 
-  const handleTaskClick = (
-    componentTask: Omit<Task, "projectId" | "milestoneId">
-  ) => {
+  const handleTaskClick = (taskTableTask: TaskTableTask) => {
+    // Convert TaskTable task to our internal Task format for modals
+    const convertedTask: Task = {
+      id: taskTableTask.id,
+      title: taskTableTask.title,
+      description: taskTableTask.description,
+      status: taskTableTask.status,
+      dueDate: taskTableTask.dueDate,
+      priority: taskTableTask.priority,
+      projectTag: taskTableTask.projectTag,
+      projectId: selectedProjectId,
+      milestoneId: selectedMilestoneId,
+      assignedTo: {
+        id: taskTableTask["member-tasks"]?.[0]?.["member-id"] || "",
+        name: taskTableTask["member-tasks"]?.[0]?.member?.name || "Unassigned",
+        avatar: taskTableTask["member-tasks"]?.[0]?.member?.avatarUrl || "",
+        email: "",
+      },
+      memberTaskIds: taskTableTask["member-tasks"]?.map((mt) => mt["member-id"]) || [],
+      memberTasks: taskTableTask["member-tasks"]?.map((mt) => ({
+        id: mt.id,
+        memberId: mt["member-id"],
+      })) || [],
+      createdAt: taskTableTask.createdAt,
+      updatedAt: taskTableTask.updatedAt,
+    };
+
+    setSelectedTask(convertedTask);
+    setIsDetailModalOpen(true);
+  };
+
+  // Separate handler for SharedTaskBoard (uses old Task format)
+  const handleKanbanTaskClick = (componentTask: Omit<Task, "projectId" | "milestoneId">) => {
     // Find the full task from our transformed data
     const fullTask = filteredTasks.find((t: Task) => t.id === componentTask.id);
     if (fullTask) {
@@ -731,7 +832,7 @@ const UserTaskManagement: React.FC = () => {
             {/* Table View */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
               <TaskTable
-                tasks={tasksForComponents}
+                milestoneId={selectedMilestoneId && selectedMilestoneId !== "no-milestones" ? selectedMilestoneId : undefined}
                 onTaskEdit={handleTaskEdit}
                 onTaskView={handleTaskView}
                 onTaskClick={handleTaskClick}
@@ -746,7 +847,7 @@ const UserTaskManagement: React.FC = () => {
             <SharedTaskBoard
               tasks={tasksForComponents}
               onTaskUpdate={handleUpdateTask}
-              onTaskClick={handleTaskClick}
+              onTaskClick={handleKanbanTaskClick}
             />
           </div>
         )}
@@ -754,12 +855,14 @@ const UserTaskManagement: React.FC = () => {
 
       {/* Modals */}
       {/* Task Detail Modal */}
-      <TaskDetailModal
+      <TaskModal
         open={isDetailModalOpen}
         onOpenChange={setIsDetailModalOpen}
+        mode="view"
         task={selectedTask ? convertTaskForComponents(selectedTask) : null}
         onUpdate={handleUpdateTask}
-        projectId={selectedProjectId}
+        selectedProjectId={selectedProjectId}
+        selectedMilestoneId={selectedMilestoneId}
       />
 
       {/* Unified Task Modal for Create */}
