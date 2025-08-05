@@ -33,7 +33,7 @@ import {
   useUpdateTaskStatusKanban,
   useDeleteTask,
 } from "@/hooks/queries/task";
-import { formatDate, formatDateTime } from "@/utils/date";
+import { formatDateTime } from "@/utils/date";
 import { isValid, parseISO } from "date-fns";
 
 // Import types from API
@@ -78,26 +78,43 @@ interface Task {
     avatar: string;
     email: string;
   };
-  memberTaskIds?: string[]; // Array of member IDs assigned to this task
-  memberTasks?: Array<{ id: string; memberId: string }>; // Array of member task objects with IDs
+  memberTaskIds?: string[]; // Array of member IDs assigned to this task (backward compatibility)
+  memberTasks?: Array<{ id: string; memberId: string }>; // Array of member task objects with IDs (backward compatibility)
+  // Enhanced member-tasks field from the API response
+  "member-tasks"?: Array<{
+    id: string;
+    "member-id": string;
+    member: {
+      id: string;
+      name: string;
+      avatarUrl: string;
+    };
+    progress?: number;
+    overdue?: number;
+    status?: string;
+    note?: string;
+  }>;
   createdAt: string;
   updatedAt: string;
+  startDate?: string;
+  endDate?: string;
 }
 
-// Safe date formatting helper
+// Safe date formatting helper - returns ISO date string for TaskTable compatibility
 const safeFormatDate = (dateString: string | null | undefined): string => {
-  if (!dateString) return new Date().toISOString().split("T")[0];
+  if (!dateString) return new Date().toISOString();
 
   try {
     const parsedDate = parseISO(dateString);
     if (isValid(parsedDate)) {
-      return formatDate(dateString);
+      // Return the original ISO string for TaskTable to handle formatting
+      return dateString;
     }
   } catch {
     // Fall through to default
   }
 
-  return new Date().toISOString().split("T")[0];
+  return new Date().toISOString();
 };
 
 const safeFormatDateTime = (dateString: string | null | undefined): string => {
@@ -125,27 +142,44 @@ const transformProjectTask = (task: ProjectTask): Task => {
     title: task.name,
     description: task.description,
     status: transformTaskStatus(task.status),
-    dueDate: safeFormatDate(task.endDate),
+    dueDate: safeFormatDate(task["end-date"]),
     priority: transformTaskPriority(task.priority),
     projectTag: task.code || "Task",
     projectId: "", // Will be set from context
-    milestoneId: task.milestoneId,
+    milestoneId: task["milestone-id"],
     assignedTo: {
       id: primaryMemberTask?.memberId || "",
       name: primaryMemberTask ? "Loading..." : "Unassigned", // Will be resolved by MemberInfo component
       avatar: "",
       email: "",
     },
-    // Store all member task IDs for later use
+    // Store all member task IDs for later use (backward compatibility)
     memberTaskIds: task["member-tasks"]?.map((mt) => mt.memberId) || [],
-    // Store member task objects with both member ID and member task ID
+    // Store member task objects with both member ID and member task ID (backward compatibility)
     memberTasks:
       task["member-tasks"]?.map((mt) => ({
         id: mt.id,
         memberId: mt.memberId,
       })) || [],
-    createdAt: safeFormatDateTime(task.startDate),
-    updatedAt: safeFormatDateTime(task.deliveryDate),
+    // Include the full member-tasks data for enhanced TaskModal display
+    "member-tasks": task["member-tasks"]?.map((mt) => ({
+      id: mt.id,
+      "member-id": mt.memberId,
+      member: {
+        id: mt.memberId,
+        name: mt["full-name"] || "Unknown Member",
+        avatarUrl: mt["avatar-url"] || "",
+      },
+      progress: mt.progress,
+      overdue: mt.overdue,
+      status: mt.status,
+      note: mt.note,
+    })) || [],
+    createdAt: safeFormatDateTime(task["start-date"]),
+    updatedAt: safeFormatDateTime(task["delivery-date"]),
+    // Add start and end date fields for TaskModal
+    startDate: safeFormatDate(task["start-date"]),
+    endDate: safeFormatDate(task["end-date"]),
   };
 };
 

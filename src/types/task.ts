@@ -99,17 +99,17 @@ export type ProjectTask = {
   code: string;
   name: string;
   description: string;
-  startDate: string;
-  endDate: string;
-  deliveryDate: string;
+  "start-date": string;
+  "end-date": string;
+  "delivery-date": string | null;
   priority: string;
   progress: number;
   overdue: number;
-  meetingUrl: string;
+  "meeting-url": string | null;
   note: string;
   status: string;
-  milestoneId: string;
-  creatorId: string;
+  "milestone-id": string;
+  "creator-id": string;
   "member-tasks": MemberTask[] | null;
 };
 

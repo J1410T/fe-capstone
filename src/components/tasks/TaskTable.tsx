@@ -103,6 +103,11 @@ const isValidDateString = (dateString: string): boolean => {
 };
 
 const formatDueDate = (dueDate: string): string => {
+  // Handle null or empty dates
+  if (!dueDate || dueDate === "null" || dueDate === "") {
+    return "Invalid date";
+  }
+
   if (!isValidDateString(dueDate)) {
     return "Invalid date";
   }
@@ -170,15 +175,22 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [dueDateFilter, setDueDateFilter] = useState<string>("all");
 
-  // Update task status to Overdue if past due date
+  // Note: Overdue status is now handled in the useTasksWithMembersByMilestoneId hook
+  // to ensure consistency across the application. We'll use tasks directly.
   const tasksWithOverdueCheck = useMemo(() => {
+    // If using the enhanced hook (milestoneId provided), overdue logic is already applied
+    if (milestoneId) {
+      return tasks;
+    }
+
+    // For backward compatibility with passed tasks, still apply overdue logic
     return tasks.map((task) => {
       if (isOverdue(task.dueDate, task.status) && task.status !== "Complete") {
         return { ...task, status: "Overdue" as const };
       }
       return task;
     });
-  }, [tasks]);
+  }, [tasks, milestoneId]);
 
   // Get priority configuration from shared utilities
   const getPriorityConfig = (priority: string) => {
@@ -299,7 +311,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
             onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
             className="h-auto p-0 font-semibold text-slate-700 hover:text-slate-900"
           >
-            Due Date
+            End Date
             {column.getIsSorted() === "asc" ? (
               <ArrowUp className="ml-2 h-4 w-4" />
             ) : column.getIsSorted() === "desc" ? (

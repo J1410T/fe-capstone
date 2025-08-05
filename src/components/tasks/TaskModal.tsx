@@ -49,7 +49,7 @@ import {
 } from "@/hooks/queries/task";
 import { UserRole } from "@/types/auth";
 import { toast } from "sonner";
-import { parseISO } from "date-fns";
+import { parseISO, isValid } from "date-fns";
 import { MemberInfo } from "./MemberInfo";
 
 // Task interface for the modal - matches TaskManagement interface
@@ -69,8 +69,22 @@ interface Task {
     avatar: string;
     email: string;
   };
-  memberTaskIds?: string[]; // Array of member IDs assigned to this task
-  memberTasks?: Array<{ id: string; memberId: string }>; // Array of member task objects with IDs
+  memberTaskIds?: string[]; // Array of member IDs assigned to this task (backward compatibility)
+  memberTasks?: Array<{ id: string; memberId: string }>; // Array of member task objects with IDs (backward compatibility)
+  // Enhanced member-tasks field from the API response
+  "member-tasks"?: Array<{
+    id: string;
+    "member-id": string;
+    member: {
+      id: string;
+      name: string;
+      avatarUrl: string;
+    };
+    progress?: number;
+    overdue?: number;
+    status?: string;
+    note?: string;
+  }>;
   createdAt: string;
   updatedAt: string;
   startDate?: string;
@@ -171,8 +185,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   }, [userRolesData, selectedMembers]);
 
   // Get current member tasks for display
-  const currentMemberTasks = memberTasksData?.["data-list"] || [];
-  const memberIds = currentMemberTasks.map((memberTask) => memberTask.memberId);
+  // Check if task has member-tasks data (from enhanced hook) or use separate API call
+  const currentMemberTasks = task?.["member-tasks"] || memberTasksData?.["data-list"] || [];
 
   // Initialize form data when task or mode changes
   useEffect(() => {
@@ -205,17 +219,37 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         meetingUrl: task.meetingUrl || "",
       });
 
-      // Set dates
-      if (task.startDate) {
-        setSelectedStartDate(parseISO(task.startDate));
-      } else if (task.createdAt) {
-        setSelectedStartDate(parseISO(task.createdAt));
+      // Set dates - handle both ISO datetime and date-only formats
+      try {
+        if (task.startDate) {
+          const startDate = parseISO(task.startDate);
+          if (isValid(startDate)) {
+            setSelectedStartDate(startDate);
+          }
+        } else if (task.createdAt) {
+          const createdDate = parseISO(task.createdAt);
+          if (isValid(createdDate)) {
+            setSelectedStartDate(createdDate);
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing start date:", error);
       }
 
-      if (task.endDate) {
-        setSelectedEndDate(parseISO(task.endDate));
-      } else if (task.dueDate) {
-        setSelectedEndDate(parseISO(task.dueDate));
+      try {
+        if (task.endDate) {
+          const endDate = parseISO(task.endDate);
+          if (isValid(endDate)) {
+            setSelectedEndDate(endDate);
+          }
+        } else if (task.dueDate) {
+          const dueDate = parseISO(task.dueDate);
+          if (isValid(dueDate)) {
+            setSelectedEndDate(dueDate);
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing end date:", error);
       }
 
       // Load current assigned members from user roles data
@@ -395,13 +429,22 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         });
 
         // Handle member task updates
-        const currentMemberIds = currentMemberTasks.map((mt) => mt.memberId);
+        const currentMemberIds = currentMemberTasks.map((mt) => {
+          // Handle both enhanced member-tasks format and legacy MemberTask format
+          if ('member-id' in mt) {
+            return mt["member-id"];
+          } else if ('memberId' in mt) {
+            return (mt as any).memberId;
+          }
+          return "";
+        });
         const newMemberIds = selectedMembers.map((m) => m["account-id"]);
 
         // Remove members that are no longer selected
-        const membersToRemove = currentMemberTasks.filter(
-          (mt) => !newMemberIds.includes(mt.memberId)
-        );
+        const membersToRemove = currentMemberTasks.filter((mt) => {
+          const memberId = 'member-id' in mt ? mt["member-id"] : ('memberId' in mt ? (mt as any).memberId : "");
+          return !newMemberIds.includes(memberId);
+        });
 
         for (const memberTask of membersToRemove) {
           await deleteMemberTaskMutation.mutateAsync(memberTask.id);
@@ -715,27 +758,67 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             </Label>
 
             {/* Display current members for view/update modes */}
-            {(mode === "view" || mode === "update") && memberIds.length > 0 && (
+            {(mode === "view" || mode === "update") && currentMemberTasks.length > 0 && (
               <div className="mb-3">
                 <Label className="text-sm font-medium text-slate-700 mb-2 block">
                   Current Members:
                 </Label>
                 <div className="space-y-2">
-                  {memberIds.map((memberId) => (
-                    <div key={memberId} className="p-2 bg-slate-50 rounded-md">
-                      <MemberInfo
-                        memberId={memberId}
-                        showRole={true}
-                        size="sm"
-                      />
-                    </div>
-                  ))}
+                  {currentMemberTasks.map((memberTask) => {
+                    // Check if member data is embedded (from enhanced hook)
+                    const memberData = 'member' in memberTask ? (memberTask as any).member : null;
+                    const memberId = 'member-id' in memberTask ? (memberTask as any)["member-id"] : ('memberId' in memberTask ? (memberTask as any).memberId : "");
+
+                    return (
+                      <div key={memberTask.id || memberId} className="p-3 bg-slate-50 rounded-md">
+                        {memberData ? (
+                          // Display member data directly from member-tasks
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                              {memberData.avatarUrl ? (
+                                <img
+                                  src={memberData.avatarUrl}
+                                  alt={memberData.name}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium"
+                                style={{ display: memberData.avatarUrl ? 'none' : 'flex' }}
+                              >
+                                {memberData.name?.charAt(0)?.toUpperCase() || 'U'}
+                              </div>
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-medium text-slate-900">{memberData.name || 'Unknown Member'}</p>
+                              <p className="text-sm text-slate-500">
+                                {memberTask.overdue > 0 && (
+                                  <span className="text-red-500 ml-2">({memberTask.overdue} days overdue)</span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          // Fallback to MemberInfo component for backward compatibility
+                          <MemberInfo
+                            memberId={memberId}
+                            showRole={true}
+                            size="sm"
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
             {/* Display empty state for view mode when no members */}
-            {mode === "view" && memberIds.length === 0 && (
+            {mode === "view" && currentMemberTasks.length === 0 && (
               <div className="p-3 bg-slate-50 rounded-lg text-center">
                 <p className="text-sm text-slate-500">
                   No members assigned to this task

@@ -206,33 +206,53 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?
                 );
               }
 
+              // Automatic overdue status logic: Set status to "Overdue" if end-date is past today
+              // and the task is not already completed, regardless of the stored status
+              const today = new Date();
+              today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+              const endDate = new Date(task["end-date"]);
+              endDate.setHours(0, 0, 0, 0); // Reset time to start of day
+
+              const isOverdue = endDate < today && task.status.toLowerCase() !== "completed" && task.status.toLowerCase() !== "complete";
+              const finalStatus = isOverdue ? "Overdue" : transformTaskStatus(task.status);
+
               // Transform ProjectTask to TaskTableTask format
               return {
                 id: task.id,
                 title: task.name,
                 description: task.description,
-                status: transformTaskStatus(task.status),
-                dueDate: task.endDate,
+                status: finalStatus,
+                dueDate: task["end-date"], // Map end-date to dueDate for TaskTable
                 priority: transformTaskPriority(task.priority),
                 projectTag: task.code || "Task",
                 "member-tasks": memberTasksWithDetails,
-                createdAt: task.startDate,
-                updatedAt: task.startDate, // Using startDate as fallback
+                createdAt: task["start-date"], // Map start-date to createdAt
+                updatedAt: task["start-date"], // Using start-date as fallback since API doesn't provide updated date
               };
             } catch (taskError) {
               console.error(`Error processing task ${task.id}:`, taskError);
+
+              // Apply automatic overdue status logic even in error case
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const endDate = new Date(task["end-date"]);
+              endDate.setHours(0, 0, 0, 0);
+
+              const isOverdue = endDate < today && task.status.toLowerCase() !== "completed" && task.status.toLowerCase() !== "complete";
+              const finalStatus = isOverdue ? "Overdue" : transformTaskStatus(task.status);
+
               // Return task with empty member tasks on error
               return {
                 id: task.id,
                 title: task.name,
                 description: task.description,
-                status: transformTaskStatus(task.status),
-                dueDate: task.endDate,
+                status: finalStatus,
+                dueDate: task["end-date"], // Map end-date to dueDate
                 priority: transformTaskPriority(task.priority),
                 projectTag: task.code || "Task",
                 "member-tasks": [],
-                createdAt: task.startDate,
-                updatedAt: task.startDate,
+                createdAt: task["start-date"], // Map start-date to createdAt
+                updatedAt: task["start-date"],
               };
             }
           })
