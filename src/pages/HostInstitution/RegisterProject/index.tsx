@@ -171,6 +171,7 @@ const RegisterProject: React.FC = () => {
       createProjectMutation,
       createProjectMajorMutation,
       createProjectTagMutation,
+      user?.role,
     ]
   );
 

@@ -161,10 +161,75 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
           </span>
         </div>
 
-        {/* Footer with Assignee */}
+        {/* Footer with Assigned Members */}
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-1 sm:space-x-2 min-w-0 flex-1">
-            {task.assignee?.id ? (
+            {/* Display member-tasks if available */}
+            {task["member-tasks"] && task["member-tasks"].length > 0 ? (
+              <div className="flex items-center space-x-1">
+                {/* Show up to 3 member avatars */}
+                {task["member-tasks"].slice(0, 3).map((memberTask) => {
+                  const memberData = memberTask.member;
+                  const memberId = memberTask["member-id"];
+
+                  if (memberData) {
+                    // Use embedded member data
+                    return (
+                      <Avatar key={memberId} className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0">
+                        {memberData.avatarUrl ? (
+                          <img
+                            src={memberData.avatarUrl}
+                            alt={memberData.name}
+                            className="w-full h-full rounded-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                              if (nextElement) {
+                                nextElement.style.display = 'flex';
+                              }
+                            }}
+                          />
+                        ) : null}
+                        <AvatarFallback
+                          className="text-xs bg-blue-100 text-blue-600"
+                          style={{ display: memberData.avatarUrl ? 'none' : 'flex' }}
+                        >
+                          {memberData.name?.charAt(0)?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    );
+                  } else {
+                    // Fallback to MemberInfo component
+                    return (
+                      <MemberInfo
+                        key={memberId}
+                        memberId={memberId}
+                        showRole={false}
+                        size="sm"
+                        className="min-w-0"
+                      />
+                    );
+                  }
+                })}
+
+                {/* Show count if more than 3 members */}
+                {task["member-tasks"].length > 3 && (
+                  <div className="w-5 h-5 sm:w-6 sm:h-6 bg-slate-200 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-slate-600 font-medium">
+                      +{task["member-tasks"].length - 3}
+                    </span>
+                  </div>
+                )}
+
+                {/* Show first member name if space allows */}
+                {task["member-tasks"][0]?.member?.name && (
+                  <span className="text-xs text-slate-600 truncate max-w-[60px] sm:max-w-[100px] hidden sm:inline">
+                    {task["member-tasks"][0].member.name}
+                  </span>
+                )}
+              </div>
+            ) : task.assignee?.id ? (
+              // Fallback to legacy assignee display
               <MemberInfo
                 memberId={task.assignee.id}
                 showRole={false}
@@ -172,6 +237,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
                 className="min-w-0"
               />
             ) : (
+              // No members assigned
               <>
                 <Avatar className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0">
                   <AvatarFallback className="text-xs bg-slate-100 text-slate-600">

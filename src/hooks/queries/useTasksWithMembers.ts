@@ -208,12 +208,15 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?
 
               // Automatic overdue status logic: Set status to "Overdue" if end-date is past today
               // and the task is not already completed, regardless of the stored status
-              const today = new Date();
-              today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
-              const endDate = new Date(task["end-date"]);
-              endDate.setHours(0, 0, 0, 0); // Reset time to start of day
+              let isOverdue = false;
+              if (task["end-date"] && task["end-date"] !== "null") {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
+                const endDate = new Date(task["end-date"]);
+                endDate.setHours(0, 0, 0, 0); // Reset time to start of day
 
-              const isOverdue = endDate < today && task.status.toLowerCase() !== "completed" && task.status.toLowerCase() !== "complete";
+                isOverdue = endDate < today && task.status.toLowerCase() !== "completed" && task.status.toLowerCase() !== "complete";
+              }
               const finalStatus = isOverdue ? "Overdue" : transformTaskStatus(task.status);
 
               // Transform ProjectTask to TaskTableTask format
@@ -222,12 +225,12 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?
                 title: task.name,
                 description: task.description,
                 status: finalStatus,
-                dueDate: task["end-date"], // Map end-date to dueDate for TaskTable
+                dueDate: task["end-date"] || "", // Map end-date to dueDate for TaskTable, handle null
                 priority: transformTaskPriority(task.priority),
                 projectTag: task.code || "Task",
                 "member-tasks": memberTasksWithDetails,
-                createdAt: task["start-date"], // Map start-date to createdAt
-                updatedAt: task["start-date"], // Using start-date as fallback since API doesn't provide updated date
+                createdAt: task["start-date"] || "", // Map start-date to createdAt, handle null
+                updatedAt: task["start-date"] || "", // Using start-date as fallback since API doesn't provide updated date
               };
             } catch (taskError) {
               console.error(`Error processing task ${task.id}:`, taskError);

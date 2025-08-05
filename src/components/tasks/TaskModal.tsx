@@ -50,6 +50,22 @@ import {
 import { UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { parseISO, isValid } from "date-fns";
+
+// Type for handling different member task formats
+type MemberTaskUnion = {
+  id: string;
+  "member-id"?: string;
+  memberId?: string;
+  member?: {
+    id: string;
+    name: string;
+    avatarUrl: string;
+  };
+  progress?: number;
+  overdue?: number;
+  status?: string;
+  note?: string;
+};
 import { MemberInfo } from "./MemberInfo";
 
 // Task interface for the modal - matches TaskManagement interface
@@ -84,6 +100,8 @@ interface Task {
     overdue?: number;
     status?: string;
     note?: string;
+    // Legacy fields for backward compatibility
+    memberId?: string;
   }>;
   createdAt: string;
   updatedAt: string;
@@ -141,6 +159,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const [selectedMembers, setSelectedMembers] = useState<UserRole[]>([]);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [currentMode, setCurrentMode] = useState<TaskModalMode>(mode);
+
+  // Sync mode prop with local state
+  useEffect(() => {
+    setCurrentMode(mode);
+  }, [mode]);
 
   // Determine project ID for API calls
   const projectId = selectedProjectId;
@@ -186,7 +210,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
   // Get current member tasks for display
   // Check if task has member-tasks data (from enhanced hook) or use separate API call
-  const currentMemberTasks = task?.["member-tasks"] || memberTasksData?.["data-list"] || [];
+  const currentMemberTasks: MemberTaskUnion[] = (task?.["member-tasks"] || memberTasksData?.["data-list"] || []) as MemberTaskUnion[];
 
   // Initialize form data when task or mode changes
   useEffect(() => {
@@ -219,37 +243,43 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         meetingUrl: task.meetingUrl || "",
       });
 
-      // Set dates - handle both ISO datetime and date-only formats
+      // Set dates - handle both ISO datetime and date-only formats, and null values
       try {
-        if (task.startDate) {
+        if (task.startDate && task.startDate !== "null" && task.startDate !== "") {
           const startDate = parseISO(task.startDate);
           if (isValid(startDate)) {
             setSelectedStartDate(startDate);
           }
-        } else if (task.createdAt) {
+        } else if (task.createdAt && task.createdAt !== "null" && task.createdAt !== "") {
           const createdDate = parseISO(task.createdAt);
           if (isValid(createdDate)) {
             setSelectedStartDate(createdDate);
           }
+        } else {
+          setSelectedStartDate(undefined); // Clear date if null
         }
       } catch (error) {
         console.error("Error parsing start date:", error);
+        setSelectedStartDate(undefined);
       }
 
       try {
-        if (task.endDate) {
+        if (task.endDate && task.endDate !== "null" && task.endDate !== "") {
           const endDate = parseISO(task.endDate);
           if (isValid(endDate)) {
             setSelectedEndDate(endDate);
           }
-        } else if (task.dueDate) {
+        } else if (task.dueDate && task.dueDate !== "null" && task.dueDate !== "") {
           const dueDate = parseISO(task.dueDate);
           if (isValid(dueDate)) {
             setSelectedEndDate(dueDate);
           }
+        } else {
+          setSelectedEndDate(undefined); // Clear date if null
         }
       } catch (error) {
         console.error("Error parsing end date:", error);
+        setSelectedEndDate(undefined);
       }
 
       // Load current assigned members from user roles data
@@ -283,8 +313,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     }
   }, [selectedEndDate]);
 
-  // Determine if form is read-only
-  const isReadOnly = mode === "view";
+  // Determine if form is read-only based on current mode
+  const isReadOnly = currentMode === "view";
 
   // Get modal title and icon based on mode
   const getModalTitle = () => {
@@ -431,18 +461,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         // Handle member task updates
         const currentMemberIds = currentMemberTasks.map((mt) => {
           // Handle both enhanced member-tasks format and legacy MemberTask format
-          if ('member-id' in mt) {
-            return mt["member-id"];
-          } else if ('memberId' in mt) {
-            return (mt as any).memberId;
-          }
-          return "";
+          return mt["member-id"] || mt.memberId || "";
         });
         const newMemberIds = selectedMembers.map((m) => m["account-id"]);
 
         // Remove members that are no longer selected
         const membersToRemove = currentMemberTasks.filter((mt) => {
-          const memberId = 'member-id' in mt ? mt["member-id"] : ('memberId' in mt ? (mt as any).memberId : "");
+          const memberId = mt["member-id"] || mt.memberId || "";
           return !newMemberIds.includes(memberId);
         });
 
@@ -766,8 +791,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 <div className="space-y-2">
                   {currentMemberTasks.map((memberTask) => {
                     // Check if member data is embedded (from enhanced hook)
-                    const memberData = 'member' in memberTask ? (memberTask as any).member : null;
-                    const memberId = 'member-id' in memberTask ? (memberTask as any)["member-id"] : ('memberId' in memberTask ? (memberTask as any).memberId : "");
+                    const memberData = memberTask.member || null;
+                    const memberId = memberTask["member-id"] || memberTask.memberId || "";
 
                     return (
                       <div key={memberTask.id || memberId} className="p-3 bg-slate-50 rounded-md">
@@ -782,7 +807,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                                   className="w-8 h-8 rounded-full object-cover"
                                   onError={(e) => {
                                     e.currentTarget.style.display = 'none';
-                                    e.currentTarget.nextElementSibling.style.display = 'flex';
+                                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                                    if (nextElement) {
+                                      nextElement.style.display = 'flex';
+                                    }
                                   }}
                                 />
                               ) : null}
@@ -796,7 +824,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                             <div className="flex-1">
                               <p className="font-medium text-slate-900">{memberData.name || 'Unknown Member'}</p>
                               <p className="text-sm text-slate-500">
-                                {memberTask.overdue > 0 && (
+                                {(memberTask.overdue || 0) > 0 && (
                                   <span className="text-red-500 ml-2">({memberTask.overdue} days overdue)</span>
                                 )}
                               </p>
@@ -965,20 +993,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading}
               >
-                {mode === "view" ? "Close" : "Cancel"}
+                {currentMode === "view" ? "Close" : "Cancel"}
               </Button>
 
-              {!isReadOnly && (
+              {(currentMode === "create" || currentMode === "update") && (
                 <Button
                   type="submit"
                   disabled={isLoading}
                   className="var(--primary) hover:var(--secondary)"
                 >
                   {isLoading
-                    ? mode === "create"
+                    ? currentMode === "create"
                       ? "Creating..."
                       : "Updating..."
-                    : mode === "create"
+                    : currentMode === "create"
                     ? "Create Task"
                     : "Update Task"}
                 </Button>

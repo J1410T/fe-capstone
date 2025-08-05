@@ -21,6 +21,20 @@ export interface Task {
   dueDate: string;
   updatedAt: string;
   projectId?: string;
+  // Enhanced member-tasks field from the API response
+  "member-tasks"?: Array<{
+    id: string;
+    "member-id": string;
+    member?: {
+      id: string;
+      name: string;
+      avatarUrl: string;
+    };
+    progress?: number;
+    overdue?: number;
+    status?: string;
+    note?: string;
+  }>;
 }
 
 export type MemberTaskFilterRequest = {

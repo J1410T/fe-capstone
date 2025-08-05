@@ -15,7 +15,8 @@ import { toast } from "sonner";
 import { Task as ProfessionalTask } from "@/types/task";
 import { UserRole } from "@/contexts/AuthContext";
 
-interface Task {
+// Use a component-specific task interface that matches what TaskManagement passes
+interface ComponentTask {
   id: string;
   title: string;
   description: string;
@@ -31,10 +32,24 @@ interface Task {
   };
   createdAt: string;
   updatedAt: string;
+  // Enhanced member-tasks field from the API response
+  "member-tasks"?: Array<{
+    id: string;
+    "member-id": string;
+    member?: {
+      id: string;
+      name: string;
+      avatarUrl: string;
+    };
+    progress?: number;
+    overdue?: number;
+    status?: string;
+    note?: string;
+  }>;
 }
 
-interface KanbanTask extends Omit<Task, "status"> {
-  assignee: Task["assignedTo"];
+interface KanbanTask extends Omit<ComponentTask, "status"> {
+  assignee: ComponentTask["assignedTo"];
   status: KanbanStatus;
 }
 
@@ -52,6 +67,8 @@ const convertToProfessionalTask = (task: KanbanTask): ProfessionalTask => ({
   dueDate: task.dueDate,
   updatedAt: task.updatedAt,
   projectId: task.projectTag,
+  // Pass through member-tasks data if available
+  "member-tasks": (task as ComponentTask)["member-tasks"]
 });
 
 const STATUS_MAPPING = {
@@ -77,9 +94,9 @@ const KANBAN_STATUSES: KanbanStatus[] = [
 ];
 
 interface SharedTaskBoardProps {
-  tasks: Task[];
-  onTaskUpdate: (task: Task) => void;
-  onTaskClick?: (task: Task) => void;
+  tasks: ComponentTask[];
+  onTaskUpdate: (task: ComponentTask) => void;
+  onTaskClick?: (task: ComponentTask) => void;
 }
 
 export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
@@ -87,7 +104,7 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
   onTaskUpdate,
   onTaskClick,
 }) => {
-  const [activeTask, setActiveTask] = useState<Task | null>(null);
+  const [activeTask, setActiveTask] = useState<ComponentTask | null>(null);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -164,7 +181,7 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
     if (!originalTask || originalTask.status === newStatus || !newStatus)
       return;
 
-    const updatedTask: Task = {
+    const updatedTask: ComponentTask = {
       ...originalTask,
       status: newStatus,
       updatedAt: new Date().toISOString(),
@@ -259,7 +276,7 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
                       ...activeTask.assignedTo,
                       role: UserRole.RESEARCHER,
                     },
-                    status: STATUS_MAPPING[activeTask.status] as KanbanStatus,
+                    status: STATUS_MAPPING[activeTask.status as keyof typeof STATUS_MAPPING] as KanbanStatus,
                   }}
                   onClick={() => {}}
                 />

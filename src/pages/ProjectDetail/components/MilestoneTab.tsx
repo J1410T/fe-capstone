@@ -59,11 +59,11 @@ const MilestoneTab: React.FC<MilestoneTabProps> = ({
                   : projectTask.priority === "medium"
                   ? "Medium"
                   : "Low",
-              dueDate: projectTask.endDate,
-              createdAt: projectTask.startDate,
-              completedAt: projectTask.deliveryDate,
-              "start-date": projectTask.startDate || "",
-              "end-date": projectTask.endDate || "",
+              dueDate: projectTask["end-date"],
+              createdAt: projectTask["start-date"],
+              completedAt: projectTask["delivery-date"] || undefined,
+              "start-date": projectTask["start-date"] || "",
+              "end-date": projectTask["end-date"] || "",
               "member-tasks": "", // Empty for now
             })
           );

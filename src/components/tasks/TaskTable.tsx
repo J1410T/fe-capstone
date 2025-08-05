@@ -750,9 +750,8 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       </Card>
 
       {/* Task Table */}
-      <Card className="border-slate-200">
-        <CardContent className="p-0">
-          <div className="w-full overflow-x-auto">
+
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div className="min-w-[600px]">
               {" "}
               {/* Đảm bảo bảng không bị bóp quá nhỏ */}
@@ -821,8 +820,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
               </Table>
             </div>
           </div>
-        </CardContent>
-      </Card>
+
 
       {/* Pagination - Responsive */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

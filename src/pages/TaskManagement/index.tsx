@@ -102,7 +102,7 @@ interface Task {
 
 // Safe date formatting helper - returns ISO date string for TaskTable compatibility
 const safeFormatDate = (dateString: string | null | undefined): string => {
-  if (!dateString) return new Date().toISOString();
+  if (!dateString || dateString === "null") return ""; // Return empty string for null dates
 
   try {
     const parsedDate = parseISO(dateString);
@@ -114,11 +114,11 @@ const safeFormatDate = (dateString: string | null | undefined): string => {
     // Fall through to default
   }
 
-  return new Date().toISOString();
+  return ""; // Return empty string for invalid dates
 };
 
 const safeFormatDateTime = (dateString: string | null | undefined): string => {
-  if (!dateString) return new Date().toISOString();
+  if (!dateString || dateString === "null") return ""; // Return empty string for null dates
 
   try {
     const parsedDate = parseISO(dateString);
@@ -129,7 +129,7 @@ const safeFormatDateTime = (dateString: string | null | undefined): string => {
     // Fall through to default
   }
 
-  return new Date().toISOString();
+  return ""; // Return empty string for invalid dates
 };
 
 // Data transformation functions
@@ -250,10 +250,13 @@ const UserTaskManagement: React.FC = () => {
   // Role-based permissions (can be made dynamic based on user context)
   const isLeader = true;
 
-  // Add debugging
-  console.log("UserTaskManagement: Component rendering");
-  console.log("UserTaskManagement: selectedProjectId:", selectedProjectId);
-  console.log("UserTaskManagement: selectedMilestoneId:", selectedMilestoneId);
+  // Refresh key for forcing data reload
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Function to refresh data
+  const refreshData = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   // API hooks with error handling
   const { data: projectsData, error: projectsError } = useMyProject();
@@ -365,9 +368,6 @@ const UserTaskManagement: React.FC = () => {
       });
 
       if (overdueTasks.length > 0) {
-        console.log(
-          `Found ${overdueTasks.length} overdue tasks in milestone ${milestoneId}, updating individually...`
-        );
 
         // Mark this milestone as checked
         setCheckedMilestones((prev) => new Set(prev).add(milestoneId));
@@ -561,6 +561,8 @@ const UserTaskManagement: React.FC = () => {
 
     // TODO: Implement API call to create task
     setIsCreateModalOpen(false);
+    // Refresh data after successful creation
+    refreshData();
     toast.success("Task creation not implemented yet", {
       description: "API integration for task creation is pending.",
     });
@@ -649,6 +651,9 @@ const UserTaskManagement: React.FC = () => {
 
             setSelectedTask(null);
             setIsUpdateModalOpen(false);
+            setIsDetailModalOpen(false); // Also close detail modal
+            // Refresh data after successful update
+            refreshData();
           },
         }
       );
@@ -661,9 +666,15 @@ const UserTaskManagement: React.FC = () => {
     if (selectedTask?.id === taskId) {
       setSelectedTask(null);
       setIsUpdateModalOpen(false);
+      setIsDetailModalOpen(false); // Also close detail modal
     }
 
-    deleteTaskMutation.mutate(taskId);
+    deleteTaskMutation.mutate(taskId, {
+      onSuccess: () => {
+        // Refresh data after successful deletion
+        refreshData();
+      }
+    });
   };
 
   // Calculate task statistics with safe date checking
@@ -866,6 +877,7 @@ const UserTaskManagement: React.FC = () => {
             {/* Table View */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
               <TaskTable
+                key={`task-table-${refreshKey}`}
                 milestoneId={selectedMilestoneId && selectedMilestoneId !== "no-milestones" ? selectedMilestoneId : undefined}
                 projectId={selectedProjectId}
                 onTaskEdit={handleTaskEdit}
@@ -880,9 +892,10 @@ const UserTaskManagement: React.FC = () => {
           /* Kanban View - Responsive */
           <div className="min-h-screen">
             <SharedTaskBoard
+              key={`kanban-board-${refreshKey}`}
               tasks={tasksForComponents}
-              onTaskUpdate={handleUpdateTask}
-              onTaskClick={handleKanbanTaskClick}
+              onTaskUpdate={(task) => handleUpdateTask(task as Omit<Task, "projectId" | "milestoneId">)}
+              onTaskClick={(task) => handleKanbanTaskClick(task as Omit<Task, "projectId" | "milestoneId">)}
             />
           </div>
         )}
