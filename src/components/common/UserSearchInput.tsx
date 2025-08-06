@@ -16,6 +16,14 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { UserSearchResult } from "@/types/auth";
 
 export interface InvitedUser extends UserSearchResult {
@@ -240,41 +248,43 @@ export const UserSearchInput: React.FC<UserSearchInputProps> = ({
       </Popover>
 
       {/* Duplicate Names Dialog */}
-      {showDuplicateDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Multiple users found</h3>
-            <p className="text-sm text-gray-600 mb-4">
+      <Dialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Multiple users found</DialogTitle>
+            <DialogDescription>
               Multiple users have the same name. Please select the correct one:
-            </p>
-            <div className="space-y-2 mb-4">
-              {duplicateUsers.map((user) => (
-                <button
-                  key={user.id}
-                  onClick={() => handleDuplicateSelect(user)}
-                  className="w-full flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 text-left"
-                >
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.avatar} />
-                    <AvatarFallback>
-                      {user.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{user.name}</p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                    {user.department && (
-                      <p className="text-xs text-gray-400">
-                        {user.department} • {user.role}
-                      </p>
-                    )}
-                  </div>
-                </button>
-              ))}
-            </div>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2 mb-4">
+            {duplicateUsers.map((user) => (
+              <button
+                key={user.id}
+                onClick={() => handleDuplicateSelect(user)}
+                className="w-full flex items-center space-x-3 p-3 rounded-lg border hover:bg-gray-50 text-left"
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarImage src={user.avatar} />
+                  <AvatarFallback>
+                    {user.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{user.name}</p>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                  {user.department && (
+                    <p className="text-xs text-gray-400">
+                      {user.department} • {user.role}
+                    </p>
+                  )}
+                </div>
+              </button>
+            ))}
+          </div>
+          <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setShowDuplicateDialog(false)}
@@ -282,9 +292,9 @@ export const UserSearchInput: React.FC<UserSearchInputProps> = ({
             >
               Cancel
             </Button>
-          </div>
-        </div>
-      )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

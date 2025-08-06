@@ -19,6 +19,7 @@ import {
   createUserRole,
   updateUserRoleStatus,
   deleteUserRole,
+  getUserRoleById,
 } from "@/services/resources/auth";
 import {
   UserRole,
@@ -103,6 +104,7 @@ export function useAllRoles() {
   });
 }
 
+// Optimized useUserRolesByProjectId - only refetch every 2 minutes
 export function useUserRolesByProjectId(
   projectId: string,
   pageIndex: number = 1,
@@ -114,6 +116,11 @@ export function useUserRolesByProjectId(
     queryKey: ["user-roles", projectId, pageIndex, pageSize],
     queryFn: () => getUserRolesByProjectId(projectId, pageIndex, pageSize),
     enabled: !!projectId && !!accessToken,
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+    refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes only
+    refetchIntervalInBackground: false, // Don't refetch in background to reduce API calls
+    refetchOnWindowFocus: false, // Don't refetch on window focus to reduce API calls
+    refetchOnMount: true, // Only refetch on initial mount
   });
 }
 
@@ -132,7 +139,7 @@ export function useUserRoleById(userRoleId: string) {
 }
 
 /**
- * Hook to get user role by account ID and project ID with real-time updates
+ * Hook to get user role by account ID and project ID - optimized for less frequent updates
  */
 export function useUserRoleByAccountAndProject(
   accountId: string,
@@ -157,11 +164,13 @@ export function useUserRoleByAccountAndProject(
       return response["data-list"] || [];
     },
     enabled: !!accountId && !!projectId && enabled,
-    staleTime: 5000, // Cache for 5 seconds for real-time updates
-    refetchInterval: 3000, // Refetch every 3 seconds for immediate status updates
-    refetchIntervalInBackground: true, // Continue refetching in background
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes instead of 5 seconds
+    refetchInterval: 2 * 60 * 1000, // Refetch every 2 minutes instead of 3 seconds
+    refetchIntervalInBackground: false, // Don't refetch in background
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 }
+
 /**
  * Hook to create a user role
  */
@@ -173,6 +182,7 @@ export function useCreateUserRole() {
     onSuccess: () => {
       // Invalidate user role queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["user-role"] });
+      queryClient.invalidateQueries({ queryKey: ["user-roles"] });
     },
     onError: (error) => {
       console.error("Failed to create user role:", error);
@@ -199,6 +209,7 @@ export function useUpdateUserRoleStatus() {
     onSuccess: () => {
       // Invalidate user role and all notification queries to refresh data across all tabs
       queryClient.invalidateQueries({ queryKey: ["user-role"] });
+      queryClient.invalidateQueries({ queryKey: ["user-roles"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       // Also refetch all notification queries to ensure immediate updates across all tabs
       queryClient.refetchQueries({ queryKey: ["notifications"] });
@@ -220,6 +231,7 @@ export function useDeleteUserRole() {
     onSuccess: () => {
       // Invalidate user role and all notification queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["user-role"] });
+      queryClient.invalidateQueries({ queryKey: ["user-roles"] });
       queryClient.invalidateQueries({ queryKey: ["notifications"] });
       queryClient.invalidateQueries({ queryKey: ["project"] });
       // Also refetch all queries to ensure immediate updates
@@ -237,10 +249,7 @@ export function useGetUserRoleById(userRoleId: string) {
 
   return useQuery({
     queryKey: ["get-user-role-by-id", userRoleId],
-    queryFn: () =>
-      import("@/services/resources/auth").then(({ getUserRoleById }) =>
-        getUserRoleById(userRoleId)
-      ),
+    queryFn: () => getUserRoleById(userRoleId),
     enabled: !!userRoleId && !!accessToken,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });

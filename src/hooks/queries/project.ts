@@ -7,12 +7,14 @@ import {
   createProject,
   createProjectMajor,
   createProjectTag,
+  updateProject,
   enrollProjectAsPrincipal,
 } from "@/services/resources/project";
 import {
   CreateProjectMajorRequest,
   CreateProjectRequest,
   CreateProjectTagRequest,
+  UpdateProjectRequest,
   SortOption,
 } from "@/types/project";
 
@@ -86,6 +88,35 @@ export function useCreateProjectMajor() {
 export function useCreateProjectTag() {
   return useMutation({
     mutationFn: (data: CreateProjectTagRequest) => createProjectTag(data),
+  });
+}
+
+export function useUpdateProject() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      projectId,
+      data,
+      status,
+    }: {
+      projectId: string;
+      data: UpdateProjectRequest;
+      status?: string;
+    }) => updateProject(projectId, data, status),
+    onSuccess: (data, variables) => {
+      // Invalidate relevant queries after successful update
+      // Use the projectId from variables if data structure is unexpected
+      const projectId = data?.["project-detail"]?.id || variables.projectId;
+
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: ["project", projectId],
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["project-list-filter"] });
+      queryClient.invalidateQueries({ queryKey: ["my-projects"] });
+    },
   });
 }
 

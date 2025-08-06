@@ -76,6 +76,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
         "is-template": false,
         "content-html": templateContent,
         "project-id": projectId,
+        status: "draft",
       });
 
       setDocumentCreated(true);

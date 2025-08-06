@@ -249,9 +249,9 @@ function ProjectDetail() {
         {visibleTabs.includes("documents") && (
           <TabsContent value="documents" className="space-y-4">
             <DocumentTab
-              documents={project.documents || []}
               projectId={project.id}
               isProposal={project.genre === "proposal"}
+              projectStatus={project.status}
             />
           </TabsContent>
         )}

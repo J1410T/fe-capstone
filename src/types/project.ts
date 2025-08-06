@@ -246,6 +246,22 @@ export interface CreateProjectTagRequest {
   "project-id": string;
 }
 
+export interface UpdateProjectRequest {
+  "english-title": string;
+  "vietnamese-title": string;
+  abbreviations?: string | null;
+  duration?: number | null;
+  "start-date"?: string | null;
+  "end-date"?: string | null;
+  description?: string | null;
+  "requirement-note"?: string | null;
+  "maximum-member": number;
+  language: string;
+  category: string;
+  type: string;
+  genre: string;
+}
+
 export interface ProjectTag {
   id?: string;
   name: string;
