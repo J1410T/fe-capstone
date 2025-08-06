@@ -97,6 +97,7 @@ export interface DocumentListResponse {
 export interface CreateDocumentRequest {
   name: string;
   type: string;
+  status: string;
   "is-template": boolean;
   "content-html": string;
   "project-id": string;
@@ -104,6 +105,28 @@ export interface CreateDocumentRequest {
 
 export interface CreateDocumentResponse {
   id: string;
+}
+
+export interface GetDocumentByProjectIdRequest {
+  "is-template": boolean;
+  status: string;
+  "page-index": number;
+  "page-size": number;
+  "project-id": string;
+}
+
+export interface DocumentWithUserRole extends DocumentForm {
+  "account-id"?: string;
+  "full-name"?: string;
+  "avatar-url"?: string;
+}
+
+export interface DocumentListWithUserRoleResponse {
+  "page-index": number;
+  "page-size": number;
+  "total-count": number;
+  "total-page": number;
+  "data-list": DocumentWithUserRole[];
 }
 
 export interface UpdateDocumentRequest {

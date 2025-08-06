@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import {
   Card,
   CardContent,
@@ -25,44 +25,57 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   FileText,
   Download,
   Eye,
   FolderOpen,
   Upload,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
-import { DocumentProject } from "@/types/document";
+import { DocumentWithUserRole } from "@/types/document";
 import { formatDateTime } from "@/utils";
 import { getStatusColor } from "../shared/utils";
 import { Editor } from "@tinymce/tinymce-react";
 import {
   useScientificCVByEmail,
   useCreateDocument,
-  useDeleteDocumentById,
+  useDocumentByProjectIdWithUserRole,
+  useUpdateDocument,
 } from "@/hooks/queries/document";
 import { useMyAccountInfo } from "@/hooks/queries/useAuth";
-import { useProject } from "@/hooks/queries/project";
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { toast } from "sonner";
 
 interface DocumentTabProps {
-  documents: DocumentProject[];
   projectId?: string;
   isProposal?: boolean;
+  projectStatus?: string;
 }
 
 const DocumentTab: React.FC<DocumentTabProps> = ({
-  documents,
   projectId,
   isProposal,
+  projectStatus,
 }) => {
   const [selectedDocument, setSelectedDocument] =
-    React.useState<DocumentProject | null>(null);
+    React.useState<DocumentWithUserRole | null>(null);
   const [showViewDialog, setShowViewDialog] = React.useState(false);
   const [isUploading, setIsUploading] = React.useState(false);
   const [showUploadConfirmDialog, setShowUploadConfirmDialog] =
     React.useState(false);
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Get email from auth response cookie
   const authResponse = getAuthResponse<{ email: string }>();
@@ -76,17 +89,44 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
 
   // API hooks
   const createDocument = useCreateDocument();
-  const deleteDocumentMutation = useDeleteDocumentById();
+  const updateDocument = useUpdateDocument();
   const { data: myAccountInfo } = useMyAccountInfo();
-  const { data: projectResponse } = useProject(projectId || "");
-  const project = projectResponse?.data;
 
-  const handleViewDocument = (document: DocumentProject) => {
+  // Determine document status based on project status
+  const getDocumentStatus = () => {
+    if (projectStatus === "submitted") {
+      return "submitted";
+    }
+    return "draft";
+  };
+
+  // Fetch documents by project ID with pagination and user role data
+  const {
+    data: documentsResponse,
+    isLoading: isDocumentsLoading,
+    refetch,
+  } = useDocumentByProjectIdWithUserRole(
+    {
+      "is-template": false,
+      status: getDocumentStatus(),
+      "page-index": currentPage,
+      "page-size": pageSize,
+      "project-id": projectId || "",
+    },
+    !!projectId
+  );
+
+  // Extract documents with user role data already included
+  const documents = documentsResponse?.["data-list"] || [];
+  const totalCount = documentsResponse?.["total-count"] || 0;
+  const totalPages = documentsResponse?.["total-page"] || 1;
+
+  const handleViewDocument = (document: DocumentWithUserRole) => {
     setSelectedDocument(document);
     setShowViewDialog(true);
   };
 
-  const handleDownloadDocument = (document: DocumentProject) => {
+  const handleDownloadDocument = (document: DocumentWithUserRole) => {
     console.log("Download", document.name);
     // TODO: implement actual download
   };
@@ -107,38 +147,39 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
     setShowUploadConfirmDialog(false);
 
     try {
-      // Check for duplicate account-id in ScienceCV documents
-      if (project?.["project-detail"]?.documents) {
-        const projectDocuments = project["project-detail"].documents;
-        const scienceCVDocs = projectDocuments.filter(
-          (doc: DocumentProject) => doc.type === "ScienceCV"
-        );
+      // Check for existing ScienceCV document with matching account-id
+      const existingScienceCVDoc = documents.find(
+        (doc) =>
+          doc.type === "ScienceCV" && doc["account-id"] === myAccountInfo.id
+      );
 
-        // Find documents with duplicate account-id
-        const duplicateDoc = scienceCVDocs.find((doc: DocumentProject) => {
-          return doc["uploader-id"] === myAccountInfo.id;
+      if (existingScienceCVDoc) {
+        // Update existing document
+        await updateDocument.mutateAsync({
+          id: existingScienceCVDoc.id,
+          name: scientificCV.data.name,
+          type: scientificCV.data.type,
+          "is-template": scientificCV.data["is-template"],
+          "content-html": scientificCV.data["content-html"],
+          "project-id": projectId,
+          status: getDocumentStatus(),
         });
 
-        // If duplicate found, delete it first
-        if (duplicateDoc) {
-          console.log(
-            "Duplicate ScienceCV document found, deleting:",
-            duplicateDoc.id
-          );
-          await deleteDocumentMutation.mutateAsync(duplicateDoc.id);
-        }
+        toast.success("Scientific CV updated successfully!");
+      } else {
+        // Create new document
+        await createDocument.mutateAsync({
+          name: scientificCV.data.name,
+          type: scientificCV.data.type,
+          "is-template": scientificCV.data["is-template"],
+          "content-html": scientificCV.data["content-html"],
+          "project-id": projectId,
+          status: getDocumentStatus(),
+        });
+
+        toast.success("Scientific CV uploaded successfully!");
       }
-
-      // Create new document
-      await createDocument.mutateAsync({
-        name: scientificCV.data.name,
-        type: scientificCV.data.type,
-        "is-template": scientificCV.data["is-template"],
-        "content-html": scientificCV.data["content-html"],
-        "project-id": projectId,
-      });
-
-      toast.success("Scientific CV uploaded successfully!");
+      await refetch();
     } catch (error) {
       console.error("Failed to upload Scientific CV:", error);
       toast.error("Failed to upload Scientific CV");
@@ -163,7 +204,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
               View and manage all project-related documents
             </CardDescription>
           </div>
-          {isProposal && (
+          {isProposal && projectStatus !== "submitted" && (
             <Button
               onClick={handleUploadScientificCV}
               disabled={isUploading || isCVLoading || !scientificCV?.data}
@@ -178,65 +219,164 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
 
       {/* --- Document table --- */}
       <CardContent className="pt-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Document</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Upload</TableHead>
-              <TableHead>Updated</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {documents.map((document) => (
-              <TableRow key={document.id}>
-                <TableCell>
-                  <div className="flex items-center space-x-2">
-                    <FileText className="w-4 h-4 text-blue-600" />
-                    <div>
-                      <p className="font-medium text-sm break-words">
-                        {document.name}
-                      </p>
-                      <Badge
-                        variant="outline"
-                        className={`${getStatusColor(document.status)} text-xs`}
-                      >
-                        {document.status}
-                      </Badge>
-                    </div>
+        {isDocumentsLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin" />
+          </div>
+        ) : (
+          <>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Document</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Upload</TableHead>
+                  <TableHead>Updated</TableHead>
+                  <TableHead>Uploader</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {documents.map((document) => (
+                  <TableRow key={document.id}>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <FileText className="w-4 h-4 text-blue-600" />
+                        <div>
+                          <p className="font-medium text-sm break-words">
+                            {document.name}
+                          </p>
+                          <Badge
+                            variant="outline"
+                            className={`${getStatusColor(
+                              document.status
+                            )} text-xs`}
+                          >
+                            {document.status}
+                          </Badge>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>{document.type}</TableCell>
+                    <TableCell>
+                      {formatDateTime(document["upload-at"])}
+                    </TableCell>
+                    <TableCell>
+                      {document["updated-at"]
+                        ? formatDateTime(document["updated-at"])
+                        : "Not updated"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <img
+                          src={
+                            document["avatar-url"] ||
+                            "https://hoseiki.vn/wp-content/uploads/2025/03/gai-anime-23.jpg"
+                          }
+                          alt={document["full-name"] || "User"}
+                          className="w-6 h-6 rounded-full"
+                        />
+
+                        <span className="text-sm">
+                          {document["full-name"] || "Unknown User"}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end space-x-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewDocument(document)}
+                        >
+                          <Eye className="w-3 h-3 mr-1" />
+                          <span className="hidden sm:inline">View</span>
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadDocument(document)}
+                        >
+                          <Download className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-6">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm text-muted-foreground">
+                    Items per page
+                  </p>
+                  <Select
+                    value={pageSize.toString()}
+                    onValueChange={(value) => setPageSize(parseInt(value))}
+                  >
+                    <SelectTrigger className="w-[80px]">
+                      <SelectValue placeholder={pageSize.toString()} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="15">15</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-sm text-muted-foreground">
+                    Showing{" "}
+                    {Math.min((currentPage - 1) * pageSize + 1, totalCount)} to{" "}
+                    {Math.min(currentPage * pageSize, totalCount)} of{" "}
+                    {totalCount} documents
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="h-8 w-8"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const page = i + 1;
+                      return (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="icon"
+                          onClick={() => setCurrentPage(page)}
+                          className="h-8 w-8"
+                        >
+                          {page}
+                        </Button>
+                      );
+                    })}
                   </div>
-                </TableCell>
-                <TableCell>{document.type}</TableCell>
-                <TableCell>{formatDateTime(document["upload-at"])}</TableCell>
-                <TableCell>
-                  {document["updated-at"]
-                    ? formatDateTime(document["updated-at"])
-                    : "Not updated"}
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleViewDocument(document)}
-                    >
-                      <Eye className="w-3 h-3 mr-1" />
-                      <span className="hidden sm:inline">View</span>
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownloadDocument(document)}
-                    >
-                      <Download className="w-3 h-3" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="h-8 w-8"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {documents.length === 0 && (
           <div className="text-center py-8 text-gray-500">
@@ -262,7 +402,8 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
                   <strong>Type:</strong> {selectedDocument.type}
                 </div>
                 <div>
-                  <strong>Date:</strong> {selectedDocument.dateInDoc}
+                  <strong>Upload Date:</strong>{" "}
+                  {formatDateTime(selectedDocument["upload-at"])}
                 </div>
                 <div>
                   <strong>Status:</strong> {selectedDocument.status}

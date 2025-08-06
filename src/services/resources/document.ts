@@ -5,7 +5,11 @@ import {
   DocumentForm,
   DocumentListResponse,
   UpdateDocumentRequest,
+  GetDocumentByProjectIdRequest,
+  DocumentListWithUserRoleResponse,
+  DocumentWithUserRole,
 } from "@/types/document";
+import { getUserRoleById } from "./auth";
 
 export const getDocumentsByFilter = async (
   type: string,
@@ -74,4 +78,70 @@ export const deleteDocumentById = async (documentId: string) => {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+};
+
+export const getDocumentByProjectId = async (
+  request: GetDocumentByProjectIdRequest
+) => {
+  const accessToken = getAccessToken();
+
+  return await axiosClient.post<DocumentListResponse>(
+    "/document/list",
+    request,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json-patch+json",
+      },
+    }
+  );
+};
+
+export const getDocumentByProjectIdWithUserRole = async (
+  request: GetDocumentByProjectIdRequest
+): Promise<DocumentListWithUserRoleResponse> => {
+  try {
+    // First, get the documents
+    const documentsResponse = await getDocumentByProjectId(request);
+    const documents = documentsResponse.data["data-list"] || [];
+
+    // Then, fetch user role data for each document
+    const documentsWithUserRole: DocumentWithUserRole[] = await Promise.all(
+      documents.map(async (document) => {
+        try {
+          const userRole = await getUserRoleById(document["uploader-id"]);
+          return {
+            ...document,
+            "account-id": userRole["account-id"],
+            "full-name": userRole["full-name"],
+            "avatar-url": userRole["avatar-url"] || undefined,
+          };
+        } catch (error) {
+          console.warn(
+            `Failed to fetch user role for uploader ${document["uploader-id"]}:`,
+            error
+          );
+          // Return document without user role data if the API call fails
+          return {
+            ...document,
+            "account-id": undefined,
+            "full-name": undefined,
+            "avatar-url": undefined,
+          };
+        }
+      })
+    );
+
+    // Return the combined response in the requested format
+    return {
+      "page-index": documentsResponse.data["page-index"],
+      "page-size": documentsResponse.data["page-size"],
+      "total-count": documentsResponse.data["total-count"],
+      "total-page": documentsResponse.data["total-page"],
+      "data-list": documentsWithUserRole,
+    };
+  } catch (error) {
+    console.error("Failed to fetch documents with user role data:", error);
+    throw error;
+  }
 };

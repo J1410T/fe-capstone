@@ -44,6 +44,7 @@ import {
   useMyAccountInfo,
   useCreateUserRole,
   useDeleteUserRole,
+  useUserRolesByProjectId,
 } from "@/hooks/queries/useAuth";
 import { GroupMember, UserRole } from "@/types/auth";
 import { UserRoleStatus } from "@/types/notification";
@@ -52,14 +53,15 @@ import {
   useCreateNotification,
   useSendNotification,
 } from "@/hooks/queries/notification";
-import { useProject } from "@/hooks/queries/project";
 import {
   useScientificCVByEmail,
   useCreateDocument,
+  useUpdateDocument,
+  useDocumentByProjectIdWithUserRole,
   useDeleteDocumentById,
 } from "@/hooks/queries/document";
 import { getAuthResponse } from "@/utils/cookie-manager";
-import { DocumentProject } from "@/types/document";
+import { getUserRoleByFilter } from "@/services/resources/auth";
 
 interface InviteMembersStepProps {
   collaborators: SimpleInvitedUser[];
@@ -102,6 +104,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     useState<UserRole | null>(null);
   const [showUploadConfirmDialog, setShowUploadConfirmDialog] = useState(false);
   const [isUploadingCV, setIsUploadingCV] = useState(false);
+  const [lastStatusCheck, setLastStatusCheck] = useState<number>(0);
 
   // API hooks - search only when input length >= 2
   const { data: searchResults = [], isLoading: isSearching } =
@@ -109,9 +112,12 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   const { data: allRoles = [], isLoading: isLoadingRoles } = useAllRoles();
   const { data: myAccountInfo } = useMyAccountInfo();
 
-  // Fetch project data to get documents
-  const { data: projectResponse } = useProject(projectId || "");
-  const project = projectResponse?.data;
+  // Fetch user roles by project ID with user role information - optimized to 2 minutes
+  const { data: userRolesResponse } = useUserRolesByProjectId(
+    projectId || "",
+    1,
+    100
+  );
 
   // Invitation hooks
   const inviteMemberMutation = useInviteMember();
@@ -122,6 +128,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
 
   // Document hooks
   const createDocumentMutation = useCreateDocument();
+  const updateDocumentMutation = useUpdateDocument();
   const deleteDocumentMutation = useDeleteDocumentById();
 
   // Get email from auth response cookie for CV upload
@@ -131,295 +138,360 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   // Fetch user's Scientific CV by email
   const { data: scientificCV } = useScientificCVByEmail(userEmail, !!userEmail);
 
+  // Fetch documents with user role information for CV status checking
+  const { data: documentsWithUserRole } = useDocumentByProjectIdWithUserRole(
+    {
+      "is-template": false,
+      status: "draft",
+      "page-index": 1,
+      "page-size": 100,
+      "project-id": projectId || "",
+    },
+    !!projectId
+  );
+
   // Initialize group members from UserRole data, excluding current user
   useEffect(() => {
-    if (projectId && myAccountInfo?.id && allRoles.length > 0) {
+    if (
+      userRolesResponse?.["data-list"] &&
+      myAccountInfo?.id &&
+      allRoles.length > 0
+    ) {
       const currentUserId = myAccountInfo.id;
 
-      const fetchUserRoles = async () => {
-        try {
-          const { getUserRolesByProjectId } = await import(
-            "@/services/resources/auth"
+      // Filter out current user based on account-id in UserRole and show approved/pending members
+      const filteredUserRoles = userRolesResponse["data-list"].filter(
+        (userRole: UserRole) =>
+          userRole["account-id"] !== currentUserId &&
+          (userRole.status === "approved" || userRole.status === "pending")
+      );
+
+      // Convert UserRole data to GroupMember format
+      const allMembersFromUserRoles: GroupMember[] = filteredUserRoles.map(
+        (userRole: UserRole) => {
+          // Find the role name from role-id
+          const memberRole = allRoles.find(
+            (role) => role.id === userRole["role-id"]
           );
-          const userRolesResponse = await getUserRolesByProjectId(
-            projectId,
-            1,
-            100
-          );
+          const roleName = memberRole?.name || "Researcher";
 
-          if (userRolesResponse["data-list"]) {
-            // Filter out current user based on account-id in UserRole
-            const filteredUserRoles = userRolesResponse["data-list"].filter(
-              (userRole: UserRole) => userRole["account-id"] !== currentUserId
-            );
-
-            // Convert UserRole data to GroupMember format
-            const allMembersFromUserRoles: GroupMember[] =
-              filteredUserRoles.map((userRole: UserRole) => {
-                // Find the role name from role-id
-                const memberRole = allRoles.find(
-                  (role) => role.id === userRole["role-id"]
-                );
-                const roleName = memberRole?.name || "Researcher";
-
-                return {
-                  id: userRole["account-id"],
-                  name: userRole["full-name"] || "",
-                  email: userRole.email || "",
-                  avatar: userRole["avatar-url"] || undefined,
-                  role: roleName as "Researcher" | "Secretary" | "Leader",
-                  roleId: userRole["role-id"],
-                  isInvitation: false, // These are existing UserRole members
-                  // Required fields from Member interface
-                  code: userRole.code,
-                  groupName: userRole["group-name"],
-                  isOfficial: userRole["is-official"],
-                  expireDate: userRole["expire-date"],
-                  createdAt: userRole["created-at"],
-                  status: userRole.status,
-                  accountId: userRole["account-id"],
-                  "full-name": userRole["full-name"],
-                  phoneNumber: null,
-                  address: null,
-                  companyName: null,
-                  "avatar-url": userRole["avatar-url"],
-                  projectId: userRole["project-id"],
-                  appraisalCouncilId: userRole["appraisal-council-id"],
-                };
-              });
-
-            // Filter members with same account-id: if there are 2 members with same account-id,
-            // show the one with role other than Researcher
-            const membersFromUserRoles: GroupMember[] = [];
-            const accountGroups = allMembersFromUserRoles.reduce(
-              (acc, member) => {
-                if (!acc[member.id]) {
-                  acc[member.id] = [];
-                }
-                acc[member.id].push(member);
-                return acc;
-              },
-              {} as Record<string, GroupMember[]>
-            );
-
-            Object.values(accountGroups).forEach((members) => {
-              if (members.length === 1) {
-                // Only one role for this account, add it
-                membersFromUserRoles.push(members[0]);
-              } else {
-                // Multiple roles for same account, prefer non-Researcher role
-                const nonResearcherMember = members.find(
-                  (m) => m.role !== "Researcher"
-                );
-                if (nonResearcherMember) {
-                  membersFromUserRoles.push(nonResearcherMember);
-                } else {
-                  // All are Researcher roles, just take the first one
-                  membersFromUserRoles.push(members[0]);
-                }
-              }
-            });
-
-            setGroupMembers((prev) => {
-              // Merge with any manually added members (isInvitation: true)
-              const manualMembers = prev.filter((m) => m.isInvitation);
-              return [...membersFromUserRoles, ...manualMembers];
-            });
-
-            // Set the member status from UserRole data
-            const statusMap: Record<string, UserRoleStatus> = {};
-            membersFromUserRoles.forEach((member) => {
-              if (member.status) {
-                statusMap[member.id] = member.status as UserRoleStatus;
-              }
-            });
-            setMemberInvitationStatus((prev) => ({ ...prev, ...statusMap }));
-          }
-        } catch (error) {
-          console.error("Failed to fetch user roles:", error);
+          return {
+            id: userRole["account-id"],
+            name: userRole["full-name"] || "",
+            email: userRole.email || "",
+            avatar: userRole["avatar-url"] || undefined,
+            role: roleName as "Researcher" | "Secretary" | "Leader",
+            roleId: userRole["role-id"],
+            isInvitation: false, // These are existing UserRole members
+            // Required fields from Member interface
+            code: userRole.code,
+            groupName: userRole["group-name"],
+            isOfficial: userRole["is-official"],
+            expireDate: userRole["expire-date"],
+            createdAt: userRole["created-at"],
+            status: userRole.status,
+            accountId: userRole["account-id"],
+            "full-name": userRole["full-name"],
+            phoneNumber: null,
+            address: null,
+            companyName: null,
+            "avatar-url": userRole["avatar-url"],
+            projectId: userRole["project-id"],
+            appraisalCouncilId: userRole["appraisal-council-id"],
+          };
         }
+      );
+
+      const membersFromUserRoles: GroupMember[] = [];
+      const accountGroups = allMembersFromUserRoles.reduce((acc, member) => {
+        if (!acc[member.id]) {
+          acc[member.id] = [];
+        }
+        acc[member.id].push(member);
+        return acc;
+      }, {} as Record<string, GroupMember[]>);
+
+      // Define role priority (higher number = higher priority)
+      // Prioritize other roles over Researcher (Secretary & Researcher → select Secretary)
+      const rolePriority: Record<string, number> = {
+        Researcher: 1,
+        Secretary: 3,
+        Leader: 2,
+        "Principal Investigator": 4,
       };
 
-      fetchUserRoles();
-    }
-  }, [projectId, myAccountInfo, allRoles]);
+      Object.values(accountGroups).forEach((members) => {
+        if (members.length === 1) {
+          // Only one role for this account, add it
+          membersFromUserRoles.push(members[0]);
+        } else {
+          // Multiple roles for same account, get the highest priority role
+          const prioritizedMember = members.reduce((highest, current) => {
+            const currentPriority = rolePriority[current.role] || 0;
+            const highestPriority = rolePriority[highest.role] || 0;
+            return currentPriority > highestPriority ? current : highest;
+          });
+          membersFromUserRoles.push(prioritizedMember);
+        }
+      });
 
-  // Track UserRole status for each member using real API
+      setGroupMembers((prev) => {
+        // Merge with any manually added members (isInvitation: true) that don't have UserRole data yet
+        const manualMembers = prev.filter(
+          (m) =>
+            m.isInvitation && !membersFromUserRoles.some((ur) => ur.id === m.id)
+        );
+        return [...membersFromUserRoles, ...manualMembers];
+      });
+
+      // Set the member status from UserRole data
+      const statusMap: Record<string, UserRoleStatus> = {};
+      membersFromUserRoles.forEach((member) => {
+        if (member.status) {
+          statusMap[member.id] = member.status as UserRoleStatus;
+        }
+      });
+      setMemberInvitationStatus((prev) => ({ ...prev, ...statusMap }));
+    }
+  }, [userRolesResponse, myAccountInfo, allRoles]);
+
+  // Optimized status checking - only every 2 minutes and with debouncing
   useEffect(() => {
-    if (!projectId) return;
+    if (!projectId || groupMembers.length === 0) return;
 
     const checkUserRoleStatus = async () => {
-      for (const member of groupMembers) {
-        try {
-          const { getUserRoleByFilter } = await import(
-            "@/services/resources/auth"
-          );
-          const userRoleResponse = await getUserRoleByFilter({
-            "account-id": member.id,
-            "project-id": projectId,
-            "page-index": 1,
-            "page-size": 10,
+      const now = Date.now();
+      // Only check if 2 minutes have passed since last check
+      if (now - lastStatusCheck < 2 * 60 * 1000) return;
+
+      setLastStatusCheck(now);
+
+      try {
+        // Batch process all members at once to reduce API calls
+        const memberStatusPromises = groupMembers
+          .filter((member) => !member.isInvitation) // Only check real members
+          .map(async (member) => {
+            try {
+              const userRoleResponse = await getUserRoleByFilter({
+                "account-id": member.id,
+                "project-id": projectId,
+                "page-index": 1,
+                "page-size": 10,
+              });
+
+              if (userRoleResponse["data-list"].length > 0) {
+                const userRole = userRoleResponse["data-list"][0];
+                const apiStatus = userRole.status as UserRoleStatus;
+                return { memberId: member.id, status: apiStatus, userRole };
+              }
+              return {
+                memberId: member.id,
+                status: "none" as UserRoleStatus,
+                userRole: null,
+              };
+            } catch (error) {
+              console.error(
+                `Failed to check status for member ${member.id}:`,
+                error
+              );
+              return {
+                memberId: member.id,
+                status: "none" as UserRoleStatus,
+                userRole: null,
+              };
+            }
           });
 
-          if (userRoleResponse["data-list"].length > 0) {
-            const userRole = userRoleResponse["data-list"][0];
-            const apiStatus = userRole.status as UserRoleStatus;
-            const currentStatus = memberInvitationStatus[member.id];
+        const statusResults = await Promise.all(memberStatusPromises);
 
-            // Update member invitation status
-            if (currentStatus !== apiStatus) {
-              setMemberInvitationStatus((prev) => ({
-                ...prev,
-                [member.id]: apiStatus,
-              }));
+        // Batch update all statuses at once
+        const statusUpdates: Record<string, UserRoleStatus> = {};
+        const membersToUpdate: GroupMember[] = [];
+        const notificationsToSend: {
+          memberId: string;
+          currentStatus: UserRoleStatus;
+          newStatus: UserRoleStatus;
+        }[] = [];
+
+        statusResults.forEach(({ memberId, status, userRole }) => {
+          const currentStatus = memberInvitationStatus[memberId];
+
+          if (currentStatus !== status) {
+            statusUpdates[memberId] = status;
+
+            // Track status changes for notifications
+            if (currentStatus && status === "approved") {
+              notificationsToSend.push({
+                memberId,
+                currentStatus,
+                newStatus: status,
+              });
             }
-
-            // Update member role information from UserRole data
-            if (!member.isInvitation) {
-              setGroupMembers((prev) =>
-                prev.map((m) =>
-                  m.id === member.id
-                    ? {
-                        ...m,
-                        roleId: userRole["role-id"],
-                        role: userRole.name as
-                          | "Researcher"
-                          | "Secretary"
-                          | "Leader",
-                      }
-                    : m
-                )
-              );
-            }
-
-            // Send notification when status changes to approved for any member
-            if (currentStatus !== apiStatus && apiStatus === "approved") {
-              try {
-                // Step 1: Create notification with 'create' status
-                const notificationResponse =
-                  await createNotificationMutation.mutateAsync({
-                    title:
-                      "Please Submit your Scientific Resume to the project you have agreed to join in My Project",
-                    type: "project",
-                    status: "create",
-                    "objec-notification-id": projectId,
-                  });
-
-                // Step 2: Send notification to the approved member
-                await sendNotificationMutation.mutateAsync({
-                  "list-account-id": [member.id],
-                  "notification-id": notificationResponse.id,
-                });
-              } catch (error) {
-                console.error("Failed to send approval notification:", error);
-              }
-            }
-          } else if (!member.isInvitation) {
-            // For existing members without UserRole, set default status
-            setMemberInvitationStatus((prev) => ({
-              ...prev,
-              [member.id]: "none",
-            }));
           }
-        } catch (error) {
-          console.error("Failed to check user role status:", error);
+
+          // Update member role information if available
+          if (
+            userRole &&
+            !groupMembers.find((m) => m.id === memberId)?.isInvitation
+          ) {
+            const memberRole = allRoles.find(
+              (role) => role.id === userRole["role-id"]
+            );
+            if (memberRole) {
+              membersToUpdate.push({
+                ...groupMembers.find((m) => m.id === memberId)!,
+                roleId: userRole["role-id"],
+                role: memberRole.name as "Researcher" | "Secretary" | "Leader",
+              });
+            }
+          }
+        });
+
+        // Batch update statuses
+        if (Object.keys(statusUpdates).length > 0) {
+          setMemberInvitationStatus((prev) => ({ ...prev, ...statusUpdates }));
         }
+
+        // Batch update member information
+        if (membersToUpdate.length > 0) {
+          setGroupMembers((prev) =>
+            prev.map((m) => {
+              const updatedMember = membersToUpdate.find(
+                (um) => um.id === m.id
+              );
+              return updatedMember || m;
+            })
+          );
+        }
+
+        // Send notifications for newly approved members
+        for (const { memberId } of notificationsToSend) {
+          try {
+            const notificationResponse =
+              await createNotificationMutation.mutateAsync({
+                title:
+                  "Please Submit your Scientific Resume to the project you have agreed to join in My Project",
+                type: "project",
+                status: "create",
+                "objec-notification-id": projectId,
+              });
+
+            await sendNotificationMutation.mutateAsync({
+              "list-account-id": [memberId],
+              "notification-id": notificationResponse.id,
+            });
+          } catch (error) {
+            console.error("Failed to send approval notification:", error);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to batch check user role status:", error);
       }
     };
 
-    // Check immediately and then every 3 seconds
+    // Check immediately on mount, then set up interval for every 2 minutes
     checkUserRoleStatus();
-    const interval = setInterval(checkUserRoleStatus, 3000);
+    const interval = setInterval(checkUserRoleStatus, 2 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, [
     projectId,
     groupMembers,
     memberInvitationStatus,
+    allRoles,
+    lastStatusCheck,
     createNotificationMutation,
     sendNotificationMutation,
   ]);
 
-  // Check CV status for approved members
+  // Check CV status specifically for Principal Investigator
   useEffect(() => {
-    const checkCVStatus = async () => {
-      if (!project?.["project-detail"]?.documents || !projectId) return;
+    const checkPICVStatus = () => {
+      if (!documentsWithUserRole?.["data-list"] || !principalInvestigator)
+        return;
 
-      const documents = project["project-detail"].documents;
-      const scienceCVDocs = documents.filter(
-        (doc: DocumentProject) => doc.type === "ScienceCV"
+      // Filter ScienceCV documents and get account IDs
+      const scienceCVDocs = documentsWithUserRole["data-list"].filter(
+        (doc) => doc.type === "ScienceCV"
       );
 
-      // Get account IDs from ScienceCV documents
       const cvSubmittedAccountIds = new Set<string>();
+      scienceCVDocs.forEach((doc) => {
+        if (doc["account-id"]) {
+          cvSubmittedAccountIds.add(doc["account-id"]);
+        }
+      });
 
-      for (const doc of scienceCVDocs) {
-        if (doc["uploader-id"]) {
-          try {
-            const userRole = await import("@/services/resources/auth").then(
-              ({ getUserRoleById }) => getUserRoleById(doc["uploader-id"])
-            );
-            if (userRole["account-id"]) {
-              cvSubmittedAccountIds.add(userRole["account-id"]);
-            }
-          } catch (error) {
-            console.error("Failed to get user role for uploader:", error);
+      // Update CV status for Principal Investigator
+      const piAccountId = principalInvestigator["account-id"];
+      setCvStatus((prev) => ({
+        ...prev,
+        [piAccountId]: cvSubmittedAccountIds.has(piAccountId)
+          ? "submitted"
+          : "not-submitted",
+      }));
+
+      // Set Principal Investigator as approved by default để hiển thị CV status
+      setMemberInvitationStatus((prev) => ({
+        ...prev,
+        [piAccountId]: "approved",
+      }));
+    };
+
+    checkPICVStatus();
+  }, [documentsWithUserRole, principalInvestigator]);
+
+  // Check CV status for approved members using useDocumentByProjectIdWithUserRole
+  useEffect(() => {
+    const checkCVStatus = () => {
+      if (!documentsWithUserRole?.["data-list"] || !groupMembers.length) return;
+
+      // Filter ScienceCV documents and get account IDs
+      const scienceCVDocs = documentsWithUserRole["data-list"].filter(
+        (doc) => doc.type === "ScienceCV"
+      );
+
+      const cvSubmittedAccountIds = new Set<string>();
+      scienceCVDocs.forEach((doc) => {
+        if (doc["account-id"]) {
+          cvSubmittedAccountIds.add(doc["account-id"]);
+        }
+      });
+
+      // Update CV status for all approved members (excluding PI to avoid overwriting)
+      setCvStatus((prev) => {
+        const newCvStatus: CVStatus = { ...prev };
+        for (const member of groupMembers) {
+          const memberStatus = memberInvitationStatus[member.id];
+          if (memberStatus === "approved") {
+            newCvStatus[member.id] = cvSubmittedAccountIds.has(member.id)
+              ? "submitted"
+              : "not-submitted";
           }
         }
-      }
-
-      // Update CV status for all approved members
-      const newCvStatus: CVStatus = {};
-      for (const member of groupMembers) {
-        const memberStatus = memberInvitationStatus[member.id];
-        if (memberStatus === "approved") {
-          newCvStatus[member.id] = cvSubmittedAccountIds.has(member.id)
-            ? "submitted"
-            : "not-submitted";
-        }
-      }
-
-      setCvStatus(newCvStatus);
+        return newCvStatus;
+      });
     };
 
     checkCVStatus();
-  }, [project, groupMembers, memberInvitationStatus, projectId]);
+  }, [documentsWithUserRole, groupMembers, memberInvitationStatus]);
 
-  // Fetch Principal Investigator data
+  // Fetch Principal Investigator data from userRolesResponse
   useEffect(() => {
-    const fetchPrincipalInvestigator = async () => {
-      if (!projectId || !allRoles.length) return;
-
-      try {
-        const { getUserRolesByProjectId } = await import(
-          "@/services/resources/auth"
+    if (userRolesResponse?.["data-list"] && allRoles.length > 0) {
+      const piRole = allRoles.find(
+        (role) => role.name === "Principal Investigator"
+      );
+      if (piRole) {
+        const piUserRole = userRolesResponse["data-list"].find(
+          (userRole: UserRole) => userRole["role-id"] === piRole.id
         );
-        const userRolesResponse = await getUserRolesByProjectId(
-          projectId,
-          1,
-          100
-        );
-
-        if (userRolesResponse["data-list"]) {
-          const piRole = allRoles.find(
-            (role) => role.name === "Principal Investigator"
-          );
-          if (piRole) {
-            const piUserRole = userRolesResponse["data-list"].find(
-              (userRole: UserRole) => userRole["role-id"] === piRole.id
-            );
-            if (piUserRole) {
-              setPrincipalInvestigator(piUserRole);
-            }
-          }
+        if (piUserRole) {
+          setPrincipalInvestigator(piUserRole);
         }
-      } catch (error) {
-        console.error("Failed to fetch Principal Investigator:", error);
       }
-    };
-
-    fetchPrincipalInvestigator();
-  }, [projectId, allRoles]);
+    }
+  }, [userRolesResponse, allRoles]);
 
   // Handle upload Scientific CV with confirmation and duplicate checking
   const handleUploadScientificCV = () => {
@@ -427,9 +499,13 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   };
 
   const handleConfirmUploadScientificCV = async () => {
-    if (!scientificCV?.data || !projectId || !myAccountInfo?.id) {
+    if (
+      !scientificCV?.data ||
+      !projectId ||
+      !principalInvestigator?.["account-id"]
+    ) {
       console.error(
-        "Scientific CV not found, project ID missing, or account info missing"
+        "Scientific CV not found, project ID missing, or Principal Investigator account-id missing"
       );
       return;
     }
@@ -438,58 +514,48 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     setShowUploadConfirmDialog(false);
 
     try {
-      // Check for duplicate account-id in ScienceCV documents
-      if (project?.["project-detail"]?.documents) {
-        const documents = project["project-detail"].documents;
-        const scienceCVDocs = documents.filter(
-          (doc: DocumentProject) => doc.type === "ScienceCV"
-        );
+      // Get Principal Investigator account-id
+      const piAccountId = principalInvestigator["account-id"];
 
-        // Find documents with duplicate account-id
-        const duplicateDoc = scienceCVDocs.find((doc: DocumentProject) => {
-          return doc["uploader-id"] === myAccountInfo.id;
+      // Check for existing ScienceCV document with matching account-id using documentsWithUserRole
+      const existingScienceCVDoc = documentsWithUserRole?.["data-list"]?.find(
+        (doc) => doc.type === "ScienceCV" && doc["account-id"] === piAccountId
+      );
+
+      if (existingScienceCVDoc) {
+        // Update existing document
+        await updateDocumentMutation.mutateAsync({
+          id: existingScienceCVDoc.id,
+          name: scientificCV.data.name,
+          type: scientificCV.data.type,
+          "is-template": scientificCV.data["is-template"],
+          "content-html": scientificCV.data["content-html"],
+          "project-id": projectId,
+          status: "draft",
         });
 
-        // If duplicate found, delete it first
-        if (duplicateDoc) {
-          console.log(
-            "Duplicate ScienceCV document found, deleting:",
-            duplicateDoc.id
-          );
-          await deleteDocumentMutation.mutateAsync(duplicateDoc.id);
-        }
+        console.log("Scientific CV updated successfully!");
+      } else {
+        // Create new document
+        await createDocumentMutation.mutateAsync({
+          name: scientificCV.data.name,
+          type: scientificCV.data.type,
+          "is-template": scientificCV.data["is-template"],
+          "content-html": scientificCV.data["content-html"],
+          "project-id": projectId,
+          status: "draft",
+        });
+
+        console.log("Scientific CV uploaded successfully!");
       }
 
-      // Check for duplicate account-id with Principal Investigator role
-      if (
-        principalInvestigator &&
-        principalInvestigator["account-id"] === myAccountInfo.id
-      ) {
-        console.log(
-          "User is Principal Investigator, proceeding with CV upload"
-        );
-      }
-
-      // Create new document
-      await createDocumentMutation.mutateAsync({
-        name: scientificCV.data.name,
-        type: scientificCV.data.type,
-        "is-template": scientificCV.data["is-template"],
-        "content-html": scientificCV.data["content-html"],
-        "project-id": projectId,
-      });
-
-      console.log("Scientific CV uploaded successfully!");
-
-      // Refresh CV status after upload
-      if (principalInvestigator) {
-        setCvStatus((prev) => ({
-          ...prev,
-          [principalInvestigator["account-id"]]: "submitted",
-        }));
-      }
+      // Update CV status for Principal Investigator
+      setCvStatus((prev) => ({
+        ...prev,
+        [piAccountId]: "submitted",
+      }));
     } catch (error) {
-      console.error("Failed to upload Scientific CV:", error);
+      console.error("Failed to upload/update Scientific CV:", error);
     } finally {
       setIsUploadingCV(false);
     }
@@ -544,6 +610,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
       (filteredUsers.length > 0 || isSearching);
     setShowResults(shouldShow);
   }, [searchValue, filteredUsers.length, isSearching]);
+
   const handleUserSelect = (user: {
     id: string;
     name: string;
@@ -682,22 +749,38 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     setIsRemovingMember(true);
 
     try {
-      // If this is an existing member (not an invitation), delete their UserRole
+      // If this is an existing member (not an invitation), delete ALL their UserRoles
       if (!memberToDelete.isInvitation && projectId) {
-        // First, get the UserRole ID for this member
-        const { getUserRoleByFilter } = await import(
-          "@/services/resources/auth"
-        );
+        // First, get ALL UserRoles for this member in the project
         const userRoleResponse = await getUserRoleByFilter({
           "account-id": memberToDelete.id,
           "project-id": projectId,
           "page-index": 1,
-          "page-size": 10,
+          "page-size": 100, // Increased to ensure we get all roles
         });
 
+        // Delete all UserRoles with matching account-id
         if (userRoleResponse["data-list"].length > 0) {
-          const userRole = userRoleResponse["data-list"][0];
-          await deleteUserRoleMutation.mutateAsync(userRole.id);
+          const deletePromises = userRoleResponse["data-list"].map((userRole) =>
+            deleteUserRoleMutation.mutateAsync(userRole.id)
+          );
+          await Promise.all(deletePromises);
+        }
+
+        // Also delete ScienceCV documents with matching account-id
+        if (documentsWithUserRole?.["data-list"]) {
+          const scienceCVDocs = documentsWithUserRole["data-list"].filter(
+            (doc) =>
+              doc.type === "ScienceCV" &&
+              doc["account-id"] === memberToDelete.id
+          );
+
+          if (scienceCVDocs.length > 0) {
+            const deleteDocPromises = scienceCVDocs.map((doc) =>
+              deleteDocumentMutation.mutateAsync(doc.id)
+            );
+            await Promise.all(deleteDocPromises);
+          }
         }
       }
 
@@ -897,6 +980,37 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     }
   };
 
+  // CV Status Badge specifically for Principal Investigator (always show)
+  const getCVStatusBadgeForPI = (accountId: string) => {
+    const status = cvStatus[accountId];
+    if (!status) return null;
+
+    switch (status) {
+      case "submitted":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-300 font-medium"
+          >
+            <CheckCircle className="w-3 h-3 mr-1" />
+            CV Submitted
+          </Badge>
+        );
+      case "not-submitted":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-300 font-medium"
+          >
+            <XCircle className="w-3 h-3 mr-1" />
+            CV Not Submitted
+          </Badge>
+        );
+      default:
+        return null;
+    }
+  };
+
   const isValidEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
@@ -1016,17 +1130,13 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
-                  {/* CV Status for PI */}
-                  {memberInvitationStatus[
-                    principalInvestigator["account-id"]
-                  ] === "approved" && (
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="text-xs text-gray-500 font-medium">
-                        CV Status
-                      </span>
-                      {getCVStatusBadge(principalInvestigator["account-id"])}
-                    </div>
-                  )}
+                  {/* CV Status for PI - Always show */}
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-xs text-gray-500 font-medium">
+                      CV Status
+                    </span>
+                    {getCVStatusBadgeForPI(principalInvestigator["account-id"])}
+                  </div>
                   <Button
                     variant="outline"
                     size="sm"

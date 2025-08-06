@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,8 +35,6 @@ const ProjectEnroll: React.FC = () => {
     collaborators: [],
     groupMembers: [],
   });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   // Track if user came from enrollment process to prevent auto-redirect
   // const [isEnrollmentProcess, setIsEnrollmentProcess] = useState(false);
 
@@ -64,14 +62,6 @@ const ProjectEnroll: React.FC = () => {
         return "/home";
     }
   };
-
-  const getProjectDetailRoute = useCallback(() => {
-    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR)
-      return `/pi/project/${projectId}`;
-    else {
-      return `/researcher/project/${projectId}`;
-    }
-  }, [user?.role, projectId]);
 
   // const hasRedirectedRef = useRef(false);
 
@@ -101,7 +91,7 @@ const ProjectEnroll: React.FC = () => {
     if (location.pathname.includes("/enroll")) {
       // setIsEnrollmentProcess(true);
     }
-  }, [location.pathname]);
+  }, []);
 
   // useEffect(() => {
   //   // Only redirect if user is already a member AND didn't come from enrollment process
@@ -156,26 +146,6 @@ const ProjectEnroll: React.FC = () => {
   //     setIsSubmitting(false);
   //   }
   // };
-
-  const handleSubmit = async () => {
-    setIsSubmitting(true);
-    try {
-      console.log("Submitting enrollment:", {
-        projectId,
-        bm1Content: enrollmentData.bm1Content,
-        collaborators: enrollmentData.collaborators,
-        groupMembers: groupMembers, // Add this
-      });
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      navigate(getProjectDetailRoute());
-    } catch (error) {
-      console.error("Failed to submit enrollment:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const updateEnrollmentData = (updates: Partial<EnrollmentData>) => {
     setEnrollmentData((prev) => ({ ...prev, ...updates }));
@@ -274,8 +244,7 @@ const ProjectEnroll: React.FC = () => {
             enrollmentData={enrollmentData}
             projectTitle={project["project-detail"]["english-title"]}
             onPrevious={handlePrevious}
-            onSubmit={handleSubmit}
-            isSubmitting={isSubmitting}
+            isSubmitting={false}
           />
         )}
       </div>

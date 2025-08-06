@@ -3,6 +3,7 @@ import {
   CreateProjectMajorResponse,
   CreateProjectRequest,
   CreateProjectTagRequest,
+  UpdateProjectRequest,
   EnrollProjectResponse,
   MyProjectResponse,
   ProjectDetailResponse,
@@ -190,6 +191,29 @@ export const getMyProjectList = async () => {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+};
+
+export const updateProject = async (
+  projectId: string,
+  data: UpdateProjectRequest,
+  status?: string
+): Promise<ProjectDetailResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    const url = status
+      ? `/project/${projectId}?status=${status}`
+      : `/project/${projectId}`;
+    const res = await axiosClient.put<ProjectDetailResponse>(url, data, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json-patch+json",
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.error("updateProject error:", error);
+    throw error;
+  }
 };
 
 export const enrollProjectAsPrincipal = async (
