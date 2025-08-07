@@ -134,7 +134,7 @@ const MyProject: React.FC = () => {
       const project = filteredProjects.find((p) => p.id === id);
       // If project status is 'submitted', navigate to Project Detail regardless of role
       if (project && project.status === "submitted") {
-        navigate(`/project/${id}`);
+        navigate(`/pi/project/${id}`);
       } else if (project && project.genre?.toLowerCase() === "proposal") {
         navigate(`/pi/project/${id}/enroll`);
       } else {

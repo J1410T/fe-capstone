@@ -96,10 +96,17 @@ export function useCreateDocument() {
   return useMutation({
     mutationFn: (data: CreateDocumentRequest) => createDocument(data),
     onSuccess: (_, variables) => {
-      // Invalidate project query to refresh documents list
+      // Invalidate relevant queries after successful creation
       queryClient.invalidateQueries({
-        queryKey: ["project", variables["project-id"]],
+        queryKey: ["document"],
       });
+
+      // Only invalidate project query if project-id exists
+      if (variables["project-id"]) {
+        queryClient.invalidateQueries({
+          queryKey: ["project", variables["project-id"]],
+        });
+      }
     },
   });
 }
