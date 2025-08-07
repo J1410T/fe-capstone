@@ -94,7 +94,7 @@ export interface UserRoleResponse {
 export interface CreateUserRoleRequest {
   "account-id": string;
   "role-id": string;
-  "project-id": string;
+  "project-id"?: string;
 }
 
 export interface UpdateUserRoleRequest {
@@ -204,4 +204,67 @@ export interface GroupMember {
   avatar?: string;
   role: "Researcher" | "Secretary" | "Leader";
   isInvitation?: boolean;
+}
+
+// New types for Users Management
+export interface UserFilterRequest {
+  "full-name"?: string;
+  email?: string;
+  "sort-by"?: string;
+  desc?: boolean;
+  "page-index": number;
+  "page-size": number;
+}
+
+export interface UserFilterResponse {
+  "page-index": number;
+  "page-size": number;
+  "total-count": number;
+  "total-page": number;
+  "data-list": UserAccount[];
+}
+
+export interface UserAccount {
+  id: string;
+  "identity-code": string;
+  "full-name": string;
+  email: string;
+  "alternative-email": string | null;
+  "phone-number": string | null;
+  address: string | null;
+  "date-of-birth": string | null;
+  gender: string | null;
+  website: string | null;
+  "facebook-url": string | null;
+  "linked-in-url": string | null;
+  "avatar-url": string | null;
+  bio: string | null;
+  degree: string | null;
+  "degree-type": string | null;
+  "professional-level": string | null;
+  "company-name": string | null;
+  "create-time": string;
+  status: "created" | "deleted" | "pending";
+  "major-id": string | null;
+  UserRole?: UserRoleInfo[];
+}
+
+export interface UserRoleInfo {
+  id: string;
+  "role-id": string;
+  name: string;
+}
+
+export interface UserAccountWithRoles extends UserAccount {
+  UserRole: UserRoleInfo[];
+}
+
+export interface CreateUserRequest {
+  "full-name": string;
+  email: string;
+  password: string;
+}
+
+export interface UpdateUserStatusRequest {
+  status: "created" | "deleted";
 }

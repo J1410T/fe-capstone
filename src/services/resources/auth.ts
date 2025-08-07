@@ -8,6 +8,9 @@ import {
   UserRole,
   UserRoleFilterRequest,
   UserRoleResponse,
+  UserFilterRequest,
+  UserFilterResponse,
+  CreateUserRequest,
 } from "@/types/auth";
 import { axiosClient, getAccessToken } from "../api";
 
@@ -272,6 +275,117 @@ export const deleteUserRole = async (userRoleId: string): Promise<void> => {
     });
   } catch (error) {
     console.error("deleteUserRole error:", error);
+    throw error;
+  }
+};
+
+// New functions for Users Management
+export const getUserFilter = async (
+  request: UserFilterRequest
+): Promise<UserFilterResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.post<UserFilterResponse>(
+      "/account/filter",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getUserFilter error:", error);
+    throw error;
+  }
+};
+
+export const getUserRoleByAccountId = async (
+  accountId: string,
+  pageIndex: number = 1,
+  pageSize: number = 100
+): Promise<UserRoleResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const request = {
+      "account-id": accountId,
+      "page-index": pageIndex,
+      "page-size": pageSize,
+    };
+
+    const res = await axiosClient.post<UserRoleResponse>(
+      "/user-role/filter",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getUserRoleByAccountId error:", error);
+    throw error;
+  }
+};
+
+export const createUser = async (
+  request: CreateUserRequest
+): Promise<unknown> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.post("/account", request, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json-patch+json",
+      },
+    });
+
+    return res.data;
+  } catch (error) {
+    console.error("createUser error:", error);
+    throw error;
+  }
+};
+
+export const updateUserStatus = async (accountId: string): Promise<unknown> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.put(
+      `/account/${accountId}/toggle-status`,
+      null,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("updateUserStatus error:", error);
     throw error;
   }
 };
