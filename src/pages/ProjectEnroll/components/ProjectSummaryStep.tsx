@@ -6,6 +6,7 @@ import {
   useDocumentsByFilter,
   useCreateDocument,
   useUpdateDocument,
+  useDocumentByProjectIdWithUserRole,
 } from "@/hooks/queries/document";
 import {
   Card,
@@ -31,7 +32,7 @@ interface ProjectSummaryStepProps {
 export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   onContentChange,
   onNext,
-  projectDocuments,
+  // projectDocuments,
   onDocumentCreated,
 }) => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -42,10 +43,23 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
   const [documentCreated, setDocumentCreated] = useState(false);
 
-  // Find BM1 document in project documents
-  const bm1Document = projectDocuments?.find((doc) => doc.type === "BM1");
-  const shouldFetchTemplate =
-    !bm1Document && projectDocuments !== undefined && !documentCreated;
+  // Use useDocumentByProjectIdWithUserRole to find BM1 document like in InviteMembersStep
+  const { data: documentsWithUserRole } = useDocumentByProjectIdWithUserRole(
+    {
+      "is-template": false,
+      status: "draft",
+      "page-index": 1,
+      "page-size": 100,
+      "project-id": projectId || "",
+    },
+    !!projectId
+  );
+
+  // Find BM1 document from the API response
+  const bm1Document = documentsWithUserRole?.["data-list"]?.find(
+    (doc) => doc.type === "BM1"
+  );
+  const shouldFetchTemplate = !bm1Document && !documentCreated;
 
   // Only fetch template when needed
   const { data: templateData, isLoading: isLoadingTemplate } =
