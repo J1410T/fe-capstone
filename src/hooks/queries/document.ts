@@ -116,6 +116,8 @@ export function useScientificCVByEmail(email: string, enabled: boolean = true) {
     queryKey: ["scientificCV", email],
     queryFn: () => getScientificCVByEmail(email),
     enabled: !!email && enabled,
+    refetchOnMount: true,
+    staleTime: 0,
   });
 }
 
@@ -132,6 +134,10 @@ export function useDeleteDocumentById() {
       // Invalidate document queries
       queryClient.invalidateQueries({
         queryKey: ["document"],
+      });
+      // Invalidate scientificCV queries to refresh the CV data
+      queryClient.invalidateQueries({
+        queryKey: ["scientificCV"],
       });
       console.log(`Document ${documentId} deleted successfully!`);
     },
