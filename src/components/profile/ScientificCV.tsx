@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,10 +11,25 @@ import {
   User,
   CheckCircle,
   Plus,
+  Trash2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { getAuthResponse } from "@/utils/cookie-manager";
-import { useScientificCVByEmail } from "@/hooks/queries/document";
+import {
+  useScientificCVByEmail,
+  useDeleteDocumentById,
+} from "@/hooks/queries/document";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ScientificCVProps {
   className?: string;
@@ -22,6 +37,9 @@ interface ScientificCVProps {
 
 export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
   const navigate = useNavigate();
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const queryClient = useQueryClient();
 
   // Get email from auth response cookie
   const authResponse = getAuthResponse<{ email: string }>();
@@ -32,7 +50,10 @@ export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
     data: scientificCV,
     isLoading,
     error,
+    refetch: refetchScientificCV,
   } = useScientificCVByEmail(userEmail, !!userEmail);
+
+  const deleteDocument = useDeleteDocumentById();
 
   const handleViewCV = () => {
     navigate("/profile/scientific-cv/view");
@@ -44,6 +65,61 @@ export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
 
   const handleCreateCV = () => {
     navigate("/profile/scientific-cv/create");
+  };
+
+  // const handleDeleteConfirm = async () => {
+  //   if (!scientificCV?.data?.id) {
+  //     toast.error("Scientific CV not found");
+  //     return;
+  //   }
+
+  //   setIsDeleting(true);
+  //   setDeleteDialogOpen(false);
+
+  //   deleteDocument.mutate(scientificCV.data.id, {
+  //     onSuccess: () => {
+  //       toast.success("Scientific CV deleted successfully!");
+  //       refetchScientificCV();
+  //     },
+  //     onError: (error) => {
+  //       console.error("Failed to delete Scientific CV:", error);
+  //       toast.error("Failed to delete Scientific CV");
+  //     },
+  //     onSettled: () => {
+  //       setIsDeleting(false);
+  //     },
+  //   });
+  // };
+  const handleDeleteConfirm = async () => {
+    if (!scientificCV?.data?.id) {
+      toast.error("Scientific CV not found");
+      return;
+    }
+
+    setIsDeleting(true);
+    setDeleteDialogOpen(false);
+
+    deleteDocument.mutate(scientificCV.data.id, {
+      onSuccess: () => {
+        toast.success("Scientific CV deleted successfully!");
+        // Force remove cache and refetch
+        queryClient.removeQueries({
+          queryKey: ["scientificCV"],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["scientificCV"],
+        });
+        // Force immediate refetch
+        refetchScientificCV();
+      },
+      onError: (error) => {
+        console.error("Failed to delete Scientific CV:", error);
+        toast.error("Failed to delete Scientific CV");
+      },
+      onSettled: () => {
+        setIsDeleting(false);
+      },
+    });
   };
 
   if (isLoading) {
@@ -173,6 +249,52 @@ export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
               <Edit className="w-4 h-4 mr-2" />
               Edit
             </Button>
+            <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  disabled={isDeleting}
+                  className="flex-1 sm:flex-none text-red-600 border-red-300 hover:bg-red-50"
+                >
+                  {isDeleting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete
+                    </>
+                  )}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Delete Scientific CV</DialogTitle>
+                  <DialogDescription>
+                    Are you sure you want to delete your Scientific CV? This
+                    action is permanent and cannot be undone. All your CV data
+                    will be lost.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setDeleteDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteConfirm}
+                    disabled={isDeleting}
+                  >
+                    {isDeleting ? "Deleting..." : "Delete CV"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </CardContent>

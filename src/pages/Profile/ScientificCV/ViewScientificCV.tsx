@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
 import { format } from "date-fns";
@@ -24,6 +24,7 @@ type EditorInstance = {
 const ViewScientificCV: React.FC = () => {
   const navigate = useNavigate();
   const editorRef = useRef<EditorInstance>(null);
+  const [isRefetching, setIsRefetching] = useState(false);
   const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
 
   // Get user email and role from cookie
@@ -38,7 +39,27 @@ const ViewScientificCV: React.FC = () => {
     data: scientificCV,
     isLoading,
     error,
+    refetch,
   } = useScientificCVByEmail(userEmail, !!userEmail);
+
+  // Force refetch on component mount
+  useEffect(() => {
+    if (userEmail) {
+      setIsRefetching(true);
+      const timer = setTimeout(async () => {
+        try {
+          await refetch();
+        } finally {
+          setIsRefetching(false);
+        }
+      }, 100); // Delay nhỏ để đảm bảo component đã mount hoàn toàn
+
+      return () => {
+        clearTimeout(timer);
+        setIsRefetching(false);
+      };
+    }
+  }, [userEmail, refetch]);
 
   // Map role to path
   const currentRole =
@@ -93,11 +114,17 @@ const ViewScientificCV: React.FC = () => {
     }
   `;
 
-  if (isLoading) {
+  // Show loading when initially loading or refetching
+  if (isLoading || isRefetching) {
     return (
       <div className="flex items-center justify-center h-[800px]">
         <div className="text-center">
           <Loading className="w-full max-w-md" />
+          {isRefetching && (
+            <p className="text-sm text-gray-600 mt-4">
+              Refreshing Scientific CV...
+            </p>
+          )}
         </div>
       </div>
     );

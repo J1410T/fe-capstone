@@ -8,15 +8,28 @@ import {
   FileText,
   AlertCircle,
   RotateCcw,
+  Trash2,
 } from "lucide-react";
 import { getAuthResponse } from "@/utils/cookie-manager";
 import {
   useScientificCVByEmail,
   useUpdateDocument,
-  useDocumentsByFilter,
+  useDeleteDocumentById,
 } from "@/hooks/queries/document";
 import { toast } from "sonner";
-import { Loading } from "@/components";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  Loading,
+} from "@/components";
+import { useAuth } from "@/contexts";
+import { UserRole } from "@/contexts/auth-types";
+import { useQueryClient } from "@tanstack/react-query";
 
 type EditorInstance = {
   getContent: () => string;
@@ -30,6 +43,12 @@ const EditScientificCV: React.FC = () => {
   const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const [isLoading, setIsLoading] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   // Get email from auth response cookie
   const authResponse = getAuthResponse<{ email: string }>();
@@ -39,16 +58,18 @@ const EditScientificCV: React.FC = () => {
     data: scientificCV,
     isLoading: isCVLoading,
     error,
+    refetch: refetchScientificCV,
   } = useScientificCVByEmail(userEmail, !!userEmail);
 
-  // Get BM2 template for reset functionality - only fetch when needed
-  const {
-    // data: bm2Template,
-    // isLoading: isTemplateLoading,
-    refetch: refetchTemplate,
-  } = useDocumentsByFilter("BM2", true, 1, 1, false);
-
   const updateDocument = useUpdateDocument();
+  const deleteDocument = useDeleteDocumentById();
+
+  const getProfileRoute = () => {
+    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) return `/pi/profile`;
+    if (user?.role === UserRole.HOST_INSTITUTION) return `/host/profile`;
+    if (user?.role === UserRole.APPRAISAL_COUNCIL) return `/council/profile`;
+    return `/researcher/profile`;
+  };
 
   useEffect(() => {
     if (!isCVLoading && scientificCV?.data?.["content-html"]) {
@@ -82,19 +103,35 @@ const EditScientificCV: React.FC = () => {
 
   const handleEditorChange = () => {};
 
-  const handleSave = async () => {
+  const handleSaveConfirm = async () => {
     if (!scientificCV?.data?.id) {
       toast.error("Scientific CV not found");
       return;
     }
 
-    const content = editorRef.current?.getContent() ?? "";
-    if (!content.trim()) {
+    const rawContent = editorRef.current?.getContent() ?? "";
+    if (!rawContent.trim()) {
       toast.error("Please add content to your Scientific CV");
       return;
     }
 
+    // Parse và chỉnh sửa ảnh
+    const doc = new DOMParser().parseFromString(rawContent, "text/html");
+    doc.querySelectorAll("img").forEach((img) => {
+      const isFrame = img.classList.contains("frame-image");
+      if (!isFrame) {
+        img.setAttribute("width", "113");
+        img.setAttribute("height", "151");
+        img.style.width = "113px";
+        img.style.height = "151px";
+        img.style.objectFit = "cover";
+      }
+    });
+
+    const content = doc.body.innerHTML;
+
     setIsLoading(true);
+    setSaveDialogOpen(false);
 
     updateDocument.mutate(
       {
@@ -121,83 +158,109 @@ const EditScientificCV: React.FC = () => {
     );
   };
 
-  const handleResetCV = async () => {
+  // const handleDeleteConfirm = async () => {
+  //   if (!scientificCV?.data?.id) {
+  //     toast.error("Scientific CV not found");
+  //     return;
+  //   }
+
+  //   setIsDeleting(true);
+  //   setDeleteDialogOpen(false);
+
+  //   deleteDocument.mutate(scientificCV.data.id, {
+  //     onSuccess: () => {
+  //       toast.success("Scientific CV deleted successfully!");
+  //       navigate(getProfileRoute());
+  //     },
+  //     onError: (error) => {
+  //       console.error("Failed to delete Scientific CV:", error);
+  //       toast.error("Failed to delete Scientific CV");
+  //     },
+  //     onSettled: () => {
+  //       setIsDeleting(false);
+  //     },
+  //   });
+  // };
+
+  const handleDeleteConfirm = async () => {
     if (!scientificCV?.data?.id) {
       toast.error("Scientific CV not found");
       return;
     }
 
-    if (
-      !confirm(
-        "Are you sure you want to reset your CV to the original template? This action cannot be undone."
-      )
-    ) {
-      return;
-    }
+    setIsDeleting(true);
+    setDeleteDialogOpen(false);
 
+    deleteDocument.mutate(scientificCV.data.id, {
+      onSuccess: () => {
+        toast.success("Scientific CV deleted successfully!");
+        // Force invalidate and remove cache before navigating
+        queryClient.invalidateQueries({
+          queryKey: ["scientificCV"],
+        });
+        queryClient.removeQueries({
+          queryKey: ["scientificCV"],
+        });
+        // Navigate after cache cleanup
+        setTimeout(() => {
+          navigate(getProfileRoute());
+        }, 100);
+      },
+      onError: (error) => {
+        console.error("Failed to delete Scientific CV:", error);
+        toast.error("Failed to delete Scientific CV");
+      },
+      onSettled: () => {
+        setIsDeleting(false);
+      },
+    });
+  };
+
+  const handleResetConfirm = async () => {
     setIsResetting(true);
+    setResetDialogOpen(false);
 
     try {
-      // Fetch the BM2 template
-      const templateResponse = await refetchTemplate();
+      // Refetch the original data
+      const result = await refetchScientificCV();
 
-      if (!templateResponse.data?.data?.["data-list"]?.[0]?.["content-html"]) {
-        toast.error("Template not found");
-        setIsResetting(false);
-        return;
+      if (result.data?.data?.["content-html"]) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(
+          result.data.data["content-html"],
+          "text/html"
+        );
+        const hasImage = doc.querySelector("img") !== null;
+
+        const frame = `
+        <div style="display: flex; justify-content: flex-end;">
+          <div class="image-frame" contenteditable="false">
+            <div contenteditable="true">
+              <img
+                src="https://via.placeholder.com/150"
+                class="frame-image"
+                style="max-width: 100%; max-height: 100%; object-fit: cover;"
+              />
+            </div>
+          </div>
+        </div>`;
+
+        const resetContent = hasImage
+          ? result.data.data["content-html"]
+          : frame + result.data.data["content-html"];
+
+        // Update both state and TinyMCE editor content
+        setFormContent(resetContent);
+        if (editorRef.current) {
+          editorRef.current.setContent(resetContent);
+        }
       }
 
-      const templateContent =
-        templateResponse.data.data["data-list"][0]["content-html"];
-
-      updateDocument.mutate(
-        {
-          id: scientificCV.data.id,
-          name: "CV",
-          type: "ScienceCV",
-          "is-template": false,
-          "content-html": templateContent,
-          "project-id": null,
-        },
-        {
-          onSuccess: () => {
-            toast.success(
-              "Scientific CV reset to original template successfully!"
-            );
-            // Update the editor content
-            const hasFrame = templateContent.includes('class="frame-image"');
-            const frame = `
-              <div style="display: flex; justify-content: flex-end;">
-                <div class="image-frame" contenteditable="false">
-                  <div contenteditable="true">
-                    <img
-                      src="https://via.placeholder.com/150"
-                      class="frame-image"
-                      style="max-width: 100%; max-height: 100%; object-fit: cover;"
-                    />
-                  </div>
-                </div>
-              </div>`;
-            const newContent = hasFrame
-              ? templateContent
-              : frame + templateContent;
-            setFormContent(newContent);
-            if (editorRef.current) {
-              editorRef.current.setContent(newContent);
-            }
-          },
-          onError: (error) => {
-            console.error("Failed to reset Scientific CV:", error);
-            toast.error("Failed to reset Scientific CV");
-          },
-          onSettled: () => {
-            setIsResetting(false);
-          },
-        }
-      );
+      toast.success("Scientific CV reset successfully!");
     } catch (error) {
-      console.error("Failed to fetch template:", error);
-      toast.error("Failed to fetch template");
+      console.error("Failed to reset Scientific CV:", error);
+      toast.error("Failed to reset Scientific CV");
+    } finally {
       setIsResetting(false);
     }
   };
@@ -360,43 +423,148 @@ const EditScientificCV: React.FC = () => {
 
       {/* Action Buttons */}
       <div className="flex justify-between mt-8 max-w-5xl mx-auto">
-        <Button
-          variant="outline"
-          onClick={handleResetCV}
-          size="lg"
-          disabled={isResetting || isCVLoading}
-          className="px-8 text-red-600 border-red-300 hover:bg-red-50"
-        >
-          {isResetting ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
-              Resetting...
-            </>
-          ) : (
-            <>
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Reset CV
-            </>
-          )}
-        </Button>
-        <Button
-          onClick={handleSave}
-          size="lg"
-          disabled={isLoading || isCVLoading}
-          className="px-8"
-        >
-          {isLoading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Saving...
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
-            </>
-          )}
-        </Button>
+        <div className="flex gap-3">
+          {/* Reset Dialog */}
+          <Dialog open={resetDialogOpen} onOpenChange={setResetDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="lg"
+                disabled={isResetting || isCVLoading}
+                className="px-8 text-red-600 border-red-300 hover:bg-red-50"
+              >
+                {isResetting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                    Resetting...
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Reset CV
+                  </>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Reset Scientific CV</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to reset your CV to the original
+                  content? This action will restore the CV to its initial state
+                  and cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setResetDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleResetConfirm}
+                  disabled={isResetting}
+                >
+                  {isResetting ? "Resetting..." : "Reset CV"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Dialog */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="lg"
+                disabled={isDeleting || isCVLoading}
+                className="px-8 text-red-600 border-red-300 hover:bg-red-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-2"></div>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete CV
+                  </>
+                )}
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Scientific CV</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete your Scientific CV? This
+                  action is permanent and cannot be undone. All your CV data
+                  will be lost.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button
+                  variant="outline"
+                  onClick={() => setDeleteDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteConfirm}
+                  disabled={isDeleting}
+                >
+                  {isDeleting ? "Deleting..." : "Delete CV"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {/* Save Dialog */}
+        <Dialog open={saveDialogOpen} onOpenChange={setSaveDialogOpen}>
+          <DialogTrigger asChild>
+            <Button
+              size="lg"
+              disabled={isLoading || isCVLoading}
+              className="px-8"
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Changes
+                </>
+              )}
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Save Scientific CV</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to save the changes to your Scientific CV?
+                This will update your profile permanently.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setSaveDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={handleSaveConfirm} disabled={isLoading}>
+                {isLoading ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
