@@ -283,10 +283,10 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
         };
       });
 
-      // Prioritize roles: Secretary > Leader > Researcher
-      let selectedRole = rolesWithNames.find((r) => r.roleName === "Secretary");
+      // Prioritize roles: Leader > Secretary > Researcher
+      let selectedRole = rolesWithNames.find((r) => r.roleName === "Leader");
       if (!selectedRole) {
-        selectedRole = rolesWithNames.find((r) => r.roleName === "Leader");
+        selectedRole = rolesWithNames.find((r) => r.roleName === "Secretary");
       }
       if (!selectedRole) {
         selectedRole = rolesWithNames.find((r) => r.roleName === "Researcher");
