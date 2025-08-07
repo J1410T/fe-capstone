@@ -20,6 +20,10 @@ import {
   updateUserRoleStatus,
   deleteUserRole,
   getUserRoleById,
+  getUserFilter,
+  getUserRoleByAccountId,
+  createUser,
+  updateUserStatus,
 } from "@/services/resources/auth";
 import {
   UserRole,
@@ -27,6 +31,10 @@ import {
   CreateUserRoleRequest,
   UpdateUserRoleRequest,
   UserRoleFilterRequest,
+  UserFilterRequest,
+  UserFilterResponse,
+  UserAccountWithRoles,
+  CreateUserRequest,
 } from "@/types/auth";
 
 export function useAuthResponse() {
@@ -183,6 +191,7 @@ export function useCreateUserRole() {
       // Invalidate user role queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["user-role"] });
       queryClient.invalidateQueries({ queryKey: ["user-roles"] });
+      queryClient.invalidateQueries({ queryKey: ["users-with-roles"] });
     },
     onError: (error) => {
       console.error("Failed to create user role:", error);
@@ -252,5 +261,144 @@ export function useGetUserRoleById(userRoleId: string) {
     queryFn: () => getUserRoleById(userRoleId),
     enabled: !!userRoleId && !!accessToken,
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+}
+
+// New hooks for Users Management
+
+/**
+ * Hook to get users with filter and pagination
+ */
+export function useUserFilter(request: UserFilterRequest) {
+  const accessToken = useAccessToken();
+
+  return useQuery({
+    queryKey: ["user-filter", request],
+    queryFn: () => getUserFilter(request),
+    enabled: !!accessToken,
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+  });
+}
+
+/**
+ * Hook to get user roles by account ID
+ */
+export function useUserRoleByAccountId(
+  accountId: string,
+  enabled: boolean = true
+) {
+  const accessToken = useAccessToken();
+
+  return useQuery({
+    queryKey: ["user-role-by-account", accountId],
+    queryFn: () => getUserRoleByAccountId(accountId),
+    enabled: !!accountId && !!accessToken && enabled,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+}
+
+/**
+ * Hook to create a new user
+ */
+export function useCreateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: CreateUserRequest) => createUser(request),
+    onSuccess: () => {
+      // Invalidate user filter queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["user-filter"] });
+      queryClient.invalidateQueries({ queryKey: ["users-with-roles"] });
+    },
+    onError: (error) => {
+      console.error("Failed to create user:", error);
+    },
+  });
+}
+
+/**
+ * Hook to update user status
+ */
+export function useUpdateUserStatus() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (accountId: string) => updateUserStatus(accountId),
+    onSuccess: () => {
+      // Invalidate user filter queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["user-filter"] });
+      queryClient.invalidateQueries({ queryKey: ["user-role-by-account"] });
+      queryClient.invalidateQueries({ queryKey: ["users-with-roles"] });
+    },
+    onError: (error) => {
+      console.error("Failed to update user status:", error);
+    },
+  });
+}
+
+/**
+ * Hook to get users with their roles - enhanced version that combines user filter with role data
+ */
+export function useUsersWithRoles(request: UserFilterRequest) {
+  const accessToken = useAccessToken();
+
+  return useQuery({
+    queryKey: ["users-with-roles", request],
+    queryFn: async (): Promise<
+      UserFilterResponse & { "data-list": UserAccountWithRoles[] }
+    > => {
+      // First get the users
+      const userResponse = await getUserFilter(request);
+
+      // Valid role names to filter
+      const validRoles = [
+        "Researcher",
+        "Principal Investigator",
+        "Staff",
+        "Appraisal council",
+        "Host Institution",
+      ];
+
+      // For each user, get their roles
+      const usersWithRoles = await Promise.all(
+        userResponse["data-list"].map(async (user) => {
+          try {
+            const rolesResponse = await getUserRoleByAccountId(user.id);
+
+            // Filter and deduplicate roles, only keep valid ones
+            const uniqueValidRoles = rolesResponse["data-list"]
+              .filter((role) => validRoles.includes(role.name))
+              .reduce((acc, role) => {
+                if (!acc.find((r) => r.name === role.name)) {
+                  acc.push({
+                    id: role.id,
+                    "role-id": role["role-id"],
+                    name: role.name,
+                  });
+                }
+                return acc;
+              }, [] as Array<{ id: string; "role-id": string; name: string }>);
+
+            return {
+              ...user,
+              UserRole: uniqueValidRoles,
+            };
+          } catch (error) {
+            console.error(`Failed to get roles for user ${user.id}:`, error);
+            return {
+              ...user,
+              UserRole: [],
+            };
+          }
+        })
+      );
+
+      return {
+        ...userResponse,
+        "data-list": usersWithRoles,
+      };
+    },
+    enabled: !!accessToken,
+    staleTime: 2 * 60 * 1000, // Cache for 2 minutes
   });
 }
