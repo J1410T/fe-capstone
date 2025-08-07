@@ -100,7 +100,7 @@ export interface CreateDocumentRequest {
   status: string;
   "is-template": boolean;
   "content-html": string;
-  "project-id": string;
+  "project-id": string | null;
 }
 
 export interface CreateDocumentResponse {

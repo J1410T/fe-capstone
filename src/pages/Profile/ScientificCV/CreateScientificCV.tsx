@@ -1,13 +1,15 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
-import { useDocumentsByFilter } from "@/hooks/queries/document";
+import {
+  useCreateDocument,
+  useDocumentsByFilter,
+} from "@/hooks/queries/document";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Save, FileText, AlertCircle } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useCreateDocument } from "@/hooks/queries/useDocuments";
 import { toast } from "sonner";
-import { DocumentForm } from "@/types/document";
+import { useAuth } from "@/contexts";
+import { UserRole } from "@/contexts/auth-types";
 
 type EditorInstance = {
   getContent: () => string;
@@ -24,16 +26,26 @@ const CreateScientificCV: React.FC = () => {
   const handleBack = () => navigate(-1);
 
   const {
-    data,
+    data: templateData,
     isLoading: isTemplateLoading,
-    error,
-  } = useDocumentsByFilter("BM2", true, 1, 1);
+    error: templateError,
+    refetch: refetchTemplate,
+  } = useDocumentsByFilter("BM2", true, 1, 1, false); // Initially disabled
+
   const createDocument = useCreateDocument();
 
+  // Fetch template on component mount
   useEffect(() => {
-    const documentList: DocumentForm[] = data?.data?.["data-list"] ?? [];
-    const firstDoc: DocumentForm | undefined = documentList[0];
-    if (firstDoc?.["content-html"]) {
+    refetchTemplate();
+  }, [refetchTemplate]);
+
+  useEffect(() => {
+    if (
+      !isTemplateLoading &&
+      templateData?.data?.["data-list"]?.[0]?.["content-html"]
+    ) {
+      const templateContent = templateData.data["data-list"][0]["content-html"];
+
       // Add frame to the top-right
       const frame = `
       <div style="display: flex; justify-content: flex-end;">
@@ -48,21 +60,85 @@ const CreateScientificCV: React.FC = () => {
        </div>
      </div>
       `;
-      setFormContent(frame + firstDoc["content-html"]);
+      setFormContent(frame + templateContent);
     }
-  }, [data]);
+  }, [templateData, isTemplateLoading]);
 
   const handleEditorChange = () => {
     // Optional: You can add any additional logic here
     // For now, we'll just let the editor handle the content
   };
 
-  const handleSave = async () => {
-    if (!user?.id) {
-      toast.error("User not authenticated");
-      return;
-    }
+  const getProfileRoute = () => {
+    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) return `/pi/profile`;
+    if (user?.role === UserRole.HOST_INSTITUTION) return `/host/profile`;
+    if (user?.role === UserRole.APPRAISAL_COUNCIL) return `/council/profile`;
+    return `/researcher/profile`;
+  };
 
+  const handleCreateFromTemplate = async () => {
+    setIsLoading(true);
+
+    try {
+      // Fetch the BM2 template
+      const templateResponse = await refetchTemplate();
+
+      if (!templateResponse.data?.data?.["data-list"]?.[0]?.["content-html"]) {
+        toast.error("Template not found");
+        setIsLoading(false);
+        return;
+      }
+
+      const templateContent =
+        templateResponse.data.data["data-list"][0]["content-html"];
+
+      // Add frame if not present
+      const hasFrame = templateContent.includes('class="frame-image"');
+      const frame = `
+        <div style="display: flex; justify-content: flex-end;">
+          <div class="image-frame" contenteditable="false">
+            <div contenteditable="true">
+              <img
+                src="https://via.placeholder.com/150"
+                class="frame-image"
+                style="max-width: 100%; max-height: 100%; object-fit: cover;"
+              />
+            </div>
+          </div>
+        </div>`;
+      const finalContent = hasFrame ? templateContent : frame + templateContent;
+
+      createDocument.mutate(
+        {
+          name: "CV",
+          type: "ScienceCV",
+          status: "created",
+          "is-template": false,
+          "content-html": finalContent,
+          "project-id": null,
+        },
+        {
+          onSuccess: () => {
+            toast.success("Scientific CV created successfully!");
+            navigate(getProfileRoute());
+          },
+          onError: (error) => {
+            console.error("Failed to create Scientific CV:", error);
+            toast.error("Failed to create Scientific CV");
+          },
+          onSettled: () => {
+            setIsLoading(false);
+          },
+        }
+      );
+    } catch (error) {
+      console.error("Failed to fetch template:", error);
+      toast.error("Failed to fetch template");
+      setIsLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
     const content = editorRef.current?.getContent() ?? "";
     if (!content.trim()) {
       toast.error("Please add content to your Scientific CV");
@@ -73,15 +149,17 @@ const CreateScientificCV: React.FC = () => {
 
     createDocument.mutate(
       {
-        name: "Scientific CV",
-        type: "BM2",
-        contentHtml: content,
-        isTemplate: false,
+        name: "CV",
+        type: "ScienceCV",
+        status: "created",
+        "is-template": false,
+        "content-html": content,
+        "project-id": null,
       },
       {
         onSuccess: () => {
           toast.success("Scientific CV created successfully!");
-          navigate("/profile");
+          navigate(getProfileRoute());
         },
         onError: (error) => {
           console.error("Failed to create Scientific CV:", error);
@@ -151,6 +229,7 @@ const CreateScientificCV: React.FC = () => {
           </p>
         </div>
       </div>
+
       {/* Requirements */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
         <div className="flex items-start space-x-2">
@@ -187,9 +266,29 @@ const CreateScientificCV: React.FC = () => {
               <p className="text-gray-600">Loading BM2 template...</p>
             </div>
           </div>
-        ) : error ? (
+        ) : templateError ? (
           <div className="text-center text-red-500 p-6 bg-white rounded-xl shadow">
-            ⚠️ API Error: {(error as Error).message}
+            <div className="mb-4">
+              ⚠️ Template Error: {(templateError as Error).message}
+            </div>
+            <Button
+              onClick={handleCreateFromTemplate}
+              size="lg"
+              disabled={isLoading}
+              className="px-6"
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Create Scientific CV from Template
+                </>
+              )}
+            </Button>
           </div>
         ) : (
           <Editor
@@ -255,7 +354,7 @@ const CreateScientificCV: React.FC = () => {
       {/* Action buttons */}
       <div className="flex justify-between mt-8 max-w-5xl mx-auto">
         <Button
-          onClick={handleSave}
+          onClick={templateError ? handleCreateFromTemplate : handleSave}
           size="lg"
           disabled={isLoading || isTemplateLoading}
           className="px-6"

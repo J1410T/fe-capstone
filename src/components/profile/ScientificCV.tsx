@@ -3,7 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Eye, Edit, Calendar, User, CheckCircle } from "lucide-react";
+import {
+  FileText,
+  Eye,
+  Edit,
+  Calendar,
+  User,
+  CheckCircle,
+  Plus,
+} from "lucide-react";
 import { format } from "date-fns";
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { useScientificCVByEmail } from "@/hooks/queries/document";
@@ -34,6 +42,10 @@ export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
     navigate("/profile/scientific-cv/edit");
   };
 
+  const handleCreateCV = () => {
+    navigate("/profile/scientific-cv/create");
+  };
+
   if (isLoading) {
     return (
       <Card className={className}>
@@ -52,8 +64,11 @@ export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
     );
   }
 
-  // If no CV exists or error, show message
-  if (!scientificCV || error) {
+  // Check for 404 error or no CV data
+  const is404Error = error && scientificCV?.status === 404;
+  const shouldShowCreate = !scientificCV || is404Error;
+
+  if (shouldShowCreate) {
     return (
       <Card className={className}>
         <CardHeader>
@@ -66,8 +81,15 @@ export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
           <div className="text-center py-8">
             <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
             <p className="text-gray-600 mb-4">
-              No Scientific CV found for your account.
+              You haven't created your Scientific CV yet.
             </p>
+            <Button
+              onClick={handleCreateCV}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Scientific CV
+            </Button>
           </div>
         </CardContent>
       </Card>
@@ -98,7 +120,7 @@ export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
                 📘 Scientific CV Created
               </h4>
               <Badge variant="outline" className="text-xs">
-                {scientificCV.data.status
+                {scientificCV?.data.status
                   ? String(scientificCV.data.status).charAt(0).toUpperCase() +
                     String(scientificCV.data.status).slice(1)
                   : "Created"}
@@ -110,7 +132,7 @@ export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
                 <Calendar className="w-4 h-4" />
                 <span>
                   Created:{" "}
-                  {scientificCV.data["upload-at"]
+                  {scientificCV?.data["upload-at"]
                     ? format(
                         new Date(scientificCV.data["upload-at"]),
                         "MMM dd, yyyy"
@@ -122,7 +144,7 @@ export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
                 <User className="w-4 h-4" />
                 <span>
                   Last updated:{" "}
-                  {scientificCV.data["updated-at"]
+                  {scientificCV?.data["updated-at"]
                     ? format(
                         new Date(scientificCV.data["updated-at"]),
                         "MMM dd, yyyy"
