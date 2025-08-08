@@ -242,7 +242,7 @@ function ProjectDetail() {
 
         {visibleTabs.includes("milestones") && (
           <TabsContent value="milestones" className="space-y-4">
-            <MilestoneTab milestones={projectData.milestones || []} />
+            <MilestoneTab projectId={project.id} />
           </TabsContent>
         )}
 
