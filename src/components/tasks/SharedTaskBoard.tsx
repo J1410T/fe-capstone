@@ -20,7 +20,7 @@ interface ComponentTask {
   id: string;
   title: string;
   description: string;
-  status: "Not Started" | "In Progress" | "Complete" | "Overdue";
+  status: "To Do" | "In Progress" | "Completed" | "Overdue";
   dueDate: string;
   priority: "Low" | "Medium" | "High";
   projectTag: string;
@@ -68,20 +68,20 @@ const convertToProfessionalTask = (task: KanbanTask): ProfessionalTask => ({
   updatedAt: task.updatedAt,
   projectId: task.projectTag,
   // Pass through member-tasks data if available
-  "member-tasks": (task as ComponentTask)["member-tasks"]
+  "member-tasks": (task as ComponentTask)["member-tasks"],
 });
 
 const STATUS_MAPPING = {
-  "Not Started": "ToDo",
+  "To Do": "ToDo",
   "In Progress": "InProgress",
-  Complete: "Completed",
+  Completed: "Completed",
   Overdue: "Overdue",
 } as const;
 
 const REVERSE_STATUS_MAPPING = {
-  ToDo: "Not Started",
+  ToDo: "To Do",
   InProgress: "In Progress",
-  Completed: "Complete",
+  Completed: "Completed",
   Overdue: "Overdue",
 } as const;
 
@@ -276,7 +276,9 @@ export const SharedTaskBoard: React.FC<SharedTaskBoardProps> = ({
                       ...activeTask.assignedTo,
                       role: UserRole.RESEARCHER,
                     },
-                    status: STATUS_MAPPING[activeTask.status as keyof typeof STATUS_MAPPING] as KanbanStatus,
+                    status: STATUS_MAPPING[
+                      activeTask.status as keyof typeof STATUS_MAPPING
+                    ] as KanbanStatus,
                   }}
                   onClick={() => {}}
                 />

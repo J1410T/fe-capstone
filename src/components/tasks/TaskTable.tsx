@@ -58,7 +58,7 @@ interface Task {
   id: string;
   title: string;
   description: string;
-  status: "Not Started" | "In Progress" | "Complete" | "Overdue";
+  status: "To Do" | "In Progress" | "Completed" | "Overdue";
   dueDate: string;
   priority: "Low" | "Medium" | "High";
   projectTag: string;
@@ -113,14 +113,21 @@ const formatDueDate = (dueDate: string): string => {
   }
 
   try {
-    return format(parseISO(dueDate), "MMM dd, yyyy");
+    const parsedDate = parseISO(dueDate);
+    // Create a local date to avoid timezone offset issues
+    const localDate = new Date(
+      parsedDate.getFullYear(),
+      parsedDate.getMonth(),
+      parsedDate.getDate()
+    );
+    return format(localDate, "MMM dd, yyyy");
   } catch {
     return "Invalid date";
   }
 };
 
 const isOverdue = (dueDate: string, status: string): boolean => {
-  if (status === "Complete") return false;
+  if (status === "Completed") return false;
   if (!isValidDateString(dueDate)) return false;
 
   try {
@@ -142,28 +149,30 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   const {
     tasks: fetchedTasks,
     loading: fetchingTasks,
-    error: fetchError
+    error: fetchError,
   } = useTasksWithMembersByMilestoneId(milestoneId || "", projectId);
 
   // Determine which tasks to use - wrapped in useMemo to prevent dependency issues
   const tasks = useMemo(() => {
-    const finalTasks = milestoneId ? fetchedTasks : (propTasks || []);
+    const finalTasks = milestoneId ? fetchedTasks : propTasks || [];
 
     // Debug logging
-    console.log("🔍 TaskTable Debug:", {
-      milestoneId,
-      usingEnhancedHook: !!milestoneId,
-      fetchedTasksCount: fetchedTasks.length,
-      finalTasksCount: finalTasks.length,
-      fetchingTasks,
-      fetchError,
-      sampleTask: finalTasks[0] ? {
-        id: finalTasks[0].id,
-        title: finalTasks[0].title,
-        memberTasksCount: finalTasks[0]["member-tasks"]?.length || 0,
-        memberTasksData: finalTasks[0]["member-tasks"]
-      } : null
-    });
+    // console.log("🔍 TaskTable Debug:", {
+    //   milestoneId,
+    //   usingEnhancedHook: !!milestoneId,
+    //   fetchedTasksCount: fetchedTasks.length,
+    //   finalTasksCount: finalTasks.length,
+    //   fetchingTasks,
+    //   fetchError,
+    //   sampleTask: finalTasks[0]
+    //     ? {
+    //         id: finalTasks[0].id,
+    //         title: finalTasks[0].title,
+    //         memberTasksCount: finalTasks[0]["member-tasks"]?.length || 0,
+    //         memberTasksData: finalTasks[0]["member-tasks"],
+    //       }
+    //     : null,
+    // });
 
     return finalTasks;
   }, [milestoneId, fetchedTasks, propTasks, fetchingTasks, fetchError]);
@@ -172,7 +181,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   const [globalFilter, setGlobalFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
-  const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [dueDateFilter, setDueDateFilter] = useState<string>("all");
 
   // Note: Overdue status is now handled in the useTasksWithMembersByMilestoneId hook
@@ -185,7 +193,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
 
     // For backward compatibility with passed tasks, still apply overdue logic
     return tasks.map((task) => {
-      if (isOverdue(task.dueDate, task.status) && task.status !== "Complete") {
+      if (isOverdue(task.dueDate, task.status) && task.status !== "Completed") {
         return { ...task, status: "Overdue" as const };
       }
       return task;
@@ -221,26 +229,18 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   // Get status configuration
   const getStatusConfig = (status: string) => {
     switch (status) {
-      case "Complete":
+      case "Completed":
         return { color: "bg-green-100 text-green-700" };
       case "In Progress":
         return { color: "bg-blue-100 text-blue-700" };
       case "Overdue":
         return { color: "bg-red-100 text-red-700" };
-      case "Not Started":
+      case "To Do":
         return { color: "bg-slate-100 text-slate-700" };
       default:
         return { color: "bg-slate-100 text-slate-700" };
     }
   };
-
-  // Get unique categories
-  const categories = useMemo(() => {
-    const uniqueCategories = Array.from(
-      new Set(tasks.map((task) => task.projectTag))
-    );
-    return uniqueCategories.sort();
-  }, [tasks]);
 
   // Table columns definition
   const columns = useMemo<ColumnDef<Task>[]>(
@@ -345,15 +345,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         },
       },
       {
-        accessorKey: "projectTag",
-        header: "Category",
-        cell: ({ row }: { row: Row<Task> }) => (
-          <Badge variant="secondary" className="bg-slate-100 text-slate-700">
-            {row.original.projectTag}
-          </Badge>
-        ),
-      },
-      {
         accessorKey: "assignedTo",
         header: "Assigned To",
         cell: ({ row }: { row: Row<Task> }) => {
@@ -372,10 +363,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
               <div className="flex items-center space-x-2">
                 <Avatar className="w-6 h-6 border">
                   {member?.avatarUrl ? (
-                    <AvatarImage
-                      src={member.avatarUrl}
-                      alt={member.name}
-                    />
+                    <AvatarImage src={member.avatarUrl} alt={member.name} />
                   ) : (
                     <AvatarFallback className="text-xs">
                       {member?.name
@@ -396,7 +384,10 @@ export const TaskTable: React.FC<TaskTableProps> = ({
           // If multiple members, show stacked avatars with count and names on hover
           return (
             <div className="flex items-center space-x-2">
-              <div className="flex -space-x-2" title={memberTasks.map(mt => mt.member?.name).join(", ")}>
+              <div
+                className="flex -space-x-2"
+                title={memberTasks.map((mt) => mt.member?.name).join(", ")}
+              >
                 {memberTasks.slice(0, 3).map((mt) => (
                   <Avatar key={mt.id} className="w-6 h-6 border">
                     {mt.member?.avatarUrl ? (
@@ -417,12 +408,14 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                 ))}
                 {memberTasks.length > 3 && (
                   <div className="w-6 h-6 rounded-full bg-slate-200 border flex items-center justify-center">
-                    <span className="text-xs text-slate-600">+{memberTasks.length - 3}</span>
+                    <span className="text-xs text-slate-600">
+                      +{memberTasks.length - 3}
+                    </span>
                   </div>
                 )}
               </div>
               <span className="text-xs text-slate-500">
-                {memberTasks.length} member{memberTasks.length > 1 ? 's' : ''}
+                {memberTasks.length} member{memberTasks.length > 1 ? "s" : ""}
               </span>
             </div>
           );
@@ -501,11 +494,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       filtered = filtered.filter((task) => task.priority === priorityFilter);
     }
 
-    // Category filter
-    if (categoryFilter !== "all") {
-      filtered = filtered.filter((task) => task.projectTag === categoryFilter);
-    }
-
     // Due date filter
     if (dueDateFilter !== "all") {
       const now = new Date();
@@ -533,13 +521,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
     }
 
     return filtered;
-  }, [
-    tasksWithOverdueCheck,
-    statusFilter,
-    priorityFilter,
-    categoryFilter,
-    dueDateFilter,
-  ]);
+  }, [tasksWithOverdueCheck, statusFilter, priorityFilter, dueDateFilter]);
 
   const table = useReactTable({
     data: filteredTasks,
@@ -574,7 +556,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       <div className="space-y-6">
         <Card className="border-slate-200">
           <CardContent className="flex items-center justify-center p-8">
-        <Loading className="w-full max-w-md" />
+            <Loading className="w-full max-w-md" />
           </CardContent>
         </Card>
       </div>
@@ -600,23 +582,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      {/* <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold text-slate-900">{title}</h2>
-          <p className="text-sm text-slate-600 mt-1">{description}</p>
-        </div>
-        {onCreateTask && (
-          <Button
-            onClick={onCreateTask}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Task
-          </Button>
-        )}
-      </div> */}
-
       {/* Filters */}
       <Card className="border-slate-200">
         <CardHeader className="pb-4">
@@ -657,9 +622,9 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="Not Started">Not Started</SelectItem>
+                  <SelectItem value="To Do">To Do</SelectItem>
                   <SelectItem value="In Progress">In Progress</SelectItem>
-                  <SelectItem value="Complete">Complete</SelectItem>
+                  <SelectItem value="Completed">Completed</SelectItem>
                   <SelectItem value="Overdue">Overdue</SelectItem>
                 </SelectContent>
               </Select>
@@ -679,26 +644,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                   <SelectItem value="High">High</SelectItem>
                   <SelectItem value="Medium">Medium</SelectItem>
                   <SelectItem value="Low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Category Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Category
-              </label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -726,7 +671,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
           {(globalFilter ||
             statusFilter !== "all" ||
             priorityFilter !== "all" ||
-            categoryFilter !== "all" ||
             dueDateFilter !== "all") && (
             <div className="flex justify-end">
               <Button
@@ -736,7 +680,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
                   setGlobalFilter("");
                   setStatusFilter("all");
                   setPriorityFilter("all");
-                  setCategoryFilter("all");
                   setDueDateFilter("all");
                 }}
                 className="border-slate-300 text-slate-700 hover:bg-slate-50"
@@ -751,76 +694,71 @@ export const TaskTable: React.FC<TaskTableProps> = ({
 
       {/* Task Table */}
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div className="min-w-[600px]">
-              {" "}
-              {/* Đảm bảo bảng không bị bóp quá nhỏ */}
-              <Table>
-                <TableHeader className="pt-0">
-                  <TableRow className="pt-0 border-slate-200">
-                    {table.getHeaderGroups().map((headerGroup) =>
-                      headerGroup.headers.map(
-                        (header: Header<Task, unknown>) => (
-                          <TableHead
-                            key={header.id}
-                            className="pt-0 bg-slate-50 text-slate-700 font-semibold text-sm sm:text-base px-4 py-3 whitespace-nowrap"
-                          >
-                            {header.isPlaceholder
-                              ? null
-                              : flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
-                                )}
-                          </TableHead>
-                        )
-                      )
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {table.getRowModel().rows?.length ? (
-                    table.getRowModel().rows.map((row: Row<Task>) => (
-                      <TableRow
-                        key={row.id}
-                        className="hover:bg-slate-50 border-slate-200 cursor-pointer"
-                        onClick={() => onTaskClick && onTaskClick(row.original)}
-                      >
-                        {row
-                          .getVisibleCells()
-                          .map((cell: Cell<Task, unknown>) => (
-                            <TableCell
-                              key={cell.id}
-                              className="py-3 px-4 text-sm sm:text-base break-words max-w-[200px] whitespace-nowrap"
-                            >
-                              {flexRender(
-                                cell.column.columnDef.cell,
-                                cell.getContext()
-                              )}
-                            </TableCell>
-                          ))}
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="min-w-[600px]">
+          {" "}
+          {/* Đảm bảo bảng không bị bóp quá nhỏ */}
+          <Table>
+            <TableHeader className="pt-0">
+              <TableRow className="pt-0 border-slate-200">
+                {table.getHeaderGroups().map((headerGroup) =>
+                  headerGroup.headers.map((header: Header<Task, unknown>) => (
+                    <TableHead
+                      key={header.id}
+                      className="pt-0 bg-slate-50 text-slate-700 font-semibold text-sm sm:text-base px-4 py-3 whitespace-nowrap"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
+                  ))
+                )}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row: Row<Task>) => (
+                  <TableRow
+                    key={row.id}
+                    className="hover:bg-slate-50 border-slate-200 cursor-pointer"
+                    onClick={() => onTaskClick && onTaskClick(row.original)}
+                  >
+                    {row.getVisibleCells().map((cell: Cell<Task, unknown>) => (
                       <TableCell
-                        colSpan={columns.length}
-                        className="h-24 text-center"
+                        key={cell.id}
+                        className="py-3 px-4 text-sm sm:text-base break-words max-w-[200px] whitespace-nowrap"
                       >
-                        <div className="flex flex-col items-center justify-center text-slate-500 px-4">
-                          <Search className="w-8 h-8 mb-2 opacity-50" />
-                          <p>No tasks found</p>
-                          <p className="text-sm">
-                            Try adjusting your search or filter criteria
-                          </p>
-                        </div>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
                       </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    <div className="flex flex-col items-center justify-center text-slate-500 px-4">
+                      <Search className="w-8 h-8 mb-2 opacity-50" />
+                      <p>No tasks found</p>
+                      <p className="text-sm">
+                        Try adjusting your search or filter criteria
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
 
       {/* Pagination - Responsive */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">

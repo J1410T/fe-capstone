@@ -73,10 +73,12 @@ export interface CreateTaskData {
 export interface UpdateTaskData {
   title?: string;
   description?: string;
-  priority?: TaskPriority;
-  assigneeId?: string;
-  dueDate?: string;
-  status?: TaskStatus;
+  startDate?: string;
+  endDate?: string;
+  status?: "ToDo" | "InProgress" | "Completed" | "Overdue";
+  milestoneId?: string;
+  memberTasks?: unknown;
+  [key: string]: unknown; // optional for flexibility
 }
 
 export type Milestone = {
@@ -234,6 +236,7 @@ export interface UpdateTaskRequest {
   "meeting-url": string | null;
   note: string;
   "milestone-id": string;
+  "member-tasks": MemberTask[] | null;
 }
 
 export interface UpdateTaskStatusRequest {

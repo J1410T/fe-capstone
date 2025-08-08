@@ -10,6 +10,7 @@ import {
   updateTaskStatusKanban,
 } from "@/services/resources/task";
 import { CreateMemberTaskRequest, CreateTaskRequest } from "@/types/auth";
+import { UpdateTaskRequest } from "@/types/task";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -45,6 +46,7 @@ export function useCreateTask() {
     onSuccess: () => {
       // Invalidate and refetch tasks
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-with-members"] });
       toast.success("Task created successfully");
     },
     onError: (error) => {
@@ -82,16 +84,26 @@ export function useUpdateTask() {
       taskData,
     }: {
       taskId: string;
-      taskData: Record<string, unknown>;
+      taskData: Partial<UpdateTaskRequest>;
     }) => updateTask(taskId, taskData),
+
     onSuccess: () => {
-      // Invalidate and refetch all task-related queries for immediate UI updates
+      console.log(
+        "🔄 Query invalidation - Starting invalidation after task update"
+      );
+
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["member-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-with-members"] });
+
+      console.log(
+        "✅ Query invalidation - All task-related queries invalidated"
+      );
       toast.success("Task updated successfully!");
     },
+
     onError: (error) => {
-      console.error("Failed to update task:", error);
+      console.error("❌ Failed to update task:", error);
       toast.error("Failed to update task");
     },
   });
@@ -103,12 +115,15 @@ export function useDeleteTask() {
   return useMutation({
     mutationFn: (taskId: string) => deleteTask(taskId),
     onSuccess: () => {
+      // Invalidate all task-related queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
-      toast.success("Task deleted successfully!");
+      queryClient.invalidateQueries({ queryKey: ["member-tasks"] });
+      queryClient.invalidateQueries({ queryKey: ["tasks-with-members"] });
+      // Don't show toast here - let the calling component handle it
     },
     onError: (error) => {
       console.error("Failed to delete task:", error);
-      toast.error("Failed to delete task");
+      // Don't show toast here - let the calling component handle it with more specific error messages
     },
   });
 }
@@ -139,11 +154,11 @@ export function useDeleteMemberTask() {
       // Invalidate and refetch all task-related queries for immediate UI updates
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["member-tasks"] });
-      toast.success("Member task deleted successfully!");
+      // Don't show toast here - let the calling component handle it
     },
     onError: (error) => {
       console.error("Failed to delete member task:", error);
-      toast.error("Failed to delete member task");
+      // Don't show toast here - let the calling component handle it with more specific error messages
     },
   });
 }

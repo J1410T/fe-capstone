@@ -73,7 +73,7 @@ interface Task {
   id: string;
   title: string;
   description: string;
-  status: "Not Started" | "In Progress" | "Complete" | "Overdue";
+  status: "To Do" | "In Progress" | "Completed" | "Overdue";
   dueDate: string;
   priority: "Low" | "Medium" | "High";
   projectTag: string;
@@ -148,6 +148,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     startDate: "",
     endDate: "",
     priority: "Medium" as "Low" | "Medium" | "High",
+    status: "To Do" as "To Do" | "In Progress" | "Completed" | "Overdue",
     note: "",
     hasMeetingUrl: false,
     meetingUrl: "",
@@ -210,7 +211,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
   // Get current member tasks for display
   // Check if task has member-tasks data (from enhanced hook) or use separate API call
-  const currentMemberTasks: MemberTaskUnion[] = (task?.["member-tasks"] || memberTasksData?.["data-list"] || []) as MemberTaskUnion[];
+  const currentMemberTasks: MemberTaskUnion[] = (task?.["member-tasks"] ||
+    memberTasksData?.["data-list"] ||
+    []) as MemberTaskUnion[];
 
   // Initialize form data when task or mode changes
   useEffect(() => {
@@ -222,6 +225,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         startDate: "",
         endDate: "",
         priority: "Medium",
+        status: "To Do",
         note: "",
         hasMeetingUrl: false,
         meetingUrl: "",
@@ -238,22 +242,44 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         startDate: task.startDate || "",
         endDate: task.endDate || task.dueDate || "",
         priority: task.priority,
+        status: task.status,
         note: task.note || "",
         hasMeetingUrl: !!task.meetingUrl,
         meetingUrl: task.meetingUrl || "",
       });
 
       // Set dates - handle both ISO datetime and date-only formats, and null values
+      // Fix timezone offset issues by creating dates in local timezone
       try {
-        if (task.startDate && task.startDate !== "null" && task.startDate !== "") {
+        if (
+          task.startDate &&
+          task.startDate !== "null" &&
+          task.startDate !== ""
+        ) {
           const startDate = parseISO(task.startDate);
           if (isValid(startDate)) {
-            setSelectedStartDate(startDate);
+            // Create a new date in local timezone to avoid offset issues
+            const localStartDate = new Date(
+              startDate.getFullYear(),
+              startDate.getMonth(),
+              startDate.getDate()
+            );
+            setSelectedStartDate(localStartDate);
           }
-        } else if (task.createdAt && task.createdAt !== "null" && task.createdAt !== "") {
+        } else if (
+          task.createdAt &&
+          task.createdAt !== "null" &&
+          task.createdAt !== ""
+        ) {
           const createdDate = parseISO(task.createdAt);
           if (isValid(createdDate)) {
-            setSelectedStartDate(createdDate);
+            // Create a new date in local timezone to avoid offset issues
+            const localCreatedDate = new Date(
+              createdDate.getFullYear(),
+              createdDate.getMonth(),
+              createdDate.getDate()
+            );
+            setSelectedStartDate(localCreatedDate);
           }
         } else {
           setSelectedStartDate(undefined); // Clear date if null
@@ -267,12 +293,28 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         if (task.endDate && task.endDate !== "null" && task.endDate !== "") {
           const endDate = parseISO(task.endDate);
           if (isValid(endDate)) {
-            setSelectedEndDate(endDate);
+            // Create a new date in local timezone to avoid offset issues
+            const localEndDate = new Date(
+              endDate.getFullYear(),
+              endDate.getMonth(),
+              endDate.getDate()
+            );
+            setSelectedEndDate(localEndDate);
           }
-        } else if (task.dueDate && task.dueDate !== "null" && task.dueDate !== "") {
+        } else if (
+          task.dueDate &&
+          task.dueDate !== "null" &&
+          task.dueDate !== ""
+        ) {
           const dueDate = parseISO(task.dueDate);
           if (isValid(dueDate)) {
-            setSelectedEndDate(dueDate);
+            // Create a new date in local timezone to avoid offset issues
+            const localDueDate = new Date(
+              dueDate.getFullYear(),
+              dueDate.getMonth(),
+              dueDate.getDate()
+            );
+            setSelectedEndDate(localDueDate);
           }
         } else {
           setSelectedEndDate(undefined); // Clear date if null
@@ -283,32 +325,70 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       }
 
       // Load current assigned members from user roles data
-      if (userRolesData?.["data-list"] && task.memberTaskIds) {
-        const currentMembers = userRolesData["data-list"].filter(
-          (role: UserRole) => task.memberTaskIds?.includes(role["account-id"])
-        );
+      // Enhanced logic to handle both legacy memberTaskIds and member-tasks data
+      if (userRolesData?.["data-list"]) {
+        let currentMembers: UserRole[] = [];
+
+        // First try to use member-tasks data (from enhanced hook)
+        if (task["member-tasks"] && task["member-tasks"].length > 0) {
+          const memberIds = task["member-tasks"].map((mt) => mt["member-id"]);
+          currentMembers = userRolesData["data-list"].filter((role: UserRole) =>
+            memberIds.includes(role["account-id"])
+          );
+        }
+        // Fallback to legacy memberTaskIds
+        else if (task.memberTaskIds && task.memberTaskIds.length > 0) {
+          currentMembers = userRolesData["data-list"].filter((role: UserRole) =>
+            task.memberTaskIds?.includes(role["account-id"])
+          );
+        }
+        // Also try to get from separate member tasks API call
+        else if (
+          memberTasksData?.["data-list"] &&
+          memberTasksData["data-list"].length > 0
+        ) {
+          const memberIds = memberTasksData["data-list"].map(
+            (mt: MemberTaskUnion) => mt.memberId || mt["member-id"] || ""
+          );
+          currentMembers = userRolesData["data-list"].filter((role: UserRole) =>
+            memberIds.includes(role["account-id"])
+          );
+        }
+
         setSelectedMembers(currentMembers);
       }
 
       setErrors({});
     }
-  }, [task, mode, userRolesData]);
+  }, [task, mode, userRolesData, memberTasksData]);
 
-  // Sync date fields
+  // Sync date fields - Fix timezone offset issues
   useEffect(() => {
     if (selectedStartDate) {
+      // Use local date string to avoid timezone offset issues
+      const year = selectedStartDate.getFullYear();
+      const month = String(selectedStartDate.getMonth() + 1).padStart(2, "0");
+      const day = String(selectedStartDate.getDate()).padStart(2, "0");
+      const localDateString = `${year}-${month}-${day}`;
+
       setFormData((prev) => ({
         ...prev,
-        startDate: selectedStartDate.toISOString().split("T")[0],
+        startDate: localDateString,
       }));
     }
   }, [selectedStartDate]);
 
   useEffect(() => {
     if (selectedEndDate) {
+      // Use local date string to avoid timezone offset issues
+      const year = selectedEndDate.getFullYear();
+      const month = String(selectedEndDate.getMonth() + 1).padStart(2, "0");
+      const day = String(selectedEndDate.getDate()).padStart(2, "0");
+      const localDateString = `${year}-${month}-${day}`;
+
       setFormData((prev) => ({
         ...prev,
-        endDate: selectedEndDate.toISOString().split("T")[0],
+        endDate: localDateString,
       }));
     }
   }, [selectedEndDate]);
@@ -387,12 +467,18 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
     try {
       if (mode === "create") {
-        // Create task
+        // Create task - Fix timezone offset by using local date at noon
+        const startDateAtNoon = new Date(selectedStartDate!);
+        startDateAtNoon.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+
+        const endDateAtNoon = new Date(selectedEndDate!);
+        endDateAtNoon.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+
         const taskData = {
           name: formData.title,
           description: formData.description,
-          "start-date": selectedStartDate!.toISOString(),
-          "end-date": selectedEndDate!.toISOString(),
+          "start-date": startDateAtNoon.toISOString(),
+          "end-date": endDateAtNoon.toISOString(),
           priority: formData.priority,
           progress: 0,
           "meeting-url": formData.hasMeetingUrl ? formData.meetingUrl : null,
@@ -422,8 +508,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           onCreate({
             title: formData.title,
             description: formData.description,
-            status: "Not Started" as Task["status"],
-            dueDate: selectedEndDate!.toISOString(),
+            status: "To Do" as Task["status"],
+            dueDate: endDateAtNoon.toISOString(),
             priority: formData.priority as Task["priority"],
             projectTag: "Task",
             assignedTo: {
@@ -439,77 +525,131 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
         toast.success("Task created successfully");
       } else if (mode === "update" && task) {
-        // Update task
+        // Update task - Fix timezone offset by using local date at noon
+        const startDateAtNoon = new Date(selectedStartDate!);
+        startDateAtNoon.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+
+        const endDateAtNoon = new Date(selectedEndDate!);
+        endDateAtNoon.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+
         const taskData = {
           name: formData.title,
           description: formData.description,
-          "start-date": selectedStartDate!.toISOString(),
-          "end-date": selectedEndDate!.toISOString(),
+          "start-date": startDateAtNoon.toISOString(),
+          "end-date": endDateAtNoon.toISOString(),
           priority: formData.priority,
-          progress: task.status === "Complete" ? 100 : 0,
+          progress: task.status === "Completed" ? 100 : 0,
           overdue: 0,
           "meeting-url": formData.hasMeetingUrl ? formData.meetingUrl : null,
           note: formData.note,
           "milestone-id": selectedMilestoneId,
         };
 
+        console.log("🔍 TaskModal - Updating task with data:", {
+          taskId: task.id,
+          taskData,
+          originalTask: task,
+          originalMemberTasks: task["member-tasks"],
+          currentMemberTasks: currentMemberTasks,
+        });
+
         await updateTaskMutation.mutateAsync({
           taskId: task.id!,
           taskData,
         });
 
-        // Handle member task updates
-        const currentMemberIds = currentMemberTasks.map((mt) => {
-          // Handle both enhanced member-tasks format and legacy MemberTask format
-          return mt["member-id"] || mt.memberId || "";
-        });
-        const newMemberIds = selectedMembers.map((m) => m["account-id"]);
+        // Handle member task updates only if there are actual changes
+        const currentMemberIds = currentMemberTasks
+          .map((mt) => {
+            // Handle both enhanced member-tasks format and legacy MemberTask format
+            return mt["member-id"] || mt.memberId || "";
+          })
+          .sort();
+        const newMemberIds = selectedMembers.map((m) => m["account-id"]).sort();
 
-        // Remove members that are no longer selected
-        const membersToRemove = currentMemberTasks.filter((mt) => {
-          const memberId = mt["member-id"] || mt.memberId || "";
-          return !newMemberIds.includes(memberId);
-        });
+        // Check if member assignments have actually changed
+        const memberAssignmentsChanged =
+          currentMemberIds.length !== newMemberIds.length ||
+          !currentMemberIds.every((id, index) => id === newMemberIds[index]);
 
-        for (const memberTask of membersToRemove) {
-          await deleteMemberTaskMutation.mutateAsync(memberTask.id);
-        }
-
-        // Add new members
-        const membersToAdd = selectedMembers.filter(
-          (m) => !currentMemberIds.includes(m["account-id"])
-        );
-
-        for (const member of membersToAdd) {
-          await createMemberTaskMutation.mutateAsync({
-            progress: 0,
-            overdue: 0,
-            note: "",
-            "member-id": member["account-id"],
-            "task-id": task.id!,
+        if (memberAssignmentsChanged) {
+          // Remove members that are no longer selected
+          const membersToRemove = currentMemberTasks.filter((mt) => {
+            const memberId = mt["member-id"] || mt.memberId || "";
+            return !newMemberIds.includes(memberId);
           });
+
+          for (const memberTask of membersToRemove) {
+            try {
+              await deleteMemberTaskMutation.mutateAsync(memberTask.id);
+              console.log(
+                "✅ Successfully removed member task:",
+                memberTask.id
+              );
+            } catch (error) {
+              console.error(
+                "❌ Failed to remove member task:",
+                memberTask.id,
+                error
+              );
+              // Continue with other operations even if one fails
+            }
+          }
+
+          // Add new members
+          const membersToAdd = selectedMembers.filter(
+            (m) => !currentMemberIds.includes(m["account-id"])
+          );
+
+          for (const member of membersToAdd) {
+            try {
+              await createMemberTaskMutation.mutateAsync({
+                progress: 0,
+                overdue: 0,
+                note: "",
+                "member-id": member["account-id"],
+                "task-id": task.id!,
+              });
+            } catch (error) {
+              console.error(
+                "❌ Failed to add member task for:",
+                member["account-id"],
+                error
+              );
+              // Continue with other operations even if one fails
+            }
+          }
+        } else {
+          console.log(
+            "ℹ️ TaskModal - No changes to member assignments, skipping member task updates"
+          );
         }
 
-        // Call the onUpdate callback
+        // Call onUpdate callback if provided (for parent component coordination)
+        // But don't show duplicate toast since updateTaskMutation already shows one
         if (onUpdate) {
           const updatedTask = {
             ...task,
             title: formData.title,
             description: formData.description,
             priority: formData.priority,
-            dueDate: selectedEndDate!.toISOString(),
-            startDate: selectedStartDate!.toISOString(),
-            endDate: selectedEndDate!.toISOString(),
+            dueDate: endDateAtNoon.toISOString(),
+            startDate: startDateAtNoon.toISOString(),
+            endDate: endDateAtNoon.toISOString(),
             note: formData.note,
             meetingUrl: formData.hasMeetingUrl
               ? formData.meetingUrl
               : undefined,
           };
 
+          console.log(
+            "🔄 TaskModal - Calling onUpdate callback with:",
+            updatedTask
+          );
           onUpdate(updatedTask);
         }
 
-        toast.success("Task updated successfully");
+        console.log("✅ TaskModal - Task update completed successfully");
       }
 
       onOpenChange(false);
@@ -529,13 +669,42 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
     setIsLoading(true);
     try {
+      // First, delete all member tasks associated with this task
+      if (currentMemberTasks.length > 0) {
+        for (const memberTask of currentMemberTasks) {
+          try {
+            await deleteMemberTaskMutation.mutateAsync(memberTask.id);
+          } catch (memberError) {
+            console.error(
+              "❌ Failed to delete member task:",
+              memberTask.id,
+              memberError
+            );
+            // Continue with other member tasks even if one fails
+          }
+        }
+      }
+
+      // Then delete the task itself
       await deleteTaskMutation.mutateAsync(task.id);
       onDelete(task.id);
       onOpenChange(false);
       toast.success("Task deleted successfully");
     } catch (error) {
-      console.error("Error deleting task:", error);
-      toast.error("Failed to delete task");
+      // Provide more specific error messages
+      let errorMessage = "Failed to delete task";
+      if (error instanceof Error) {
+        if (error.message.includes("500")) {
+          errorMessage =
+            "Server error: Unable to delete task. Please try again or contact support.";
+        } else if (error.message.includes("404")) {
+          errorMessage = "Task not found. It may have already been deleted.";
+        } else if (error.message.includes("403")) {
+          errorMessage = "You don't have permission to delete this task.";
+        }
+      }
+
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -663,7 +832,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 date={selectedStartDate}
                 onDateChange={isReadOnly ? undefined : setSelectedStartDate}
                 placeholder="Select start date"
-                disablePastDates={mode === "create"}
+                disablePastDates={mode === "create" || mode === "update"}
                 disabled={isReadOnly}
               />
               {errors.startDate && (
@@ -681,7 +850,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 date={selectedEndDate}
                 onDateChange={isReadOnly ? undefined : setSelectedEndDate}
                 placeholder="Select end date"
-                disablePastDates={mode === "create"}
+                disablePastDates={mode === "create" || mode === "update"}
                 disabled={isReadOnly}
               />
               {errors.endDate && (
@@ -711,6 +880,33 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   <SelectItem value="Low">Low</SelectItem>
                   <SelectItem value="Medium">Medium</SelectItem>
                   <SelectItem value="High">High</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <Label className="flex items-center space-x-1">
+                <Tag className="w-4 h-4" />
+                <span>Status</span>
+              </Label>
+              <Select
+                value={formData.status}
+                onValueChange={
+                  isReadOnly
+                    ? undefined
+                    : (value) => handleInputChange("status", value)
+                }
+                disabled={isReadOnly}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="To Do">To Do</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Completed">Completed</SelectItem>
+                  <SelectItem value="Overdue">Overdue</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -783,67 +979,82 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             </Label>
 
             {/* Display current members for view/update modes */}
-            {(mode === "view" || mode === "update") && currentMemberTasks.length > 0 && (
-              <div className="mb-3">
-                <Label className="text-sm font-medium text-slate-700 mb-2 block">
-                  Current Members:
-                </Label>
-                <div className="space-y-2">
-                  {currentMemberTasks.map((memberTask) => {
-                    // Check if member data is embedded (from enhanced hook)
-                    const memberData = memberTask.member || null;
-                    const memberId = memberTask["member-id"] || memberTask.memberId || "";
+            {(mode === "view" || mode === "update") &&
+              currentMemberTasks.length > 0 && (
+                <div className="mb-3">
+                  <Label className="text-sm font-medium text-slate-700 mb-2 block">
+                    Current Members:
+                  </Label>
+                  <div className="space-y-2">
+                    {currentMemberTasks.map((memberTask) => {
+                      // Check if member data is embedded (from enhanced hook)
+                      const memberData = memberTask.member || null;
+                      const memberId =
+                        memberTask["member-id"] || memberTask.memberId || "";
 
-                    return (
-                      <div key={memberTask.id || memberId} className="p-3 bg-slate-50 rounded-md">
-                        {memberData ? (
-                          // Display member data directly from member-tasks
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
-                              {memberData.avatarUrl ? (
-                                <img
-                                  src={memberData.avatarUrl}
-                                  alt={memberData.name}
-                                  className="w-8 h-8 rounded-full object-cover"
-                                  onError={(e) => {
-                                    e.currentTarget.style.display = 'none';
-                                    const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
-                                    if (nextElement) {
-                                      nextElement.style.display = 'flex';
-                                    }
+                      return (
+                        <div
+                          key={memberTask.id || memberId}
+                          className="p-3 bg-slate-50 rounded-md"
+                        >
+                          {memberData ? (
+                            // Display member data directly from member-tasks
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
+                                {memberData.avatarUrl ? (
+                                  <img
+                                    src={memberData.avatarUrl}
+                                    alt={memberData.name}
+                                    className="w-8 h-8 rounded-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = "none";
+                                      const nextElement = e.currentTarget
+                                        .nextElementSibling as HTMLElement;
+                                      if (nextElement) {
+                                        nextElement.style.display = "flex";
+                                      }
+                                    }}
+                                  />
+                                ) : null}
+                                <div
+                                  className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium"
+                                  style={{
+                                    display: memberData.avatarUrl
+                                      ? "none"
+                                      : "flex",
                                   }}
-                                />
-                              ) : null}
-                              <div
-                                className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm font-medium"
-                                style={{ display: memberData.avatarUrl ? 'none' : 'flex' }}
-                              >
-                                {memberData.name?.charAt(0)?.toUpperCase() || 'U'}
+                                >
+                                  {memberData.name?.charAt(0)?.toUpperCase() ||
+                                    "U"}
+                                </div>
+                              </div>
+                              <div className="flex-1">
+                                <p className="font-medium text-slate-900">
+                                  {memberData.name || "Unknown Member"}
+                                </p>
+                                <p className="text-sm text-slate-500">
+                                  {(memberTask.overdue || 0) > 0 && (
+                                    <span className="text-red-500 ml-2">
+                                      ({memberTask.overdue} days overdue)
+                                    </span>
+                                  )}
+                                </p>
                               </div>
                             </div>
-                            <div className="flex-1">
-                              <p className="font-medium text-slate-900">{memberData.name || 'Unknown Member'}</p>
-                              <p className="text-sm text-slate-500">
-                                {(memberTask.overdue || 0) > 0 && (
-                                  <span className="text-red-500 ml-2">({memberTask.overdue} days overdue)</span>
-                                )}
-                              </p>
-                            </div>
-                          </div>
-                        ) : (
-                          // Fallback to MemberInfo component for backward compatibility
-                          <MemberInfo
-                            memberId={memberId}
-                            showRole={true}
-                            size="sm"
-                          />
-                        )}
-                      </div>
-                    );
-                  })}
+                          ) : (
+                            // Fallback to MemberInfo component for backward compatibility
+                            <MemberInfo
+                              memberId={memberId}
+                              showRole={true}
+                              size="sm"
+                            />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Display empty state for view mode when no members */}
             {mode === "view" && currentMemberTasks.length === 0 && (

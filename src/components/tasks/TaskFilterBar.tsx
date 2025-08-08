@@ -69,9 +69,9 @@ export const TaskFilterBar: React.FC<TaskFilterBarProps> = ({
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="Not Started">Not Started</SelectItem>
+              <SelectItem value="To Do">To Do</SelectItem>
               <SelectItem value="In Progress">In Progress</SelectItem>
-              <SelectItem value="Complete">Complete</SelectItem>
+              <SelectItem value="Completed">Completed</SelectItem>
               <SelectItem value="Overdue">Overdue</SelectItem>
             </SelectContent>
           </Select>

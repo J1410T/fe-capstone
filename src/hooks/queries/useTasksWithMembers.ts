@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
-import { getMemberTasksByTaskId, getTasksByMilestoneId } from "@/services/resources/task";
+import { useQuery } from "@tanstack/react-query";
+import {
+  getMemberTasksByTaskId,
+  getTasksByMilestoneId,
+} from "@/services/resources/task";
 import { MemberTask, ProjectTask } from "@/types/task";
-import { getAccountById, getUserRolesByProjectId } from "@/services/resources/auth";
+import {
+  getAccountById,
+  getUserRolesByProjectId,
+} from "@/services/resources/auth";
 import { UserRole } from "@/types/auth";
 
 // Task interface compatible with TaskTable component
@@ -9,7 +16,7 @@ interface TaskTableTask {
   id: string;
   title: string;
   description: string;
-  status: "Not Started" | "In Progress" | "Complete" | "Overdue";
+  status: "To Do" | "In Progress" | "Completed" | "Overdue";
   dueDate: string;
   priority: "Low" | "Medium" | "High";
   projectTag: string;
@@ -27,21 +34,24 @@ interface TaskTableTask {
 }
 
 // Helper function to transform task status
-const transformTaskStatus = (status: string): "Not Started" | "In Progress" | "Complete" | "Overdue" => {
+const transformTaskStatus = (
+  status: string
+): "To Do" | "In Progress" | "Completed" | "Overdue" => {
   switch (status?.toLowerCase()) {
     case "todo":
     case "not started":
-      return "Not Started";
+    case "to do":
+      return "To Do";
     case "inprogress":
     case "in progress":
       return "In Progress";
     case "completed":
     case "complete":
-      return "Complete";
+      return "Completed";
     case "overdue":
       return "Overdue";
     default:
-      return "Not Started";
+      return "To Do";
   }
 };
 
@@ -59,10 +69,27 @@ const transformTaskPriority = (priority: string): "Low" | "Medium" | "High" => {
   }
 };
 
-export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?: string) {
+export function useTasksWithMembersByMilestoneId(
+  milestoneId: string,
+  projectId?: string
+) {
   const [tasks, setTasks] = useState<TaskTableTask[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Create a unique query key for this hook to make it reactive to invalidations
+  const queryKey = ["tasks-with-members", milestoneId, projectId];
+
+  // Use React Query to make this hook reactive to query invalidations
+  const { data: queryTrigger } = useQuery({
+    queryKey,
+    queryFn: () => {
+      const timestamp = Date.now();
+      return timestamp;
+    },
+    enabled: !!milestoneId,
+    staleTime: 0, // Always consider stale to ensure fresh data
+  });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -79,37 +106,31 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?
         const taskResponse = await getTasksByMilestoneId(milestoneId, 1, 100);
         const taskList: ProjectTask[] = taskResponse.data["data-list"] || [];
 
-        console.log("🔍 Enhanced hook - Raw tasks from API:", {
-          milestoneId,
-          projectId,
-          tasksCount: taskList.length,
-          tasks: taskList.map(t => ({
-            id: t.id,
-            name: t.name,
-            memberTasksCount: t["member-tasks"]?.length || 0,
-            memberTasks: t["member-tasks"]
-          }))
-        });
-
         // If projectId is provided, fetch all user roles for the project to get member info efficiently
         let projectUserRoles: UserRole[] = [];
         if (projectId) {
           try {
-            console.log("🔍 Fetching user roles for project:", projectId);
-            const userRolesResponse = await getUserRolesByProjectId(projectId, 1, 100);
+            const userRolesResponse = await getUserRolesByProjectId(
+              projectId,
+              1,
+              100
+            );
             projectUserRoles = userRolesResponse["data-list"] || [];
             console.log("✅ Fetched user roles:", {
               projectId,
               userRolesCount: projectUserRoles.length,
-              userRoles: projectUserRoles.map(ur => ({
+              userRoles: projectUserRoles.map((ur) => ({
                 id: ur.id,
                 accountId: ur["account-id"],
                 fullName: ur["full-name"],
-                avatarUrl: ur["avatar-url"]
-              }))
+                avatarUrl: ur["avatar-url"],
+              })),
             });
           } catch (userRoleError) {
-            console.error("❌ Error fetching user roles for project:", userRoleError);
+            console.error(
+              "❌ Error fetching user roles for project:",
+              userRoleError
+            );
           }
         }
 
@@ -128,57 +149,70 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?
               }> = [];
 
               if (task["member-tasks"] && task["member-tasks"].length > 0) {
-                console.log(`🔍 Using member-tasks from task response for ${task.name}:`, {
-                  memberTasksCount: task["member-tasks"].length,
-                  memberTasks: task["member-tasks"].map(mt => ({
-                    id: mt.id,
-                    memberId: mt.memberId,
-                    fullName: mt["full-name"],
-                    avatarUrl: mt["avatar-url"],
-                    roleName: mt["role-name"],
-                    status: mt.status
-                  }))
-                });
+                console.log(
+                  `🔍 Using member-tasks from task response for ${task.name}:`,
+                  {
+                    memberTasksCount: task["member-tasks"].length,
+                    memberTasks: task["member-tasks"].map((mt) => ({
+                      id: mt.id,
+                      memberId: mt.memberId,
+                      fullName: mt["full-name"],
+                      avatarUrl: mt["avatar-url"],
+                      roleName: mt["role-name"],
+                      status: mt.status,
+                    })),
+                  }
+                );
 
                 // Use member data directly from the task response (no additional API calls needed!)
-                memberTasksWithDetails = task["member-tasks"].map((memberTask) => {
-                  console.log(`✅ Using member data from API response for ${memberTask.memberId}:`, {
-                    fullName: memberTask["full-name"],
-                    avatarUrl: memberTask["avatar-url"],
-                    roleName: memberTask["role-name"]
-                  });
+                memberTasksWithDetails = task["member-tasks"].map(
+                  (memberTask) => {
+                    console.log(
+                      `✅ Using member data from API response for ${memberTask.memberId}:`,
+                      {
+                        fullName: memberTask["full-name"],
+                        avatarUrl: memberTask["avatar-url"],
+                        roleName: memberTask["role-name"],
+                      }
+                    );
 
-                  return {
-                    id: memberTask.id,
-                    "member-id": memberTask.memberId,
-                    member: {
-                      id: memberTask.memberId,
-                      name: memberTask["full-name"] || "Unknown Member",
-                      avatarUrl: memberTask["avatar-url"] || "",
-                    },
-                  };
-                });
+                    return {
+                      id: memberTask.id,
+                      "member-id": memberTask.memberId,
+                      member: {
+                        id: memberTask.memberId,
+                        name: memberTask["full-name"] || "Unknown Member",
+                        avatarUrl: memberTask["avatar-url"] || "",
+                      },
+                    };
+                  }
+                );
               } else {
                 // Fallback: Get member tasks separately if not included in task response
-                console.log(`🔍 Fetching member tasks separately for task ${task.name} (${task.id})`);
                 const memberResponse = await getMemberTasksByTaskId(task.id);
-                const memberTasks: MemberTask[] = memberResponse["data-list"] || [];
+                const memberTasks: MemberTask[] =
+                  memberResponse["data-list"] || [];
 
-                console.log(`🔍 Member tasks from separate API for task ${task.name}:`, {
-                  memberTasksCount: memberTasks.length,
-                  memberTasks: memberTasks.map(mt => ({
-                    id: mt.id,
-                    memberId: mt.memberId,
-                    status: mt.status
-                  }))
-                });
+                console.log(
+                  `🔍 Member tasks from separate API for task ${task.name}:`,
+                  {
+                    memberTasksCount: memberTasks.length,
+                    memberTasks: memberTasks.map((mt) => ({
+                      id: mt.id,
+                      memberId: mt.memberId,
+                      status: mt.status,
+                    })),
+                  }
+                );
 
                 // Fetch member details for each member task
                 memberTasksWithDetails = await Promise.all(
                   memberTasks.map(async (memberTask) => {
                     try {
                       // Fetch member details
-                      const memberDetails = await getAccountById(memberTask.memberId);
+                      const memberDetails = await getAccountById(
+                        memberTask.memberId
+                      );
 
                       return {
                         id: memberTask.id,
@@ -190,7 +224,10 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?
                         },
                       };
                     } catch (memberError) {
-                      console.error(`Error fetching member details for ${memberTask.memberId}:`, memberError);
+                      console.error(
+                        `Error fetching member details for ${memberTask.memberId}:`,
+                        memberError
+                      );
                       // Return fallback member data
                       return {
                         id: memberTask.id,
@@ -215,9 +252,14 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?
                 const endDate = new Date(task["end-date"]);
                 endDate.setHours(0, 0, 0, 0); // Reset time to start of day
 
-                isOverdue = endDate < today && task.status.toLowerCase() !== "completed" && task.status.toLowerCase() !== "complete";
+                isOverdue =
+                  endDate < today &&
+                  task.status.toLowerCase() !== "completed" &&
+                  task.status.toLowerCase() !== "complete";
               }
-              const finalStatus = isOverdue ? "Overdue" : transformTaskStatus(task.status);
+              const finalStatus = isOverdue
+                ? "Overdue"
+                : transformTaskStatus(task.status);
 
               // Transform ProjectTask to TaskTableTask format
               return {
@@ -241,8 +283,13 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?
               const endDate = new Date(task["end-date"]);
               endDate.setHours(0, 0, 0, 0);
 
-              const isOverdue = endDate < today && task.status.toLowerCase() !== "completed" && task.status.toLowerCase() !== "complete";
-              const finalStatus = isOverdue ? "Overdue" : transformTaskStatus(task.status);
+              const isOverdue =
+                endDate < today &&
+                task.status.toLowerCase() !== "completed" &&
+                task.status.toLowerCase() !== "complete";
+              const finalStatus = isOverdue
+                ? "Overdue"
+                : transformTaskStatus(task.status);
 
               // Return task with empty member tasks on error
               return {
@@ -261,21 +308,6 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?
           })
         );
 
-        console.log("✅ Enhanced hook - Successfully fetched tasks with members:", {
-          milestoneId,
-          tasksCount: enrichedTasks.length,
-          tasksWithMembers: enrichedTasks.filter(t => t["member-tasks"].length > 0).length,
-          sampleTask: enrichedTasks[0] ? {
-            id: enrichedTasks[0].id,
-            title: enrichedTasks[0].title,
-            memberTasksCount: enrichedTasks[0]["member-tasks"].length,
-            memberTasks: enrichedTasks[0]["member-tasks"].map(mt => ({
-              memberId: mt["member-id"],
-              memberName: mt.member.name
-            }))
-          } : null
-        });
-
         setTasks(enrichedTasks);
       } catch (err) {
         console.error("❌ Error fetching tasks and members:", err);
@@ -287,7 +319,7 @@ export function useTasksWithMembersByMilestoneId(milestoneId: string, projectId?
     };
 
     fetchData();
-  }, [milestoneId, projectId]);
+  }, [milestoneId, projectId, queryTrigger]);
 
   return { tasks, loading, error };
 }
