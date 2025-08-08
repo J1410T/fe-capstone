@@ -26,7 +26,7 @@ import {
 import { Loading } from "@/components/ui/loaders";
 import { formatDate } from "@/utils";
 import { getStatusColor, formatVND } from "../shared/utils";
-import { Transaction } from "@/types/budget";
+import { Transaction } from "@/types/transaction";
 
 interface BudgetTabProps {
   transactions: Transaction[];

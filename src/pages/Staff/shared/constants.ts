@@ -88,22 +88,25 @@ export const TABLE_STYLES = {
 
 // Form Style Constants
 export const FORM_STYLES = {
-  container: "space-y-6",
-  section: "space-y-4",
+  container: "space-y-4 sm:space-y-6",
+  section: "space-y-3 sm:space-y-4",
   field: "space-y-2",
   label: "text-sm font-medium text-gray-900",
   input: "w-full",
   error: "text-sm text-red-600",
-  actions: "flex justify-end space-x-3 pt-6",
+  actions:
+    "flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4 sm:pt-6",
 } as const;
 
 // Dialog Style Constants
 export const DIALOG_STYLES = {
-  content: "sm:max-w-lg",
+  content:
+    "w-[95vw] max-w-[95vw] sm:max-w-lg md:max-w-xl lg:max-w-2xl max-h-[90vh] overflow-y-auto",
   header: "space-y-2",
   title: "text-lg font-semibold",
   description: "text-sm text-muted-foreground pt-0 pb-2",
-  footer: "flex justify-end space-x-3 pt-4",
+  footer:
+    "flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3 pt-4",
 } as const;
 
 // Button Variants

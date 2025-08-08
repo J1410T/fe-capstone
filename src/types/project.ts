@@ -1,5 +1,5 @@
 import { Member } from "./auth";
-import { Transaction } from "./budget";
+import { Transaction } from "./transaction";
 import { DocumentProject } from "./document";
 import { Evaluation, IndividualEvaluation, Milestone } from "./task";
 

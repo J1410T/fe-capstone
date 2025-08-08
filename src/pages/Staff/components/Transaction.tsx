@@ -1,149 +1,137 @@
 import React, { useState, useMemo } from "react";
 import { ColumnDef } from "@tanstack/react-table";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Plus, Download } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Download, Eye, Edit, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   DataTable,
   StatusBadge,
-  ActionButtons,
   PageHeader,
   FormDialog,
   ConfirmDialog,
-  FilterBar,
-  createCommonActions,
-  type Transaction,
-  type FormConfig,
-  type FilterConfig,
-  TRANSACTION_STATUSES,
-  TRANSACTION_TYPES,
-  formatDate,
-  formatVND,
-  generateId,
 } from "../shared";
+import {
+  TransactionDetail,
+  TransactionListRequest,
+  TransactionPerson,
+  TransactionProject,
+} from "@/types/transaction";
+import {
+  useDeleteTransaction,
+  useTransactionList,
+  useUpdateTransaction,
+} from "@/hooks/queries/transaction";
 
-// Mock data for transactions
-const mockTransactions: Transaction[] = [
-  {
-    id: "txn-1",
-    projectId: "proj-1",
-    projectTitle: "AI Drug Discovery Platform",
-    pi: "Dr. Sarah Johnson",
-    amount: 600000000, // ~25K USD in VND
-    type: "Payment",
-    status: "Pending",
-    description: "Q1 Milestone Payment",
-    requestDate: "2024-01-15T00:00:00Z",
-    notes: "Research funding for milestone completion",
-    createdAt: "2024-01-15T00:00:00Z",
-    updatedAt: "2024-01-15T00:00:00Z",
-  },
-  {
-    id: "txn-2",
-    projectId: "proj-2",
-    projectTitle: "Sustainable Energy Storage",
-    pi: "Dr. Michael Chen",
-    amount: 360000000, // ~15K USD in VND
-    type: "Payment",
-    status: "Approved",
-    description: "Laboratory Equipment Purchase",
-    requestDate: "2024-01-12T00:00:00Z",
-    processedDate: "2024-01-20T00:00:00Z",
-    processedBy: "Admin User",
-    notes: "Equipment procurement approved",
-    createdAt: "2024-01-12T00:00:00Z",
-    updatedAt: "2024-01-20T00:00:00Z",
-  },
-  {
-    id: "txn-3",
-    projectId: "proj-3",
-    projectTitle: "Climate Change Study",
-    pi: "Dr. Emily Rodriguez",
-    amount: 204000000, // ~8.5K USD in VND
-    type: "Payment",
-    status: "Completed",
-    description: "Conference Travel Expenses",
-    requestDate: "2024-01-10T00:00:00Z",
-    processedDate: "2024-01-18T00:00:00Z",
-    processedBy: "Finance Team",
-    notes: "Travel expenses processed",
-    createdAt: "2024-01-10T00:00:00Z",
-    updatedAt: "2024-01-18T00:00:00Z",
-  },
-  {
-    id: "txn-4",
-    projectId: "proj-4",
-    projectTitle: "Marine Biology Research",
-    pi: "Dr. James Wilson",
-    amount: 1080000000, // ~45K USD in VND
-    type: "Refund",
-    status: "Rejected",
-    description: "Research Assistant Salary",
-    requestDate: "2024-01-08T00:00:00Z",
-    notes: "Budget allocation issue",
-    createdAt: "2024-01-08T00:00:00Z",
-    updatedAt: "2024-01-08T00:00:00Z",
-  },
-  {
-    id: "txn-5",
-    projectId: "proj-5",
-    projectTitle: "Quantum Computing Research",
-    pi: "Dr. Lisa Park",
-    amount: 840000000, // ~35K USD in VND
-    type: "Adjustment",
-    status: "Pending",
-    description: "Budget adjustment for equipment",
-    requestDate: "2024-01-20T00:00:00Z",
-    notes: "Equipment cost adjustment needed",
-    createdAt: "2024-01-20T00:00:00Z",
-    updatedAt: "2024-01-20T00:00:00Z",
-  },
-];
+const DEFAULT_IMAGE_URL =
+  "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
+
+// Helper component for user avatar display
+const UserAvatar: React.FC<{
+  person: TransactionPerson | null;
+  size?: string;
+}> = ({ person, size = "h-7 w-7" }) => {
+  if (!person) return <span className="text-muted-foreground">-</span>;
+
+  const avatarUrl = person["avatar-url"] || DEFAULT_IMAGE_URL;
+  const fullName = person["full-name"] || "";
+
+  return (
+    <div className="flex items-center space-x-2 min-w-0">
+      <Avatar className={`${size} flex-shrink-0`}>
+        <AvatarImage
+          src={avatarUrl}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = DEFAULT_IMAGE_URL;
+          }}
+        />
+        <AvatarFallback className="text-xs">
+          {fullName
+            .split(" ")
+            .map((n: string) => n[0])
+            .join("")
+            .toUpperCase()}
+        </AvatarFallback>
+      </Avatar>
+      <span
+        className="font-medium text-sm truncate max-w-[80px]"
+        title={fullName}
+      >
+        {fullName}
+      </span>
+    </div>
+  );
+};
 
 const TransactionManagement: React.FC = () => {
-  const [transactions, setTransactions] =
-    useState<Transaction[]>(mockTransactions);
-  const [globalFilter, setGlobalFilter] = useState("");
+  // State for search and pagination
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [sortBy, setSortBy] = useState(0); // 0 = RequestDate, 2 = Title
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+
+  // State for modals and forms
   const [selectedTransaction, setSelectedTransaction] =
-    useState<Transaction | null>(null);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    useState<TransactionDetail | null>(null);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConfirmSaveDialogOpen, setIsConfirmSaveDialogOpen] = useState(false);
+
+  // Form data state
   const [formData, setFormData] = useState({
-    projectTitle: "",
-    pi: "",
-    amount: "",
+    "receiver-account": "",
+    "receiver-name": "",
+    "receiver-bank-name": "",
+    title: "",
     type: "",
-    description: "",
+    "fee-cost": 0,
+    "total-money": 0,
+    "pay-method": "",
+    status: "",
+    "project-id": "",
+    "evaluation-stage-id": "",
   });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({
-    status: "all",
-    type: "all",
-  });
+
+  // API request parameters
+  const transactionRequest: TransactionListRequest = {
+    "key-word": searchKeyword,
+    "sort-by": sortBy,
+    "page-index": currentPage,
+    "page-size": pageSize,
+  };
+
+  // API hooks
+  const { data: transactionData, isLoading } = useTransactionList(
+    transactionRequest,
+    { enableClientEnrichment: true }
+  );
+  const updateTransactionMutation = useUpdateTransaction();
+  const deleteTransactionMutation = useDeleteTransaction();
 
   // Table columns definition
-  const columns = useMemo<ColumnDef<Transaction>[]>(
+  const columns = useMemo<ColumnDef<TransactionDetail>[]>(
     () => [
       {
-        accessorKey: "projectTitle",
-        header: "Project",
+        accessorKey: "title",
+        header: "Title",
         cell: ({ row }) => (
-          <div>
-            <div className="font-medium">{row.getValue("projectTitle")}</div>
-            <div className="text-sm text-muted-foreground">
-              PI: {row.original.pi}
-            </div>
+          <div
+            className="font-medium max-w-[150px] truncate"
+            title={row.getValue("title") as string}
+          >
+            {row.getValue("title")}
           </div>
-        ),
-      },
-      {
-        accessorKey: "amount",
-        header: "Amount",
-        cell: ({ row }) => (
-          <div className="font-medium">{formatVND(row.getValue("amount"))}</div>
         ),
       },
       {
@@ -154,6 +142,15 @@ const TransactionManagement: React.FC = () => {
         ),
       },
       {
+        accessorKey: "pay-method",
+        header: "Pay Method",
+        cell: ({ row }) => (
+          <span className="text-sm whitespace-nowrap">
+            {row.getValue("pay-method")}
+          </span>
+        ),
+      },
+      {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => (
@@ -161,221 +158,151 @@ const TransactionManagement: React.FC = () => {
         ),
       },
       {
-        accessorKey: "requestDate",
-        header: "Request Date",
+        accessorKey: "request-person",
+        header: "Request Person",
         cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">
-            {formatDate(row.getValue("requestDate"))}
+          <div className="min-w-[120px]">
+            <UserAvatar person={row.getValue("request-person")} />
           </div>
         ),
+      },
+      {
+        accessorKey: "handle-person",
+        header: "Handle Person",
+        cell: ({ row }) => (
+          <div className="min-w-[120px]">
+            <UserAvatar person={row.getValue("handle-person")} />
+          </div>
+        ),
+      },
+      {
+        accessorKey: "project",
+        header: "Project",
+        cell: ({ row }) => {
+          const project = row.getValue("project") as TransactionProject | null;
+          return project ? (
+            <span
+              className="text-sm font-medium max-w-[200px] truncate block"
+              title={project["english-title"]}
+            >
+              {project["english-title"]}
+            </span>
+          ) : (
+            <span className="text-muted-foreground">-</span>
+          );
+        },
       },
       {
         id: "actions",
         header: "Actions",
         cell: ({ row }) => {
           const transaction = row.original;
-          const actions = [
-            createCommonActions.view(() => handleView(transaction)),
-            createCommonActions.edit(() => handleEdit(transaction)),
-          ];
-
-          // Add approve/reject actions for pending transactions
-          if (transaction.status === "Pending") {
-            actions.push({
-              label: "Approve",
-              icon: undefined,
-              onClick: () => handleApprove(transaction),
-              variant: "default" as const,
-            });
-            actions.push({
-              label: "Reject",
-              icon: undefined,
-              onClick: () => handleReject(transaction),
-              variant: "destructive" as const,
-              separator: true,
-            });
-          }
-
-          actions.push(
-            createCommonActions.delete(() => handleDelete(transaction))
+          return (
+            <div className="flex items-center gap-1 min-w-[140px]">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleView(transaction)}
+                className="px-2 h-8"
+              >
+                <Eye className="w-4 h-4" />
+                <span className="hidden lg:inline ml-1">View</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleEdit(transaction)}
+                className="px-2 h-8"
+              >
+                <Edit className="w-4 h-4" />
+                <span className="hidden lg:inline ml-1">Edit</span>
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => handleDelete(transaction)}
+                className="px-2 h-8"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span className="hidden lg:inline ml-1">Delete</span>
+              </Button>
+            </div>
           );
-
-          return <ActionButtons actions={actions} />;
         },
       },
     ],
     []
   );
 
-  // Form configuration
-  const formConfig: FormConfig = {
-    title: selectedTransaction ? "Edit Transaction" : "Create Transaction",
-    description: selectedTransaction
-      ? "Update transaction information"
-      : "Add a new transaction to the system",
-    fields: [
-      {
-        name: "projectTitle",
-        label: "Project Title",
-        type: "text",
-        required: true,
-        placeholder: "Enter project title",
-      },
-      {
-        name: "pi",
-        label: "Principal Investigator",
-        type: "text",
-        required: true,
-        placeholder: "Enter PI name",
-      },
-      {
-        name: "amount",
-        label: "Amount (VND)",
-        type: "number",
-        required: true,
-        placeholder: "Enter amount",
-      },
-      {
-        name: "type",
-        label: "Transaction Type",
-        type: "select",
-        required: true,
-        placeholder: "Select transaction type",
-        options: TRANSACTION_TYPES.map((type) => ({
-          value: type.value,
-          label: type.label,
-        })),
-      },
-      {
-        name: "description",
-        label: "Description",
-        type: "textarea",
-        required: true,
-        placeholder: "Enter transaction description",
-      },
-    ],
-  };
-
-  // Filter configuration
-  const filterConfig: FilterConfig[] = [
-    {
-      key: "status",
-      label: "Status",
-      type: "select",
-      options: TRANSACTION_STATUSES.map((status) => ({
-        value: status.value,
-        label: status.label,
-      })),
-    },
-    {
-      key: "type",
-      label: "Type",
-      type: "select",
-      options: TRANSACTION_TYPES.map((type) => ({
-        value: type.value,
-        label: type.label,
-      })),
-    },
-  ];
-
   // Handler functions
-  const handleCreate = () => {
-    setSelectedTransaction(null);
-    setFormData({
-      projectTitle: "",
-      pi: "",
-      amount: "",
-      type: "",
-      description: "",
-    });
-    setFormErrors({});
-    setIsCreateDialogOpen(true);
+  const handleView = (transaction: TransactionDetail) => {
+    setSelectedTransaction(transaction);
+    setIsViewDialogOpen(true);
   };
 
-  const handleView = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    toast.info(`Viewing transaction for ${transaction.projectTitle}`);
-  };
-
-  const handleEdit = (transaction: Transaction) => {
+  const handleEdit = (transaction: TransactionDetail) => {
     setSelectedTransaction(transaction);
     setFormData({
-      projectTitle: transaction.projectTitle,
-      pi: transaction.pi,
-      amount: transaction.amount.toString(),
+      "receiver-account": transaction["receiver-account"],
+      "receiver-name": transaction["receiver-name"],
+      "receiver-bank-name": transaction["receiver-bank-name"],
+      title: transaction.title,
       type: transaction.type,
-      description: transaction.description,
+      "fee-cost": transaction["fee-cost"],
+      "total-money": transaction["total-money"],
+      "pay-method": transaction["pay-method"],
+      status: transaction.status,
+      "project-id": transaction["project-id"] || "",
+      "evaluation-stage-id": transaction["evaluation-stage-id"] || "",
     });
     setFormErrors({});
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (transaction: Transaction) => {
+  const handleDelete = (transaction: TransactionDetail) => {
     setSelectedTransaction(transaction);
     setIsDeleteDialogOpen(true);
-  };
-
-  const handleApprove = (transaction: Transaction) => {
-    setTransactions((prev) =>
-      prev.map((t) =>
-        t.id === transaction.id
-          ? {
-              ...t,
-              status: "Approved" as const,
-              processedDate: new Date().toISOString(),
-              processedBy: "Current User",
-              updatedAt: new Date().toISOString(),
-            }
-          : t
-      )
-    );
-    toast.success(
-      `Transaction for ${transaction.projectTitle} has been approved`
-    );
-  };
-
-  const handleReject = (transaction: Transaction) => {
-    setTransactions((prev) =>
-      prev.map((t) =>
-        t.id === transaction.id
-          ? {
-              ...t,
-              status: "Rejected" as const,
-              processedDate: new Date().toISOString(),
-              processedBy: "Current User",
-              updatedAt: new Date().toISOString(),
-            }
-          : t
-      )
-    );
-    toast.success(
-      `Transaction for ${transaction.projectTitle} has been rejected`
-    );
   };
 
   const validateForm = () => {
     const errors: Record<string, string> = {};
 
-    if (!formData.projectTitle.trim()) {
-      errors.projectTitle = "Project title is required";
+    if (!formData.title.trim()) {
+      errors.title = "Title is required";
     }
 
-    if (!formData.pi.trim()) {
-      errors.pi = "Principal investigator is required";
+    if (!formData["receiver-account"].trim()) {
+      errors["receiver-account"] = "Receiver account is required";
     }
 
-    if (!formData.amount.trim()) {
-      errors.amount = "Amount is required";
-    } else if (isNaN(Number(formData.amount)) || Number(formData.amount) <= 0) {
-      errors.amount = "Please enter a valid amount";
+    if (!formData["receiver-name"].trim()) {
+      errors["receiver-name"] = "Receiver name is required";
+    }
+
+    if (!formData["receiver-bank-name"].trim()) {
+      errors["receiver-bank-name"] = "Receiver bank name is required";
     }
 
     if (!formData.type) {
       errors.type = "Transaction type is required";
     }
 
-    if (!formData.description.trim()) {
-      errors.description = "Description is required";
+    if (!formData["pay-method"]) {
+      errors["pay-method"] = "Payment method is required";
+    }
+
+    if (!formData.status) {
+      errors.status = "Status is required";
+    }
+
+    // Validate Total Money >= 0
+    if (formData["total-money"] < 0) {
+      errors["total-money"] = "Total money must be greater than or equal to 0";
+    }
+
+    // Validate Fee Cost >= 0
+    if (formData["fee-cost"] < 0) {
+      errors["fee-cost"] = "Fee cost must be greater than or equal to 0";
     }
 
     setFormErrors(errors);
@@ -385,64 +312,54 @@ const TransactionManagement: React.FC = () => {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
+    if (!validateForm() || !selectedTransaction) {
       return;
     }
 
+    // Show confirmation dialog before saving
+    setIsConfirmSaveDialogOpen(true);
+  };
+
+  const handleConfirmSave = async () => {
+    if (!selectedTransaction) return;
+
     setIsSubmitting(true);
+    setIsConfirmSaveDialogOpen(false);
 
     try {
-      if (selectedTransaction) {
-        // Update existing transaction
-        setTransactions((prev) =>
-          prev.map((transaction) =>
-            transaction.id === selectedTransaction.id
-              ? {
-                  ...transaction,
-                  projectTitle: formData.projectTitle,
-                  pi: formData.pi,
-                  amount: Number(formData.amount),
-                  type: formData.type as Transaction["type"],
-                  description: formData.description,
-                  updatedAt: new Date().toISOString(),
-                }
-              : transaction
-          )
-        );
-        toast.success("Transaction updated successfully");
-        setIsEditDialogOpen(false);
-      } else {
-        // Create new transaction
-        const newTransaction: Transaction = {
-          id: generateId(),
-          projectId: generateId(),
-          projectTitle: formData.projectTitle,
-          pi: formData.pi,
-          amount: Number(formData.amount),
-          type: formData.type as Transaction["type"],
-          status: "Pending",
-          description: formData.description,
-          requestDate: new Date().toISOString(),
-          notes: "",
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        setTransactions((prev) => [...prev, newTransaction]);
-        toast.success("Transaction created successfully");
-        setIsCreateDialogOpen(false);
-      }
+      await updateTransactionMutation.mutateAsync({
+        id: selectedTransaction.id,
+        "receiver-account": formData["receiver-account"],
+        "receiver-name": formData["receiver-name"],
+        "receiver-bank-name": formData["receiver-bank-name"],
+        title: formData.title,
+        type: formData.type,
+        "fee-cost": formData["fee-cost"],
+        "total-money": formData["total-money"],
+        "pay-method": formData["pay-method"],
+        status: formData.status,
+        "project-id": formData["project-id"] || null,
+        "evaluation-stage-id": formData["evaluation-stage-id"] || null,
+      });
 
+      setIsEditDialogOpen(false);
       setSelectedTransaction(null);
       setFormData({
-        projectTitle: "",
-        pi: "",
-        amount: "",
+        "receiver-account": "",
+        "receiver-name": "",
+        "receiver-bank-name": "",
+        title: "",
         type: "",
-        description: "",
+        "fee-cost": 0,
+        "total-money": 0,
+        "pay-method": "",
+        status: "",
+        "project-id": "",
+        "evaluation-stage-id": "",
       });
       setFormErrors({});
-    } catch {
-      toast.error("An error occurred while saving the transaction");
+    } catch (error) {
+      console.error("Update transaction error:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -453,73 +370,57 @@ const TransactionManagement: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      setTransactions((prev) =>
-        prev.filter((transaction) => transaction.id !== selectedTransaction.id)
-      );
-      toast.success("Transaction deleted successfully");
+      await deleteTransactionMutation.mutateAsync(selectedTransaction.id);
       setIsDeleteDialogOpen(false);
       setSelectedTransaction(null);
-    } catch {
-      toast.error("An error occurred while deleting the transaction");
+    } catch (error) {
+      console.error("Delete transaction error:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleFormChange = (field: string, value: unknown) => {
-    setFormData((prev) => ({ ...prev, [field]: value as string }));
+    let processedValue = value;
+
+    // Handle number fields with validation
+    if (field === "total-money" || field === "fee-cost") {
+      const numValue = Number(value);
+      // Ensure the value is not negative and default to 0 if invalid
+      processedValue = isNaN(numValue) || numValue < 0 ? 0 : numValue;
+    }
+
+    setFormData((prev) => ({ ...prev, [field]: processedValue as string }));
     // Clear error when user starts typing
     if (formErrors[field]) {
       setFormErrors((prev) => ({ ...prev, [field]: "" }));
     }
   };
 
-  const handleFilterChange = (key: string, value: string) => {
-    setFilterValues((prev) => ({ ...prev, [key]: value }));
+  // Get transactions from API
+  const transactions = transactionData?.["data-list"] || [];
+  const totalCount = transactionData?.["total-count"] || 0;
+
+  // Handle search
+  const handleSearch = (keyword: string) => {
+    setSearchKeyword(keyword);
+    setCurrentPage(1); // Reset to first page when searching
   };
 
-  const handleClearFilters = () => {
-    setFilterValues({ status: "all", type: "all" });
+  // Handle sort change
+  const handleSortChange = (sortValue: string) => {
+    setSortBy(sortValue === "title" ? 2 : 0);
+    setCurrentPage(1); // Reset to first page when sorting
   };
-
-  // Filter transactions based on current filter values
-  const filteredTransactions = useMemo(() => {
-    return transactions.filter((transaction) => {
-      const statusMatch =
-        filterValues.status === "all" ||
-        transaction.status === filterValues.status;
-      const typeMatch =
-        filterValues.type === "all" || transaction.type === filterValues.type;
-      return statusMatch && typeMatch;
-    });
-  }, [transactions, filterValues]);
-
-  // Calculate summary statistics
-  const stats = useMemo(() => {
-    const totalAmount = transactions.reduce((sum, t) => sum + t.amount, 0);
-    const pendingAmount = transactions
-      .filter((t) => t.status === "Pending")
-      .reduce((sum, t) => sum + t.amount, 0);
-    const approvedAmount = transactions
-      .filter((t) => t.status === "Approved")
-      .reduce((sum, t) => sum + t.amount, 0);
-
-    return {
-      total: totalAmount,
-      pending: pendingAmount,
-      approved: approvedAmount,
-      count: transactions.length,
-    };
-  }, [transactions]);
 
   return (
-    <div className="space-y-6">
+    <div className="w-full max-w-full space-y-6 overflow-hidden">
       {/* Page Header */}
       <PageHeader
         title="Transaction Management"
         description="Manage financial transactions and payment requests"
         badge={{
-          text: `${transactions.length} transactions`,
+          text: `${totalCount} transactions`,
           variant: "secondary",
         }}
         actions={
@@ -527,146 +428,224 @@ const TransactionManagement: React.FC = () => {
             <Button
               variant="outline"
               onClick={() => toast.info("Export functionality coming soon")}
+              className="whitespace-nowrap"
             >
               <Download className="w-4 h-4 mr-2" />
               Export
-            </Button>
-            <Button onClick={handleCreate}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Transaction
             </Button>
           </div>
         }
       />
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <DollarSign className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Amount
-                </p>
-                <p className="text-2xl font-bold">{formatVND(stats.total)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <DollarSign className="h-8 w-8 text-yellow-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Pending
-                </p>
-                <p className="text-2xl font-bold">{formatVND(stats.pending)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <DollarSign className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Approved
-                </p>
-                <p className="text-2xl font-bold">
-                  {formatVND(stats.approved)}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <DollarSign className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Count
-                </p>
-                <p className="text-2xl font-bold">{stats.count}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Search and Filter Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+        <div className="flex-1 min-w-0">
+          <Input
+            placeholder="Search transactions..."
+            value={searchKeyword}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full max-w-none sm:max-w-sm"
+          />
+        </div>
+        <div className="flex-shrink-0">
+          <Select
+            value={sortBy === 2 ? "title" : "date"}
+            onValueChange={handleSortChange}
+          >
+            <SelectTrigger className="w-full sm:w-[160px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="date">Request Date</SelectItem>
+              <SelectItem value="title">Title</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-6">
-          <FilterBar
-            filters={filterConfig}
-            values={filterValues}
-            onChange={handleFilterChange}
-            onClear={handleClearFilters}
-          />
-        </CardContent>
-      </Card>
+      {/* Data Table */}
+      <div className="w-full overflow-hidden">
+        <div className="overflow-x-auto">
+          <div className="min-w-[900px] transaction-table">
+            <DataTable
+              data={transactions}
+              columns={columns}
+              searchable={false}
+              emptyMessage="No transactions found."
+              loading={isLoading}
+            />
+          </div>
+        </div>
+      </div>
 
-      {/* Transactions Table */}
-      <DataTable
-        data={filteredTransactions}
-        columns={columns}
-        searchable={true}
-        searchPlaceholder="Search transactions..."
-        searchFields={["projectTitle", "pi", "description"]}
-        globalFilter={globalFilter}
-        onGlobalFilterChange={setGlobalFilter}
-        emptyMessage="No transactions found. Get started by adding your first transaction."
-      />
+      {/* View Transaction Dialog */}
+      {selectedTransaction && (
+        <FormDialog
+          open={isViewDialogOpen}
+          onOpenChange={setIsViewDialogOpen}
+          config={{
+            title: "View Transaction",
+            description: "Transaction details (Read-only)",
+            fields: [
+              { name: "title", label: "Title", type: "text", required: false },
+              { name: "type", label: "Type", type: "text", required: false },
+              {
+                name: "pay-method",
+                label: "Payment Method",
+                type: "text",
+                required: false,
+              },
+              {
+                name: "status",
+                label: "Status",
+                type: "text",
+                required: false,
+              },
+              {
+                name: "receiver-account",
+                label: "Receiver Account",
+                type: "text",
+                required: false,
+              },
+              {
+                name: "receiver-name",
+                label: "Receiver Name",
+                type: "text",
+                required: false,
+              },
+              {
+                name: "receiver-bank-name",
+                label: "Receiver Bank",
+                type: "text",
+                required: false,
+              },
+              {
+                name: "total-money",
+                label: "Total Money",
+                type: "number",
+                required: false,
+              },
+              {
+                name: "fee-cost",
+                label: "Fee Cost",
+                type: "number",
+                required: false,
+              },
+            ],
+          }}
+          data={{
+            title: selectedTransaction.title,
+            type: selectedTransaction.type,
+            "pay-method": selectedTransaction["pay-method"],
+            status: selectedTransaction.status,
+            "receiver-account": selectedTransaction["receiver-account"],
+            "receiver-name": selectedTransaction["receiver-name"],
+            "receiver-bank-name": selectedTransaction["receiver-bank-name"],
+            "total-money": selectedTransaction["total-money"],
+            "fee-cost": selectedTransaction["fee-cost"],
+          }}
+          errors={{}}
+          loading={true}
+          onSubmit={() => {}}
+          onCancel={() => setIsViewDialogOpen(false)}
+          onChange={() => {}}
+          mode="create"
+        />
+      )}
 
-      {/* Form Dialog */}
-      <FormDialog
-        open={isCreateDialogOpen || isEditDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsCreateDialogOpen(false);
+      {/* Edit Transaction Dialog */}
+      {selectedTransaction && (
+        <FormDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          config={{
+            title: "Edit Transaction",
+            description: "Update transaction information",
+            fields: [
+              { name: "title", label: "Title", type: "text", required: true },
+              {
+                name: "type",
+                label: "Type",
+                type: "select",
+                required: true,
+                options: [
+                  { value: "project", label: "Project" },
+                  { value: "evaluation", label: "Evaluation" },
+                ],
+              },
+              {
+                name: "pay-method",
+                label: "Payment Method",
+                type: "select",
+                required: true,
+                options: [
+                  { value: "banking", label: "Banking" },
+                  { value: "cash", label: "Cash" },
+                ],
+              },
+              {
+                name: "status",
+                label: "Status",
+                type: "select",
+                required: true,
+                options: [
+                  { value: "pending", label: "Pending" },
+                  { value: "approved", label: "Approved" },
+                  { value: "rejected", label: "Rejected" },
+                ],
+              },
+              {
+                name: "receiver-account",
+                label: "Receiver Account",
+                type: "text",
+                required: true,
+              },
+              {
+                name: "receiver-name",
+                label: "Receiver Name",
+                type: "text",
+                required: true,
+              },
+              {
+                name: "receiver-bank-name",
+                label: "Receiver Bank",
+                type: "text",
+                required: true,
+              },
+              {
+                name: "total-money",
+                label: "Total Money",
+                type: "number",
+                required: true,
+              },
+              {
+                name: "fee-cost",
+                label: "Fee Cost",
+                type: "number",
+                required: true,
+              },
+            ],
+          }}
+          data={formData}
+          errors={formErrors}
+          loading={isSubmitting}
+          onSubmit={handleFormSubmit}
+          onCancel={() => {
             setIsEditDialogOpen(false);
             setSelectedTransaction(null);
-            setFormData({
-              projectTitle: "",
-              pi: "",
-              amount: "",
-              type: "",
-              description: "",
-            });
             setFormErrors({});
-          }
-        }}
-        config={formConfig}
-        data={formData}
-        errors={formErrors}
-        loading={isSubmitting}
-        onSubmit={handleFormSubmit}
-        onCancel={() => {
-          setIsCreateDialogOpen(false);
-          setIsEditDialogOpen(false);
-          setSelectedTransaction(null);
-          setFormData({
-            projectTitle: "",
-            pi: "",
-            amount: "",
-            type: "",
-            description: "",
-          });
-          setFormErrors({});
-        }}
-        onChange={handleFormChange}
-        mode={selectedTransaction ? "edit" : "create"}
-      />
+          }}
+          onChange={handleFormChange}
+          mode="edit"
+        />
+      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
         title="Delete Transaction"
-        description={`Are you sure you want to delete the transaction for "${selectedTransaction?.projectTitle}"? This action cannot be undone.`}
+        description={`Are you sure you want to delete the transaction "${selectedTransaction?.title}"? This action cannot be undone.`}
         confirmLabel="Delete"
         cancelLabel="Cancel"
         variant="destructive"
@@ -675,6 +654,22 @@ const TransactionManagement: React.FC = () => {
         onCancel={() => {
           setIsDeleteDialogOpen(false);
           setSelectedTransaction(null);
+        }}
+      />
+
+      {/* Save Confirmation Dialog */}
+      <ConfirmDialog
+        open={isConfirmSaveDialogOpen}
+        onOpenChange={setIsConfirmSaveDialogOpen}
+        title="Save Transaction"
+        description={`Are you sure you want to save the changes to the transaction "${selectedTransaction?.title}"?`}
+        confirmLabel="Save"
+        cancelLabel="Cancel"
+        variant="default"
+        loading={isSubmitting}
+        onConfirm={handleConfirmSave}
+        onCancel={() => {
+          setIsConfirmSaveDialogOpen(false);
         }}
       />
     </div>
