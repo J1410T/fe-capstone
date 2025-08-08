@@ -159,7 +159,6 @@ export interface Milestone {
   id: string;
   name: string;
   description: string;
-  deadline: string;
   status: "Not Started" | "In Progress" | "Completed" | "Overdue";
   progress: number;
   "start-date": string;

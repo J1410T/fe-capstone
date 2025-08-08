@@ -14,6 +14,7 @@ import { Milestone as APIMilestone } from "@/types/task";
 import { useMilestonesByProjectId } from "@/hooks/queries/milestone";
 import { useTasksByMilestoneId } from "@/hooks/queries/task";
 import { format } from "date-fns";
+import { Loading } from "@/components";
 
 interface MilestoneTabProps {
   projectId: string;
@@ -25,7 +26,7 @@ const transformMilestone = (apiMilestone: APIMilestone): Milestone => ({
   id: apiMilestone.id,
   name: apiMilestone.title || `Milestone ${apiMilestone.code}`,
   description: apiMilestone.description || "",
-  deadline: apiMilestone.endDate || "",
+  // deadline: apiMilestone.endDate || "",
   status: transformMilestoneStatus(apiMilestone.status),
   progress: 0, // Will be calculated later
   "start-date": apiMilestone.startDate || "",
@@ -249,7 +250,7 @@ const EnhancedMilestoneCard: React.FC<{
                 {milestone.name}
               </h3>
               <span
-                className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                className={`px-3 py-1 rounded-lg text-xs font-medium border ${getStatusColor(
                   milestone.status
                 )}`}
               >
@@ -269,27 +270,11 @@ const EnhancedMilestoneCard: React.FC<{
             <div className="flex items-center gap-6 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <Calendar className="w-4 h-4" />
-                <span>Due: {formatDate(milestone.deadline)}</span>
+                <span>End: {formatDate(milestone["end-date"])}</span>
               </div>
               <div className="flex items-center gap-1">
                 <Target className="w-4 h-4" />
                 <span>{tasks.length} tasks</span>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mt-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  Progress
-                </span>
-                <span className="text-sm text-gray-500">{progress}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                  style={{ width: `${progress}%` }}
-                />
               </div>
             </div>
           </div>
@@ -313,7 +298,7 @@ const EnhancedMilestoneCard: React.FC<{
           {isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-              <span className="ml-2 text-gray-500">Loading tasks...</span>
+              <Loading />
             </div>
           ) : tasks.length > 0 ? (
             <div className="space-y-3">
@@ -548,14 +533,6 @@ const MilestoneTab: React.FC<MilestoneTabProps> = ({ projectId }) => {
                       100
                   )
                 : 0;
-
-            console.log(`Rendering milestone ${milestone.id}:`, {
-              tasksCount: tasks.length,
-              isLoading,
-              progress,
-              loadingMapValue: loadingMap[milestone.id],
-              loadingMapKeys: Object.keys(loadingMap),
-            });
 
             return (
               <EnhancedMilestoneCard
