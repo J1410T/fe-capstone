@@ -101,7 +101,14 @@ export function FormDialog({
           <Input
             {...baseInputProps}
             type="number"
-            onChange={(e) => onChange(field.name, Number(e.target.value))}
+            min={0}
+            step="0.01"
+            onChange={(e) => {
+              const numValue = Number(e.target.value);
+              // Ensure the value is not negative and default to 0 if invalid
+              const validValue = isNaN(numValue) || numValue < 0 ? 0 : numValue;
+              onChange(field.name, validValue);
+            }}
           />
         );
 
