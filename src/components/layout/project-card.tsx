@@ -27,8 +27,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 }) => {
   const { user } = useAuth();
 
-  const isAllowed = ["done", "created", "draft"].includes(status.toLowerCase());
-  if (!isAllowed) return null;
+  // const isAllowed = ["done", "created", "draft"].includes(status.toLowerCase());
+  // if (!isAllowed) return null;
 
   const getProjectDetailRoute = () => {
     if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR)
