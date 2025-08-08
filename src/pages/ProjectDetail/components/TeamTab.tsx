@@ -94,21 +94,6 @@ export const TeamTab: React.FC<TeamTabProps> = ({ team }) => {
     }
   };
 
-  // const getRoleIcon = (role: string) => {
-  //   switch (role) {
-  //     case "Principal Investigator":
-  //       return "👑";
-  //     case "Leader":
-  //       return "⭐";
-  //     case "Secretary":
-  //       return "📋";
-  //     case "Researcher":
-  //       return "👤";
-  //     default:
-  //       return "👤";
-  //   }
-  // };
-
   return (
     <div className="space-y-4 sm:space-y-6">
       <Card className="shadow-sm">
