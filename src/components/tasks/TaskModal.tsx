@@ -46,6 +46,7 @@ import {
   useDeleteTask,
   useDeleteMemberTask,
   useMemberTasksByTaskId,
+  useUpdateTaskStatusKanban,
 } from "@/hooks/queries/task";
 import { UserRole } from "@/types/auth";
 import { toast } from "sonner";
@@ -179,6 +180,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const updateTaskMutation = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
   const deleteMemberTaskMutation = useDeleteMemberTask();
+  const updateTaskStatusKanbanMutation = useUpdateTaskStatusKanban();
 
   // Process user roles data to filter duplicates and prioritize non-Researcher roles
   const availableMembers = React.useMemo(() => {
@@ -415,12 +417,18 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
+    // Required field validations
     if (!formData.title.trim()) {
       newErrors.title = "Task title is required";
+    } else if (formData.title.trim().length < 3) {
+      newErrors.title = "Task title must be at least 3 characters long";
     }
 
     if (!formData.description.trim()) {
       newErrors.description = "Task description is required";
+    } else if (formData.description.trim().length < 10) {
+      newErrors.description =
+        "Task description must be at least 10 characters long";
     }
 
     if (!formData.startDate && !selectedStartDate) {
@@ -431,7 +439,15 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       newErrors.endDate = "End date is required";
     }
 
-    // Validate that end date is not equal to start date and not in the past
+    if (!formData.priority) {
+      newErrors.priority = "Priority is required";
+    }
+
+    if (!formData.status) {
+      newErrors.status = "Status is required";
+    }
+
+    // Date validations
     if (selectedStartDate && selectedEndDate) {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
@@ -445,8 +461,16 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       }
     }
 
+    // Meeting URL validation
     if (formData.hasMeetingUrl && !formData.meetingUrl.trim()) {
       newErrors.meetingUrl = "Meeting URL is required when enabled";
+    } else if (formData.hasMeetingUrl && formData.meetingUrl.trim()) {
+      // Basic URL validation
+      try {
+        new URL(formData.meetingUrl.trim());
+      } catch {
+        newErrors.meetingUrl = "Please enter a valid URL";
+      }
     }
 
     setErrors(newErrors);
@@ -456,7 +480,18 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) return;
+    if (!validateForm()) {
+      // Show validation error summary
+      const errorCount = Object.keys(errors).length;
+      if (errorCount > 0) {
+        toast.error(
+          `Please fix ${errorCount} validation error${
+            errorCount > 1 ? "s" : ""
+          } before saving`
+        );
+      }
+      return;
+    }
 
     if (mode === "create" && !selectedMilestoneId) {
       toast.error("Milestone is required");
@@ -538,7 +573,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           "start-date": startDateAtNoon.toISOString(),
           "end-date": endDateAtNoon.toISOString(),
           priority: formData.priority,
-          progress: task.status === "Completed" ? 100 : 0,
+          progress: formData.status === "Completed" ? 100 : 0,
           overdue: 0,
           "meeting-url": formData.hasMeetingUrl ? formData.meetingUrl : null,
           note: formData.note,
@@ -558,49 +593,45 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           taskData,
         });
 
-        // Handle member task updates only if there are actual changes
-        const currentMemberIds = currentMemberTasks
-          .map((mt) => {
-            // Handle both enhanced member-tasks format and legacy MemberTask format
-            return mt["member-id"] || mt.memberId || "";
-          })
-          .sort();
-        const newMemberIds = selectedMembers.map((m) => m["account-id"]).sort();
+        // Update task status if it has changed
+        if (formData.status !== task.status) {
+          try {
+            // Map the status to Kanban format
+            const kanbanStatusMapping: Record<
+              string,
+              "ToDo" | "InProgress" | "Completed" | "Overdue"
+            > = {
+              "To Do": "ToDo",
+              "In Progress": "InProgress",
+              Completed: "Completed",
+              Overdue: "Overdue",
+            };
 
-        // Check if member assignments have actually changed
-        const memberAssignmentsChanged =
-          currentMemberIds.length !== newMemberIds.length ||
-          !currentMemberIds.every((id, index) => id === newMemberIds[index]);
-
-        if (memberAssignmentsChanged) {
-          // Remove members that are no longer selected
-          const membersToRemove = currentMemberTasks.filter((mt) => {
-            const memberId = mt["member-id"] || mt.memberId || "";
-            return !newMemberIds.includes(memberId);
-          });
-
-          for (const memberTask of membersToRemove) {
-            try {
-              await deleteMemberTaskMutation.mutateAsync(memberTask.id);
-              console.log(
-                "✅ Successfully removed member task:",
-                memberTask.id
-              );
-            } catch (error) {
-              console.error(
-                "❌ Failed to remove member task:",
-                memberTask.id,
-                error
-              );
-              // Continue with other operations even if one fails
+            const kanbanStatus = kanbanStatusMapping[formData.status];
+            if (kanbanStatus) {
+              await updateTaskStatusKanbanMutation.mutateAsync({
+                taskId: task.id,
+                status: kanbanStatus,
+              });
+              console.log(`✅ Task status updated to: ${formData.status}`);
             }
+          } catch (error) {
+            console.error("❌ Failed to update task status:", error);
+            // Don't fail the entire operation if status update fails
           }
+        }
 
-          // Add new members
-          const membersToAdd = selectedMembers.filter(
-            (m) => !currentMemberIds.includes(m["account-id"])
-          );
+        // Get current member IDs from task
+        const currentMemberIds = currentMemberTasks
+          .map((mt) => mt["member-id"] || mt.memberId || "")
+          .filter(Boolean); // loại bỏ chuỗi rỗng nếu có
 
+        // Lọc ra các member mới chưa có trong danh sách hiện tại
+        const membersToAdd = selectedMembers.filter(
+          (m) => !currentMemberIds.includes(m["account-id"])
+        );
+
+        if (membersToAdd.length > 0) {
           for (const member of membersToAdd) {
             try {
               await createMemberTaskMutation.mutateAsync({
@@ -616,12 +647,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 member["account-id"],
                 error
               );
-              // Continue with other operations even if one fails
             }
           }
         } else {
           console.log(
-            "ℹ️ TaskModal - No changes to member assignments, skipping member task updates"
+            "ℹ️ No new members to add, skipping member task creation"
           );
         }
 
@@ -737,6 +767,35 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     setSelectedMembers((prev) =>
       prev.filter((member) => member["account-id"] !== accountId)
     );
+  };
+
+  // Handle status change - only update local state, not API
+  const handleStatusChange = (newStatus: string) => {
+    if (isReadOnly) return;
+
+    // Only update local form data, don't call API immediately
+    setFormData((prev) => ({
+      ...prev,
+      status: newStatus as "To Do" | "In Progress" | "Completed" | "Overdue",
+    }));
+
+    // Clear any existing status error
+    if (errors.status) {
+      setErrors((prev) => ({ ...prev, status: "" }));
+    }
+  };
+
+  // Handle member task deletion
+  const handleDeleteMemberTask = async (memberTaskId: string) => {
+    if (isReadOnly) return;
+
+    try {
+      await deleteMemberTaskMutation.mutateAsync(memberTaskId);
+      toast.success("Member removed from task successfully");
+    } catch (error) {
+      console.error("Failed to remove member from task:", error);
+      toast.error("Failed to remove member from task");
+    }
   };
 
   // Helper function to safely get display name
@@ -862,7 +921,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             <div className="space-y-2">
               <Label className="flex items-center space-x-1">
                 <Flag className="w-4 h-4" />
-                <span>Priority</span>
+                <span>Priority *</span>
               </Label>
               <Select
                 value={formData.priority}
@@ -873,7 +932,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 }
                 disabled={isReadOnly}
               >
-                <SelectTrigger>
+                <SelectTrigger
+                  className={errors.priority ? "border-red-500" : ""}
+                >
                   <SelectValue placeholder="Select priority" />
                 </SelectTrigger>
                 <SelectContent>
@@ -882,24 +943,25 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   <SelectItem value="High">High</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.priority && (
+                <p className="text-sm text-red-500">{errors.priority}</p>
+              )}
             </div>
 
             {/* Status */}
             <div className="space-y-2">
               <Label className="flex items-center space-x-1">
                 <Tag className="w-4 h-4" />
-                <span>Status</span>
+                <span>Status *</span>
               </Label>
               <Select
                 value={formData.status}
-                onValueChange={
-                  isReadOnly
-                    ? undefined
-                    : (value) => handleInputChange("status", value)
-                }
+                onValueChange={isReadOnly ? undefined : handleStatusChange}
                 disabled={isReadOnly}
               >
-                <SelectTrigger>
+                <SelectTrigger
+                  className={errors.status ? "border-red-500" : ""}
+                >
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -909,6 +971,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   <SelectItem value="Overdue">Overdue</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.status && (
+                <p className="text-sm text-red-500">{errors.status}</p>
+              )}
             </div>
 
             {/* Meeting URL Switch */}
@@ -1040,14 +1105,96 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                                   )}
                                 </p>
                               </div>
+                              {/* Delete member button - only show in update mode */}
+                              {/* {mode === "update" && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Remove Member
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to remove{" "}
+                                        {memberData.name || "this member"} from
+                                        this task? This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() =>
+                                          handleDeleteMemberTask(memberTask.id)
+                                        }
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        Remove
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )} */}
                             </div>
                           ) : (
                             // Fallback to MemberInfo component for backward compatibility
-                            <MemberInfo
-                              memberId={memberId}
-                              showRole={true}
-                              size="sm"
-                            />
+                            <div className="flex items-center justify-between">
+                              <MemberInfo
+                                memberId={memberId}
+                                showRole={true}
+                                size="sm"
+                              />
+                              {/* Delete member button - only show in update mode */}
+                              {mode === "update" && (
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>
+                                        Remove Member
+                                      </AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Are you sure you want to remove this
+                                        member from this task? This action
+                                        cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>
+                                        Cancel
+                                      </AlertDialogCancel>
+                                      <AlertDialogAction
+                                        onClick={() =>
+                                          handleDeleteMemberTask(memberTask.id)
+                                        }
+                                        className="bg-red-500 hover:bg-red-600"
+                                      >
+                                        Remove
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              )}
+                            </div>
                           )}
                         </div>
                       );
