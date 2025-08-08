@@ -29,7 +29,6 @@ import { useMyProject } from "@/hooks/queries/project";
 import { useMilestonesByProjectId } from "@/hooks/queries/milestone";
 import {
   useTasksByMilestoneId,
-  useUpdateTask,
   useUpdateTaskStatusKanban,
   useDeleteTask,
 } from "@/hooks/queries/task";
@@ -44,7 +43,7 @@ interface TaskTableTask {
   id: string;
   title: string;
   description: string;
-  status: "Not Started" | "In Progress" | "Complete" | "Overdue";
+  status: "To Do" | "In Progress" | "Completed" | "Overdue";
   dueDate: string;
   priority: "Low" | "Medium" | "High";
   projectTag: string;
@@ -66,7 +65,7 @@ interface Task {
   id: string;
   title: string;
   description: string;
-  status: "Not Started" | "In Progress" | "Complete" | "Overdue";
+  status: "To Do" | "In Progress" | "Completed" | "Overdue";
   dueDate: string;
   priority: "Low" | "Medium" | "High";
   projectTag: string;
@@ -162,19 +161,20 @@ const transformProjectTask = (task: ProjectTask): Task => {
         memberId: mt.memberId,
       })) || [],
     // Include the full member-tasks data for enhanced TaskModal display
-    "member-tasks": task["member-tasks"]?.map((mt) => ({
-      id: mt.id,
-      "member-id": mt.memberId,
-      member: {
-        id: mt.memberId,
-        name: mt["full-name"] || "Unknown Member",
-        avatarUrl: mt["avatar-url"] || "",
-      },
-      progress: mt.progress,
-      overdue: mt.overdue,
-      status: mt.status,
-      note: mt.note,
-    })) || [],
+    "member-tasks":
+      task["member-tasks"]?.map((mt) => ({
+        id: mt.id,
+        "member-id": mt.memberId,
+        member: {
+          id: mt.memberId,
+          name: mt["full-name"] || "Unknown Member",
+          avatarUrl: mt["avatar-url"] || "",
+        },
+        progress: mt.progress,
+        overdue: mt.overdue,
+        status: mt.status,
+        note: mt.note,
+      })) || [],
     createdAt: safeFormatDateTime(task["start-date"]),
     updatedAt: safeFormatDateTime(task["delivery-date"]),
     // Add start and end date fields for TaskModal
@@ -185,22 +185,23 @@ const transformProjectTask = (task: ProjectTask): Task => {
 
 const transformTaskStatus = (
   status: string
-): "Not Started" | "In Progress" | "Complete" | "Overdue" => {
+): "To Do" | "In Progress" | "Completed" | "Overdue" => {
   switch (status?.toLowerCase()) {
     case "create":
     case "todo":
     case "to do":
-      return "Not Started"; // 'create' → ToDo
+    case "not started":
+      return "To Do"; // 'create' → ToDo
     case "in progress":
     case "inprogress":
       return "In Progress";
     case "completed":
     case "complete":
-      return "Complete";
+      return "Completed";
     case "overdue":
       return "Overdue";
     default:
-      return "Not Started";
+      return "To Do";
   }
 };
 
@@ -246,7 +247,6 @@ const UserTaskManagement: React.FC = () => {
   const [pageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
 
-
   // Role-based permissions (can be made dynamic based on user context)
   const isLeader = true;
 
@@ -255,7 +255,7 @@ const UserTaskManagement: React.FC = () => {
 
   // Function to refresh data
   const refreshData = () => {
-    setRefreshKey(prev => prev + 1);
+    setRefreshKey((prev) => prev + 1);
   };
 
   // API hooks with error handling
@@ -271,7 +271,6 @@ const UserTaskManagement: React.FC = () => {
   );
 
   // Task management mutations
-  const updateTaskMutation = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
   const updateTaskStatusKanbanMutation = useUpdateTaskStatusKanban();
 
@@ -355,7 +354,7 @@ const UserTaskManagement: React.FC = () => {
 
       const now = new Date();
       const overdueTasks = tasks.filter((task) => {
-        if (task.status === "Complete" || task.status === "Overdue")
+        if (task.status === "Completed" || task.status === "Overdue")
           return false;
         if (!task.dueDate) return false;
 
@@ -368,7 +367,6 @@ const UserTaskManagement: React.FC = () => {
       });
 
       if (overdueTasks.length > 0) {
-
         // Mark this milestone as checked
         setCheckedMilestones((prev) => new Set(prev).add(milestoneId));
 
@@ -432,8 +430,12 @@ const UserTaskManagement: React.FC = () => {
   useEffect(() => {
     console.log("🔍 TaskManagement - Milestone selection:", {
       selectedMilestoneId,
-      milestoneIdForTable: selectedMilestoneId && selectedMilestoneId !== "no-milestones" ? selectedMilestoneId : undefined,
-      isValidMilestone: selectedMilestoneId && selectedMilestoneId !== "no-milestones"
+      milestoneIdForTable:
+        selectedMilestoneId && selectedMilestoneId !== "no-milestones"
+          ? selectedMilestoneId
+          : undefined,
+      isValidMilestone:
+        selectedMilestoneId && selectedMilestoneId !== "no-milestones",
     });
   }, [selectedMilestoneId]);
 
@@ -456,11 +458,13 @@ const UserTaskManagement: React.FC = () => {
         avatar: taskTableTask["member-tasks"]?.[0]?.member?.avatarUrl || "",
         email: "",
       },
-      memberTaskIds: taskTableTask["member-tasks"]?.map((mt) => mt["member-id"]) || [],
-      memberTasks: taskTableTask["member-tasks"]?.map((mt) => ({
-        id: mt.id,
-        memberId: mt["member-id"],
-      })) || [],
+      memberTaskIds:
+        taskTableTask["member-tasks"]?.map((mt) => mt["member-id"]) || [],
+      memberTasks:
+        taskTableTask["member-tasks"]?.map((mt) => ({
+          id: mt.id,
+          memberId: mt["member-id"],
+        })) || [],
       createdAt: taskTableTask.createdAt,
       updatedAt: taskTableTask.updatedAt,
     };
@@ -487,11 +491,13 @@ const UserTaskManagement: React.FC = () => {
         avatar: taskTableTask["member-tasks"]?.[0]?.member?.avatarUrl || "",
         email: "",
       },
-      memberTaskIds: taskTableTask["member-tasks"]?.map((mt) => mt["member-id"]) || [],
-      memberTasks: taskTableTask["member-tasks"]?.map((mt) => ({
-        id: mt.id,
-        memberId: mt["member-id"],
-      })) || [],
+      memberTaskIds:
+        taskTableTask["member-tasks"]?.map((mt) => mt["member-id"]) || [],
+      memberTasks:
+        taskTableTask["member-tasks"]?.map((mt) => ({
+          id: mt.id,
+          memberId: mt["member-id"],
+        })) || [],
       createdAt: taskTableTask.createdAt,
       updatedAt: taskTableTask.updatedAt,
     };
@@ -518,11 +524,13 @@ const UserTaskManagement: React.FC = () => {
         avatar: taskTableTask["member-tasks"]?.[0]?.member?.avatarUrl || "",
         email: "",
       },
-      memberTaskIds: taskTableTask["member-tasks"]?.map((mt) => mt["member-id"]) || [],
-      memberTasks: taskTableTask["member-tasks"]?.map((mt) => ({
-        id: mt.id,
-        memberId: mt["member-id"],
-      })) || [],
+      memberTaskIds:
+        taskTableTask["member-tasks"]?.map((mt) => mt["member-id"]) || [],
+      memberTasks:
+        taskTableTask["member-tasks"]?.map((mt) => ({
+          id: mt.id,
+          memberId: mt["member-id"],
+        })) || [],
       createdAt: taskTableTask.createdAt,
       updatedAt: taskTableTask.updatedAt,
     };
@@ -532,7 +540,9 @@ const UserTaskManagement: React.FC = () => {
   };
 
   // Separate handler for SharedTaskBoard (uses old Task format)
-  const handleKanbanTaskClick = (componentTask: Omit<Task, "projectId" | "milestoneId">) => {
+  const handleKanbanTaskClick = (
+    componentTask: Omit<Task, "projectId" | "milestoneId">
+  ) => {
     // Find the full task from our transformed data
     const fullTask = filteredTasks.find((t: Task) => t.id === componentTask.id);
     if (fullTask) {
@@ -572,11 +582,22 @@ const UserTaskManagement: React.FC = () => {
   const handleUpdateTask = (
     componentUpdatedTask: Omit<Task, "projectId" | "milestoneId">
   ) => {
+    console.log(
+      "🔍 TaskManagement - handleUpdateTask called with:",
+      componentUpdatedTask
+    );
+
     // Find the original task to preserve projectId and milestoneId
     const originalTask = filteredTasks.find(
       (task: Task) => task.id === componentUpdatedTask.id
     );
-    if (!originalTask) return;
+    if (!originalTask) {
+      console.warn(
+        "❌ TaskManagement - Original task not found for update:",
+        componentUpdatedTask.id
+      );
+      return;
+    }
 
     // Check if this is just a status update (from drag and drop)
     const isStatusOnlyUpdate =
@@ -592,15 +613,15 @@ const UserTaskManagement: React.FC = () => {
         string,
         "ToDo" | "InProgress" | "Completed" | "Overdue"
       > = {
-        "Not Started": "ToDo",
+        "To Do": "ToDo",
         "In Progress": "InProgress",
-        Complete: "Completed",
+        Completed: "Completed",
         Overdue: "Overdue",
       };
       const kanbanStatus = kanbanStatusMapping[componentUpdatedTask.status];
       if (kanbanStatus) {
         console.log(
-          `Kanban status update: "${componentUpdatedTask.status}" -> "${kanbanStatus}"`
+          `🔄 TaskManagement - Kanban status update: "${componentUpdatedTask.status}" -> "${kanbanStatus}"`
         );
         updateTaskStatusKanbanMutation.mutate({
           taskId: componentUpdatedTask.id,
@@ -608,55 +629,17 @@ const UserTaskManagement: React.FC = () => {
         });
       }
     } else {
-      // Handle full task update
-      const updateData = {
-        name: componentUpdatedTask.title,
-        description: componentUpdatedTask.description,
-        "start-date": new Date().toISOString(), // Use current date as start date
-        "end-date": componentUpdatedTask.dueDate,
-        priority: componentUpdatedTask.priority,
-        progress: 0,
-        overdue: 0,
-        "meeting-url": null,
-        note: "",
-        "milestone-id": originalTask.milestoneId,
-      };
+      // For full task updates, just handle UI state changes
+      // The actual API update should have been handled by TaskModal already
+      console.log("� TaskManagement - Handling UI state after task update");
 
-      updateTaskMutation.mutate(
-        { taskId: componentUpdatedTask.id, taskData: updateData },
-        {
-          onSuccess: async () => {
-            // Handle member task changes if assignee changed
-            const oldAssigneeId = originalTask.assignedTo.id;
-            const newAssigneeId = componentUpdatedTask.assignedTo.id;
+      setSelectedTask(null);
+      setIsUpdateModalOpen(false);
+      setIsDetailModalOpen(false);
 
-            if (oldAssigneeId !== newAssigneeId) {
-              try {
-                // Remove old member task if exists
-                if (oldAssigneeId && originalTask.memberTaskIds?.length) {
-                  // Find the member task ID to delete (this would need to be stored in the task data)
-                  // For now, we'll skip this as we don't have the member-task ID readily available
-                  // In a real implementation, you'd need to store member-task IDs in the task data
-                }
-
-                // Add new member task if new assignee exists
-                if (newAssigneeId) {
-                  // This would be handled by the CreateTaskModal pattern
-                  // For now, we'll just update the task
-                }
-              } catch (error) {
-                console.error("Error updating member tasks:", error);
-              }
-            }
-
-            setSelectedTask(null);
-            setIsUpdateModalOpen(false);
-            setIsDetailModalOpen(false); // Also close detail modal
-            // Refresh data after successful update
-            refreshData();
-          },
-        }
-      );
+      // The query invalidation from updateTaskMutation should handle data refresh
+      // But we can also trigger a manual refresh to be sure
+      refreshData();
     }
   };
 
@@ -673,18 +656,17 @@ const UserTaskManagement: React.FC = () => {
       onSuccess: () => {
         // Refresh data after successful deletion
         refreshData();
-      }
+      },
     });
   };
 
   // Calculate task statistics with safe date checking
   const taskStats = {
     total: filteredTasks.length,
-    notStarted: filteredTasks.filter((t: Task) => t.status === "Not Started")
-      .length,
+    notStarted: filteredTasks.filter((t: Task) => t.status === "To Do").length,
     inProgress: filteredTasks.filter((t: Task) => t.status === "In Progress")
       .length,
-    completed: filteredTasks.filter((t: Task) => t.status === "Complete")
+    completed: filteredTasks.filter((t: Task) => t.status === "Completed")
       .length,
     overdue: filteredTasks.filter((t: Task) => {
       return isTaskOverdue(t.dueDate, t.status);
@@ -878,7 +860,11 @@ const UserTaskManagement: React.FC = () => {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-6">
               <TaskTable
                 key={`task-table-${refreshKey}`}
-                milestoneId={selectedMilestoneId && selectedMilestoneId !== "no-milestones" ? selectedMilestoneId : undefined}
+                milestoneId={
+                  selectedMilestoneId && selectedMilestoneId !== "no-milestones"
+                    ? selectedMilestoneId
+                    : undefined
+                }
                 projectId={selectedProjectId}
                 onTaskEdit={handleTaskEdit}
                 onTaskView={handleTaskView}
@@ -894,8 +880,16 @@ const UserTaskManagement: React.FC = () => {
             <SharedTaskBoard
               key={`kanban-board-${refreshKey}`}
               tasks={tasksForComponents}
-              onTaskUpdate={(task) => handleUpdateTask(task as Omit<Task, "projectId" | "milestoneId">)}
-              onTaskClick={(task) => handleKanbanTaskClick(task as Omit<Task, "projectId" | "milestoneId">)}
+              onTaskUpdate={(task) =>
+                handleUpdateTask(
+                  task as Omit<Task, "projectId" | "milestoneId">
+                )
+              }
+              onTaskClick={(task) =>
+                handleKanbanTaskClick(
+                  task as Omit<Task, "projectId" | "milestoneId">
+                )
+              }
             />
           </div>
         )}
