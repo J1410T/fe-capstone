@@ -209,6 +209,42 @@ export const createUserRole = async (
   }
 };
 
+export const getUserRolesByAppraisalCouncil = async (
+  appraisalCouncilId: string,
+  pageIndex: number = 1,
+  pageSize: number = 100
+): Promise<UserRoleResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const request = {
+      "appraisal-council-id": appraisalCouncilId,
+      status: "Approved",
+      "page-index": pageIndex,
+      "page-size": pageSize,
+    };
+
+    const res = await axiosClient.post<UserRoleResponse>(
+      "/user-role/filter",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getUserRolesByAppraisalCouncil error:", error);
+    throw error;
+  }
+};
+
 export const updateUserRoleStatus = async (
   userRoleId: string,
   status: string,
@@ -386,6 +422,37 @@ export const updateUserStatus = async (accountId: string): Promise<unknown> => {
     return res.data;
   } catch (error) {
     console.error("updateUserStatus error:", error);
+    throw error;
+  }
+};
+
+// Add these functions to your existing auth.ts service file
+
+export const updateUserRole = async (
+  userRoleId: string,
+  status: string,
+  request: UpdateUserRoleRequest
+): Promise<UserRole> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.put<UserRole>(
+      `/user-role/${userRoleId}?Status=${status}`,
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("updateUserRole error:", error);
     throw error;
   }
 };

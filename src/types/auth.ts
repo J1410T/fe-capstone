@@ -95,15 +95,17 @@ export interface CreateUserRoleRequest {
   "account-id": string;
   "role-id": string;
   "project-id"?: string;
+  "appraisal-council-id"?: string;
+  status?: string;
 }
 
 export interface UpdateUserRoleRequest {
   "account-id": string;
   "role-id": string;
-  "project-id": string;
+  "project-id"?: string | null;
+  "appraisal-council-id"?: string | null;
   status?: string;
 }
-
 export interface UserRoleFilterRequest {
   "account-id"?: string;
   "project-id"?: string;
