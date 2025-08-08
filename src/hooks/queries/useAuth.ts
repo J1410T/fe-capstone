@@ -24,6 +24,8 @@ import {
   getUserRoleByAccountId,
   createUser,
   updateUserStatus,
+  getUserRolesByAppraisalCouncil,
+  updateUserRole,
 } from "@/services/resources/auth";
 import {
   UserRole,
@@ -192,10 +194,36 @@ export function useCreateUserRole() {
       queryClient.invalidateQueries({ queryKey: ["user-role"] });
       queryClient.invalidateQueries({ queryKey: ["user-roles"] });
       queryClient.invalidateQueries({ queryKey: ["users-with-roles"] });
+      queryClient.invalidateQueries({
+        queryKey: ["user-roles-by-appraisal-council"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["appraisal-councils"],
+      });
     },
     onError: (error) => {
       console.error("Failed to create user role:", error);
+      // Let the component handle the error display
     },
+  });
+}
+
+export function useUserRolesByAppraisalCouncil(
+  appraisalCouncilId: string,
+  pageIndex: number = 1,
+  pageSize: number = 100
+) {
+  return useQuery({
+    queryKey: [
+      "user-roles-by-appraisal-council",
+      appraisalCouncilId,
+      pageIndex,
+      pageSize,
+    ],
+    queryFn: () =>
+      getUserRolesByAppraisalCouncil(appraisalCouncilId, pageIndex, pageSize),
+    enabled: !!appraisalCouncilId,
+    staleTime: 30000, // Cache for 30 seconds
   });
 }
 
@@ -400,5 +428,33 @@ export function useUsersWithRoles(request: UserFilterRequest) {
     },
     enabled: !!accessToken,
     staleTime: 2 * 60 * 1000, // Cache for 2 minutes
+  });
+}
+
+export function useUpdateUserRole() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      userRoleId,
+      status,
+      request,
+    }: {
+      userRoleId: string;
+      status: string;
+      request: UpdateUserRoleRequest;
+    }) => updateUserRole(userRoleId, status, request),
+    onSuccess: () => {
+      // Invalidate user role and related queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["user-role"] });
+      queryClient.invalidateQueries({ queryKey: ["user-roles"] });
+      queryClient.invalidateQueries({
+        queryKey: ["user-roles-by-appraisal-council"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["appraisal-councils"] });
+    },
+    onError: (error) => {
+      console.error("Failed to update user role:", error);
+    },
   });
 }
