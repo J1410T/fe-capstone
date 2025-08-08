@@ -1,6 +1,7 @@
 // Principal Investigator Pages
 export { default as ProjectRegistration } from "./ProjectRegistration";
 export { default as MyProjects } from "./MyProjects";
+export { default as Meetings } from "./Meetings";
 
 // Default export (MyProjects as main page)
 export { default } from "./MyProjects";

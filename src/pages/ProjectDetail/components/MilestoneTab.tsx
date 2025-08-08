@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { Milestone, Task } from "../shared/types";
 import { ProjectTask } from "@/types/task";
+import { Milestone as APIMilestone } from "@/types/task";
 import { useMilestonesByProjectId } from "@/hooks/queries/milestone";
 import { useTasksByMilestoneId } from "@/hooks/queries/task";
 import { format } from "date-fns";
@@ -20,15 +21,15 @@ interface MilestoneTabProps {
 }
 
 // Transform API milestone to component format
-const transformMilestone = (apiMilestone: any): Milestone => ({
+const transformMilestone = (apiMilestone: APIMilestone): Milestone => ({
   id: apiMilestone.id,
-  name: apiMilestone.title || apiMilestone.name,
+  name: apiMilestone.title || `Milestone ${apiMilestone.code}`,
   description: apiMilestone.description || "",
-  deadline: apiMilestone["end-date"] || apiMilestone.endDate || "",
+  deadline: apiMilestone.endDate || "",
   status: transformMilestoneStatus(apiMilestone.status),
   progress: 0, // Will be calculated later
-  "start-date": apiMilestone["start-date"] || apiMilestone.startDate || "",
-  "end-date": apiMilestone["end-date"] || apiMilestone.endDate || "",
+  "start-date": apiMilestone.startDate || "",
+  "end-date": apiMilestone.endDate || "",
   tasks: [], // Tasks will be loaded separately
 });
 
