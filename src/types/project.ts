@@ -24,6 +24,7 @@ export interface ProjectFilterRequest {
   "page-index": number;
   "page-size": number;
   status?: string;
+  genres?: string;
 }
 
 export interface ProjectFilterResponse {
@@ -53,7 +54,7 @@ export interface ProjectItem {
   language: string;
   category: string;
   type: string;
-  genre: string;
+  genres: string;
   "created-at": string;
   "updated-at": string | null;
   status: string;
@@ -127,6 +128,7 @@ export interface ProjectCardProps {
   logoUrl?: string;
   major?: ProjectMajor[];
   field?: ProjectMajor["field"];
+  genres?: string;
 }
 
 export interface CreateProjectRequest {
