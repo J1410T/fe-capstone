@@ -2,6 +2,7 @@ import {
   ProjectTaskResponse,
   MemberTaskResponse,
   MemberTaskFilterRequest,
+  UpdateTaskRequest,
 } from "@/types/task";
 import { axiosClient, getAccessToken } from "../api";
 import {
@@ -79,26 +80,50 @@ export const createMemberTask = async (
 
 export const updateTask = async (
   taskId: string,
-  taskData: Record<string, unknown>
-): Promise<Record<string, unknown>> => {
-  try {
-    const accessToken = getAccessToken();
-    if (!accessToken) {
-      throw new Error("Access token not found");
-    }
+  taskData: Partial<UpdateTaskRequest> // partial để chấp nhận chỉ truyền các trường cần update
+): Promise<UpdateTaskRequest> => {
+  const accessToken = getAccessToken();
+  if (!accessToken) throw new Error("No token");
 
-    const res = await axiosClient.put(`/task/${taskId}`, taskData, {
+  // Get current task data from server
+  const currentRes = await axiosClient.get<UpdateTaskRequest>(
+    `/task/${taskId}`,
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    }
+  );
+
+  const currentTask = currentRes.data;
+  console.log("🔍 updateTask - Current task from server:", currentTask);
+  console.log(
+    "🔍 updateTask - Current member-tasks:",
+    currentTask["member-tasks"]
+  );
+
+  // Merge dữ liệu update vào currentTask
+  const mergedTaskData: UpdateTaskRequest = {
+    ...currentTask,
+    ...taskData,
+    "member-tasks": currentTask["member-tasks"] ?? [], // giữ nguyên hoặc array rỗng nếu không có
+  };
+  console.log("🔍 updateTask - Incoming task data:", taskData);
+  console.log(
+    "🔍 updateTask - Merged task data being sent to API:",
+    mergedTaskData
+  );
+
+  const res = await axiosClient.put<UpdateTaskRequest>(
+    `/task/${taskId}`,
+    mergedTaskData,
+    {
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json-patch+json",
+        "Content-Type": "application/json",
       },
-    });
+    }
+  );
 
-    return res.data;
-  } catch (error) {
-    console.error("updateTask error:", error);
-    throw error;
-  }
+  return res.data;
 };
 
 export const deleteTask = async (taskId: string): Promise<void> => {
@@ -108,13 +133,45 @@ export const deleteTask = async (taskId: string): Promise<void> => {
       throw new Error("Access token not found");
     }
 
-    await axiosClient.delete(`/task/${taskId}`, {
+    console.log("🗑️ API - Deleting task:", taskId);
+
+    const response = await axiosClient.delete(`/task/${taskId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-  } catch (error) {
-    console.error("deleteTask error:", error);
+
+    console.log("✅ API - Task deleted successfully:", taskId, response.status);
+  } catch (error: unknown) {
+    const axiosError = error as {
+      response?: {
+        data?: { message?: string };
+        status?: number;
+        statusText?: string;
+      };
+      message?: string;
+    };
+    // Enhance error message with more context
+    if (axiosError.response?.status === 500) {
+      throw new Error(
+        `Server error (500): Unable to delete task ${taskId}. ${
+          axiosError.response?.data?.message || "Internal server error"
+        }`
+      );
+    } else if (axiosError.response?.status === 404) {
+      throw new Error(
+        `Task not found (404): Task ${taskId} does not exist or has already been deleted.`
+      );
+    } else if (axiosError.response?.status === 403) {
+      throw new Error(
+        `Permission denied (403): You don't have permission to delete task ${taskId}.`
+      );
+    } else if (axiosError.response?.status === 409) {
+      throw new Error(
+        `Conflict (409): Task ${taskId} cannot be deleted due to dependencies. Please remove associated member tasks first.`
+      );
+    }
+
     throw error;
   }
 };
@@ -174,8 +231,31 @@ export const getMemberTasksByTaskId = async (
     );
 
     return res.data;
-  } catch (error) {
-    console.error("getMemberTasksByTaskId error:", error);
+  } catch (error: unknown) {
+    const axiosError = error as {
+      response?: {
+        data?: { message?: string };
+        status?: number;
+        statusText?: string;
+      };
+      message?: string;
+    };
+
+    // Handle 404 specifically - this might mean no member tasks exist
+    if (axiosError.response?.status === 404) {
+      console.warn(
+        `⚠️ Member task endpoint not found for task ${taskId} - returning empty result`
+      );
+      // Return empty result instead of throwing error
+      return {
+        "data-list": [],
+        "total-count": 0,
+        "total-page": 0,
+        "page-index": pageIndex,
+        "page-size": pageSize,
+      } as MemberTaskResponse;
+    }
+
     throw error;
   }
 };
@@ -187,13 +267,44 @@ export const deleteMemberTask = async (memberTaskId: string): Promise<void> => {
       throw new Error("Access token not found");
     }
 
-    await axiosClient.delete(`/member-task/${memberTaskId}`, {
+    const response = await axiosClient.delete(`/member-task/${memberTaskId}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-  } catch (error) {
-    console.error("deleteMemberTask error:", error);
+
+    console.log(
+      "✅ API - Member task deleted successfully:",
+      memberTaskId,
+      response.status
+    );
+  } catch (error: unknown) {
+    const axiosError = error as {
+      response?: {
+        data?: { message?: string };
+        status?: number;
+        statusText?: string;
+      };
+      message?: string;
+    };
+
+    // Enhance error message with more context
+    if (axiosError.response?.status === 500) {
+      throw new Error(
+        `Server error (500): Unable to delete member task ${memberTaskId}. ${
+          axiosError.response?.data?.message || "Internal server error"
+        }`
+      );
+    } else if (axiosError.response?.status === 404) {
+      throw new Error(
+        `Member task not found (404): Member task ${memberTaskId} does not exist or has already been deleted.`
+      );
+    } else if (axiosError.response?.status === 403) {
+      throw new Error(
+        `Permission denied (403): You don't have permission to delete member task ${memberTaskId}.`
+      );
+    }
+
     throw error;
   }
 };
