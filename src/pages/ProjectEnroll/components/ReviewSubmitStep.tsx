@@ -38,6 +38,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useCreateFirstEvaluation } from "@/hooks/queries/evaluation";
 
 interface ReviewSubmitStepProps {
   enrollmentData: EnrollmentData;
@@ -75,6 +76,7 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
   // Mutation hooks
   const updateProjectMutation = useUpdateProject();
   const updateDocumentMutation = useUpdateDocument();
+  const createFirstEvaluationMutation = useCreateFirstEvaluation();
 
   // Handle project submission
   // const handleProjectSubmission = async () => {
@@ -218,6 +220,22 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
         }
       } else {
         console.log("No documents to update");
+      }
+
+      try {
+        console.log("Creating first evaluation...");
+        const evaluationResult =
+          await createFirstEvaluationMutation.mutateAsync(projectId);
+        console.log(
+          "First evaluation created successfully:",
+          evaluationResult.evaluationId
+        );
+      } catch (evaluationError) {
+        console.error("Failed to create first evaluation:", evaluationError);
+        toast.warning(
+          "Project submitted successfully, but evaluation creation failed"
+        );
+        // Don't throw here as the main submission was successful
       }
 
       // 3. Show success toast and navigate to Project Detail
