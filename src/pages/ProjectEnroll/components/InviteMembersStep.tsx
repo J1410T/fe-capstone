@@ -412,7 +412,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
 
       // Filter ScienceCV documents and get account IDs
       const scienceCVDocs = documentsWithUserRole["data-list"].filter(
-        (doc) => doc.type === "ScienceCV"
+        (doc) => doc.type === "BM2"
       );
 
       const cvSubmittedAccountIds = new Set<string>();
@@ -448,7 +448,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
 
       // Filter ScienceCV documents and get account IDs
       const scienceCVDocs = documentsWithUserRole["data-list"].filter(
-        (doc) => doc.type === "ScienceCV"
+        (doc) => doc.type === "BM2"
       );
 
       const cvSubmittedAccountIds = new Set<string>();
@@ -519,15 +519,15 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
 
       // Check for existing ScienceCV document with matching account-id using documentsWithUserRole
       const existingScienceCVDoc = documentsWithUserRole?.["data-list"]?.find(
-        (doc) => doc.type === "ScienceCV" && doc["account-id"] === piAccountId
+        (doc) => doc.type === "BM2" && doc["account-id"] === piAccountId
       );
 
       if (existingScienceCVDoc) {
         // Update existing document
         await updateDocumentMutation.mutateAsync({
           id: existingScienceCVDoc.id,
-          name: scientificCV.data.name,
-          type: scientificCV.data.type,
+          name: "Scientific CV",
+          type: "BM2",
           "is-template": scientificCV.data["is-template"],
           "content-html": scientificCV.data["content-html"],
           "project-id": projectId,
@@ -538,8 +538,8 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
       } else {
         // Create new document
         await createDocumentMutation.mutateAsync({
-          name: scientificCV.data.name,
-          type: scientificCV.data.type,
+          name: "Scientific CV",
+          type: "BM2",
           "is-template": scientificCV.data["is-template"],
           "content-html": scientificCV.data["content-html"],
           "project-id": projectId,
@@ -771,8 +771,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
         if (documentsWithUserRole?.["data-list"]) {
           const scienceCVDocs = documentsWithUserRole["data-list"].filter(
             (doc) =>
-              doc.type === "ScienceCV" &&
-              doc["account-id"] === memberToDelete.id
+              doc.type === "BM2" && doc["account-id"] === memberToDelete.id
           );
 
           if (scienceCVDocs.length > 0) {

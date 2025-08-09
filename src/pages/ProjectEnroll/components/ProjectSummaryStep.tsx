@@ -32,7 +32,6 @@ interface ProjectSummaryStepProps {
 export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   onContentChange,
   onNext,
-  // projectDocuments,
   onDocumentCreated,
 }) => {
   const { projectId } = useParams<{ projectId: string }>();
@@ -43,23 +42,31 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
   const [documentCreated, setDocumentCreated] = useState(false);
 
-  // Use useDocumentByProjectIdWithUserRole to find BM1 document like in InviteMembersStep
-  const { data: documentsWithUserRole } = useDocumentByProjectIdWithUserRole(
-    {
-      "is-template": false,
-      status: "draft",
-      "page-index": 1,
-      "page-size": 100,
-      "project-id": projectId || "",
-    },
-    !!projectId
-  );
+  // Use useDocumentByProjectIdWithUserRole to find BM1 document
+  const { data: documentsWithUserRole, isLoading: isLoadingDocuments } =
+    useDocumentByProjectIdWithUserRole(
+      {
+        "is-template": false,
+        status: "draft",
+        "page-index": 1,
+        "page-size": 100,
+        "project-id": projectId || "",
+      },
+      !!projectId
+    );
 
   // Find BM1 document from the API response
   const bm1Document = documentsWithUserRole?.["data-list"]?.find(
     (doc) => doc.type === "BM1"
   );
-  const shouldFetchTemplate = !bm1Document && !documentCreated;
+
+  // FIX: Wait for documents to load before deciding to fetch template
+  // Only fetch template when we've confirmed there's no BM1 document
+  const shouldFetchTemplate =
+    !isLoadingDocuments &&
+    !bm1Document &&
+    !documentCreated &&
+    !isCreatingDocument;
 
   // Only fetch template when needed
   const { data: templateData, isLoading: isLoadingTemplate } =
@@ -69,8 +76,10 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   const updateDocumentMutation = useUpdateDocument();
 
   const createDocumentFromTemplate = useCallback(async () => {
+    // FIX: Wait for documents API to finish loading before attempting to create
     if (
-      !shouldFetchTemplate ||
+      isLoadingDocuments || // Wait for documents to load
+      bm1Document || // If we already have BM1 document, don't create
       !templateData?.data?.["data-list"]?.length ||
       isCreatingDocument ||
       documentCreated ||
@@ -79,12 +88,13 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
       return;
     }
 
+    console.log("Creating BM1 document from template...");
     setIsCreatingDocument(true);
     const templateDoc: DocumentForm = templateData.data["data-list"][0];
     const templateContent = templateDoc["content-html"].replace(/\\"/g, '"');
 
     try {
-      await createDocumentMutation.mutateAsync({
+      const newDocument = await createDocumentMutation.mutateAsync({
         name: "Registration form",
         type: "BM1",
         "is-template": false,
@@ -93,17 +103,23 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
         status: "draft",
       });
 
+      console.log("BM1 document created successfully:", newDocument);
       setDocumentCreated(true);
       onDocumentCreated?.();
+
+      // FIX: Set the created content to state
+      setFormContent(templateContent);
     } catch (error) {
       console.error("Failed to create document:", error);
       // Fallback: use template content directly
       setFormContent(templateContent);
+      toast.error("Failed to create document, using template content directly");
     } finally {
       setIsCreatingDocument(false);
     }
   }, [
-    shouldFetchTemplate,
+    isLoadingDocuments, // FIX: Add this dependency
+    bm1Document,
     templateData,
     isCreatingDocument,
     documentCreated,
@@ -113,15 +129,29 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   ]);
 
   useEffect(() => {
+    // FIX: Wait for documents API to finish loading before making decisions
+    if (isLoadingDocuments) {
+      console.log("Still loading documents...");
+      return;
+    }
+
     if (bm1Document) {
-      // Use existing BM1 document from project
+      // FIX: If we have existing BM1 document, use it and don't try to create new one
       const unescapedHtml = bm1Document["content-html"].replace(/\\"/g, '"');
       setFormContent(unescapedHtml);
-    } else {
-      // Create document from template
+      console.log("Using existing BM1 document:", bm1Document.id);
+    } else if (!documentCreated && !isCreatingDocument) {
+      // FIX: Only try to create if we haven't created one yet and not currently creating
+      console.log("No BM1 document found, attempting to create from template");
       createDocumentFromTemplate();
     }
-  }, [bm1Document, createDocumentFromTemplate]);
+  }, [
+    isLoadingDocuments, // FIX: Add this dependency
+    bm1Document,
+    createDocumentFromTemplate,
+    documentCreated,
+    isCreatingDocument,
+  ]);
 
   const handleEditorChange = (content: string) => {
     onContentChange(content);
@@ -178,7 +208,10 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   `;
 
   const isLoading =
-    isLoadingTemplate || isCreatingDocument || createDocumentMutation.isPending;
+    isLoadingDocuments ||
+    isLoadingTemplate ||
+    isCreatingDocument ||
+    createDocumentMutation.isPending;
 
   return (
     <div>
