@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button";
 import { FileText, ArrowRight, File } from "lucide-react";
 import { DocumentForm, DocumentProject } from "@/types/document";
 import { toast } from "sonner";
+import { Loading } from "@/components";
 
 type EditorInstance = TinyMCEEditor | null;
 
@@ -222,15 +223,20 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
             Project Summary Document
           </CardTitle>
           <CardDescription>
-            Create and edit project summary documents using templates
+            Create and edit project summary documents using templates.
           </CardDescription>
+          <div className="mt-3 p-3 rounded-md border border-blue-300 bg-blue-50 text-sm text-blue-800">
+            💡 <strong>Signing instruction:</strong> If you want to sign, please
+            upload your signature image and place it exactly where you want the
+            signature to appear in the document.
+          </div>
         </CardHeader>
 
         <CardContent className="p-0 mt-0 pt-0">
           {isLoading ? (
             <div className="flex items-center justify-center h-[800px]">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <Loading className="w-full max-w-md" />
                 <p className="text-gray-600">
                   {isCreatingDocument
                     ? "Creating document..."
@@ -254,26 +260,24 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                 width: "100%",
                 menubar: true,
                 plugins: [
-                  "advlist",
-                  "autolink",
-                  "lists",
-                  "link",
-                  "image",
-                  "charmap",
-                  "preview",
-                  "anchor",
-                  "searchreplace",
-                  "visualblocks",
-                  "code",
-                  "fullscreen",
-                  "insertdatetime",
-                  "media",
-                  "table",
-                  "help",
-                  "wordcount",
+                  "advlist autolink lists link image charmap preview anchor",
+                  "searchreplace visualblocks code fullscreen",
+                  "insertdatetime media table help wordcount",
                 ],
                 toolbar:
-                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen",
+                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | insertSignature",
+                setup: (editor) => {
+                  editor.ui.registry.addButton("insertSignature", {
+                    text: "Insert Signature",
+                    icon: "image",
+                    onAction: () => {
+                      const signatureUrl = "https://example.com/signature.png"; // URL ảnh chữ ký
+                      editor.insertContent(
+                        `<img src="${signatureUrl}" alt="Signature" style="width:150px;height:auto;" />`
+                      );
+                    },
+                  });
+                },
                 content_style: formStyles,
               }}
             />
@@ -281,7 +285,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
         </CardContent>
       </Card>
 
-      <div className="flex justify-end">
+      <div className="flex justify-end pt-4">
         <Button
           variant="outline"
           onClick={handleSave}

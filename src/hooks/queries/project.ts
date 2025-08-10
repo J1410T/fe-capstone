@@ -9,6 +9,7 @@ import {
   createProjectTag,
   updateProject,
   enrollProjectAsPrincipal,
+  getProjectByHostInstitution,
 } from "@/services/resources/project";
 import {
   CreateProjectMajorRequest,
@@ -131,5 +132,16 @@ export function useEnrollProjectAsPrincipal() {
       queryClient.invalidateQueries({ queryKey: ["project-list-filter"] });
       queryClient.invalidateQueries({ queryKey: ["my-projects"] });
     },
+  });
+}
+
+export function useProjectByHostInstitution() {
+  return useQuery({
+    queryKey: ["project-by-host-institution"],
+    queryFn: getProjectByHostInstitution,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }
