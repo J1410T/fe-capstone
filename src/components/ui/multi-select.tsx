@@ -80,10 +80,13 @@ export function MultiSelect({
                 onClick={(e) => handleRemove(option.value, e)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => {
+                onKeyDown={(e: React.KeyboardEvent<HTMLSpanElement>) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
-                    handleRemove(option.value, e as any);
+                    handleRemove(
+                      option.value,
+                      e as unknown as React.MouseEvent<HTMLSpanElement>
+                    );
                   }
                 }}
               >
