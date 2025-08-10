@@ -1,6 +1,7 @@
 import { Navigate, RouteObject } from "react-router-dom";
 import Login from "@/pages/Login";
 import StaffLogin from "@/pages/Login/StaffLogin";
+import ForgotPassword from "@/pages/Login/components/ForgotPassword";
 
 export const authRoutes: RouteObject[] = [
   {
@@ -14,5 +15,9 @@ export const authRoutes: RouteObject[] = [
   {
     path: "login-staff",
     element: <StaffLogin />,
+  },
+  {
+    path: "forgot-password",
+    element: <ForgotPassword />,
   },
 ];
