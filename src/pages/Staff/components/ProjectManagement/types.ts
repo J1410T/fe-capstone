@@ -51,6 +51,30 @@ export interface ProjectEvaluation {
   documents: ProjectDocument[];
 }
 
+export interface TeamMember {
+  name: string;
+  role: string;
+  email: string;
+  department: string;
+  cv: ProjectDocument;
+}
+
+export interface PrincipalInvestigator {
+  name: string;
+  email: string;
+  phone: string;
+  department: string;
+  position: string;
+  cv: ProjectDocument;
+}
+
+export interface ProjectRegistrationDetails {
+  projectTitle: string;
+  principalInvestigator: PrincipalInvestigator;
+  teamMembers: TeamMember[];
+  projectDocuments: ProjectDocument[];
+}
+
 export interface PIRequest {
   id: string;
   projectId: string;
@@ -64,6 +88,7 @@ export interface PIRequest {
   submittedAt: string;
   description: string;
   documents: ProjectDocument[];
+  projectRegistrationDetails?: ProjectRegistrationDetails;
 }
 
 export interface EnhancedMilestone {

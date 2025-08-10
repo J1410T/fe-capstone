@@ -8,7 +8,6 @@ import {
   FileText,
   BookOpen,
   Building2,
-  Target,
   LogOut,
   User,
   Calendar,
@@ -74,11 +73,6 @@ const data = {
           title: "Project Payments",
           url: "/staff/payments",
           icon: DollarSign,
-        },
-        {
-          title: "Milestone Review",
-          url: "/staff/milestones/management",
-          icon: Target,
         },
         {
           title: "Meeting Management",

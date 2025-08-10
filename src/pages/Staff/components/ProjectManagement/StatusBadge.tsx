@@ -1,220 +1,63 @@
 import React from "react";
-import { Badge } from "@/components/ui/badge";
-import {
-  Circle,
-  Play,
-  CheckCircle2,
-  XCircle,
-  FileEdit,
-  Send,
-  Eye,
-  Clock,
-  Loader2,
-  Award,
-  Calendar,
-} from "lucide-react";
-import { StatusType, StatusConfig } from "./types";
 
 interface StatusBadgeProps {
   status: string;
-  type?: StatusType;
-  size?: "sm" | "md" | "lg";
+  size?: string;
+  className?: string;
 }
 
 export const StatusBadge: React.FC<StatusBadgeProps> = ({
   status,
-  type = "project",
-  size = "md",
+  size = "sm",
+  className = "",
 }) => {
-  const statusConfigs = {
-    project: {
-      created: {
-        variant: "secondary" as const,
-        label: "Created",
-        icon: Circle,
-        color: "text-gray-600",
-      },
-      in_progress: {
-        variant: "default" as const,
-        label: "In Progress",
-        icon: Play,
-        color: "text-blue-600",
-      },
-      completed: {
-        variant: "outline" as const,
-        label: "Completed",
-        icon: CheckCircle2,
-        color: "text-green-600",
-      },
-      cancelled: {
-        variant: "destructive" as const,
-        label: "Cancelled",
-        icon: XCircle,
-        color: "text-red-600",
-      },
-    },
-    proposal: {
-      draft: {
-        variant: "secondary" as const,
-        label: "Draft",
-        icon: FileEdit,
-        color: "text-gray-600",
-      },
-      submitted: {
-        variant: "default" as const,
-        label: "Submitted",
-        icon: Send,
-        color: "text-blue-600",
-      },
-      approved: {
-        variant: "outline" as const,
-        label: "Approved",
-        icon: CheckCircle2,
-        color: "text-green-600",
-      },
-      rejected: {
-        variant: "destructive" as const,
-        label: "Rejected",
-        icon: XCircle,
-        color: "text-red-600",
-      },
-      under_review: {
-        variant: "secondary" as const,
-        label: "Under Review",
-        icon: Eye,
-        color: "text-orange-600",
-      },
-    },
-    clone: {
-      active: {
-        variant: "default" as const,
-        label: "Active",
-        icon: Play,
-        color: "text-blue-600",
-      },
-      pending: {
-        variant: "secondary" as const,
-        label: "Pending",
-        icon: Clock,
-        color: "text-orange-600",
-      },
-      approved: {
-        variant: "outline" as const,
-        label: "Approved",
-        icon: CheckCircle2,
-        color: "text-green-600",
-      },
-      rejected: {
-        variant: "destructive" as const,
-        label: "Rejected",
-        icon: XCircle,
-        color: "text-red-600",
-      },
-    },
-    evaluation: {
-      pending: {
-        variant: "secondary" as const,
-        label: "Pending",
-        icon: Clock,
-        color: "text-orange-600",
-      },
-      in_progress: {
-        variant: "default" as const,
-        label: "In Progress",
-        icon: Loader2,
-        color: "text-blue-600",
-      },
-      completed: {
-        variant: "outline" as const,
-        label: "Completed",
-        icon: CheckCircle2,
-        color: "text-green-600",
-      },
-    },
-    request: {
-      pending: {
-        variant: "secondary" as const,
-        label: "Pending",
-        icon: Clock,
-        color: "text-orange-600",
-      },
-      approved: {
-        variant: "outline" as const,
-        label: "Approved",
-        icon: CheckCircle2,
-        color: "text-green-600",
-      },
-      rejected: {
-        variant: "destructive" as const,
-        label: "Rejected",
-        icon: XCircle,
-        color: "text-red-600",
-      },
-    },
-    milestone: {
-      not_started: {
-        variant: "secondary" as const,
-        label: "Not Started",
-        icon: Circle,
-        color: "text-gray-600",
-      },
-      in_progress: {
-        variant: "default" as const,
-        label: "In Progress",
-        icon: Calendar,
-        color: "text-blue-600",
-      },
-      completed: {
-        variant: "outline" as const,
-        label: "Completed",
-        icon: CheckCircle2,
-        color: "text-green-600",
-      },
-      approved: {
-        variant: "outline" as const,
-        label: "Approved",
-        icon: Award,
-        color: "text-green-600",
-      },
-      rejected: {
-        variant: "destructive" as const,
-        label: "Rejected",
-        icon: XCircle,
-        color: "text-red-600",
-      },
-      pending: {
-        variant: "secondary" as const,
-        label: "Pending Review",
-        icon: Clock,
-        color: "text-orange-600",
-      },
-    },
+  const getStatusStyles = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "created":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      case "in progress":
+      case "in-progress":
+      case "in_progress":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "completed":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "cancelled":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "draft":
+        return "bg-gray-100 text-gray-800 border-gray-200";
+      case "submitted":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "approved":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "rejected":
+        return "bg-red-100 text-red-800 border-red-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
   };
 
-  const config =
-    (statusConfigs[type] as Record<string, StatusConfig>)?.[status] ||
-    statusConfigs.project.created;
-  const IconComponent = config.icon;
-
-  const sizeClasses = {
-    sm: "text-xs px-2 py-1",
-    md: "text-sm px-3 py-1",
-    lg: "text-base px-4 py-2",
-  };
-
-  const iconSizes = {
-    sm: "w-3 h-3",
-    md: "w-4 h-4",
-    lg: "w-5 h-5",
+  const getSizeStyles = (size: string) => {
+    switch (size) {
+      case "sm":
+        return "px-2 py-0.5 text-xs";
+      case "md":
+        return "px-2.5 py-1 text-sm";
+      case "lg":
+        return "px-3 py-1.5 text-base";
+      default:
+        return "px-2.5 py-0.5 text-xs";
+    }
   };
 
   return (
-    <Badge
-      variant={config.variant}
-      className={`flex items-center gap-1 ${sizeClasses[size]}`}
+    <span
+      className={`inline-flex items-center rounded-full font-medium border ${getStatusStyles(
+        status
+      )} ${getSizeStyles(size)} ${className}`}
     >
-      <IconComponent className={iconSizes[size]} />
-      {config.label}
-    </Badge>
+      {status}
+    </span>
   );
 };

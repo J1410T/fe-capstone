@@ -23,7 +23,7 @@ import {
   FieldsManagement,
   AppraisalCouncilsManagement,
   MajorsManagement,
-  StaffMilestoneManagement,
+  // StaffMilestoneManagement,
   StaffMeetings,
 } from "@/pages/Staff";
 
@@ -178,10 +178,10 @@ export const routes: RouteObject[] = [
           {
             path: "milestones",
             children: [
-              {
-                path: "management",
-                element: <StaffMilestoneManagement />,
-              },
+              // {
+              //   path: "management",
+              //   element: <StaffMilestoneManagement />,
+              // },
             ],
           },
           {
