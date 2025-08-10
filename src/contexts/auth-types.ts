@@ -1,7 +1,7 @@
 // Define user roles
 export enum UserRole {
   RESEARCHER = "Researcher",
-  APPRAISAL_COUNCIL = "Appraisal council",
+  APPRAISAL_COUNCIL = "Appraisal Council",
   HOST_INSTITUTION = "Host Institution",
   PRINCIPAL_INVESTIGATOR = "Principal Investigator",
   STAFF = "Staff",

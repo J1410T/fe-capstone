@@ -60,7 +60,7 @@ export const AppraisalCouncilModal: React.FC<AppraisalCouncilModalProps> = ({
 
   // Filter roles for Appraisal council and Chairman
   const appraisalCouncilRole = allRoles?.find(
-    (role) => role.name === "Appraisal council"
+    (role) => role.name === "Appraisal Council"
   );
   const chairmanRole = allRoles?.find((role) => role.name === "Chairman");
 

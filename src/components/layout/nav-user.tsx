@@ -48,7 +48,7 @@ export function NavUser({
       navigate("/researcher/profile");
     } else if (authUser?.role === "Host Institution") {
       navigate("/host/profile");
-    } else if (authUser?.role === "Appraisal council") {
+    } else if (authUser?.role === "Appraisal Council") {
       navigate("/council/profile");
     } else if (authUser?.role === "Staff") {
       navigate("/staff/profile");
