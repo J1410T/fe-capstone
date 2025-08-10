@@ -41,6 +41,7 @@ export * from "./breadcrumb";
 export * from "./collapsible";
 export * from "./pagination";
 export * from "./slider";
+export * from "./multi-select";
 export * from "./switch";
 
 // Loaders

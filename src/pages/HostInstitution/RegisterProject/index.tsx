@@ -35,8 +35,8 @@ const RegisterProject: React.FC = () => {
     language: "",
     category: "",
     type: "",
-    field: "",
-    major: "",
+    field: [],
+    major: [],
     tags: [],
   });
 
@@ -56,6 +56,13 @@ const RegisterProject: React.FC = () => {
   const handleSelectChange = useCallback((name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   }, []);
+
+  const handleMultiSelectChange = useCallback(
+    (name: string, value: string[]) => {
+      setFormData((prev) => ({ ...prev, [name]: value }));
+    },
+    []
+  );
 
   const handleTagsChange = useCallback((tags: string[]) => {
     setFormData((prev) => ({ ...prev, tags }));
@@ -86,8 +93,14 @@ const RegisterProject: React.FC = () => {
       { field: formData.language, message: "Language is required" },
       { field: formData.category, message: "Category is required" },
       { field: formData.type, message: "Type is required" },
-      { field: formData.field, message: "Field is required" },
-      { field: formData.major, message: "Major is required" },
+      {
+        field: formData.field.length > 0,
+        message: "At least one field is required",
+      },
+      {
+        field: formData.major.length > 0,
+        message: "At least one major is required",
+      },
     ];
 
     for (const { field, message } of requiredFields) {
@@ -135,13 +148,14 @@ const RegisterProject: React.FC = () => {
 
         const projectId = await createProjectMutation.mutateAsync(projectData);
 
-        // Step 2: Create project-major association
-        const projectMajorData = {
-          "project-id": projectId,
-          "major-id": formData.major,
-        };
-
-        await createProjectMajorMutation.mutateAsync(projectMajorData);
+        // Step 2: Create project-major associations for each selected major
+        for (const majorId of formData.major) {
+          const projectMajorData = {
+            "project-id": projectId,
+            "major-id": majorId,
+          };
+          await createProjectMajorMutation.mutateAsync(projectMajorData);
+        }
 
         // Step 3: Create project tags if any
         if (formData.tags.length > 0) {
@@ -201,6 +215,7 @@ const RegisterProject: React.FC = () => {
               formData={formData}
               onInputChange={handleInputChange}
               onSelectChange={handleSelectChange}
+              onMultiSelectChange={handleMultiSelectChange}
               onTagsChange={handleTagsChange}
               onNextStep={handleNextStep}
             />
