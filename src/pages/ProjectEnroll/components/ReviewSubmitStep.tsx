@@ -78,65 +78,6 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
   const updateDocumentMutation = useUpdateDocument();
   const createFirstEvaluationMutation = useCreateFirstEvaluation();
 
-  // Handle project submission
-  // const handleProjectSubmission = async () => {
-  //   if (!projectId || !project) {
-  //     toast.error("Project information not found");
-  //     return;
-  //   }
-
-  //   setIsSubmittingProject(true);
-  //   try {
-  //     // 1. Update project status to 'submitted'
-  //     const projectUpdateData = {
-  //       "english-title": project["english-title"],
-  //       "vietnamese-title": project["vietnamese-title"],
-  //       abbreviations: project.abbreviations,
-  //       duration: project.duration,
-  //       "start-date": project["start-date"],
-  //       "end-date": project["end-date"],
-  //       description: project.description,
-  //       "requirement-note": project["requirement-note"],
-  //       "maximum-member": project["maximum-member"] || 1,
-  //       language: project.language,
-  //       category: project.category,
-  //       type: project.type,
-  //       genre: project.genre,
-  //     };
-
-  //     await updateProjectMutation.mutateAsync({
-  //       projectId,
-  //       data: projectUpdateData,
-  //       status: "submitted",
-  //     });
-
-  //     // 2. Update all documents to 'submitted' status
-  //     if (documentsWithUserRole?.["data-list"]) {
-  //       const updatePromises = documentsWithUserRole["data-list"].map((doc) =>
-  //         updateDocumentMutation.mutateAsync({
-  //           id: doc.id,
-  //           name: doc.name,
-  //           type: doc.type,
-  //           "is-template": doc["is-template"],
-  //           "content-html": doc["content-html"],
-  //           status: "submitted",
-  //           "project-id": doc["project-id"],
-  //         })
-  //       );
-
-  //       await Promise.all(updatePromises);
-  //     }
-
-  //     // 3. Show success toast and navigate to Project Detail
-  //     toast.success("Project submitted successfully!");
-  //     navigate(`/pi/project/${projectId}`);
-  //   } catch (error) {
-  //     console.error("Failed to submit project:", error);
-  //     toast.error("Failed to submit project. Please try again.");
-  //   } finally {
-  //     setIsSubmittingProject(false);
-  //   }
-  // };
   const handleProjectSubmission = async () => {
     if (!projectId || !project) {
       toast.error("Project information not found");

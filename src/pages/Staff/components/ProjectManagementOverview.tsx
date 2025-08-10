@@ -1,525 +1,460 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { useOutletContext } from "react-router-dom";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Progress } from "@/components/ui/progress";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, FileText, Filter, Settings } from "lucide-react";
+
+// Import new modular components
+import { SimpleProjectCard } from "./ProjectManagement/ProjectCard";
+import { StatusBadge } from "./ProjectManagement/StatusBadge";
+import { PIRequestDetailView } from "./ProjectManagement/PIRequestDetailView";
+import { ProjectDetailView } from "./ProjectManagement/ProjectDetailView";
+import { MilestoneDetailView } from "./ProjectManagement/MilestoneDetailView";
+import { EvaluationDetailView } from "./ProjectManagement/EvaluationDetailView";
+import { EvaluationStageDetailView } from "./ProjectManagement/EvaluationStageDetailView";
+import { DocumentDetailView } from "./ProjectManagement/DocumentDetailView";
+import { enhancedPIRequests } from "./ProjectManagement/enhancedMockData";
 import {
-  Search,
-  ChevronDown,
-  ChevronUp,
-  Calendar,
-  FileText,
-  Building2,
-  Users,
-  CheckCircle2,
-  AlertTriangle,
-  Circle,
-  Folder,
-} from "lucide-react";
+  BreadcrumbItem,
+  createBreadcrumbItem,
+} from "./ProjectManagement/BreadcrumbNavigation";
+import {
+  SelectedMilestone,
+  SelectedEvaluation,
+  SelectedEvaluationStage,
+  SelectedDocument,
+  SelectedPIRequest,
+  LegacyProject,
+  Council,
+} from "./ProjectManagement/detailViewTypes";
 
-// Project interface based on the provided data structure
-interface Project {
-  id: string;
-  code: string;
-  "english-title": string;
-  "vietnamese-title": string;
-  language: string;
-  category: string;
-  type: string;
-  genre: string;
-  status: string;
-  progress: number;
-  "maximum-member": number;
-  "created-at": string;
-  "updated-at": string | null;
-  "creator-id": string;
-  majors: Array<{
-    id: string;
-    name: string;
-    field: {
-      id: string;
-      name: string;
-    };
-  }>;
-  "project-tags": Array<{
-    name: string;
-  }>;
+// Interface for outlet context from StaffLayout
+interface StaffLayoutContext {
+  breadcrumbItems: BreadcrumbItem[];
+  setBreadcrumbItems: React.Dispatch<React.SetStateAction<BreadcrumbItem[]>>;
 }
 
-// Mock milestone data
-interface Milestone {
-  id: string;
-  title: string;
-  scheduledDate: string;
-  status: "completed" | "ongoing" | "upcoming";
-}
-
-// Mock document data
-interface Document {
-  id: string;
-  name: string;
-  uploadedAt: string;
-}
-
-// Mock data for milestones and documents
-const mockMilestones: Record<string, Milestone[]> = {
-  "319ad3ec-7c7b-433e-9cdf-0ba9fa9b182d": [
-    { id: "1", title: "Project Proposal", scheduledDate: "2025-01-15", status: "completed" },
-    { id: "2", title: "Mid-Term Review", scheduledDate: "2025-03-15", status: "ongoing" },
-    { id: "3", title: "Final Presentation", scheduledDate: "2025-05-15", status: "upcoming" },
-  ],
-  "37262efd-0640-45bb-a5a6-148c54d9b7f6": [
-    { id: "4", title: "Research Phase", scheduledDate: "2025-02-01", status: "completed" },
-    { id: "5", title: "Development Phase", scheduledDate: "2025-04-01", status: "ongoing" },
-  ],
-};
-
-const mockDocuments: Record<string, Document[]> = {
-  "319ad3ec-7c7b-433e-9cdf-0ba9fa9b182d": [
-    { id: "1", name: "Proposal.pdf", uploadedAt: "2025-01-10" },
-    { id: "2", name: "ReviewReport.docx", uploadedAt: "2025-02-15" },
-    { id: "3", name: "TechnicalSpec.pdf", uploadedAt: "2025-03-01" },
-  ],
-  "37262efd-0640-45bb-a5a6-148c54d9b7f6": [
-    { id: "4", name: "ResearchPlan.pdf", uploadedAt: "2025-01-20" },
-    { id: "5", name: "DataAnalysis.xlsx", uploadedAt: "2025-02-28" },
-  ],
-};
-
-// Mock projects data (using the provided structure)
-const mockProjects: Project[] = [
-  {
-    id: "7a117ebd-e5c0-459f-a977-075b492a9aa1",
-    code: "PRJ015",
-    "english-title": "BookStreet - The application helps people look up information about books for Ho Chi Minh city bookstreet company",
-    "vietnamese-title": "BookStreet - Ứng dụng giúp mọi người tra cứu thông tin về sách cho công ty đường sách TP.HCM",
-    language: "Vietnamese",
-    category: "basic",
-    type: "school level",
-    genre: "proposal",
-    status: "created",
-    progress: 15,
-    "maximum-member": 6,
-    "created-at": "2025-07-18T14:50:33.66",
-    "updated-at": null,
-    "creator-id": "403c10a6-4889-49c6-b3b7-75d65572e1ee",
-    majors: [],
-    "project-tags": [],
-  },
-  {
-    id: "319ad3ec-7c7b-433e-9cdf-0ba9fa9b182d",
-    code: "PRJ002",
-    "english-title": "Science Research Project Management",
-    "vietnamese-title": "Ứng dụng quản lý đề tài khoa học",
-    language: "English",
-    category: "basic",
-    type: "school level",
-    genre: "normal",
-    status: "created",
-    progress: 45,
-    "maximum-member": 6,
-    "created-at": "2025-07-18T14:50:33.66",
-    "updated-at": null,
-    "creator-id": "5439fe48-5101-4266-a10f-afabcafb2f74",
-    majors: [
-      {
-        id: "74c32ee6-b8a6-4455-8b34-02321af11590",
-        name: "Software Engineering",
-        field: {
-          id: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6",
-          name: "Information Technology"
-        }
-      },
-      {
-        id: "b32a4b6e-3d34-4f79-a345-6b7c08e28474",
-        name: "Computer Networks & Data Communication",
-        field: {
-          id: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6",
-          name: "Information Technology"
-        }
-      }
-    ],
-    "project-tags": [
-      { name: "task management" },
-      { name: "science" },
-      { name: "research" },
-      { name: "management" },
-      { name: "project" },
-      { name: "task" },
-      { name: "project management" },
-      { name: "AI plagmarism" }
-    ],
-  },
-  {
-    id: "37262efd-0640-45bb-a5a6-148c54d9b7f6",
-    code: "PRJ001",
-    "english-title": "AI-based Learning Support System",
-    "vietnamese-title": "Hệ thống hỗ trợ học tập dùng AI",
-    language: "English",
-    category: "basic",
-    type: "school level",
-    genre: "normal",
-    status: "created",
-    progress: 75,
-    "maximum-member": 6,
-    "created-at": "2025-07-18T14:50:33.66",
-    "updated-at": null,
-    "creator-id": "5439fe48-5101-4266-a10f-afabcafb2f74",
-    majors: [
-      {
-        id: "57027f18-9e31-40e6-8df7-633bed2a0131",
-        name: "Artificial Intelligence",
-        field: {
-          id: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6",
-          name: "Information Technology"
-        }
-      },
-      {
-        id: "43933e55-b97a-4920-ae62-f1b3c3c111db",
-        name: "Psychology",
-        field: {
-          id: "cf080a69-8860-4751-91f2-c320c767dfb2",
-          name: "Social Sciences & Humanities"
-        }
-      }
-    ],
-    "project-tags": [],
-  },
-  {
-    id: "a07cbf07-c165-459c-b99f-2023cbe32653",
-    code: "PRJ007",
-    "english-title": "FUC - Capstone management system for FPT university teachers and students",
-    "vietnamese-title": "FUC - Hệ thống quản lý đồ án cho giảng viên và sinh viên của trường đại học FPT",
-    language: "English",
-    category: "basic",
-    type: "school level",
-    genre: "propose",
-    status: "created",
-    progress: 30,
-    "maximum-member": 6,
-    "created-at": "2025-07-18T14:50:33.66",
-    "updated-at": null,
-    "creator-id": "2427d29b-b64f-4315-b8b4-b0bf2f3c4cee",
-    majors: [],
-    "project-tags": [],
-  },
-];
+// Types are now imported from detailViewTypes.ts
 
 const ProjectManagementOverview: React.FC = () => {
-  const [projects] = useState<Project[]>(mockProjects);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
-  const [statusFilter] = useState<string>("all");
+  // State management
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [activeTab, setActiveTab] = useState("projects");
+  const [currentView, setCurrentView] = useState<
+    | "overview"
+    | "project-detail"
+    | "milestone-detail"
+    | "evaluation-detail"
+    | "evaluation-stage-detail"
+    | "document-detail"
+    | "pi-request-detail"
+  >("overview");
+  const [selectedProject, setSelectedProject] = useState<LegacyProject | null>(
+    null
+  );
+  const [selectedMilestone, setSelectedMilestone] =
+    useState<SelectedMilestone | null>(null);
+  const [selectedEvaluation] = useState<SelectedEvaluation | null>(null);
+  const [selectedEvaluationStage] = useState<SelectedEvaluationStage | null>(
+    null
+  );
+  const [selectedDocument] = useState<SelectedDocument | null>(null);
+  const [selectedPIRequest, setSelectedPIRequest] =
+    useState<SelectedPIRequest | null>(null);
 
+  // Get breadcrumb functions from layout context
+  const { setBreadcrumbItems } = useOutletContext<StaffLayoutContext>();
 
-  // Filter projects based on search query and status
-  const filteredProjects = useMemo(() => {
-    let filtered = projects;
+  // Initialize breadcrumbs
+  useEffect(() => {
+    if (currentView === "overview") {
+      setBreadcrumbItems([
+        createBreadcrumbItem("overview", "Projects", "overview"),
+      ]);
+    }
+  }, [currentView, setBreadcrumbItems]);
 
-    // Apply search filter
-    if (searchQuery.trim()) {
-      filtered = filtered.filter(project =>
-        project["english-title"].toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project["vietnamese-title"].toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.majors.some(major => major.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        project["project-tags"].some(tag => tag.name.toLowerCase().includes(searchQuery.toLowerCase()))
+  // Handle breadcrumb navigation events
+  useEffect(() => {
+    const handleBreadcrumbNavigate = (event: CustomEvent) => {
+      const { item } = event.detail;
+
+      // Navigate based on breadcrumb item type
+      if (item.type === "overview") {
+        // Navigate back to overview
+        setCurrentView("overview");
+        setSelectedProject(null);
+        setSelectedMilestone(null);
+        setSelectedPIRequest(null);
+      } else if (item.type === "project" && item.data) {
+        // Navigate back to project detail
+        const project = item.data as LegacyProject;
+        setSelectedProject(project);
+        setCurrentView("project-detail");
+        setSelectedMilestone(null);
+        setSelectedPIRequest(null);
+      } else if (item.type === "milestone" && item.data && selectedProject) {
+        // Navigate back to milestone detail
+        const milestone = item.data as SelectedMilestone;
+        setSelectedMilestone(milestone);
+        setCurrentView("milestone-detail");
+      } else if (item.type === "request" && item.data) {
+        // Navigate back to PI request detail
+        const piRequest = item.data as SelectedPIRequest;
+        setSelectedPIRequest(piRequest);
+        setCurrentView("pi-request-detail");
+        setSelectedProject(null);
+        setSelectedMilestone(null);
+      }
+    };
+
+    // Add event listener
+    window.addEventListener(
+      "breadcrumb-navigate",
+      handleBreadcrumbNavigate as EventListener
+    );
+
+    // Cleanup
+    return () => {
+      window.removeEventListener(
+        "breadcrumb-navigate",
+        handleBreadcrumbNavigate as EventListener
       );
-    }
-
-    // Apply status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter(project => project.status === statusFilter);
-    }
-
-    return filtered;
-  }, [projects, searchQuery, statusFilter]);
-
-  const toggleProjectExpansion = (projectId: string) => {
-    const newExpanded = new Set(expandedProjects);
-    if (newExpanded.has(projectId)) {
-      newExpanded.delete(projectId);
-    } else {
-      newExpanded.add(projectId);
-    }
-    setExpandedProjects(newExpanded);
-  };
-
-
-  const getStatusBadge = (status: string) => {
-    const statusConfig = {
-      created: { variant: "secondary" as const, label: "Created" },
-      ongoing: { variant: "default" as const, label: "In Progress" },
-      completed: { variant: "outline" as const, label: "Completed" },
-      draft: { variant: "secondary" as const, label: "Draft" },
     };
+  }, [selectedProject]);
 
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.created;
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+  // Mock projects data - using state to allow updates
+  const [projects, setProjects] = useState<LegacyProject[]>(() => {
+    return [
+      {
+        id: "319ad3ec-7c7b-433e-9cdf-0ba9fa9b182d",
+        "english-title": "Advanced Medical Diagnosis System",
+        "vietnamese-title": "Hệ thống chẩn đoán y tế tiên tiến",
+        status: "in_progress",
+        "created-at": "2025-01-15",
+        "creator-id": "user-001",
+        code: "PRJ001",
+        language: "English",
+        category: "Research",
+        type: "AI/ML",
+        genre: "propose",
+        "maximum-member": 5,
+        progress: 65,
+        "updated-at": "2025-01-20",
+        majors: [
+          { id: "major-1", name: "Computer Science" },
+          { id: "major-2", name: "Medical Technology" },
+        ],
+        "project-tags": [
+          { name: "AI" },
+          { name: "Healthcare" },
+          { name: "Machine Learning" },
+        ],
+      },
+      {
+        id: "37262efd-0640-45bb-a5a6-148c54d9b7f6",
+        "english-title": "Smart Learning Management Platform",
+        "vietnamese-title": "Nền tảng quản lý học tập thông minh",
+        status: "completed",
+        "created-at": "2025-01-10",
+        "creator-id": "user-002",
+        code: "PRJ002",
+        language: "English",
+        category: "Development",
+        type: "Web Application",
+        genre: "normal",
+        "maximum-member": 8,
+        progress: 100,
+        "updated-at": "2025-01-25",
+        majors: [
+          { id: "major-3", name: "Software Engineering" },
+          { id: "major-4", name: "Education Technology" },
+        ],
+        "project-tags": [
+          { name: "Education" },
+          { name: "Web Development" },
+          { name: "Learning Analytics" },
+        ],
+      },
+    ];
+  });
+
+  // Filter projects
+  const filteredProjects = useMemo(() => {
+    return projects.filter((project) => {
+      const matchesSearch =
+        project["english-title"]
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        project["vietnamese-title"]
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase());
+      const matchesStatus =
+        statusFilter === "all" || project.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [projects, searchTerm, statusFilter]);
+
+  // Navigation function
+  const navigateToPage = (
+    type:
+      | "project"
+      | "evaluation"
+      | "evaluation-stage"
+      | "request"
+      | "milestone"
+      | "council"
+      | "document"
+      | "pi-request",
+    data?: unknown
+  ) => {
+    if (type === "project" && data) {
+      const project = data as LegacyProject;
+      setSelectedProject(project);
+      setCurrentView("project-detail");
+      // Clear other selections
+      setSelectedMilestone(null);
+      setSelectedPIRequest(null);
+
+      setBreadcrumbItems([
+        createBreadcrumbItem("overview", "Projects", "overview"),
+        createBreadcrumbItem(
+          "project-detail",
+          project["english-title"],
+          "project",
+          project
+        ),
+      ]);
+    } else if (type === "milestone" && data && selectedProject) {
+      const milestone = data as SelectedMilestone;
+      setSelectedMilestone(milestone);
+      setCurrentView("milestone-detail");
+
+      setBreadcrumbItems([
+        createBreadcrumbItem("overview", "Projects", "overview"),
+        createBreadcrumbItem(
+          "project-detail",
+          selectedProject["english-title"],
+          "project",
+          selectedProject
+        ),
+        createBreadcrumbItem(
+          "milestone-detail",
+          milestone.title,
+          "milestone",
+          milestone
+        ),
+      ]);
+    } else if (type === "request" && data) {
+      const piRequest = data as SelectedPIRequest;
+      setSelectedPIRequest(piRequest);
+      setCurrentView("pi-request-detail");
+      // Clear other selections
+      setSelectedProject(null);
+      setSelectedMilestone(null);
+
+      setBreadcrumbItems([
+        createBreadcrumbItem("overview", "Projects", "overview"),
+        createBreadcrumbItem(
+          "pi-request-detail",
+          `PI Request - ${piRequest.projectRegistrationDetails.projectTitle}`,
+          "request",
+          piRequest
+        ),
+      ]);
+    }
   };
 
-  const getMilestoneIcon = (status: string) => {
-    switch (status) {
-      case "completed":
-        return <CheckCircle2 className="w-4 h-4 text-green-600" />;
-      case "ongoing":
-        return <AlertTriangle className="w-4 h-4 text-orange-600" />;
-      case "upcoming":
-        return <Circle className="w-4 h-4 text-gray-400" />;
+  // Handle council assignment
+  const handleAssignCouncil = (project: LegacyProject, council: Council) => {
+    // Update the projects state with the assigned council
+    setProjects((prevProjects) =>
+      prevProjects.map((p) =>
+        p.id === project.id ? { ...p, assignedCouncil: council } : p
+      )
+    );
+
+    // Update selected project if it's the one being assigned
+    if (selectedProject && selectedProject.id === project.id) {
+      setSelectedProject({ ...selectedProject, assignedCouncil: council });
+    }
+  };
+
+  // Render different detail views based on current state
+  const renderDetailView = () => {
+    switch (currentView) {
+      case "project-detail":
+        return (
+          <ProjectDetailView
+            selectedProject={selectedProject}
+            navigateToPage={navigateToPage}
+            onAssignCouncil={handleAssignCouncil}
+          />
+        );
+      case "milestone-detail":
+        return <MilestoneDetailView selectedMilestone={selectedMilestone} />;
+      case "evaluation-detail":
+        return <EvaluationDetailView selectedEvaluation={selectedEvaluation} />;
+      case "evaluation-stage-detail":
+        return (
+          <EvaluationStageDetailView
+            selectedEvaluationStage={selectedEvaluationStage}
+          />
+        );
+      case "document-detail":
+        return <DocumentDetailView selectedDocument={selectedDocument} />;
+      case "pi-request-detail":
+        return <PIRequestDetailView selectedPIRequest={selectedPIRequest} />;
       default:
-        return <Circle className="w-4 h-4 text-gray-400" />;
+        return null;
     }
   };
 
-  // Get principal investigator name (mock data for now)
-  const getPrincipalInvestigator = (creatorId: string) => {
-    // Mock PI data - in real app, this would come from API
-    const mockPIs: Record<string, string> = {
-      "403c10a6-4889-49c6-b3b7-75d65572e1ee": "Dr. Nguyen Van A",
-      "5439fe48-5101-4266-a10f-afabcafb2f74": "Dr. Tran Thi B",
-      "2427d29b-b64f-4315-b8b4-b0bf2f3c4cee": "Dr. Le Van C",
-    };
-    return mockPIs[creatorId] || "Not assigned yet";
-  };
+  if (currentView !== "overview") {
+    return renderDetailView();
+  }
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 p-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Project Management Overview</h2>
-          <p className="text-muted-foreground">
-            View and manage all projects with expandable summaries
+          <h1 className="text-3xl font-bold text-gray-900">
+            Project Management
+          </h1>
+          <p className="text-lg text-gray-600 mt-2">
+            Manage projects, proposals, evaluations, and PI requests
           </p>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Button variant="outline" size="default">
+            <Settings className="w-4 h-4 mr-2" />
+            Settings
+          </Button>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col lg:flex-row gap-4">
-        <div className="flex-1">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search projects by title, code, major, or tags..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+      <div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Search projects..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10"
+          />
         </div>
-        <div className="flex space-x-2">
-          <Badge variant="outline">
-            {filteredProjects.length} projects
-          </Badge>
-          <Badge variant="outline">
-            {projects.filter(p => p.status === "created").length} active
-          </Badge>
-          <Badge variant="outline">
-            {projects.filter(p => p.status === "completed").length} completed
-          </Badge>
-        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]">
+            <Filter className="w-4 h-4 mr-2" />
+            <SelectValue placeholder="Filter by status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="pending">Pending</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-     {/* Projects List */}
-<div className="space-y-4">
-  {filteredProjects.length === 0 ? (
-    <div className="flex flex-col items-center justify-center py-12">
-      <FileText className="w-12 h-12 text-gray-400 mb-4" />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-      <p className="text-gray-500 text-center">
-        {searchQuery ? "Try adjusting your search criteria" : "Get started by adding your first project"}
-      </p>
-    </div>
-  ) : (
-    filteredProjects.map((project) => (
-      <div key={project.id} className="mb-6 border border-gray-200 rounded-lg shadow-sm bg-white">
-        <Collapsible
-          open={expandedProjects.has(project.id)}
-          onOpenChange={() => toggleProjectExpansion(project.id)}
-        >
-          {/* Collapsed View - Default */}
-          <CollapsibleTrigger asChild>
-            <div className="cursor-pointer hover:bg-gray-50 transition-colors p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-3 mb-2">
+      {/* Main Content Tabs */}
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-6"
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="projects">Projects</TabsTrigger>
+          <TabsTrigger value="requests">PI Requests</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="projects" className="space-y-6">
+          {filteredProjects.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <FileText className="w-12 h-12 text-gray-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                No projects found
+              </h3>
+              <p className="text-base text-gray-500 text-center">
+                Try adjusting your search criteria or filters
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredProjects.map((project) => (
+                <SimpleProjectCard
+                  key={project.id}
+                  project={project}
+                  onViewDetails={() => navigateToPage("project", project)}
+                />
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="requests" className="space-y-6">
+          <div className="space-y-4">
+            {enhancedPIRequests.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <FileText className="w-12 h-12 text-gray-400 mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                  No PI requests found
+                </h3>
+                <p className="text-base text-gray-500 text-center">
+                  All requests have been processed
+                </p>
+              </div>
+            ) : (
+              enhancedPIRequests.map((request) => (
+                <div
+                  key={request.id}
+                  className="border border-gray-200 rounded-lg p-6 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+                  onClick={() => navigateToPage("request", request)}
+                >
+                  <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold truncate">
-                        {project["english-title"]}
-                      </h3>
-                      <p className="text-sm text-muted-foreground truncate mt-1">
-                        {project["vietnamese-title"]}
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="flex-1">
+                          <h4 className="text-lg font-semibold text-gray-900">
+                            {request.requestType
+                              .replace(/_/g, " ")
+                              .replace(/\b\w/g, (l: string) => l.toUpperCase())}
+                          </h4>
+                          <p className="text-base text-gray-600">
+                            Project:{" "}
+                            {request.projectRegistrationDetails?.projectTitle ||
+                              "Unknown Project"}
+                          </p>
+                        </div>
+                        <StatusBadge status={request.status} size="md" />
+                      </div>
+                      <p className="text-base text-gray-700 mb-3">
+                        {request.description}
                       </p>
-                    </div>
-                    <Badge variant="outline" className="shrink-0">
-                      {project.code}
-                    </Badge>
-                  </div>
-
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        <Building2 className="w-4 h-4" />
-                        <span>FPT University</span>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <span>Submitted: {request.submittedAt}</span>
+                        <span>•</span>
+                        <span>ID: {request.id}</span>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <Users className="w-4 h-4" />
-                        <span>PI: {getPrincipalInvestigator(project["creator-id"])}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Users className="w-4 h-4" />
-                        <span>Max {project["maximum-member"]} members</span>
-                      </div>
-                      {getStatusBadge(project.status)}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2 ml-4">
-                    {expandedProjects.has(project.id) ? (
-                      <ChevronUp className="w-5 h-5 text-gray-400" />
-                    ) : (
-                      <ChevronDown className="w-5 h-5 text-gray-400" />
-                    )}
-                  </div>
-                </div>
-              </div>
-            </CollapsibleTrigger>
-
-            {/* Expanded View - Quick Summary */}
-            <CollapsibleContent>
-              <div className="pt-0 border-t bg-gray-50/50 px-6 pb-6">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 pt-6">
-                  {/* Milestones Overview */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium flex items-center">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Milestones Overview
-                    </h4>
-                    <div className="space-y-2">
-                      {(mockMilestones[project.id] || []).slice(0, 3).map((milestone) => (
-                        <div key={milestone.id} className="flex items-center space-x-2 text-sm">
-                          {getMilestoneIcon(milestone.status)}
-                          <span className="flex-1 truncate">{milestone.title}</span>
-                          <span className="text-muted-foreground text-xs">
-                            {new Date(milestone.scheduledDate).toLocaleDateString()}
-                          </span>
-                        </div>
-                      ))}
-                      {(mockMilestones[project.id] || []).length === 0 && (
-                        <p className="text-sm text-muted-foreground">No milestones available</p>
-                      )}
-                      {(mockMilestones[project.id] || []).length > 3 && (
-                        <Button variant="link" size="sm" className="h-auto p-0 text-xs">
-                          View All Milestones
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Documents Summary */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium flex items-center">
-                      <FileText className="w-4 h-4 mr-2" />
-                      Documents Summary
-                    </h4>
-                    <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
-                        {(mockDocuments[project.id] || []).length} documents uploaded
-                      </p>
-                      {(mockDocuments[project.id] || []).slice(0, 3).map((doc) => (
-                        <div key={doc.id} className="text-sm truncate">
-                          📄 {doc.name}
-                        </div>
-                      ))}
-                      {(mockDocuments[project.id] || []).length === 0 && (
-                        <p className="text-sm text-muted-foreground">No documents available</p>
-                      )}
-                      <Button variant="link" size="sm" className="h-auto p-0 text-xs">
-                        View All Documents
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Timeline & Progress */}
-                  <div className="space-y-3">
-                    <h4 className="font-medium flex items-center">
-                      <Folder className="w-4 h-4 mr-2" />
-                      Timeline & Progress
-                    </h4>
-                    <div className="space-y-3">
-                      <div className="text-sm">
-                        <div className="flex justify-between text-muted-foreground mb-1">
-                          <span>Progress</span>
-                          <span>{project.progress}%</span>
-                        </div>
-                        <Progress value={project.progress} className="h-2" />
-                      </div>
-
-                      <div className="text-sm space-y-1">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Created:</span>
-                          <span>{new Date(project["created-at"]).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Language:</span>
-                          <span>{project.language}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Max Members:</span>
-                          <span>{project["maximum-member"]}</span>
-                        </div>
-                      </div>
-
-                      {/* Majors */}
-                      {project.majors.length > 0 && (
-                        <div className="space-y-2">
-                          <span className="text-sm font-medium">Majors:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {project.majors.slice(0, 2).map((major) => (
-                              <Badge key={major.id} variant="secondary" className="text-xs">
-                                {major.name}
-                              </Badge>
-                            ))}
-                            {project.majors.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{project.majors.length - 2} more
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Tags */}
-                      {project["project-tags"].length > 0 && (
-                        <div className="space-y-2">
-                          <span className="text-sm font-medium">Tags:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {project["project-tags"].slice(0, 3).map((tag, index) => (
-                              <Badge key={index} variant="outline" className="text-xs">
-                                {tag.name}
-                              </Badge>
-                            ))}
-                            {project["project-tags"].length > 3 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{project["project-tags"].length - 3} more
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-            </CollapsibleContent>
-        </Collapsible>
-      </div>
-    ))
-  )}
-</div>
+              ))
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

@@ -10,7 +10,6 @@ export { default as StaffDashboard } from "./components/Dashboard";
 export { default as DocumentFormsManagement } from "./components/DocumentFormsManagement";
 
 // Project Management
-export { default as StaffProjectRegistration } from "./components/RegisterProject";
 export { default as ProjectManagementOverview } from "./components/ProjectManagementOverview";
 
 // Approvals
@@ -20,9 +19,6 @@ export { default as PaymentManagement } from "./components/Transaction";
 
 // User Management
 export { default as UserAccessControl } from "./components/UsersManagement";
-
-// Milestone Management
-export { default as StaffMilestoneManagement } from "./components/MilestoneManagement";
 
 // Meeting Management
 export { default as StaffMeetings } from "./components/StaffMeetings";

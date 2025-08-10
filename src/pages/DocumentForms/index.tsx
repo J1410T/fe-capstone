@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Editor } from "@tinymce/tinymce-react";
-import html2pdf from "html2pdf.js";
 
 import {
   Dialog,
@@ -96,14 +95,6 @@ export default function DocumentForms() {
 
     const tempDiv = document.createElement("div");
     tempDiv.innerHTML = html;
-
-    html2pdf(tempDiv, {
-      margin: 0.5,
-      filename: "document-form.pdf",
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2 },
-      jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
-    });
 
     setIsPreviewOpen(false);
   };
