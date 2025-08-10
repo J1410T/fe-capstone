@@ -133,7 +133,7 @@ function Header() {
       navigate("/researcher/profile");
     } else if (currentRole === "Host Institution") {
       navigate("/host/profile");
-    } else if (currentRole === "Appraisal council") {
+    } else if (currentRole === "Appraisal Council") {
       navigate("/council/profile");
     } else if (currentRole === "Staff") {
       navigate("/staff/profile");
