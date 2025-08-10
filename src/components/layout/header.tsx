@@ -65,7 +65,7 @@ const menuItemsByRole = {
       icon: FileText,
     },
     // { name: "My Projects", path: "/host/my-projects", icon: Briefcase },
-    { name: "History", path: "/host/history", icon: History },
+    { name: "My Project", path: "/host/history", icon: History },
   ],
   [UserRole.PRINCIPAL_INVESTIGATOR]: [
     { name: "Home", path: "/home", icon: Home },
