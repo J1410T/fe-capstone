@@ -383,7 +383,7 @@ export function useUsersWithRoles(request: UserFilterRequest) {
         "Researcher",
         "Principal Investigator",
         "Staff",
-        "Appraisal council",
+        "Appraisal Council",
         "Host Institution",
       ];
 
