@@ -12,6 +12,7 @@ import {
   // ProjectItem,
   ProjectTag,
   SortOption,
+  ProjectItem,
 } from "@/types/project";
 import { axiosClient, getAccessToken } from "../api";
 
@@ -238,6 +239,34 @@ export const enrollProjectAsPrincipal = async (
     return res.data;
   } catch (error) {
     console.error("enrollProjectAsPrincipal error:", error);
+    throw error;
+  }
+};
+
+export const getProjectByHostInstitution = async (): Promise<ProjectItem[]> => {
+  try {
+    const accessToken = getAccessToken();
+    const res = await axiosClient.get(`/project/host`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    console.log("getProjectByHostInstitution full response:", res);
+    console.log("getProjectByHostInstitution response data:", res.data);
+
+    // Handle different possible response structures
+    if (Array.isArray(res.data)) {
+      return res.data;
+    } else if (res.data && Array.isArray(res.data.data)) {
+      return res.data.data;
+    } else if (res.data && Array.isArray(res.data["data-list"])) {
+      return res.data["data-list"];
+    } else {
+      console.warn("Unexpected response structure:", res.data);
+      return [];
+    }
+  } catch (error) {
+    console.error("getProjectByHostInstitution error:", error);
     throw error;
   }
 };
