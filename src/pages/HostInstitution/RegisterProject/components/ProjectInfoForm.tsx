@@ -17,11 +17,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { ArrowRight } from "lucide-react";
 import { Textarea } from "@/components/ui";
 import { useFieldList } from "@/hooks/queries/field";
-import { useMajorsByField } from "@/hooks/queries/major";
+import { useMajorsWithPagination } from "@/hooks/queries/major";
 import { FormHostRegister } from "@/types/form";
+import { MajorItem } from "@/types/major";
 import { TagInput } from "@/components/layout/TagInput";
 
 interface ProjectInfoFormProps {
@@ -30,6 +32,7 @@ interface ProjectInfoFormProps {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => void;
   onSelectChange: (name: string, value: string) => void;
+  onMultiSelectChange: (name: string, value: string[]) => void;
   onTagsChange: (tags: string[]) => void;
   onNextStep: () => void;
 }
@@ -38,18 +41,30 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
   formData,
   onInputChange,
   onSelectChange,
+  onMultiSelectChange,
   onTagsChange,
   onNextStep,
 }) => {
   const { data: fields, isLoading: fieldsLoading } = useFieldList();
-  const { data: majors, isLoading: majorsLoading } = useMajorsByField(
-    formData.field
-  );
+  const { data: majorsResponse, isLoading: majorsLoading } =
+    useMajorsWithPagination({
+      "page-index": 0,
+      "page-size": 1000, // Large page size to get all majors
+    });
 
-  const handleFieldChange = (value: string) => {
-    onSelectChange("field", value);
+  // Filter majors based on selected fields
+  const allMajors = React.useMemo(() => {
+    const allMajorsData = majorsResponse?.["data-list"] || [];
+    if (!allMajorsData || formData.field.length === 0) return [];
+    return allMajorsData.filter((major: MajorItem) =>
+      formData.field.includes(major.field?.id || "")
+    );
+  }, [majorsResponse, formData.field]);
+
+  const handleFieldChange = (value: string[]) => {
+    onMultiSelectChange("field", value);
     // Reset major selection when field changes
-    onSelectChange("major", "");
+    onMultiSelectChange("major", []);
   };
 
   return (
@@ -210,55 +225,39 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="field">Field</Label>
-              <Select
+              <MultiSelect
+                options={
+                  fieldsLoading
+                    ? []
+                    : Array.isArray(fields)
+                    ? fields.map((field) => ({
+                        value: field.id,
+                        label: field.name,
+                      }))
+                    : []
+                }
                 value={formData.field}
-                onValueChange={handleFieldChange}
-                required
-              >
-                <SelectTrigger id="field" className="w-full">
-                  <SelectValue placeholder="Select field" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fieldsLoading ? (
-                    <SelectItem value="loading" disabled>
-                      Loading...
-                    </SelectItem>
-                  ) : (
-                    Array.isArray(fields) &&
-                    fields.map((field) => (
-                      <SelectItem key={field.id} value={field.id}>
-                        {field.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+                onChange={handleFieldChange}
+                placeholder="Select fields..."
+                disabled={fieldsLoading}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="major">Major</Label>
-              <Select
+              <MultiSelect
+                options={
+                  majorsLoading
+                    ? []
+                    : allMajors.map((major) => ({
+                        value: major.id,
+                        label: major.name,
+                      }))
+                }
                 value={formData.major}
-                onValueChange={(value) => onSelectChange("major", value)}
-                disabled={!formData.field || majorsLoading}
-                required
-              >
-                <SelectTrigger id="major" className="w-full">
-                  <SelectValue placeholder="Select major" />
-                </SelectTrigger>
-                <SelectContent>
-                  {majorsLoading ? (
-                    <SelectItem value="loading" disabled>
-                      Loading...
-                    </SelectItem>
-                  ) : (
-                    majors?.map((major) => (
-                      <SelectItem key={major.id} value={major.id}>
-                        {major.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
+                onChange={(value) => onMultiSelectChange("major", value)}
+                placeholder="Select majors..."
+                disabled={formData.field.length === 0 || majorsLoading}
+              />
             </div>
           </div>
 

@@ -10,8 +10,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle, Tag } from "lucide-react";
 import { useFieldList } from "@/hooks/queries/field";
-import { useMajorsByField } from "@/hooks/queries/major";
+import { useMajorsWithPagination } from "@/hooks/queries/major";
 import { FormHostRegister } from "@/types/form";
+import { MajorItem } from "@/types/major";
 
 interface ReviewFormProps {
   formData: FormHostRegister;
@@ -27,16 +28,37 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
   isLoading = false,
 }) => {
   const { data: fields } = useFieldList();
-  const { data: majors } = useMajorsByField(formData.field);
+  const { data: majorsResponse } = useMajorsWithPagination({
+    "page-index": 0,
+    "page-size": 1000, // Large page size to get all majors
+  });
 
-  const getFieldName = (fieldId: string) => {
-    const field = Array.isArray(fields) && fields.find((f) => f.id === fieldId);
-    return field ? field.name : fieldId;
+  // Filter majors based on selected fields for display
+  const allMajors = React.useMemo(() => {
+    const allMajorsData = majorsResponse?.["data-list"] || [];
+    if (!allMajorsData) return [];
+    return allMajorsData.filter((major: MajorItem) =>
+      formData.field.includes(major.field?.id || "")
+    );
+  }, [majorsResponse, formData.field]);
+
+  const getFieldNames = (fieldIds: string[]) => {
+    if (!Array.isArray(fields)) return fieldIds.join(", ");
+    return fieldIds
+      .map((id) => {
+        const field = fields.find((f) => f.id === id);
+        return field ? field.name : id;
+      })
+      .join(", ");
   };
 
-  const getMajorName = (majorId: string) => {
-    const major = majors?.find((m) => m.id === majorId);
-    return major ? major.name : majorId;
+  const getMajorNames = (majorIds: string[]) => {
+    return majorIds
+      .map((id) => {
+        const major = allMajors.find((m) => m.id === id);
+        return major ? major.name : id;
+      })
+      .join(", ");
   };
 
   return (
@@ -98,12 +120,16 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
               <p className="text-base">{formData.type}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Field</p>
-              <p className="text-base">{getFieldName(formData.field)}</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Fields
+              </p>
+              <p className="text-base">{getFieldNames(formData.field)}</p>
             </div>
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Major</p>
-              <p className="text-base">{getMajorName(formData.major)}</p>
+              <p className="text-sm font-medium text-muted-foreground">
+                Majors
+              </p>
+              <p className="text-base">{getMajorNames(formData.major)}</p>
             </div>
           </div>
 

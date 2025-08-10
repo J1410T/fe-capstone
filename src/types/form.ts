@@ -9,7 +9,7 @@ export interface FormHostRegister {
   language: string;
   category: string;
   type: string;
-  field: string;
-  major: string;
+  field: string[];
+  major: string[];
   tags: string[];
 }
