@@ -300,7 +300,11 @@ export const routes: RouteObject[] = [
         children: [
           {
             index: true,
-            element: <Navigate to="/host/my-projects" replace />,
+            element: <Navigate to="/host/history" replace />,
+          },
+          {
+            path: "my-projects",
+            element: <ProjectHistory />,
           },
           {
             path: "register-project",

@@ -1,248 +1,513 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQueries } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Progress } from "@/components/ui/progress";
+import { Search, Briefcase, ArrowUpDown, Eye } from "lucide-react";
+import { useProjectListFilter } from "@/hooks/queries/project";
+import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "@/components/ui/loaders";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, BarChart } from "lucide-react";
-import { HistoryHeader, ProjectListTab, StatisticsTab } from "./components";
+import type { ProjectItem } from "@/types/project";
+import { getUserRoleById } from "@/services/resources/auth";
+import type { UserRole } from "@/types/auth";
 
-// Mock data for historical projects
-const historicalProjects = [
-  {
-    id: 1,
-    title: "AI-Driven Healthcare Solutions",
-    pi: "Dr. Jane Smith",
-    department: "Computer Science",
-    year: "2023",
-    budget: "$120,000",
-    status: "Completed",
-    completionRate: 100,
-    reports: "Complete",
-  },
-  {
-    id: 2,
-    title: "Sustainable Energy Research",
-    pi: "Dr. Michael Johnson",
-    department: "Engineering",
-    year: "2023",
-    budget: "$85,000",
-    status: "Suspended",
-    completionRate: 45,
-    reports: "Missing",
-  },
-  {
-    id: 3,
-    title: "Market Analysis Framework",
-    pi: "Dr. Sarah Williams",
-    department: "Business",
-    year: "2022",
-    budget: "$75,000",
-    status: "Completed",
-    completionRate: 100,
-    reports: "Complete",
-  },
-  {
-    id: 4,
-    title: "Urban Planning Innovations",
-    pi: "Dr. Robert Chen",
-    department: "Architecture",
-    year: "2022",
-    budget: "$90,000",
-    status: "Completed",
-    completionRate: 100,
-    reports: "Complete",
-  },
-  {
-    id: 5,
-    title: "Quantum Computing Applications",
-    pi: "Dr. Emily Davis",
-    department: "Computer Science",
-    year: "2021",
-    budget: "$150,000",
-    status: "Completed",
-    completionRate: 100,
-    reports: "Complete",
-  },
-  {
-    id: 6,
-    title: "Renewable Materials Development",
-    pi: "Dr. James Wilson",
-    department: "Engineering",
-    year: "2021",
-    budget: "$110,000",
-    status: "Suspended",
-    completionRate: 60,
-    reports: "Incomplete",
-  },
-  {
-    id: 7,
-    title: "Consumer Behavior Analysis",
-    pi: "Dr. Lisa Thompson",
-    department: "Business",
-    year: "2021",
-    budget: "$65,000",
-    status: "Completed",
-    completionRate: 100,
-    reports: "Complete",
-  },
-  {
-    id: 8,
-    title: "Sustainable Architecture Designs",
-    pi: "Dr. David Lee",
-    department: "Architecture",
-    year: "2020",
-    budget: "$95,000",
-    status: "Completed",
-    completionRate: 100,
-    reports: "Complete",
-  },
-  {
-    id: 9,
-    title: "Machine Learning for Finance",
-    pi: "Dr. Amanda Brown",
-    department: "Computer Science",
-    year: "2020",
-    budget: "$130,000",
-    status: "Completed",
-    completionRate: 100,
-    reports: "Complete",
-  },
-  {
-    id: 10,
-    title: "Nanotechnology Applications",
-    pi: "Dr. Thomas White",
-    department: "Engineering",
-    year: "2020",
-    budget: "$180,000",
-    status: "Suspended",
-    completionRate: 30,
-    reports: "Missing",
-  },
-];
+// Custom hook for Host Institution project access control with two-step verification
+const useHostInstitutionProjects = () => {
+  const { user } = useAuth();
+  console.log("Debug: Authenticated user from useAuth()", user);
 
-// Mock data for statistics
-const yearlyStats = [
-  { year: "2020", completed: 2, suspended: 1, total: 3, budget: 405000 },
-  { year: "2021", completed: 2, suspended: 1, total: 3, budget: 325000 },
-  { year: "2022", completed: 2, suspended: 0, total: 2, budget: 165000 },
-  { year: "2023", completed: 1, suspended: 1, total: 2, budget: 205000 },
-];
-
-const departmentStats = [
-  { name: "Computer Science", value: 4, color: "#3b82f6" },
-  { name: "Engineering", value: 3, color: "#10b981" },
-  { name: "Business", value: 2, color: "#f59e0b" },
-  { name: "Architecture", value: 1, color: "#8b5cf6" },
-];
-
-const statusStats = [
-  { name: "Completed", value: 7, color: "#10b981" },
-  { name: "Suspended", value: 3, color: "#ef4444" },
-];
-
-const reportStats = [
-  { name: "Complete", value: 7, color: "#10b981" },
-  { name: "Incomplete", value: 1, color: "#f59e0b" },
-  { name: "Missing", value: 2, color: "#ef4444" },
-];
-
-const ProjectHistory: React.FC = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState<string>("all");
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("all");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [activeTab, setActiveTab] = useState("list");
-
-  const handleExportData = (format: string) => {
-    setIsLoading(true);
-    console.log("Exporting data in format:", format);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Show success message
-    }, 1500);
-  };
-
-  const filteredProjects = historicalProjects.filter((project) => {
-    const matchesSearch =
-      project.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.pi.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      project.department.toLowerCase().includes(searchTerm.toLowerCase());
-
-    const matchesYear = selectedYear === "all" || project.year === selectedYear;
-    const matchesDepartment =
-      selectedDepartment === "all" || project.department === selectedDepartment;
-    const matchesStatus =
-      selectedStatus === "all" || project.status === selectedStatus;
-
-    return matchesSearch && matchesYear && matchesDepartment && matchesStatus;
+  // Fetch all projects using project list filter
+  const {
+    data: projectsResponse,
+    isLoading: projectsLoading,
+    error: projectsError,
+  } = useProjectListFilter({
+    searchTerm: "",
+    selectedStatus: "all",
+    selectedField: "all",
+    selectedMajor: "all",
+    selectedCategory: "all",
+    selectedType: "all",
+    selectedSort: "latest",
+    tags: [],
+    currentPage: 1,
+    pageSize: 1000,
   });
 
+  // Extract unique creator IDs from projects
+  const creatorIds = useMemo(() => {
+    const projects = projectsResponse?.["data-list"] || [];
+    const allCreatorIds = projects
+      .map((project: ProjectItem) => project["creator-id"])
+      .filter(Boolean);
+    return Array.from(new Set(allCreatorIds));
+  }, [projectsResponse]);
+
+  // Fetch user role information for each creator ID
+  const userRoleQueries = useQueries({
+    queries: creatorIds.map((creatorId) => ({
+      queryKey: ["user-role-by-id", creatorId],
+      queryFn: () => getUserRoleById(creatorId),
+      enabled: !!creatorId,
+      staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+      retry: 1,
+    })),
+  });
+
+  // Create a map of creator-id to user role data for efficient lookup
+  const creatorToUserRoleMap = useMemo(() => {
+    const map = new Map<string, UserRole>();
+
+    userRoleQueries.forEach((query, index) => {
+      if (query.data && !query.isLoading && !query.error) {
+        const creatorId = creatorIds[index];
+        const userRole = query.data as UserRole;
+        if (creatorId) {
+          map.set(creatorId, userRole);
+        }
+        console.log("Debug: Creator ID to User Role Mapping", {
+          creatorId,
+          userRole,
+        });
+      }
+    });
+
+    return map;
+  }, [userRoleQueries, creatorIds]);
+
+  // Determine loading and error states
+  const isLoadingUserRoles = userRoleQueries.some((query) => query.isLoading);
+  const isLoading = projectsLoading || isLoadingUserRoles;
+  const error = projectsError || userRoleQueries.find((q) => q.error)?.error;
+
+  // Apply two-step verification process
+  const projects = useMemo(() => {
+    if (!user?.id) {
+      console.log("Debug: No authenticated user ID available");
+      return [];
+    }
+
+    const rawProjects = projectsResponse?.["data-list"] || [];
+    console.log("Debug: Starting two-step verification", {
+      totalRawProjects: rawProjects.length,
+      authenticatedUserId: user.id,
+      creatorRoleMapSize: creatorToUserRoleMap.size,
+    });
+
+    // Filter projects based on two-step verification
+    const filteredProjects = rawProjects.filter((project: ProjectItem) => {
+      const creatorId = project["creator-id"];
+
+      if (!creatorId) {
+        console.log("Debug: Project missing creator-id", {
+          projectId: project.id,
+          projectTitle: project["english-title"],
+        });
+        return false;
+      }
+
+      // Step 1: Get user role data for this creator-id
+      const userRole = creatorToUserRoleMap.get(creatorId);
+
+      if (!userRole) {
+        console.log("Debug: No user role found for creator-id", {
+          projectId: project.id,
+          projectTitle: project["english-title"],
+          creatorId,
+          note: "getUserRoleById(creator-id) may have failed or is still loading",
+        });
+        return false;
+      }
+
+      // Step 2: Verify Host Institution role and account-id match
+      const isHostInstitution = userRole.name === "Host Institution";
+      const accountMatches = userRole["account-id"] === user.id;
+      const hasAccess = isHostInstitution && accountMatches;
+
+      console.log("Debug: Two-step verification result", {
+        projectId: project.id,
+        projectTitle: project["english-title"],
+        creatorId,
+        userRoleName: userRole.name,
+        userRoleAccountId: userRole["account-id"],
+        authenticatedUserId: user.id,
+        step1_isHostInstitution: isHostInstitution,
+        step2_accountMatches: accountMatches,
+        finalAccessGranted: hasAccess,
+        verificationDetails: {
+          roleNameCheck: `"${userRole.name}" === "Host Institution" = ${isHostInstitution}`,
+          accountIdCheck: `"${userRole["account-id"]}" === "${user.id}" = ${accountMatches}`,
+        },
+      });
+
+      return hasAccess;
+    });
+
+    console.log("Debug: Two-step verification complete", {
+      totalRawProjects: rawProjects.length,
+      totalFilteredProjects: filteredProjects.length,
+      accessControlSummary: {
+        projectsWithCreatorId: rawProjects.filter((p) => p["creator-id"])
+          .length,
+        projectsWithUserRoleData: rawProjects.filter(
+          (p) => p["creator-id"] && creatorToUserRoleMap.has(p["creator-id"])
+        ).length,
+        projectsWithHostInstitutionRole: rawProjects.filter((p) => {
+          const role = p["creator-id"]
+            ? creatorToUserRoleMap.get(p["creator-id"])
+            : null;
+          return role?.name === "Host Institution";
+        }).length,
+        finalAuthorizedProjects: filteredProjects.length,
+      },
+    });
+
+    return filteredProjects;
+  }, [projectsResponse, user?.id, creatorToUserRoleMap]);
+
+  return {
+    projects,
+    isLoading,
+    error,
+  };
+};
+
+const ProjectHistory: React.FC = () => {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [categoryFilter, setCategoryFilter] = useState("All");
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("englishTitle");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Use the sophisticated filtering hook
+  const { projects, isLoading, error } = useHostInstitutionProjects();
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "active":
+      case "approved":
+        return "text-emerald-700 border-emerald-200 bg-emerald-50";
+      case "completed":
+      case "finished":
+        return "text-indigo-700 border-indigo-200 bg-indigo-50";
+      case "created":
+      case "planning":
+        return "text-blue-700 border-blue-200 bg-blue-50";
+      case "on hold":
+      case "suspended":
+        return "text-orange-700 border-orange-200 bg-orange-50";
+      case "rejected":
+        return "text-red-700 border-red-200 bg-red-50";
+      default:
+        return "text-gray-700 border-gray-200 bg-gray-50";
+    }
+  };
+
+  const filteredProjects = projects
+    .filter((project) => {
+      const matchesSearch =
+        project["english-title"]
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        project["vietnamese-title"]
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (project.description
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ??
+          false);
+
+      const matchesStatus =
+        statusFilter === "All" || project.status === statusFilter;
+      const matchesCategory =
+        categoryFilter === "All" || project.category === categoryFilter;
+      const matchesType = typeFilter === "All" || project.type === typeFilter;
+
+      return matchesSearch && matchesStatus && matchesCategory && matchesType;
+    })
+    .sort((a, b) => {
+      let aValue: string = "";
+      let bValue: string = "";
+
+      if (sortBy === "englishTitle") {
+        aValue = a["english-title"];
+        bValue = b["english-title"];
+      } else if (sortBy === "vietnameseTitle") {
+        aValue = a["vietnamese-title"];
+        bValue = b["vietnamese-title"];
+      } else if (sortBy === "createdAt") {
+        aValue = a["created-at"];
+        bValue = b["created-at"];
+      } else {
+        aValue = String(a[sortBy as keyof typeof a] ?? "");
+        bValue = String(b[sortBy as keyof typeof b] ?? "");
+      }
+
+      return sortOrder === "asc"
+        ? aValue.localeCompare(bValue)
+        : bValue.localeCompare(aValue);
+    });
+
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
+  };
+
+  const handleViewProject = (id: string) => {
+    navigate(`/host/project/${id}`);
+  };
+
+  const uniqueStatuses = Array.from(new Set(projects.map((p) => p.status)));
+  const uniqueCategories = Array.from(new Set(projects.map((p) => p.category)));
+  const uniqueTypes = Array.from(new Set(projects.map((p) => p.type)));
+
+  const formatDate = (dateString: string) =>
+    new Date(dateString).toLocaleDateString();
+  const capitalize = (str: string) =>
+    str.charAt(0).toUpperCase() + str.slice(1);
+
   if (isLoading) {
-    return <Loading />;
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loading className="w-full max-w-md" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <div className="text-red-600 mb-2">Error loading projects</div>
+        <p className="text-muted-foreground">Please try again later</p>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/30">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-7xl">
-        <div className="space-y-4 sm:space-y-6">
-          <HistoryHeader onExportData={handleExportData} />
-
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <div className="w-full overflow-x-auto">
-              <TabsList className="flex w-full h-auto min-h-[40px] p-1 gap-1 bg-muted rounded-lg justify-start">
-                <TabsTrigger
-                  value="list"
-                  className="flex-1 min-w-[120px] text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
-                >
-                  <FileText className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Project List</span>
-                  <span className="sm:hidden">List</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="stats"
-                  className="flex-1 min-w-[120px] text-xs sm:text-sm px-3 sm:px-4 py-2 whitespace-nowrap data-[state=active]:bg-background data-[state=active]:text-foreground"
-                >
-                  <BarChart className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
-                  <span className="hidden sm:inline">Statistics</span>
-                  <span className="sm:hidden">Stats</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <div className="mt-4 sm:mt-6">
-              {/* Project List Tab */}
-              <TabsContent value="list" className="space-y-4 mt-0">
-                <ProjectListTab
-                  projects={filteredProjects}
-                  searchTerm={searchTerm}
-                  onSearchChange={setSearchTerm}
-                  selectedYear={selectedYear}
-                  onYearChange={setSelectedYear}
-                  selectedDepartment={selectedDepartment}
-                  onDepartmentChange={setSelectedDepartment}
-                  selectedStatus={selectedStatus}
-                  onStatusChange={setSelectedStatus}
-                />
-              </TabsContent>
-
-              {/* Statistics Tab */}
-              <TabsContent value="stats" className="space-y-4 mt-0">
-                <StatisticsTab
-                  yearlyStats={yearlyStats}
-                  departmentStats={departmentStats}
-                  statusStats={statusStats}
-                  reportStats={reportStats}
-                />
-              </TabsContent>
-            </div>
-          </Tabs>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Project History</h1>
+          <p className="text-muted-foreground">
+            View and manage projects you've created as Host Institution
+          </p>
         </div>
       </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filter & Search</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search projects..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Status</SelectItem>
+                {uniqueStatuses.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {capitalize(status)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Categories</SelectItem>
+                {uniqueCategories.map((category) => (
+                  <SelectItem key={category} value={category}>
+                    {capitalize(category)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Filter by type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="All">All Types</SelectItem>
+                {uniqueTypes.map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {capitalize(type)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Projects Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Projects ({filteredProjects.length})</CardTitle>
+          <CardDescription>
+            Projects you've created and their current status
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      onClick={() => handleSort("englishTitle")}
+                      className="hover:bg-transparent p-0 h-auto font-medium"
+                    >
+                      Project Title
+                      <ArrowUpDown className="ml-2 h-4 w-4" />
+                    </Button>
+                  </TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Progress</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProjects.map((project) => (
+                  <TableRow key={project.id}>
+                    <TableCell className="font-medium">
+                      <div className="max-w-[330px]">
+                        <div className="font-semibold truncate">
+                          {project["english-title"]}
+                        </div>
+                        <div className="text-sm text-muted-foreground truncate">
+                          {project["vietnamese-title"]}
+                        </div>
+                        {project.description && (
+                          <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {project.description}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {project.category?.includes("application")
+                          ? "Application"
+                          : capitalize(project.category)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {capitalize(project.type)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={getStatusColor(project.status)}
+                      >
+                        {capitalize(project.status)}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Progress
+                          value={project.progress || 0}
+                          className="w-16 h-2"
+                        />
+                        <span className="text-sm text-muted-foreground">
+                          {project.progress || 0}%
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        {formatDate(project["created-at"])}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewProject(project.id)}
+                        >
+                          View
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {filteredProjects.length === 0 && (
+            <div className="text-center py-8">
+              <Briefcase className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No projects found</h3>
+              <p className="text-muted-foreground mb-4">
+                {searchTerm ||
+                statusFilter !== "All" ||
+                categoryFilter !== "All" ||
+                typeFilter !== "All"
+                  ? "Try adjusting your search criteria"
+                  : "No projects found that match your Host Institution account"}
+              </p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
