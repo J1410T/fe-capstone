@@ -22,7 +22,10 @@ export const getProjectListFilter = async (
     const accessToken = getAccessToken();
     const res = await axiosClient.post<ProjectFilterResponse>(
       `/project/filter`,
-      params,
+      {
+        ...params,
+        genres: ["normal", "propose"],
+      },
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -30,6 +33,7 @@ export const getProjectListFilter = async (
         },
       }
     );
+    console.log("params project filter:", params);
     return res.data;
   } catch (error) {
     console.error("getProjectListFilter error:", error);

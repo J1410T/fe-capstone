@@ -48,17 +48,20 @@ export function ActionButtons({
           return (
             <Button
               key={index}
-              variant={
-                action.variant === "destructive" ? "destructive" : "ghost"
-              }
+              variant="ghost"
               size={size}
               onClick={action.onClick}
               disabled={action.disabled}
               className={cn(
-                "h-8 w-8 p-0",
+                "h-8 w-8 p-0 hover:scale-105 transition-transform",
                 action.variant === "destructive" &&
-                  "text-red-600 hover:text-red-700"
+                  "text-red-600 hover:text-red-700 hover:bg-red-50",
+                action.label === "View Details" &&
+                  "text-blue-600 hover:text-blue-700 hover:bg-blue-50",
+                action.label === "Edit" &&
+                  "text-green-600 hover:text-green-700 hover:bg-green-50"
               )}
+              title={action.label}
             >
               {Icon && <Icon className="w-4 h-4" />}
             </Button>

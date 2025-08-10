@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import {
   FileText,
-  Download,
+  // Download,
   Eye,
   FolderOpen,
   Upload,
@@ -126,10 +126,10 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
     setShowViewDialog(true);
   };
 
-  const handleDownloadDocument = (document: DocumentWithUserRole) => {
-    console.log("Download", document.name);
-    // TODO: implement actual download
-  };
+  // const handleDownloadDocument = (document: DocumentWithUserRole) => {
+  //   console.log("Download", document.name);
+  //   // TODO: implement actual download
+  // };
 
   const handleUploadScientificCV = () => {
     setShowUploadConfirmDialog(true);
@@ -149,16 +149,15 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
     try {
       // Check for existing ScienceCV document with matching account-id
       const existingScienceCVDoc = documents.find(
-        (doc) =>
-          doc.type === "ScienceCV" && doc["account-id"] === myAccountInfo.id
+        (doc) => doc.type === "BM2" && doc["account-id"] === myAccountInfo.id
       );
 
       if (existingScienceCVDoc) {
         // Update existing document
         await updateDocument.mutateAsync({
           id: existingScienceCVDoc.id,
-          name: scientificCV.data.name,
-          type: scientificCV.data.type,
+          name: "Scientific CV",
+          type: "BM2",
           "is-template": scientificCV.data["is-template"],
           "content-html": scientificCV.data["content-html"],
           "project-id": projectId,
@@ -169,8 +168,8 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
       } else {
         // Create new document
         await createDocument.mutateAsync({
-          name: scientificCV.data.name,
-          type: scientificCV.data.type,
+          name: "Scientific CV",
+          type: "BM2",
           "is-template": scientificCV.data["is-template"],
           "content-html": scientificCV.data["content-html"],
           "project-id": projectId,
@@ -292,13 +291,13 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
                           <Eye className="w-3 h-3 mr-1" />
                           <span className="hidden sm:inline">View</span>
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleDownloadDocument(document)}
                         >
                           <Download className="w-3 h-3" />
-                        </Button>
+                        </Button> */}
                       </div>
                     </TableCell>
                   </TableRow>
