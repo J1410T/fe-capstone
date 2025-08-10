@@ -10,6 +10,3 @@ export * from "./useAuth";
 
 // Document hooks
 export * from "./useDocuments";
-
-// CV Request hooks
-export * from "./useCVRequests";

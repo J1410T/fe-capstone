@@ -15,9 +15,7 @@ import {
   Edit,
   Save,
   X,
-  Camera,
   Shield,
-  // Clock,
   Star,
   Award,
   BookOpen,
@@ -25,6 +23,9 @@ import {
   Globe,
   Facebook,
   Linkedin,
+  Activity,
+  Lightbulb,
+  // Check,
 } from "lucide-react";
 import { format } from "date-fns";
 import { validateEmail, validateRequired } from "@/utils";
@@ -212,8 +213,6 @@ const Profile: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          {/* <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p> */}
           <Loading className="w-full max-w-md" />
         </div>
       </div>
@@ -238,14 +237,6 @@ const Profile: React.FC = () => {
                       .join("")}
                   </AvatarFallback>
                 </Avatar>
-                {isEditing && (
-                  <Button
-                    size="sm"
-                    className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full p-0 bg-white hover:bg-gray-50 text-gray-700 shadow-lg border-2 border-white"
-                  >
-                    <Camera className="w-5 h-5" />
-                  </Button>
-                )}
               </div>
 
               {/* User Info */}
@@ -319,6 +310,7 @@ const Profile: React.FC = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                {/* Identity Code */}
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
                   <span className="text-gray-600 font-medium">
                     Identity Code
@@ -327,23 +319,64 @@ const Profile: React.FC = () => {
                     {user.identityCode || "N/A"}
                   </span>
                 </div>
-                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
-                  <span className="text-gray-600 font-medium">Status</span>
-                  <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
-                    {user.status?.charAt(0).toUpperCase() +
-                      user.status?.slice(1) || "Active"}
-                  </Badge>
-                </div>
-                {user.createTime && (
-                  <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+
+                {/* Current Role */}
+                {/* <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-100">
+                  <span className="text-gray-600 font-medium">
+                    Current Role
+                  </span>
+                  <span className="font-bold text-gray-800">
+                    {user.|| "Member"}
+                  </span>
+                </div> */}
+
+                {/* PI Request */}
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 space-y-2">
+                  <div className="flex items-center justify-between">
                     <span className="text-gray-600 font-medium">
-                      Member Since
+                      PI Request
                     </span>
-                    <span className="font-bold text-gray-800">
-                      {format(new Date(user.createTime), "MMM yyyy")}
-                    </span>
+                    {/* {user.roleRequestStatus === "approved" ? (
+                      <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        Approved
+                      </Badge>
+                    ) : user.roleRequestStatus === "pending" ? (
+                      <Badge className="bg-yellow-100 text-yellow-700 border border-yellow-200">
+                        Pending
+                      </Badge>
+                    ) : (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          // TODO: Call API để gửi request làm PI
+                          // setUser({ ...user, roleRequestStatus: "pending" });
+                        }}
+                      >
+                        Request PI
+                      </Button>
+                    )} */}
                   </div>
-                )}
+
+                  {/* Instruction */}
+                  <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <span className="mt-0.5">
+                      <Lightbulb className="w-4 h-4 text-yellow-500" />
+                    </span>
+                    <p className="text-sm text-yellow-800">
+                      If you want to enroll in any project, you must request PI
+                      first. Only PI members can enroll in projects.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Info when approved */}
+                {/* {user.roleRequestStatus === "approved" && (
+                <div className="text-sm text-emerald-700 bg-emerald-50 border border-emerald-200 rounded p-2">
+                  <Check className="w-4 h-4 mr-2 inline-block" />
+                  You have been added as PI. You can switch your role from the
+                  avatar menu.
+                </div>
+                 )}  */}
               </CardContent>
             </Card>
 
@@ -447,8 +480,9 @@ const Profile: React.FC = () => {
 
             {/* Personal Information */}
             <Card className="border-0 shadow-lg bg-white">
-              <CardHeader className="bg-gray-50 rounded-t-lg border-b border-gray-100">
-                <CardTitle className="text-xl font-bold text-gray-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
+                  <User className="w-5 h-5 text-emerald-600" />
                   Personal Information
                 </CardTitle>
               </CardHeader>
@@ -764,8 +798,9 @@ const Profile: React.FC = () => {
 
             {/* Account Activity */}
             <Card className="border-0 shadow-lg bg-white">
-              <CardHeader className="bg-gray-50 rounded-t-lg border-b border-gray-100">
-                <CardTitle className="text-xl font-bold text-gray-800">
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-gray-800">
+                  <Activity className="w-5 h-5 text-emerald-600" />
                   Account Activity
                 </CardTitle>
               </CardHeader>
