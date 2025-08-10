@@ -14,7 +14,7 @@ import { toast } from "sonner";
 
 import { LogIn, Shield } from "lucide-react";
 import GoogleAuthentication from "./components/GoogleAuthentication";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { axiosClient } from "@/services/api";
 import { AuthResponse } from "@/types/auth";
 import { setAuthResponse } from "@/utils/cookie-manager";
@@ -144,6 +144,14 @@ export function StaffLoginForm({
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
+            </div>
+            <div className="text-right">
+              <Link
+                to="/auth/forgot-password"
+                className="text-sm text-red-500 hover:text-red-400 hover:underline font-medium"
+              >
+                Forgot your password?
+              </Link>
             </div>
             <Button
               type="button"

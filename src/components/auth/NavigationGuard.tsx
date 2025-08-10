@@ -46,6 +46,7 @@ const NavigationGuard: React.FC = () => {
   const publicRoutes = [
     "/auth/login",
     "/auth/login-staff",
+    "/auth/forgot-password",
     "/unauthorized",
     "/auth",
   ];

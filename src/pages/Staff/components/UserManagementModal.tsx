@@ -68,7 +68,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
       "Researcher",
       "Principal Investigator",
       "Staff",
-      "Appraisal council",
+      "Appraisal Council",
       "Host Institution",
     ],
     []
