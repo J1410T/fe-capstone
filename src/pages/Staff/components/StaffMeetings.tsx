@@ -371,7 +371,7 @@ const StaffMeetings: React.FC = () => {
                   Bulk Create
                 </Button>
               </DialogTrigger>
-              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Bulk Meeting Creation</DialogTitle>
                   <DialogDescription>

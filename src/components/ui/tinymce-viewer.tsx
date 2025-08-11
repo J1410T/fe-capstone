@@ -12,12 +12,14 @@ export const TinyMCEViewer: React.FC<TinyMCEViewerProps> = ({
   content,
   height = 400,
   className = "",
-  apiKey = "your-tinymce-api-key",
+  apiKey,
 }) => {
+  const defaultApiKey = import.meta.env.VITE_TINYMCE_API_KEY;
+  const editorApiKey = apiKey || defaultApiKey;
   return (
     <div className={`border rounded-lg ${className}`}>
       <Editor
-        apiKey={apiKey}
+        apiKey={editorApiKey}
         value={content}
         init={{
           height,
