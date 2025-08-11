@@ -1,296 +1,238 @@
-import React from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import React, { useState } from "react";
 import {
   Accordion,
-  AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  AccordionContent,
 } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import {
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  Plus,
-  User,
-  Bot,
-  FileText,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  EvaluationStage,
-  EvaluationSummary,
-  IndividualEvaluation,
-} from "@/types/task";
+import { CalendarDays, CheckCircle2, Clock, AlertCircle } from "lucide-react";
+import { EvaluationStage, EvaluationSummary } from "@/types/task";
+
+const mockEvaluations = [
+  {
+    id: "d921b763-7f62-4b1f-8368-07f7b017774a",
+    code: "EVA-SRPM01082025",
+    title: "Đánh Giá Đề Cương",
+    createDate: "2025-08-01T18:05:19.86",
+    status: "created",
+    evaluationStages: [
+      {
+        id: "6ec036a3-b0a3-4e4c-8ac2-156a0c732d84",
+        name: "Đánh giá cuối cùng",
+        stageOrder: 3,
+        phrase: "decision",
+        type: "project",
+        status: "created",
+      },
+      {
+        id: "90e108b6-e376-4b2f-81e1-876b7c958d0d",
+        name: "Đánh giá sơ bộ",
+        stageOrder: 1,
+        phrase: "review",
+        type: "project",
+        status: "created",
+      },
+      {
+        id: "7f5641b6-9e01-4ad6-a8fe-f167a300e165",
+        name: "Đánh giá hồ sơ",
+        stageOrder: 2,
+        phrase: "review",
+        type: "milestone",
+        status: "created",
+      },
+    ],
+  },
+  {
+    id: "2897adef-0c43-4c35-9abf-4d53a6e13be1",
+    code: "EVA-SRPM01082025",
+    title: "Đánh Giá Đề Cương",
+    createDate: "2025-08-01T18:05:19.86",
+    status: "created",
+    evaluationStages: [
+      {
+        id: "bef06572-aa7a-498f-a9ad-023f5987e71b",
+        name: "Đánh giá cuối cùng",
+        stageOrder: 3,
+        phrase: "decision",
+        type: "project",
+        status: "created",
+      },
+      {
+        id: "3af7f963-6d1a-4f24-bc59-d598892194dd",
+        name: "Đánh giá sơ bộ",
+        stageOrder: 1,
+        phrase: "review",
+        type: "project",
+        status: "created",
+      },
+      {
+        id: "ac266645-0a36-4810-b148-dd52038cf6a7",
+        name: "Đánh giá hồ sơ",
+        stageOrder: 2,
+        phrase: "review",
+        type: "milestone",
+        status: "created",
+      },
+    ],
+  },
+];
 
 interface EvaluationBoardTabProps {
   evaluationStages: EvaluationStage[];
   evaluationSummary: EvaluationSummary;
 }
 
-export const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
+const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
   evaluationStages,
   evaluationSummary,
 }) => {
+  const [evaluations] = useState(mockEvaluations);
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
 
-  const getStatusColor = (status: string) => {
+  const handleStageClick = (stageId: string) => {
+    navigate(`/project/${projectId}/evaluation/stage/${stageId}`);
+  };
+
+  const getStatusBadge = (status: string) => {
     switch (status) {
-      case "submitted":
-        return "bg-green-100 text-green-800 border-green-200";
+      case "completed":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-100 text-green-800 border-green-300 flex items-center gap-1"
+          >
+            <CheckCircle2 size={14} /> Completed
+          </Badge>
+        );
       case "in_progress":
-        return "bg-blue-100 text-blue-800 border-blue-200";
+        return (
+          <Badge
+            variant="outline"
+            className="bg-blue-100 text-blue-800 border-blue-300 flex items-center gap-1"
+          >
+            <Clock size={14} /> In Progress
+          </Badge>
+        );
       case "pending":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case "overdue":
-        return "bg-red-100 text-red-800 border-red-200";
+        return (
+          <Badge
+            variant="outline"
+            className="bg-yellow-100 text-yellow-800 border-yellow-300 flex items-center gap-1"
+          >
+            <AlertCircle size={14} /> Pending
+          </Badge>
+        );
       default:
-        return "bg-gray-100 text-gray-700 border-gray-200";
+        return (
+          <Badge
+            variant="outline"
+            className="bg-gray-100 text-gray-700 border-gray-300"
+          >
+            {status}
+          </Badge>
+        );
     }
   };
 
-  const getEvaluatorIcon = (evaluation: IndividualEvaluation) => {
-    return evaluation.isAIReport ? (
-      <Bot className="w-4 h-4 text-blue-600" />
-    ) : (
-      <User className="w-4 h-4 text-gray-600" />
-    );
-  };
-
-  const handleViewEvaluation = (stageId: string, evaluationId: string) => {
-    navigate(
-      `/projects/${projectId}/evaluation-board/${stageId}/${evaluationId}`
-    );
-  };
-
-  const handleCreateEvaluation = (stageId: string) => {
-    // Navigate to create evaluation page or open modal
-    console.log("Create evaluation for stage:", stageId);
-  };
-
-  const handleViewAllEvaluations = () => {
-    navigate(`/project/${projectId}/detail/evaluation`);
-  };
-
-  const completionPercentage =
-    evaluationSummary.totalStages > 0
-      ? Math.round(
-          (evaluationSummary.completedEvaluations /
-            (evaluationSummary.totalStages * 3)) *
-            100
-        ) // Assuming 3 evaluators per stage
-      : 0;
-
   return (
     <div className="space-y-6">
-      {/* Project Evaluation Summary Card */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
+      <h1 className="text-2xl font-semibold text-gray-900">
+        Overall Evaluation
+      </h1>
+
+      {evaluations.map((evaluation) => (
+        <Card
+          key={evaluation.id}
+          className="border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+        >
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
             <div>
               <CardTitle className="text-lg font-semibold text-gray-900">
-                Project Evaluation Summary
+                {evaluation.title}
               </CardTitle>
-              <CardDescription className="text-sm text-gray-600">
-                Overview of evaluation progress across all stages
-              </CardDescription>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleViewAllEvaluations}
-              className="flex items-center gap-2"
-            >
-              <FileText className="w-4 h-4" />
-              View All Evaluations
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Progress Bar */}
-          <div className="space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Overall Progress</span>
-              <span className="font-medium">{completionPercentage}%</span>
-            </div>
-            <Progress value={completionPercentage} className="h-2" />
-          </div>
-
-          {/* Stats Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <div className="bg-blue-50 rounded-lg p-3 border border-blue-200">
-              <div className="flex items-center gap-2">
-                <FileText className="w-4 h-4 text-blue-600" />
-                <div>
-                  <p className="text-lg font-semibold text-blue-800">
-                    {evaluationSummary.totalStages}
-                  </p>
-                  <p className="text-xs text-blue-700">Total Stages</p>
-                </div>
+              <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
+                <span>Code: {evaluation.code}</span>
+                <span className="flex items-center gap-1">
+                  <CalendarDays size={14} /> {evaluation.createDate}
+                </span>
               </div>
             </div>
+            {getStatusBadge(evaluation.status)}
+          </CardHeader>
 
-            <div className="bg-green-50 rounded-lg p-3 border border-green-200">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-green-600" />
-                <div>
-                  <p className="text-lg font-semibold text-green-800">
-                    {evaluationSummary.completedEvaluations}
-                  </p>
-                  <p className="text-xs text-green-700">Completed</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-yellow-50 rounded-lg p-3 border border-yellow-200">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-yellow-600" />
-                <div>
-                  <p className="text-lg font-semibold text-yellow-800">
-                    {evaluationSummary.pendingEvaluations}
-                  </p>
-                  <p className="text-xs text-yellow-700">Pending</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-purple-50 rounded-lg p-3 border border-purple-200">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-purple-600" />
-                <div>
-                  <p className="text-lg font-semibold text-purple-800">
-                    {evaluationSummary.averageScore?.toFixed(1) || "N/A"}
-                  </p>
-                  <p className="text-xs text-purple-700">Avg Score</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Individual Evaluations Card */}
-      <Card className="shadow-sm">
-        <CardHeader className="pb-4">
-          <CardTitle className="text-lg font-semibold text-gray-900">
-            Individual Evaluations
-          </CardTitle>
-          <CardDescription className="text-sm text-gray-600">
-            Detailed evaluations organized by evaluation stages
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {evaluationStages.length > 0 ? (
-            <Accordion type="single" collapsible className="space-y-2">
-              {evaluationStages.map((stage) => (
-                <AccordionItem
-                  key={stage.id}
-                  value={stage.id}
-                  className="border rounded-lg px-4"
-                >
-                  <AccordionTrigger className="hover:no-underline">
-                    <div className="flex items-center justify-between w-full mr-4">
-                      <div className="flex items-center gap-3">
-                        <div className="text-left">
-                          <h3 className="font-medium text-gray-900">
-                            {stage.title}
+          <CardContent>
+            <Accordion type="single" collapsible className="mt-2">
+              {evaluation.evaluationStages
+                .sort((a, b) => a.stageOrder - b.stageOrder)
+                .map((stage) => (
+                  <AccordionItem
+                    key={stage.id}
+                    value={stage.id}
+                    className="border rounded-lg mb-2 overflow-hidden"
+                  >
+                    <AccordionTrigger className="hover:no-underline px-4 py-3 bg-gray-50 hover:bg-gray-100">
+                      <div className="flex items-center justify-between w-full">
+                        <div>
+                          <h3 className="text-sm font-medium text-gray-900">
+                            {stage.name}
                           </h3>
-                          {stage.description && (
-                            <p className="text-sm text-gray-500 mt-1">
-                              {stage.description}
-                            </p>
-                          )}
                         </div>
+                        {getStatusBadge(stage.status)}
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Badge
-                          variant="outline"
-                          className={getStatusColor(stage.status)}
-                        >
-                          {stage.status}
-                        </Badge>
-                        <span className="text-sm text-gray-500">
-                          {stage.individualEvaluations.length} evaluations
-                        </span>
-                      </div>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pt-4">
-                    <div className="space-y-3">
-                      {stage.individualEvaluations.map((evaluation) => (
-                        <div
-                          key={evaluation.id}
-                          className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border"
-                        >
-                          <div className="flex items-center gap-3">
-                            {getEvaluatorIcon(evaluation)}
-                            <div>
-                              <p className="font-medium text-gray-900">
-                                {evaluation.evaluator ||
-                                  (evaluation.isAIReport
-                                    ? "AI Evaluation"
-                                    : "Council Member")}
-                              </p>
-                              <p className="text-sm text-gray-500">
-                                Score: {evaluation.totalRate}/10
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className={getStatusColor(evaluation.status)}
-                            >
-                              {evaluation.status}
-                            </Badge>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleViewEvaluation(stage.id, evaluation.id)
-                              }
-                            >
-                              View Details
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-
-                      {/* Create New Evaluation Button */}
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 py-3 bg-white">
+                      <p className="text-sm text-gray-600">
+                        <strong>Type:</strong> {stage.type}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        <strong>Phrase:</strong> {stage.phrase}
+                      </p>
                       <Button
                         variant="outline"
-                        className="w-full border-dashed"
-                        onClick={() => handleCreateEvaluation(stage.id)}
+                        size="sm"
+                        onClick={() => handleStageClick(stage.id)}
+                        className="mt-3"
                       >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create New Evaluation
+                        View Details
                       </Button>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
             </Accordion>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p className="text-lg font-medium mb-2">No Evaluation Stages</p>
-              <p className="text-sm">
-                Evaluation stages will appear here once they are created for
-                this project.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ))}
+
+      <div>
+        <h2 className="text-xl font-semibold text-gray-900">
+          Evaluation Summary
+        </h2>
+        <p className="text-sm text-gray-600">
+          Total Evaluations: {evaluationSummary.totalEvaluations}
+        </p>
+        <p className="text-sm text-gray-600">
+          Total Stages: {evaluationSummary.totalStages}
+        </p>
+        <p className="text-sm text-gray-600">
+          Overall Status: {evaluationSummary.overallStatus}
+        </p>
+
+        <h3 className="text-lg font-medium text-gray-900 mt-4">
+          Evaluation Stages
+        </h3>
+        <ul className="list-disc list-inside">
+          {evaluationStages.map((stage) => (
+            <li key={stage.id} className="text-sm text-gray-700">
+              {stage.name}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 };

@@ -79,6 +79,7 @@ import StageViewPage from "@/pages/ProjectDetail/components/StageViewPage";
 import MyCouncil from "@/pages/Council/MyCouncil";
 import { ViewAllNotifications } from "@/pages/Notifications";
 import { ScrollRestoration } from "@/components/common/ScrollRestoration";
+import EvaluationStageDetail from "@/pages/ProjectDetail/components/EvaluationStageDetail";
 
 /**
  * Main application routes configuration
@@ -566,6 +567,14 @@ export const routes: RouteObject[] = [
             <GeneralComingSoon />
           </AuthGuard>
         ),
+      },
+      {
+        path: "project/:projectId/evaluation/stage/:stageId",
+        element: <EvaluationStageDetail />,
+      },
+      {
+        path: "project/:projectId/evaluation/individual/:individualEvaluationId",
+        element: <IndividualEvaluationDetail />,
       },
     ],
   },

@@ -111,36 +111,42 @@ export const mockIndividualEvaluations: IndividualEvaluation[] = [
 export const mockEvaluationStages: EvaluationStage[] = [
   {
     id: "stage-1",
-    title: "EV Stage 1",
-    description: "Initial evaluation stage for proposal review",
+    name: "EV Stage 1",
+    phrase: "Initial evaluation stage for proposal review",
     evaluationId: "evaluation-1",
-    order: 1,
+    stageOrder: 1, // Replaced `order` with `stageOrder`
     createdAt: "2024-01-10T08:00:00Z",
     status: "completed",
+    type: "proposal-review", // Added `type`
+    title: "Proposal Review", // Added `title`
     individualEvaluations: mockIndividualEvaluations.filter(
       (e) => e.evaluationStageId === "stage-1"
     ),
   },
   {
     id: "stage-2",
-    title: "EV Stage 2",
-    description: "Second evaluation stage for milestone review",
+    name: "EV Stage 2",
+    phrase: "Second evaluation stage for milestone review",
     evaluationId: "evaluation-1",
-    order: 2,
+    stageOrder: 2, // Replaced `order` with `stageOrder`
     createdAt: "2024-02-15T08:00:00Z",
     status: "active",
+    type: "milestone-review", // Added `type`
+    title: "Milestone Review", // Added `title`
     individualEvaluations: mockIndividualEvaluations.filter(
       (e) => e.evaluationStageId === "stage-2"
     ),
   },
   {
     id: "stage-3",
-    title: "EV Stage 3",
-    description: "Third evaluation stage for progress assessment",
+    name: "EV Stage 3",
+    phrase: "Third evaluation stage for progress assessment",
     evaluationId: "evaluation-2",
-    order: 1,
+    stageOrder: 1, // Replaced `order` with `stageOrder`
     createdAt: "2024-03-01T08:00:00Z",
     status: "active",
+    type: "progress-assessment", // Added `type`
+    title: "Progress Assessment", // Added `title`
     individualEvaluations: mockIndividualEvaluations.filter(
       (e) => e.evaluationStageId === "stage-3"
     ),
