@@ -42,10 +42,10 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
     if (!selectedCouncil) return;
 
     setIsAssigning(true);
-    
+
     // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     onAssignCouncil(project, selectedCouncil);
     setIsAssigning(false);
     setSelectedCouncil(null);
@@ -59,30 +59,41 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
 
   // Filter councils based on project specialization
   const getRecommendedCouncils = () => {
-    const projectTags = project["project-tags"].map(tag => tag.name.toLowerCase());
+    const projectTags = project["project-tags"].map((tag) =>
+      tag.name.toLowerCase()
+    );
     const projectCategory = project.category.toLowerCase();
-    
-    return mockCouncils.map(council => {
-      const matchScore = council.specialization.reduce((score, spec) => {
-        const specLower = spec.toLowerCase();
-        if (projectTags.some(tag => specLower.includes(tag) || tag.includes(specLower))) {
-          return score + 2;
-        }
-        if (specLower.includes(projectCategory) || projectCategory.includes(specLower)) {
-          return score + 1;
-        }
-        return score;
-      }, 0);
-      
-      return { ...council, matchScore, isRecommended: matchScore > 0 };
-    }).sort((a, b) => b.matchScore - a.matchScore);
+
+    return mockCouncils
+      .map((council) => {
+        const matchScore = council.specialization.reduce((score, spec) => {
+          const specLower = spec.toLowerCase();
+          if (
+            projectTags.some(
+              (tag) => specLower.includes(tag) || tag.includes(specLower)
+            )
+          ) {
+            return score + 2;
+          }
+          if (
+            specLower.includes(projectCategory) ||
+            projectCategory.includes(specLower)
+          ) {
+            return score + 1;
+          }
+          return score;
+        }, 0);
+
+        return { ...council, matchScore, isRecommended: matchScore > 0 };
+      })
+      .sort((a, b) => b.matchScore - a.matchScore);
   };
 
   const councils = getRecommendedCouncils();
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
+      <DialogContent className="w-[95vw] max-w-[95vw] h-[90vh] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2">
             <Users className="w-5 h-5" />
@@ -121,7 +132,10 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
                         {council.name}
                       </h3>
                       {council.isRecommended && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-800">
+                        <Badge
+                          variant="secondary"
+                          className="bg-green-100 text-green-800"
+                        >
                           <CheckCircle className="w-3 h-3 mr-1" />
                           Recommended
                         </Badge>
@@ -157,7 +171,8 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
                     <div className="flex items-center space-x-2 mb-2">
                       <User className="w-4 h-4 text-blue-500" />
                       <span className="text-sm font-medium">
-                        Capacity: {council.currentProjects}/{council.maxProjects}
+                        Capacity: {council.currentProjects}/
+                        {council.maxProjects}
                       </span>
                     </div>
                     <div className="ml-6">
@@ -166,13 +181,15 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
                           className={`h-2 rounded-full ${
                             council.currentProjects >= council.maxProjects
                               ? "bg-red-500"
-                              : council.currentProjects / council.maxProjects > 0.7
+                              : council.currentProjects / council.maxProjects >
+                                0.7
                               ? "bg-yellow-500"
                               : "bg-green-500"
                           }`}
                           style={{
                             width: `${
-                              (council.currentProjects / council.maxProjects) * 100
+                              (council.currentProjects / council.maxProjects) *
+                              100
                             }%`,
                           }}
                         />
@@ -187,11 +204,17 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
                   <div>
                     <div className="flex items-center space-x-2 mb-2">
                       <GraduationCap className="w-4 h-4 text-purple-500" />
-                      <span className="text-sm font-medium">Specializations</span>
+                      <span className="text-sm font-medium">
+                        Specializations
+                      </span>
                     </div>
                     <div className="flex flex-wrap gap-1 ml-6">
                       {council.specialization.map((spec, index) => (
-                        <Badge key={index} variant="outline" className="text-xs">
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="text-xs"
+                        >
                           {spec}
                         </Badge>
                       ))}
@@ -209,7 +232,8 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
                       {council.members.slice(0, 3).map((member, index) => (
                         <span key={member.id}>
                           {member.name}
-                          {index < Math.min(2, council.members.length - 1) && ", "}
+                          {index < Math.min(2, council.members.length - 1) &&
+                            ", "}
                         </span>
                       ))}
                       {council.members.length > 3 && (

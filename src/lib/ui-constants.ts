@@ -127,13 +127,12 @@ export const UI_CONSTANTS = {
 
   // Dialogs/Modals
   DIALOGS: {
-    small: "sm:max-w-md",
-    default: "sm:max-w-lg",
-    large: "sm:max-w-2xl",
-    extraLarge: "sm:max-w-4xl",
-    fullWidth: "sm:max-w-[90vw]",
+    small: "w-[75vw] max-w-[75vw] sm:max-w-sm",
+    default: "w-[80vw] max-w-[80vw] sm:max-w-md",
+    large: "w-[85vw] max-w-[85vw] sm:max-w-lg",
+    extraLarge: "w-[90vw] max-w-[90vw] sm:max-w-xl",
+    fullWidth: "w-[95vw] max-w-[95vw] sm:max-w-2xl2xl",
   },
-
   // Cards
   CARDS: {
     default: "bg-white border border-slate-200 rounded-lg shadow-sm",

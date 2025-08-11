@@ -66,6 +66,7 @@ import PIRegisterProject from "@/pages/PrincipalInvestigator/RegisterProject";
 import PIMeetings from "@/pages/PrincipalInvestigator/Meetings";
 import Meetings from "@/pages/Council/Meetings";
 import ProjectApproval from "@/pages/Council/ProjectApproval";
+import CreateEvaluation from "@/pages/Council/ProjectApproval/CreateEvaluation";
 // import FormRegister from "@/pages/FormRegister";
 import FormsOverview from "@/pages/FormRegister/FormsOverview";
 import FormCreate from "@/pages/FormRegister/FormCreate";
@@ -378,6 +379,10 @@ export const routes: RouteObject[] = [
           {
             path: "project-approval",
             element: <ProjectApproval />,
+          },
+          {
+            path: "project-approval/create-evaluation",
+            element: <CreateEvaluation />,
           },
           {
             path: "evaluations",
