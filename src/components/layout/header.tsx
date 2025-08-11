@@ -71,6 +71,7 @@ const menuItemsByRole = {
     { name: "Home", path: "/home", icon: Home },
     { name: "Projects", path: "/pi/projects", icon: FolderOpen },
     { name: "My Projects", path: "/pi/my-projects", icon: Briefcase },
+    { name: "Register Project", path: "/pi/register-project", icon: FileText },
     { name: "Meetings", path: "/pi/meetings", icon: Calendar },
     { name: "Forms", path: "/pi/forms", icon: FileText },
     // { name: "Progress", path: "/pi/progress-reports", icon: FileText },
