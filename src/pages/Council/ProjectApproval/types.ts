@@ -112,6 +112,74 @@ export interface EvaluationData {
   proposalDocuments?: Document[];
 }
 
+// Evaluation System Types
+export interface EvaluationCriteria {
+  id: string;
+  name: string;
+  score: number; // 0-10
+  maxScore: number;
+  weight: number; // percentage
+  comments?: string;
+}
+
+export interface CouncilEvaluation {
+  id: string;
+  evaluatorId: string;
+  evaluatorName: string;
+  evaluatorRole: string;
+  status: "pending" | "in_progress" | "completed" | "overdue";
+  submittedAt?: string;
+  dueDate?: string;
+  totalScore: number;
+  maxTotalScore: number;
+  recommendation: "approve" | "reject" | "revise" | "pending";
+  overallComments?: string;
+  criteria: EvaluationCriteria[];
+  lastUpdated: string;
+  evaluationContent?: string; // TinyMCE content for detailed evaluation
+}
+
+export interface EvaluationOverview {
+  id: string;
+  proposalId: number;
+  totalEvaluations: number;
+  completedEvaluations: number;
+  pendingEvaluations: number;
+  overdueEvaluations: number;
+  averageScore: number;
+  maxPossibleScore: number;
+  overallRecommendation: "approve" | "reject" | "revise" | "pending";
+  evaluations: CouncilEvaluation[];
+  lastUpdated: string;
+}
+
+export interface EvaluationStage {
+  id: string;
+  name: string;
+  description: string;
+  order: number;
+  status: "not_started" | "in_progress" | "completed";
+  evaluations: CouncilEvaluation[];
+  dueDate?: string;
+}
+
+// Enhanced Team Member with detailed information
+export interface EnhancedTeamMember extends TeamResearcher {
+  id: string;
+  profileData?: ProfileData;
+  cv?: string;
+  detailedInfo?: {
+    personalInfo: PersonalInformation;
+    contactInfo: ContactInformation;
+    academicInfo: AcademicTitle;
+    workInfo: WorkUnit;
+    educationHistory: EducationRecord[];
+    researchExperience?: string;
+    publications?: string[];
+    awards?: string[];
+  };
+}
+
 // Combined Applicant Data (represents proposals submitted to PI)
 export interface ApplicantData {
   id: number;
@@ -133,4 +201,7 @@ export interface ApplicantData {
   submittedBy: string;
   profileData: ProfileData;
   evaluationData: EvaluationData;
+  // Enhanced evaluation system
+  evaluationOverview?: EvaluationOverview;
+  enhancedTeamMembers?: EnhancedTeamMember[];
 }

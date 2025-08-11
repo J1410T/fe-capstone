@@ -1,7 +1,16 @@
 import React, { useState } from "react";
 import { Loading } from "@/components/ui/loaders";
-import { ApprovalHeader, TopicsTab, ApplicantProfile } from "./components";
+import { ApprovalHeader, TopicsTab } from "./components";
 import { ApplicantData } from "./types";
+import { Search } from "lucide-react";
+import { Input } from "@/components";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Mock data for research topics
 const proposedTopics = [
@@ -548,22 +557,29 @@ const piApplicants: ApplicantData[] = [
   },
 ];
 
+// Removed unused mock data
+
 const ProjectApproval: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedApplicant, setSelectedApplicant] = useState<number | null>(
-    null
-  );
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [selectedType, setSelectedType] = useState<string>("all"); // Changed from selectedDepartment
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
 
-  const handleViewApplicantProfile = (applicantId: number) => {
-    setSelectedApplicant(applicantId);
+  const onSearchChange = (value: string) => {
+    setSearchTerm(value);
   };
 
-  const handleCloseApplicantProfile = () => {
-    setSelectedApplicant(null);
+  const onTypeChange = (value: string) => {
+    setSelectedType(value);
+  };
+
+  const onCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+  };
+
+  const onStatusChange = (value: string) => {
+    setSelectedStatus(value);
   };
 
   const handleApprovePI = (applicantId: number) => {
@@ -574,7 +590,6 @@ const ProjectApproval: React.FC = () => {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      setSelectedApplicant(null);
       // Show success message
     }, 1500);
   };
@@ -587,7 +602,6 @@ const ProjectApproval: React.FC = () => {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      setSelectedApplicant(null);
       // Show success message
     }, 1500);
   };
@@ -600,9 +614,14 @@ const ProjectApproval: React.FC = () => {
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
-      setSelectedApplicant(null);
       // Show success message
     }, 1500);
+  };
+
+  const handleViewProfile = (applicantId: number) => {
+    // Handle view profile
+    console.log("Viewing profile for applicant with ID:", applicantId);
+    // This could open a modal or navigate to a profile page
   };
 
   // Filter topics based on search term, department, and status
@@ -618,16 +637,79 @@ const ProjectApproval: React.FC = () => {
     return matchesSearch && matchesType && matchesCategory && matchesStatus;
   });
 
-  // Get selected applicant data
-  const selectedApplicantData = selectedApplicant
-    ? piApplicants.find((applicant) => applicant.id === selectedApplicant)
-    : null;
+  // Fixed categories for filter (Applied Science and Basic Science)
+  const categories = ["all", "Applied Science", "Basic Science"];
+
+  // Fixed statuses for filter
+  const statuses = ["all", "Waiting for PI", "PI Assigned"];
+  // Fixed types for filter
+  const types = [
+    "all",
+    "Information Technology",
+    "Environment",
+    "Biology",
+    "Physics",
+    "Biotechnology",
+    "Civil Engineering",
+    "Environmental Science",
+  ];
 
   return (
     <div className="container mx-auto py-6 space-y-6">
       <ApprovalHeader />
 
       {isLoading && <Loading />}
+
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search topics..."
+            className="pl-8"
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4">
+          <Select value={selectedType} onValueChange={onTypeChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Types" />
+            </SelectTrigger>
+            <SelectContent>
+              {types.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {type === "all" ? "All Types" : type}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedCategory} onValueChange={onCategoryChange}>
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Category" />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category} value={category}>
+                  {category === "all" ? "All Categories" : category}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedStatus} onValueChange={onStatusChange}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Statuses" />
+            </SelectTrigger>
+            <SelectContent>
+              {statuses.map((status) => (
+                <SelectItem key={status} value={status}>
+                  {status === "all" ? "All Statuses" : status}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
 
       <TopicsTab
         topics={filteredTopics}
@@ -640,16 +722,9 @@ const ProjectApproval: React.FC = () => {
         onCategoryChange={setSelectedCategory}
         selectedStatus={selectedStatus}
         onStatusChange={setSelectedStatus}
-        onViewProfile={handleViewApplicantProfile}
-      />
-
-      {/* Applicant Profile Dialog */}
-      <ApplicantProfile
-        applicant={selectedApplicantData || null}
-        isOpen={!!selectedApplicant}
-        onClose={handleCloseApplicantProfile}
-        onApprove={handleApprovePI}
-        onReject={handleRejectPI}
+        onViewProfile={handleViewProfile}
+        onApproveProposal={handleApprovePI}
+        onRejectProposal={handleRejectPI}
         onRequestRevision={handleRequestRevision}
       />
     </div>

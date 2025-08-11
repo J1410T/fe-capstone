@@ -132,6 +132,24 @@ export const isStaffMember = (user: User | null): boolean => {
 };
 
 /**
+ * Check if user can edit a specific evaluation (must be the owner)
+ */
+export const canEditSpecificEvaluation = (
+  user: User | null,
+  evaluationOwnerId: string
+): boolean => {
+  if (!user) return false;
+
+  // User must be the owner of the evaluation
+  const isOwner = user.id === evaluationOwnerId;
+
+  // User must also have general edit permissions
+  const hasEditPermission = canEditEvaluation(user);
+
+  return isOwner && hasEditPermission;
+};
+
+/**
  * Check if user has administrative privileges (council or staff)
  */
 export const hasAdminPrivileges = (user: User | null): boolean => {

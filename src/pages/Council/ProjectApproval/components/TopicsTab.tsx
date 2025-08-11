@@ -1,36 +1,18 @@
-import React from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import React, { useState } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Search,
-  CheckCircle,
-  Users,
-  BookOpen,
-  FolderOpen,
-  Eye,
-  GraduationCap,
-} from "lucide-react";
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { CheckCircle, Users, BookOpen, FolderOpen } from "lucide-react";
+import { TopicDetailView } from "./TopicDetailView";
+import { ProposalDetailView } from "./ProposalDetailView";
+import { ProfileData, EvaluationData } from "../types";
 
 interface Topic {
   id: number;
@@ -62,7 +44,20 @@ interface Applicant {
   proposalSummary: string;
   proposalType: string;
   submittedBy: string;
+  profileData: ProfileData; // Add missing property
+  evaluationData: EvaluationData; // Add missing property
 }
+
+// Breadcrumb navigation types
+interface BreadcrumbItem {
+  id: string;
+  label: string;
+  type: "topics" | "topic-detail" | "proposal-detail";
+  data?: Topic | Applicant;
+}
+
+// View state types
+type ViewState = "topics-list" | "topic-detail" | "proposal-detail";
 
 interface TopicsTabProps {
   topics: Topic[];
@@ -76,125 +71,182 @@ interface TopicsTabProps {
   selectedStatus: string;
   onStatusChange: (value: string) => void;
   onViewProfile: (applicantId: number) => void;
+  onApproveProposal?: (proposalId: number) => void;
+  onRejectProposal?: (proposalId: number) => void;
+  onRequestRevision?: (proposalId: number) => void;
 }
 
 export const TopicsTab: React.FC<TopicsTabProps> = ({
   topics,
   applicants,
-  searchTerm,
-  onSearchChange,
-  selectedType,
-  onTypeChange,
-  selectedCategory,
-  onCategoryChange,
-  selectedStatus,
-  onStatusChange,
   onViewProfile,
+  onApproveProposal,
+  onRejectProposal,
+  onRequestRevision,
 }) => {
-  // Fixed types for filter
-  const types = [
-    "all",
-    "Information Technology",
-    "Environment",
-    "Biology",
-    "Physics",
-    "Biotechnology",
-    "Civil Engineering",
-    "Environmental Science",
-  ];
-
-  // Fixed categories for filter (Applied Science and Basic Science)
-  const categories = ["all", "Applied Science", "Basic Science"];
-
-  // Fixed statuses for filter
-  const statuses = ["all", "Waiting for PI", "PI Assigned"];
+  // Breadcrumb navigation state
+  const [currentView, setCurrentView] = useState<ViewState>("topics-list");
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [selectedProposal, setSelectedProposal] = useState<Applicant | null>(
+    null
+  );
+  const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([
+    { id: "topics", label: "Research Topics", type: "topics" },
+  ]);
+  // const [showApprovalDialog, setShowApprovalDialog] = useState(false);
+  // const [approvalProposal, setApprovalProposal] = useState<Applicant | null>(
+  //   null
+  // );
 
   console.log("Topics:", topics);
+
+  // Navigation functions
+  const navigateToTopicDetail = (topic: Topic) => {
+    setSelectedTopic(topic);
+    setSelectedProposal(null);
+    setCurrentView("topic-detail");
+    setBreadcrumbs([
+      { id: "topics", label: "Research Topics", type: "topics" },
+      {
+        id: `topic-${topic.id}`,
+        label: topic.title,
+        type: "topic-detail",
+        data: topic,
+      },
+    ]);
+  };
+
+  const navigateToProposalDetail = (proposal: Applicant) => {
+    setSelectedProposal(proposal);
+    setCurrentView("proposal-detail");
+    const topic =
+      selectedTopic || topics.find((t) => t.id === proposal.appliedFor);
+    if (topic) {
+      setBreadcrumbs([
+        { id: "topics", label: "Research Topics", type: "topics" },
+        {
+          id: `topic-${topic.id}`,
+          label: topic.title,
+          type: "topic-detail",
+          data: topic,
+        },
+        {
+          id: `proposal-${proposal.id}`,
+          label: proposal.proposalTitle,
+          type: "proposal-detail",
+          data: proposal,
+        },
+      ]);
+    }
+  };
+
+  const navigateToBreadcrumb = (breadcrumb: BreadcrumbItem) => {
+    const index = breadcrumbs.findIndex((b) => b.id === breadcrumb.id);
+    if (index !== -1) {
+      const newBreadcrumbs = breadcrumbs.slice(0, index + 1);
+      setBreadcrumbs(newBreadcrumbs);
+
+      switch (breadcrumb.type) {
+        case "topics":
+          setCurrentView("topics-list");
+          setSelectedTopic(null);
+          setSelectedProposal(null);
+          break;
+        case "topic-detail":
+          setCurrentView("topic-detail");
+          setSelectedTopic(breadcrumb.data as Topic);
+          setSelectedProposal(null);
+          break;
+        case "proposal-detail":
+          setCurrentView("proposal-detail");
+          setSelectedProposal(breadcrumb.data as Applicant);
+          break;
+      }
+    }
+  };
+
+  // Approval functions
+  const handleApproveProposal = (proposalId: number) => {
+    if (onApproveProposal) {
+      onApproveProposal(proposalId);
+    }
+  };
+
+  const handleRejectProposal = (proposalId: number) => {
+    if (onRejectProposal) {
+      onRejectProposal(proposalId);
+    }
+  };
+
+  const handleRequestRevision = (proposalId: number) => {
+    if (onRequestRevision) {
+      onRequestRevision(proposalId);
+    }
+  };
+
+  // const closeApprovalDialog = () => {
+  //   setApprovalProposal(null);
+  //   setShowApprovalDialog(false);
+  // };
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Research Topics</CardTitle>
-        <CardDescription>
-          Review research projects and their Principal Investigator proposals
-        </CardDescription>
+        {/* Breadcrumb Navigation */}
+        {breadcrumbs.length > 1 && (
+          <div className="">
+            <Breadcrumb>
+              <BreadcrumbList>
+                {breadcrumbs.map((breadcrumb, index) => (
+                  <React.Fragment key={breadcrumb.id}>
+                    {index > 0 && <BreadcrumbSeparator />}
+                    {index === breadcrumbs.length - 1 ? (
+                      <BreadcrumbItem>
+                        <BreadcrumbPage>{breadcrumb.label}</BreadcrumbPage>
+                      </BreadcrumbItem>
+                    ) : (
+                      <BreadcrumbItem>
+                        <BreadcrumbLink
+                          onClick={() => navigateToBreadcrumb(breadcrumb)}
+                          className="cursor-pointer"
+                        >
+                          {breadcrumb.label}
+                        </BreadcrumbLink>
+                      </BreadcrumbItem>
+                    )}
+                  </React.Fragment>
+                ))}
+              </BreadcrumbList>
+            </Breadcrumb>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search topics..."
-              className="pl-8"
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
-            />
-          </div>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Select value={selectedType} onValueChange={onTypeChange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Types" />
-              </SelectTrigger>
-              <SelectContent>
-                {types.map((type) => (
-                  <SelectItem key={type} value={type}>
-                    {type === "all" ? "All Types" : type}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedCategory} onValueChange={onCategoryChange}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category}>
-                    {category === "all" ? "All Categories" : category}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedStatus} onValueChange={onStatusChange}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Statuses" />
-              </SelectTrigger>
-              <SelectContent>
-                {statuses.map((status) => (
-                  <SelectItem key={status} value={status}>
-                    {status === "all" ? "All Statuses" : status}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        {topics.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="flex flex-col items-center gap-3">
-              <FolderOpen className="h-12 w-12 text-muted-foreground" />
-              <p className="text-lg font-medium text-muted-foreground">
-                No projects found
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Try adjusting your search filters
-              </p>
-            </div>
-          </div>
-        ) : (
-          <Accordion type="single" collapsible className="w-full space-y-4">
-            {topics.map((topic) => (
-              <AccordionItem
-                key={topic.id}
-                value={topic.id.toString()}
-                className="border rounded-lg bg-white shadow-sm"
-              >
-                <AccordionTrigger className="hover:no-underline px-6 py-4">
-                  <div className="flex items-center justify-between w-full mr-4">
-                    <div className="flex items-start space-x-4 text-left">
-                      <div className="flex-1 min-w-0">
+        {/* Render different views based on current state */}
+        {currentView === "topics-list" && (
+          <>
+            {topics.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="flex flex-col items-center gap-3">
+                  <FolderOpen className="h-12 w-12 text-muted-foreground" />
+                  <p className="text-lg font-medium text-muted-foreground">
+                    No projects found
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Try adjusting your search filters
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {topics.map((topic) => (
+                  <div
+                    key={topic.id}
+                    className="border rounded-lg bg-white shadow-sm p-6 hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => navigateToTopicDetail(topic)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <CheckCircle className="h-5 w-5 text-green-600" />
                           <span className="text-sm font-medium text-green-700">
@@ -222,198 +274,63 @@ export const TopicsTab: React.FC<TopicsTabProps> = ({
                             </span>
                           </div>
                         </div>
-
-                        {/* Show proposal list in collapsed view */}
-                        {topic.applicants > 0 && (
-                          <div className="mt-3 pt-3 border-t border-gray-200">
-                            <h4 className="text-sm font-medium text-gray-700 mb-2">
-                              Proposals Submitted:
-                            </h4>
-                            <div className="space-y-1">
-                              {applicants
-                                .filter(
-                                  (applicant) =>
-                                    applicant.appliedFor === topic.id
-                                )
-                                .map((applicant) => (
-                                  <div
-                                    key={applicant.id}
-                                    className="text-xs text-gray-600 truncate"
-                                  >
-                                    • {applicant.proposalTitle}
-                                  </div>
-                                ))}
-                            </div>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <Badge
-                        variant="outline"
-                        className={
-                          topic.status === "Waiting for PI"
-                            ? "bg-amber-100 text-amber-800 border-amber-200"
-                            : "bg-emerald-100 text-emerald-800 border-emerald-200"
-                        }
-                      >
-                        {topic.status}
-                      </Badge>
+                      <div className="flex items-center space-x-3">
+                        <Badge
+                          variant="outline"
+                          className={
+                            topic.status === "Waiting for PI"
+                              ? "bg-amber-100 text-amber-800 border-amber-200"
+                              : "bg-emerald-100 text-emerald-800 border-emerald-200"
+                          }
+                        >
+                          {topic.status}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </AccordionTrigger>
-                <AccordionContent className="px-6 pb-4">
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-gray-50 rounded-lg">
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-2">
-                          Project Details
-                        </h4>
-                        <div className="space-y-2 text-sm">
-                          <div>
-                            <span className="font-medium">Field:</span>{" "}
-                            {topic.type}
-                          </div>
-                          <div>
-                            <span className="font-medium">Category:</span>{" "}
-                            {topic.category}
-                          </div>
-                          <div>
-                            <span className="font-medium">Created:</span>{" "}
-                            {new Date(topic.createdAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-gray-900 mb-2">
-                          Approval Status
-                        </h4>
-                        <div className="space-y-2 text-sm">
-                          <div>
-                            <span className="font-medium">
-                              Council Approvals:
-                            </span>{" "}
-                            {topic.councilApprovals || 0} of{" "}
-                            {topic.totalCouncilMembers || 5}
-                          </div>
-                          <div>
-                            <span className="font-medium">PI Proposals:</span>{" "}
-                            {topic.applicants}
-                          </div>
-                          <div>
-                            <span className="font-medium">Status:</span>{" "}
-                            {topic.status}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Detailed Applicant Information */}
-                    {topic.applicants > 0 && (
-                      <div className="space-y-4">
-                        <h4 className="font-medium text-gray-900 text-lg">
-                          Principal Investigator Proposals
-                        </h4>
-                        <div className="space-y-3">
-                          {applicants
-                            .filter(
-                              (applicant) => applicant.appliedFor === topic.id
-                            )
-                            .map((applicant) => (
-                              <div
-                                key={applicant.id}
-                                className="border rounded-lg p-4 bg-white"
-                              >
-                                <div className="flex flex-col md:flex-row justify-between gap-4">
-                                  <div className="flex-1">
-                                    <div className="flex items-start justify-between gap-3 mb-3">
-                                      <div className="flex-1">
-                                        <h5 className="font-semibold text-lg text-gray-900 mb-1">
-                                          {applicant.proposalTitle}
-                                        </h5>
-                                        <div className="flex items-center gap-2 mb-2">
-                                          <Badge
-                                            variant="outline"
-                                            className="bg-blue-100 text-blue-800 border-blue-200"
-                                          >
-                                            {applicant.proposalType}
-                                          </Badge>
-                                          <Badge
-                                            variant="outline"
-                                            className="bg-green-100 text-green-800 border-green-200"
-                                          >
-                                            {applicant.status}
-                                          </Badge>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="text-sm text-gray-600 space-y-2">
-                                      <div>
-                                        <span className="font-medium">
-                                          Summary:
-                                        </span>
-                                        <p className="mt-1 text-gray-700 text-sm leading-relaxed">
-                                          {applicant.proposalSummary.length >
-                                          150
-                                            ? `${applicant.proposalSummary.substring(
-                                                0,
-                                                150
-                                              )}...`
-                                            : applicant.proposalSummary}
-                                        </p>
-                                      </div>
-                                      <div className="flex items-center gap-4">
-                                        <div className="flex items-center gap-2">
-                                          <GraduationCap className="h-4 w-4" />
-                                          <span>
-                                            Submitted by:{" "}
-                                            {applicant.submittedBy}
-                                          </span>
-                                        </div>
-                                        <div>
-                                          <span className="font-medium">
-                                            Date:
-                                          </span>{" "}
-                                          {new Date(
-                                            applicant.appliedDate
-                                          ).toLocaleDateString()}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex-shrink-0">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() =>
-                                        onViewProfile(applicant.id)
-                                      }
-                                      className="flex items-center gap-2"
-                                    >
-                                      <Eye className="h-4 w-4" />
-                                      View Document
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {topic.applicants === 0 && (
-                      <div className="text-center py-8 text-gray-500">
-                        <Users className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                        <p>No proposals submitted for this project yet.</p>
-                      </div>
-                    )}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
+                ))}
+              </div>
+            )}
+          </>
         )}
+
+        {currentView === "topic-detail" && selectedTopic && (
+          <TopicDetailView
+            topic={selectedTopic}
+            applicants={applicants}
+            onViewProposal={navigateToProposalDetail}
+            onViewProfile={onViewProfile}
+          />
+        )}
+
+        {currentView === "proposal-detail" &&
+          selectedProposal &&
+          selectedTopic && (
+            <ProposalDetailView
+              proposal={selectedProposal}
+              topic={selectedTopic}
+              onApprove={handleApproveProposal}
+              onReject={handleRejectProposal}
+              onRequestRevision={handleRequestRevision}
+            />
+          )}
       </CardContent>
+
+      {/* Proposal Approval Dialog */}
+      {/* <ProposalApprovalDialog
+        isOpen={showApprovalDialog}
+        onClose={closeApprovalDialog}
+        proposal={approvalProposal}
+        topic={
+          approvalProposal
+            ? topics.find((t) => t.id === approvalProposal.appliedFor) || null
+            : null
+        }
+        onApprove={handleApproveProposal}
+        onReject={handleRejectProposal}
+        onRequestRevision={handleRequestRevision}
+      /> */}
     </Card>
   );
 };
