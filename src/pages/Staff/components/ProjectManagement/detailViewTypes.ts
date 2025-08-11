@@ -91,4 +91,15 @@ export interface LegacyProject {
   majors: Array<{ id: string; name: string }>;
   "project-tags": Array<{ name: string }>;
   assignedCouncil?: Council;
+  // Additional fields from API
+  abbreviations?: string;
+  duration?: number;
+  description?: string;
+  "requirement-note"?: string;
+  creator?: {
+    id: string;
+    "full-name": string;
+    email: string;
+    "avatar-url": string;
+  };
 }

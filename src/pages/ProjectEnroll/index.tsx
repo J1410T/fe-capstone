@@ -168,8 +168,9 @@ const ProjectEnroll: React.FC = () => {
           <InviteMembersStep
             collaborators={collaborators}
             onCollaboratorsChange={setCollaborators}
-            groupMembers={groupMembers} // Add this prop
-            onGroupMembersChange={setGroupMembers} // Add this prop
+            groupMembers={groupMembers}
+            onGroupMembersChange={setGroupMembers}
+            maximumMembers={project["project-detail"]["maximum-member"] ?? 1}
             onNext={handleNext}
             onPrevious={handlePrevious}
             mode="detailed"

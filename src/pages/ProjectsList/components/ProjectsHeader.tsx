@@ -158,8 +158,8 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="created">Created</SelectItem>
-            <SelectItem value="done">Done</SelectItem>
+            <SelectItem value="Created">Created</SelectItem>
+            <SelectItem value="Completed">Done</SelectItem>
           </SelectContent>
         </Select>
 

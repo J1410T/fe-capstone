@@ -4,8 +4,10 @@
 
 import { axiosClient, getAccessToken } from "../api";
 import {
+  AppraisalCouncilByProject,
   AppraisalCouncilListRequest,
   AppraisalCouncilListResponse,
+  AssignCouncilToProjectRequest,
   CreateAppraisalCouncilRequest,
   UpdateAppraisalCouncilRequest,
 } from "@/types/appraisal-council";
@@ -161,6 +163,55 @@ export const getAppraisalCouncilListWithMembers = async (
     };
   } catch (error) {
     console.error("getAppraisalCouncilListWithMembers error:", error);
+    throw error;
+  }
+};
+
+export const getAppraisalCouncilByProjectId = async (
+  projectId: string
+): Promise<AppraisalCouncilByProject> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.get<AppraisalCouncilByProject>(
+      `/appraisal-council/project/${projectId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getAppraisalCouncilByProjectId error:", error);
+    throw error;
+  }
+};
+
+export const assignAppraisalCouncilToProject = async (
+  request: AssignCouncilToProjectRequest
+): Promise<void> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    await axiosClient.post(
+      `/appraisal-council/assign-council?sourceProjectId=${request.sourceProjectId}&appraisalCouncilId=${request.appraisalCouncilId}`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+  } catch (error) {
+    console.error("assignAppraisalCouncilToProject error:", error);
     throw error;
   }
 };
