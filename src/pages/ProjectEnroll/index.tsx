@@ -35,8 +35,6 @@ const ProjectEnroll: React.FC = () => {
     collaborators: [],
     groupMembers: [],
   });
-  // Track if user came from enrollment process to prevent auto-redirect
-  // const [isEnrollmentProcess, setIsEnrollmentProcess] = useState(false);
 
   // Fetch project data
   const {
@@ -63,48 +61,12 @@ const ProjectEnroll: React.FC = () => {
     }
   };
 
-  // const hasRedirectedRef = useRef(false);
-
-  // Check if user came from enrollment process (via state or URL pattern)
-  // useEffect(() => {
-  //   // If user navigated here directly via enrollment flow, set flag
-  //   if (location.pathname.includes("/enroll")) {
-  //     setIsEnrollmentProcess(true);
-  //   }
-  // }, [location.pathname]);
-
-  // useEffect(() => {
-  //   // Only redirect if user is already a member AND didn't come from enrollment process
-  //   if (
-  //     project &&
-  //     project["is-member"] &&
-  //     !hasRedirectedRef.current &&
-  //     !isEnrollmentProcess
-  //   ) {
-  //     hasRedirectedRef.current = true;
-  //     navigate(getProjectDetailRoute(), { replace: true });
-  //   }
-  // }, [project, navigate, getProjectDetailRoute, isEnrollmentProcess]);
-
   useEffect(() => {
     // If user navigated here directly via enrollment flow, set flag
     if (location.pathname.includes("/enroll")) {
       // setIsEnrollmentProcess(true);
     }
   }, []);
-
-  // useEffect(() => {
-  //   // Only redirect if user is already a member AND didn't come from enrollment process
-  //   if (
-  //     project &&
-  //     project["is-member"] &&
-  //     !hasRedirectedRef.current &&
-  //     !isEnrollmentProcess
-  //   ) {
-  //     hasRedirectedRef.current = true;
-  //     navigate(getProjectDetailRoute(), { replace: true });
-  //   }
-  // }, [project, navigate, getProjectDetailRoute, isEnrollmentProcess]);
 
   const handleBack = () => {
     navigate(getBackPath());
@@ -121,31 +83,6 @@ const ProjectEnroll: React.FC = () => {
       setCurrentStep((prev) => prev - 1);
     }
   };
-
-  // const handleSubmit = async () => {
-  //   setIsSubmitting(true);
-  //   try {
-  //     // API call to submit enrollment
-  //     console.log("Submitting enrollment:", {
-  //       projectId,
-  //       bm1Content: enrollmentData.bm1Content,
-  //       collaborators: enrollmentData.collaborators,
-  //     });
-
-  //     // Simulate API call
-  //     await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  //     // After successful enrollment, reset the enrollment process flag
-  //     // setIsEnrollmentProcess(false);
-
-  //     // Redirect to project detail page after successful enrollment
-  //     navigate(getProjectDetailRoute());
-  //   } catch (error) {
-  //     console.error("Failed to submit enrollment:", error);
-  //   } finally {
-  //     setIsSubmitting(false);
-  //   }
-  // };
 
   const updateEnrollmentData = (updates: Partial<EnrollmentData>) => {
     setEnrollmentData((prev) => ({ ...prev, ...updates }));
