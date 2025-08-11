@@ -11,6 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Search, FileText, Filter, Settings } from "lucide-react";
+import { useStaffProjectFilter } from "@/hooks/queries/project";
+import { StaffProjectFilterRequest } from "@/types/project";
 
 // Import new modular components
 import { SimpleProjectCard } from "./ProjectManagement/ProjectCard";
@@ -48,6 +50,12 @@ const ProjectManagementOverview: React.FC = () => {
   // State management
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"createdate" | "englishtitle">(
+    "createdate"
+  );
+  const [sortDesc, setSortDesc] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(9);
   const [activeTab, setActiveTab] = useState("projects");
   const [currentView, setCurrentView] = useState<
     | "overview"
@@ -132,77 +140,75 @@ const ProjectManagementOverview: React.FC = () => {
     };
   }, [selectedProject]);
 
-  // Mock projects data - using state to allow updates
-  const [projects, setProjects] = useState<LegacyProject[]>(() => {
-    return [
-      {
-        id: "319ad3ec-7c7b-433e-9cdf-0ba9fa9b182d",
-        "english-title": "Advanced Medical Diagnosis System",
-        "vietnamese-title": "Hệ thống chẩn đoán y tế tiên tiến",
-        status: "in_progress",
-        "created-at": "2025-01-15",
-        "creator-id": "user-001",
-        code: "PRJ001",
-        language: "English",
-        category: "Research",
-        type: "AI/ML",
-        genre: "propose",
-        "maximum-member": 5,
-        progress: 65,
-        "updated-at": "2025-01-20",
-        majors: [
-          { id: "major-1", name: "Computer Science" },
-          { id: "major-2", name: "Medical Technology" },
-        ],
-        "project-tags": [
-          { name: "AI" },
-          { name: "Healthcare" },
-          { name: "Machine Learning" },
-        ],
-      },
-      {
-        id: "37262efd-0640-45bb-a5a6-148c54d9b7f6",
-        "english-title": "Smart Learning Management Platform",
-        "vietnamese-title": "Nền tảng quản lý học tập thông minh",
-        status: "completed",
-        "created-at": "2025-01-10",
-        "creator-id": "user-002",
-        code: "PRJ002",
-        language: "English",
-        category: "Development",
-        type: "Web Application",
-        genre: "normal",
-        "maximum-member": 8,
-        progress: 100,
-        "updated-at": "2025-01-25",
-        majors: [
-          { id: "major-3", name: "Software Engineering" },
-          { id: "major-4", name: "Education Technology" },
-        ],
-        "project-tags": [
-          { name: "Education" },
-          { name: "Web Development" },
-          { name: "Learning Analytics" },
-        ],
-      },
-    ];
-  });
+  // API request parameters
+  const projectFilterRequest: StaffProjectFilterRequest = useMemo(
+    () => ({
+      title: searchTerm,
+      genres: ["propose", "normal"],
+      statuses:
+        statusFilter === "all"
+          ? ["created"]
+          : [
+              statusFilter as
+                | "created"
+                | "in_progress"
+                | "completed"
+                | "cancelled",
+            ],
+      "page-index": currentPage,
+      "page-size": pageSize,
+      "sort-by": sortBy,
+      desc: sortDesc,
+      "include-creator": true,
+      "include-members": true,
+    }),
+    [searchTerm, statusFilter, currentPage, pageSize, sortBy, sortDesc]
+  );
 
-  // Filter projects
-  const filteredProjects = useMemo(() => {
-    return projects.filter((project) => {
-      const matchesSearch =
-        project["english-title"]
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        project["vietnamese-title"]
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase());
-      const matchesStatus =
-        statusFilter === "all" || project.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [projects, searchTerm, statusFilter]);
+  // Fetch projects using the new API
+  const {
+    data: projectsData,
+    isLoading,
+    error,
+  } = useStaffProjectFilter(projectFilterRequest);
+
+  // Get projects from API data and map to LegacyProject format
+  const projects: LegacyProject[] = useMemo(() => {
+    return (projectsData?.["data-list"] || []).map((project) => ({
+      id: project.id,
+      "english-title": project["english-title"],
+      "vietnamese-title": project["vietnamese-title"],
+      status: project.status,
+      "created-at": project["created-at"],
+      "creator-id": project["creator-id"],
+      code: project.code || "",
+      language: project.language,
+      category: project.category,
+      type: project.type,
+      genre: project.genre,
+      "maximum-member": project["maximum-member"],
+      progress: project.progress || 0,
+      "updated-at": project["updated-at"] || undefined,
+      majors: project.majors || [],
+      "project-tags": project["project-tags"] || [],
+      // Additional fields
+      abbreviations: project.abbreviations || undefined,
+      duration: project.duration || undefined,
+      description: project.description || undefined,
+      "requirement-note": project["requirement-note"] || undefined,
+      creator: project.creator
+        ? {
+            id: project.creator.id,
+            "full-name": project.creator["full-name"] || "",
+            email: project.creator.email || "",
+            "avatar-url": project.creator["avatar-url"] || "",
+          }
+        : undefined,
+    }));
+  }, [projectsData]);
+
+  const totalCount = projectsData?.["total-count"] || 0;
+  const totalPages = projectsData?.["total-page"] || 0;
 
   // Navigation function
   const navigateToPage = (
@@ -276,17 +282,11 @@ const ProjectManagementOverview: React.FC = () => {
 
   // Handle council assignment
   const handleAssignCouncil = (project: LegacyProject, council: Council) => {
-    // Update the projects state with the assigned council
-    setProjects((prevProjects) =>
-      prevProjects.map((p) =>
-        p.id === project.id ? { ...p, assignedCouncil: council } : p
-      )
-    );
-
     // Update selected project if it's the one being assigned
     if (selectedProject && selectedProject.id === project.id) {
       setSelectedProject({ ...selectedProject, assignedCouncil: council });
     }
+    // Note: In a real implementation, you would also call an API to update the project
   };
 
   // Render different detail views based on current state
@@ -324,7 +324,7 @@ const ProjectManagementOverview: React.FC = () => {
   }
 
   return (
-    <div className="space-y-8 p-8">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -361,11 +361,33 @@ const ProjectManagementOverview: React.FC = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="completed">Completed</SelectItem>
-            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="created">Created</SelectItem>
+            <SelectItem value="in_progress">In Progress</SelectItem>
+            <SelectItem value="done">Completed</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
           </SelectContent>
         </Select>
+        <Select
+          value={sortBy}
+          onValueChange={(value: "createdate" | "englishtitle") =>
+            setSortBy(value)
+          }
+        >
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="createdate">Created Date</SelectItem>
+            <SelectItem value="englishtitle">English Title</SelectItem>
+          </SelectContent>
+        </Select>
+        <Button
+          variant="outline"
+          onClick={() => setSortDesc(!sortDesc)}
+          className="px-3"
+        >
+          {sortDesc ? "↓" : "↑"}
+        </Button>
       </div>
 
       {/* Main Content Tabs */}
@@ -380,7 +402,22 @@ const ProjectManagementOverview: React.FC = () => {
         </TabsList>
 
         <TabsContent value="projects" className="space-y-6">
-          {filteredProjects.length === 0 ? (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+              <p className="text-base text-gray-500">Loading projects...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <FileText className="w-12 h-12 text-red-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Error loading projects
+              </h3>
+              <p className="text-base text-gray-500 text-center">
+                Please try again later
+              </p>
+            </div>
+          ) : projects.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <FileText className="w-12 h-12 text-gray-400 mb-4" />
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
@@ -391,15 +428,49 @@ const ProjectManagementOverview: React.FC = () => {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredProjects.map((project) => (
-                <SimpleProjectCard
-                  key={project.id}
-                  project={project}
-                  onViewDetails={() => navigateToPage("project", project)}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                {projects.map((project) => (
+                  <SimpleProjectCard
+                    key={project.id}
+                    project={project}
+                    onViewDetails={() => navigateToPage("project", project)}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6">
+                  <div className="text-sm text-gray-500">
+                    Showing {(currentPage - 1) * pageSize + 1} to{" "}
+                    {Math.min(currentPage * pageSize, totalCount)} of{" "}
+                    {totalCount} projects
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                    >
+                      Previous
+                    </Button>
+                    <span className="text-sm text-gray-500">
+                      Page {currentPage} of {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </TabsContent>
 

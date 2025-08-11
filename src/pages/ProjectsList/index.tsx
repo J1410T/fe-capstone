@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loading } from "@/components/ui/loaders";
 
@@ -8,15 +8,12 @@ import {
   CategoryFilter,
   FieldFilter,
   MajorFilter,
-  ProjectItem,
+  // ProjectItem,
   SortOption,
   StatusFilter,
   TypeFilter,
 } from "@/types/project";
-import {
-  getProjectListFilter,
-  buildFilterParams,
-} from "@/services/resources/project";
+import { useProjectListFilter } from "@/hooks/queries/project";
 import { ProjectCard, ProjectsHeader, ProjectsPagination } from "./components";
 
 // Default values for filters
@@ -36,10 +33,6 @@ const DEFAULT_FILTERS = {
 const ProjectsList: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [projects, setProjects] = useState<ProjectItem[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
 
   // Filter states
   const [searchTerm, setSearchTerm] = useState<string>(
@@ -71,58 +64,36 @@ const ProjectsList: React.FC = () => {
   );
   const [pageSize, setPageSize] = useState<number>(DEFAULT_FILTERS.pageSize);
 
-  const fetchProjects = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const filterParams = buildFilterParams({
-        searchTerm,
-        selectedStatus,
-        selectedField,
-        selectedMajor,
-        selectedCategory,
-        selectedType,
-        selectedSort,
-        tags,
-        currentPage,
-        pageSize,
-      });
+  // Use TanStack Query for data fetching
+  const {
+    data: projectsResponse,
+    isLoading,
+    refetch,
+  } = useProjectListFilter(
+    {
+      searchTerm,
+      selectedStatus,
+      selectedField,
+      selectedMajor,
+      selectedCategory,
+      selectedType,
+      selectedSort,
+      tags,
+      currentPage,
+      pageSize,
+    },
+    true
+  );
 
-      const response = await getProjectListFilter(filterParams);
-
-      setProjects(response["data-list"] || []);
-      setTotalPages(response["total-page"] || 1);
-      setTotalCount(response["total-count"] || 0);
-    } catch (error) {
-      console.error("Fetch projects failed:", error);
-      setProjects([]);
-      setTotalPages(1);
-      setTotalCount(0);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    searchTerm,
-    selectedStatus,
-    selectedField,
-    selectedMajor,
-    selectedCategory,
-    selectedType,
-    selectedSort,
-    tags,
-    currentPage,
-    pageSize,
-  ]);
-
-  // Load projects on component mount and when pagination changes
-  useEffect(() => {
-    fetchProjects();
-  }, [currentPage, pageSize, fetchProjects]);
+  const projects = projectsResponse?.["data-list"] || [];
+  const totalPages = projectsResponse?.["total-page"] || 1;
+  const totalCount = projectsResponse?.["total-count"] || 0;
 
   const handleSearch = useCallback(async () => {
     // Reset to first page when searching
     setCurrentPage(1);
-    await fetchProjects();
-  }, [fetchProjects]);
+    await refetch();
+  }, [refetch]);
 
   const handleReset = useCallback(() => {
     // Reset all filters to default values
@@ -136,7 +107,6 @@ const ProjectsList: React.FC = () => {
     setTags(DEFAULT_FILTERS.tags);
     setCurrentPage(DEFAULT_FILTERS.currentPage);
     setPageSize(DEFAULT_FILTERS.pageSize);
-    // fetchProjects will be called automatically via useEffect when states change
   }, []);
 
   const handleViewDetails = useCallback(
@@ -156,13 +126,11 @@ const ProjectsList: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // fetchProjects will be called automatically via useEffect
   };
 
   const handlePageSizeChange = (size: number) => {
     setPageSize(size);
     setCurrentPage(1);
-    // fetchProjects will be called automatically via useEffect
   };
 
   // Reset to first page when filters change

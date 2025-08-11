@@ -93,7 +93,7 @@ function StaffLayout() {
         </header>
         <main className="flex flex-col flex-1 overflow-hidden">
           <div className="flex-1 overflow-auto">
-            <div className="container mx-auto">
+            <div className="container mx-auto px-6 py-6">
               <Outlet context={{ breadcrumbItems, setBreadcrumbItems }} />
             </div>
           </div>

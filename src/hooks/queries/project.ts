@@ -10,6 +10,7 @@ import {
   updateProject,
   enrollProjectAsPrincipal,
   getProjectByHostInstitution,
+  getStaffProjectFilter,
 } from "@/services/resources/project";
 import {
   CreateProjectMajorRequest,
@@ -17,6 +18,7 @@ import {
   CreateProjectTagRequest,
   UpdateProjectRequest,
   SortOption,
+  StaffProjectFilterRequest,
 } from "@/types/project";
 
 export function useProjectListFilter(
@@ -143,5 +145,19 @@ export function useProjectByHostInstitution() {
     gcTime: 1000 * 60 * 10, // 10 minutes
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+}
+
+// New query hook for project filtering (Staff Management)
+export function useStaffProjectFilter(
+  request: StaffProjectFilterRequest,
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: ["staff-project-filter", request],
+    queryFn: () => getStaffProjectFilter(request),
+    enabled,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
   });
 }

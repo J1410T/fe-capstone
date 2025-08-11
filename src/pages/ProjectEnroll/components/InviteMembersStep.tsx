@@ -62,12 +62,14 @@ import {
 } from "@/hooks/queries/document";
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { getUserRoleByFilter } from "@/services/resources/auth";
+import { toast } from "sonner";
 
 interface InviteMembersStepProps {
   collaborators: SimpleInvitedUser[];
   onCollaboratorsChange: (collaborators: SimpleInvitedUser[]) => void;
   groupMembers?: GroupMember[];
   onGroupMembersChange?: (groupMembers: GroupMember[]) => void;
+  maximumMembers?: number;
   onNext: () => void;
   onPrevious: () => void;
   mode?: "detailed" | "simple";
@@ -82,6 +84,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   onCollaboratorsChange,
   groupMembers: initialGroupMembers = [],
   onGroupMembersChange,
+  maximumMembers,
   onNext,
   onPrevious,
   mode = "detailed",
@@ -149,6 +152,11 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     },
     !!projectId
   );
+
+  const canAddMember = () => {
+    const max = maximumMembers ?? Infinity;
+    return groupMembers.length < max - 1;
+  };
 
   // Initialize group members from UserRole data, excluding current user
   useEffect(() => {
@@ -611,13 +619,80 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     setShowResults(shouldShow);
   }, [searchValue, filteredUsers.length, isSearching]);
 
+  // const handleUserSelect = (user: {
+  //   id: string;
+  //   name: string;
+  //   email: string;
+  //   avatar?: string;
+  // }) => {
+  //   if (groupMembers.some((u) => u.email === user.email)) return;
+
+  //   // Determine default role - Leader if none exists, otherwise Researcher
+  //   const hasLeader = groupMembers.some((u) => u.role === "Leader");
+  //   const defaultRole: "Researcher" | "Secretary" | "Leader" = !hasLeader
+  //     ? "Leader"
+  //     : "Researcher";
+  //   const defaultRoleId =
+  //     allowedRoles.find((r) => r.name === defaultRole)?.id || "";
+
+  //   const newMember: GroupMember = {
+  //     id: user.id,
+  //     name: user.name,
+  //     email: user.email,
+  //     avatar: user.avatar,
+  //     role: defaultRole,
+  //     roleId: defaultRoleId,
+  //     isInvitation: !user.id || user.id.startsWith("invite-"),
+  //     // Add required fields from Member interface
+  //     code: "",
+  //     groupName: "",
+  //     isOfficial: null,
+  //     expireDate: null,
+  //     createdAt: null,
+  //     status: null,
+  //     accountId: user.id,
+  //     "full-name": user.name,
+  //     phoneNumber: null,
+  //     address: null,
+  //     companyName: null,
+  //     "avatar-url": user.avatar || null,
+  //     projectId: null,
+  //     appraisalCouncilId: null,
+  //   };
+
+  //   setGroupMembers([...groupMembers, newMember]);
+
+  //   // Update collaborators for backward compatibility
+  //   const newCollaborator: SimpleInvitedUser = {
+  //     id: user.id,
+  //     name: user.name,
+  //     email: user.email,
+  //     avatar: user.avatar,
+  //     role: defaultRole,
+  //     isInvitation: newMember.isInvitation,
+  //   };
+
+  //   onCollaboratorsChange([...collaborators, newCollaborator]);
+  //   setSearchValue("");
+  //   setShowResults(false);
+  // };
+
   const handleUserSelect = (user: {
     id: string;
     name: string;
     email: string;
     avatar?: string;
   }) => {
+    // Kiểm tra xem user đã tồn tại chưa
     if (groupMembers.some((u) => u.email === user.email)) return;
+
+    // Kiểm tra giới hạn số lượng thành viên
+    if (!canAddMember()) {
+      toast.error(
+        `Cannot add members because there are already ${maximumMembers} members`
+      );
+      return;
+    }
 
     // Determine default role - Leader if none exists, otherwise Researcher
     const hasLeader = groupMembers.some((u) => u.role === "Leader");

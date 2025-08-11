@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { Eye, Calendar, User } from "lucide-react";
+import { Eye, Calendar, Users, Tag } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { LegacyProject } from "./detailViewTypes";
 
@@ -8,18 +8,6 @@ interface SimpleProjectCardProps {
   project: LegacyProject;
   onViewDetails: () => void;
 }
-
-// Get principal investigator name
-const getPrincipalInvestigator = (creatorId: string) => {
-  const piMapping: Record<string, string> = {
-    "user-001": "Dr. Sarah Johnson",
-    "user-002": "Prof. Michael Chen",
-    "user-003": "Dr. Emily Rodriguez",
-    "user-004": "Prof. James Wilson",
-    "user-005": "Dr. Lisa Brown",
-  };
-  return piMapping[creatorId] || "Unknown PI";
-};
 
 export const SimpleProjectCard: React.FC<SimpleProjectCardProps> = ({
   project,
@@ -41,8 +29,12 @@ export const SimpleProjectCard: React.FC<SimpleProjectCardProps> = ({
 
       <div className="space-y-2 mb-4">
         <div className="flex items-center text-sm text-gray-600">
-          <User className="w-4 h-4 mr-2" />
-          <span>PI: {getPrincipalInvestigator(project["creator-id"])}</span>
+          <Tag className="w-4 h-4 mr-2" />
+          <span>Type: {project.type}</span>
+        </div>
+        <div className="flex items-center text-sm text-gray-600">
+          <Users className="w-4 h-4 mr-2" />
+          <span>Max Members: {project["maximum-member"]}</span>
         </div>
         <div className="flex items-center text-sm text-gray-600">
           <Calendar className="w-4 h-4 mr-2" />
