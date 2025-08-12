@@ -1,5 +1,4 @@
 import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -65,142 +64,189 @@ export const TopicDetailView: React.FC<TopicDetailViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Topic Overview */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <FileText className="h-6 w-6" />
-            {topic.title}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">
-                Project Details
-              </h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">Field:</span>
-                  <span>{topic.type}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FolderOpen className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">Category:</span>
-                  <span>{topic.category}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">Created:</span>
-                  <span>{new Date(topic.createdAt).toLocaleDateString()}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-gray-500" />
-                  <span className="font-medium">Proposals:</span>
-                  <span>
-                    {topic.applicants} Proposal
-                    {topic.applicants !== 1 ? "s" : ""}
-                  </span>
-                </div>
+      <div className="bg-gradient-to-r from-white via-emerald-50/30 to-white rounded-2xl border border-emerald-100 p-6">
+        <div className="flex items-start gap-4 mb-6">
+          <div className="p-3 bg-emerald-100 rounded-xl">
+            <FileText className="h-6 w-6 text-emerald-600" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 line-clamp-2">
+              {topic.title}
+            </h2>
+            <div className="flex items-center gap-4">
+              <Badge
+                variant="outline"
+                className={
+                  topic.status === "Waiting for PI"
+                    ? "bg-amber-50 text-amber-700 border-amber-200 font-medium"
+                    : "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium"
+                }
+              >
+                {topic.status}
+              </Badge>
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <Calendar className="h-4 w-4" />
+                <span>
+                  Created {new Date(topic.createdAt).toLocaleDateString()}
+                </span>
               </div>
             </div>
-            <div>
-              <h4 className="font-medium text-gray-900 mb-3">
-                Approval Status
-              </h4>
-              <div className="space-y-3">
-                <div className="flex items-center gap-3">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <span className="text-sm font-medium text-green-700">
-                    {topic.councilApprovals || 0}/
-                    {topic.totalCouncilMembers || 5} Council Approvals
-                  </span>
-                </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Project Details */}
+          <div className="space-y-4">
+            <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+              Project Information
+            </h4>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                <BookOpen className="h-5 w-5 text-blue-600" />
                 <div>
-                  <Badge
-                    variant="outline"
-                    className={
-                      topic.status === "Waiting for PI"
-                        ? "bg-amber-100 text-amber-800 border-amber-200"
-                        : "bg-emerald-100 text-emerald-800 border-emerald-200"
-                    }
-                  >
-                    {topic.status}
-                  </Badge>
+                  <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                    Research Field
+                  </span>
+                  <p className="font-semibold text-gray-900">{topic.type}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+                <FolderOpen className="h-5 w-5 text-purple-600" />
+                <div>
+                  <span className="text-xs font-medium text-purple-600 uppercase tracking-wide">
+                    Category
+                  </span>
+                  <p className="font-semibold text-gray-900">
+                    {topic.category}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+                <Users className="h-5 w-5 text-orange-600" />
+                <div>
+                  <span className="text-xs font-medium text-orange-600 uppercase tracking-wide">
+                    Applications
+                  </span>
+                  <p className="font-semibold text-gray-900">
+                    {topic.applicants} Proposal
+                    {topic.applicants !== 1 ? "s" : ""} Submitted
+                  </p>
                 </div>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Proposals List */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <GraduationCap className="h-6 w-6" />
-            Principal Investigator Proposals ({topicProposals.length})
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+        <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <GraduationCap className="h-5 w-5 text-blue-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Principal Investigator Proposals
+              </h3>
+              <p className="text-sm text-gray-500">
+                {topicProposals.length} proposal
+                {topicProposals.length !== 1 ? "s" : ""} submitted for review
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-6">
           {topicProposals.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Users className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-              <p>No proposals submitted for this project yet.</p>
+            <div className="text-center py-12">
+              <div className="flex flex-col items-center gap-4">
+                <div className="p-4 bg-gray-100 rounded-full">
+                  <Users className="h-8 w-8 text-gray-400" />
+                </div>
+                <div>
+                  <p className="text-lg font-medium text-gray-900 mb-1">
+                    No proposals yet
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Waiting for Principal Investigators to submit their
+                    proposals
+                  </p>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
               {topicProposals.map((proposal) => (
                 <div
                   key={proposal.id}
-                  className="border rounded-lg p-4 bg-white hover:bg-gray-50 transition-colors"
+                  className="group bg-gradient-to-r from-white to-gray-50/50 rounded-xl border border-gray-200 p-6 hover:border-emerald-200 hover:shadow-lg transition-all duration-200"
                 >
-                  <div className="flex flex-col md:flex-row justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between gap-3 mb-3">
-                        <div className="flex-1">
-                          <h5 className="font-semibold text-lg text-gray-900 mb-1">
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    <div className="flex-1 space-y-4">
+                      {/* Header with badges */}
+                      <div className="flex flex-wrap items-start gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-emerald-700 transition-colors">
                             {proposal.proposalTitle}
-                          </h5>
-                          <div className="flex items-center gap-2 mb-2">
-                            <Badge
-                              variant="outline"
-                              className="bg-blue-100 text-blue-800 border-blue-200"
-                            >
-                              {proposal.proposalType}
-                            </Badge>
-                            <Badge
-                              variant="outline"
-                              className="bg-green-100 text-green-800 border-green-200"
-                            >
-                              {proposal.status}
-                            </Badge>
-                          </div>
+                          </h4>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge
+                            variant="outline"
+                            className="bg-blue-50 text-blue-700 border-blue-200 font-medium"
+                          >
+                            {proposal.proposalType}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className="bg-green-50 text-green-700 border-green-200 font-medium"
+                          >
+                            {proposal.status}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="text-sm text-gray-600 space-y-2">
-                        <div>
-                          <span className="font-medium">Summary:</span>
-                          <p className="mt-1 text-gray-700 text-sm leading-relaxed">
-                            {proposal.proposalSummary.length > 200
-                              ? `${proposal.proposalSummary.substring(
-                                  0,
-                                  200
-                                )}...`
-                              : proposal.proposalSummary}
-                          </p>
+
+                      {/* Summary */}
+                      <div className="bg-gray-50 rounded-lg p-4">
+                        <h5 className="text-sm font-medium text-gray-700 mb-2">
+                          Proposal Summary
+                        </h5>
+                        <p className="text-sm text-gray-600 leading-relaxed line-clamp-3">
+                          {proposal.proposalSummary}
+                        </p>
+                      </div>
+
+                      {/* Applicant Info */}
+                      <div className="flex items-center gap-3 text-sm text-gray-600">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+                            <span className="text-xs font-semibold text-emerald-700">
+                              {proposal.name.charAt(0)}
+                            </span>
+                          </div>
+                          <span className="font-medium text-gray-900">
+                            {proposal.name}
+                          </span>
                         </div>
+                        <span className="text-gray-400">•</span>
+                        <span>{proposal.institution}</span>
+                        <span className="text-gray-400">•</span>
+                        <span>{proposal.experience} experience</span>
                       </div>
                     </div>
-                    <div className="flex-shrink-0 flex flex-col gap-2">
+
+                    {/* Action Button */}
+                    <div className="flex-shrink-0 flex items-center">
                       <Button
-                        variant="default"
-                        size="sm"
                         onClick={() => onViewProposal(proposal)}
-                        className="flex items-center gap-2"
+                        className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-medium px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
                       >
-                        <CheckCircle className="h-4 w-4" />
-                        Review & Approve
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        Review & Evaluate
                       </Button>
                     </div>
                   </div>
@@ -208,8 +254,8 @@ export const TopicDetailView: React.FC<TopicDetailViewProps> = ({
               ))}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

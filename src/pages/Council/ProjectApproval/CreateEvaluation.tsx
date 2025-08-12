@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -120,180 +119,246 @@ const CreateEvaluation: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={handleCancel}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to {stageName}
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">
-              Create New Evaluation
-            </h1>
-            <p className="text-gray-600">
-              Create a new evaluation for {stageName}
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-emerald-50/30">
+      <div className="container mx-auto py-8 space-y-8">
+        {/* Modern Header */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/20">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCancel}
+                className="flex items-center gap-2 hover:bg-gray-50 rounded-xl"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Back to {stageName}
+              </Button>
+              <div className="h-6 w-px bg-gray-300"></div>
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl text-white shadow-lg">
+                  <FileText className="h-6 w-6" />
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    Create New Evaluation
+                  </h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Create a new evaluation for {stageName}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                className="rounded-xl px-6"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-medium px-8 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {isSaving ? "Saving..." : "Save Evaluation"}
+              </Button>
+            </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            <Save className="h-4 w-4 mr-2" />
-            {isSaving ? "Saving..." : "Save Evaluation"}
-          </Button>
-        </div>
-      </div>
 
-      {/* Form */}
-      <div className="grid gap-6">
-        {/* Basic Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Evaluator Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="evaluatorName">Evaluator Name *</Label>
-                <Input
-                  id="evaluatorName"
-                  value={formData.evaluatorName}
-                  onChange={(e) =>
-                    handleInputChange("evaluatorName", e.target.value)
-                  }
-                  placeholder="Enter evaluator name"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="evaluatorRole">Evaluator Role *</Label>
-                <Input
-                  id="evaluatorRole"
-                  value={formData.evaluatorRole}
-                  onChange={(e) =>
-                    handleInputChange("evaluatorRole", e.target.value)
-                  }
-                  placeholder="e.g., Senior Research Council Member"
-                />
+        {/* Form */}
+        <div className="grid gap-8">
+          {/* Basic Information */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 overflow-hidden">
+            <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <User className="h-5 w-5 text-blue-600" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Evaluator Information
+                </h2>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="recommendation">Recommendation</Label>
-              <Select
-                value={formData.recommendation}
-                onValueChange={(value) =>
-                  handleInputChange("recommendation", value)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select recommendation" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="approve">Approve</SelectItem>
-                  <SelectItem value="reject">Reject</SelectItem>
-                  <SelectItem value="revise">Revise</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="evaluatorName"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Evaluator Name *
+                  </Label>
+                  <Input
+                    id="evaluatorName"
+                    value={formData.evaluatorName}
+                    onChange={(e) =>
+                      handleInputChange("evaluatorName", e.target.value)
+                    }
+                    placeholder="Enter evaluator name"
+                    className="h-11 bg-white/50 border-gray-200 focus:border-emerald-300 focus:ring-emerald-200 rounded-xl"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label
+                    htmlFor="evaluatorRole"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Evaluator Role *
+                  </Label>
+                  <Input
+                    id="evaluatorRole"
+                    value={formData.evaluatorRole}
+                    onChange={(e) =>
+                      handleInputChange("evaluatorRole", e.target.value)
+                    }
+                    placeholder="e.g., Senior Research Council Member"
+                    className="h-11 bg-white/50 border-gray-200 focus:border-emerald-300 focus:ring-emerald-200 rounded-xl"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="recommendation"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Recommendation
+                </Label>
+                <Select
+                  value={formData.recommendation}
+                  onValueChange={(value) =>
+                    handleInputChange("recommendation", value)
+                  }
+                >
+                  <SelectTrigger className="h-11 bg-white/50 border-gray-200 rounded-xl">
+                    <SelectValue placeholder="Select recommendation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approve">Approve</SelectItem>
+                    <SelectItem value="reject">Reject</SelectItem>
+                    <SelectItem value="revise">Revise</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label
+                  htmlFor="overallComments"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Overall Comments
+                </Label>
+                <Textarea
+                  id="overallComments"
+                  value={formData.overallComments}
+                  onChange={(e) =>
+                    handleInputChange("overallComments", e.target.value)
+                  }
+                  placeholder="Enter overall comments about the proposal"
+                  rows={3}
+                  className="bg-white/50 border-gray-200 focus:border-emerald-300 focus:ring-emerald-200 rounded-xl resize-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Evaluation Content */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 overflow-hidden">
+            <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <FileText className="h-5 w-5 text-purple-600" />
+                </div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Detailed Evaluation Report *
+                </h2>
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="overallComments">Overall Comments</Label>
-              <Textarea
-                id="overallComments"
-                value={formData.overallComments}
-                onChange={(e) =>
-                  handleInputChange("overallComments", e.target.value)
-                }
-                placeholder="Enter overall comments about the proposal"
-                rows={3}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Evaluation Content */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Detailed Evaluation Report *
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label>Evaluation Content</Label>
-              <div className="border rounded-lg">
-                <Editor
-                  apiKey={apiKey}
-                  onInit={(_evt, editor) => {
-                    editorRef.current = editor;
-                  }}
-                  initialValue={
-                    formData.evaluationContent ||
+            <div className="p-6">
+              <div className="space-y-2">
+                <Label className="text-sm font-medium text-gray-700">
+                  Evaluation Content
+                </Label>
+                <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
+                  <Editor
+                    apiKey={apiKey}
+                    onInit={(_evt, editor) => {
+                      editorRef.current = editor;
+                    }}
+                    initialValue={
+                      formData.evaluationContent ||
+                      `
+                      <h3>Evaluation Report</h3>
+                      <h4>Executive Summary</h4>
+                      <p>Please provide your overall assessment of the proposal...</p>
+                      
+                      <h4>Strengths</h4>
+                      <ul>
+                        <li>List key strengths of the proposal</li>
+                      </ul>
+                      
+                      <h4>Areas for Improvement</h4>
+                      <ul>
+                        <li>List areas that need improvement</li>
+                      </ul>
+                      
+                      <h4>Recommendation</h4>
+                      <p>Provide your final recommendation and reasoning...</p>
                     `
-                    <h3>Evaluation Report</h3>
-                    <h4>Executive Summary</h4>
-                    <p>Please provide your overall assessment of the proposal...</p>
-                    
-                    <h4>Strengths</h4>
-                    <ul>
-                      <li>List key strengths of the proposal</li>
-                    </ul>
-                    
-                    <h4>Areas for Improvement</h4>
-                    <ul>
-                      <li>List areas that need improvement</li>
-                    </ul>
-                    
-                    <h4>Recommendation</h4>
-                    <p>Provide your final recommendation and reasoning...</p>
-                  `
-                  }
-                  init={{
-                    height: 500,
-                    menubar: true,
-                    plugins: [
-                      "advlist",
-                      "autolink",
-                      "lists",
-                      "link",
-                      "image",
-                      "charmap",
-                      "preview",
-                      "anchor",
-                      "searchreplace",
-                      "visualblocks",
-                      "code",
-                      "fullscreen",
-                      "insertdatetime",
-                      "media",
-                      "table",
-                      "code",
-                      "help",
-                      "wordcount",
-                    ],
-                    toolbar:
-                      "undo redo | blocks | " +
-                      "bold italic forecolor | alignleft aligncenter " +
-                      "alignright alignjustify | bullist numlist outdent indent | " +
-                      "removeformat | help",
-                    content_style:
-                      "body { font-family:Helvetica,Arial,sans-serif; font-size:14px }",
-                  }}
-                  onEditorChange={handleEditorChange}
-                />
+                    }
+                    init={{
+                      height: 500,
+                      menubar: true,
+                      plugins: [
+                        "advlist",
+                        "autolink",
+                        "lists",
+                        "link",
+                        "image",
+                        "charmap",
+                        "preview",
+                        "anchor",
+                        "searchreplace",
+                        "visualblocks",
+                        "code",
+                        "fullscreen",
+                        "insertdatetime",
+                        "media",
+                        "table",
+                        "code",
+                        "help",
+                        "wordcount",
+                      ],
+                      toolbar:
+                        "undo redo | blocks | " +
+                        "bold italic forecolor | alignleft aligncenter " +
+                        "alignright alignjustify | bullist numlist outdent indent | " +
+                        "removeformat | help",
+                      content_style: `
+                        body { 
+                          font-family: 'Merriweather', serif; 
+                          font-size: 14px; 
+                          line-height: 1.6;
+                          padding: 16px;
+                        }
+                        p { margin-bottom: 12px; }
+                        h1, h2, h3, h4, h5, h6 { margin-top: 16px; margin-bottom: 8px; }
+                      `,
+                    }}
+                    onEditorChange={handleEditorChange}
+                  />
+                </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );
