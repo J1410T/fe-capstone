@@ -42,3 +42,11 @@ export {
   compressImage,
   formatFileSize,
 } from "./file";
+
+// AI content formatting utilities
+export {
+  formatAIContent,
+  formatAIContentForTinyMCE,
+  extractProjectDetails,
+  type FormattedAIContent,
+} from "./ai-content-formatter";

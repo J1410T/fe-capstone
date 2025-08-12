@@ -47,7 +47,7 @@ export const IndividualEvaluationDetail: React.FC<
   const { projectId } = evaluation;
 
   const handleNavigateToEvaluation = () => {
-    navigate(`/project/${projectId}`);
+    navigate(`/project/${projectId}/evaluation`);
   };
 
   const handleNavigateToEvaluationStage = () => {

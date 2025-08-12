@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { TinyMCEViewer } from "@/components/ui/tinymce-viewer";
+import { ResponsiveTinyMCEViewer } from "@/components/ui/responsive-tinymce-viewer";
 import {
   ArrowLeft,
   User,
@@ -196,9 +196,9 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen ">
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto py-4 px-4">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-3 mb-6">
           <Button
             variant="outline"
             onClick={() =>
@@ -212,7 +212,7 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
             Back to Proposal
           </Button>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
               Individual Evaluation Detail
             </h1>
             <p className="text-gray-600 mt-1">{evaluation.proposalTitle}</p>
@@ -220,16 +220,16 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
         </div>
 
         {/* Main Content */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-3 space-y-4">
           {/* Evaluation Overview */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-6">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-4">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <User className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-blue-100 rounded-xl">
+                  <User className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     Evaluation Overview
                   </h3>
                   <p className="text-sm text-gray-500">
@@ -250,8 +250,8 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <User className="h-4 w-4 text-blue-600" />
                   <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
@@ -266,7 +266,7 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <Star className="h-4 w-4 text-emerald-600" />
                   <span className="text-xs font-medium text-emerald-600 uppercase tracking-wide">
@@ -294,7 +294,7 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
                 )}
               </div>
 
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-3">
                 <div className="flex items-center gap-2 mb-2">
                   <FileText className="h-4 w-4 text-purple-600" />
                   <span className="text-xs font-medium text-purple-600 uppercase tracking-wide">
@@ -341,14 +341,14 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
           </div>
 
           {/* Evaluation Document */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20">
-            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-6 border-b border-gray-100">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20">
+            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 border-b border-gray-100">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-emerald-100 rounded-xl">
-                  <FileText className="h-6 w-6 text-emerald-600" />
+                <div className="p-2 bg-emerald-100 rounded-xl">
+                  <FileText className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     Detailed Evaluation Document
                   </h3>
                   <p className="text-sm text-gray-600">
@@ -358,12 +358,14 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-4">
               <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                <TinyMCEViewer
+                <ResponsiveTinyMCEViewer
                   content={evaluation.evaluationContent}
-                  height={600}
+                  height="auto"
                   className="border-0"
+                  maxHeight="60vh"
+                  autoResize={true}
                 />
               </div>
             </div>
@@ -371,14 +373,14 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
 
           {/* Comments Section */}
           {evaluation.comments && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20">
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b border-gray-100">
                 <div className="flex items-center gap-3">
-                  <div className="p-3 bg-blue-100 rounded-xl">
-                    <FileText className="h-6 w-6 text-blue-600" />
+                  <div className="p-2 bg-blue-100 rounded-xl">
+                    <FileText className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-gray-900">
                       Additional Comments
                     </h3>
                     <p className="text-sm text-gray-600">
@@ -388,12 +390,14 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-6">
+              <div className="p-4">
                 <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                  <TinyMCEViewer
+                  <ResponsiveTinyMCEViewer
                     content={evaluation.comments}
-                    height={300}
+                    height="auto"
                     className="border-0"
+                    maxHeight="40vh"
+                    autoResize={true}
                   />
                 </div>
               </div>

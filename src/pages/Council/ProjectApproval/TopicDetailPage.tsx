@@ -12,6 +12,7 @@ import {
   Calendar,
   FileText,
   CheckSquare,
+  CheckCircle,
 } from "lucide-react";
 
 interface Topic {
@@ -43,6 +44,8 @@ interface Applicant {
   proposalSummary: string;
   proposalType: string;
   submittedBy: string;
+  approvals?: number;
+  totalReviewers?: number;
 }
 
 // Mock data - in real app this would come from API
@@ -72,6 +75,20 @@ const mockTopics: Topic[] = [
   // Add more as needed
 ];
 
+// Extended majors/fields for the topic
+const availableMajors = [
+  { name: "Computer Science", color: "bg-blue-100 text-blue-700" },
+  { name: "Artificial Intelligence", color: "bg-purple-100 text-purple-700" },
+  { name: "Biomedical Engineering", color: "bg-green-100 text-green-700" },
+  { name: "Data Science", color: "bg-indigo-100 text-indigo-700" },
+  { name: "Machine Learning", color: "bg-pink-100 text-pink-700" },
+  { name: "Medical Informatics", color: "bg-teal-100 text-teal-700" },
+  { name: "Software Engineering", color: "bg-orange-100 text-orange-700" },
+  { name: "Information Systems", color: "bg-cyan-100 text-cyan-700" },
+  { name: "Robotics", color: "bg-red-100 text-red-700" },
+  { name: "Healthcare Technology", color: "bg-emerald-100 text-emerald-700" },
+];
+
 const mockApplicants: Applicant[] = [
   {
     id: 1,
@@ -86,11 +103,13 @@ const mockApplicants: Applicant[] = [
     status: "Pending Review",
     appliedFor: 1,
     appliedDate: "2023-05-20",
-    proposalTitle: "Advanced AI Diagnostic System for Medical Imaging",
+    proposalTitle: "🔬 Advanced AI Diagnostic System for Medical Imaging",
     proposalSummary:
       "A comprehensive proposal for developing an AI-powered diagnostic system...",
     proposalType: "Research Proposal",
     submittedBy: "Dr. Jane Smith",
+    approvals: 3,
+    totalReviewers: 4,
   },
   {
     id: 2,
@@ -105,11 +124,35 @@ const mockApplicants: Applicant[] = [
     status: "Pending Review",
     appliedFor: 1,
     appliedDate: "2023-05-18",
-    proposalTitle: "Intelligent Medical Diagnosis Platform Using Deep Learning",
+    proposalTitle:
+      "🤖 Intelligent Medical Diagnosis Platform Using Deep Learning",
     proposalSummary:
       "Development of a comprehensive AI platform that integrates multiple diagnostic tools...",
     proposalType: "Technical Proposal",
     submittedBy: "Dr. Michael Johnson",
+    approvals: 2,
+    totalReviewers: 5,
+  },
+  {
+    id: 3,
+    name: "Dr. Sarah Williams",
+    email: "sarah.williams@example.com",
+    phone: "+1 (555) 456-7890",
+    department: "Biomedical Engineering",
+    institution: "Medical Research Institute",
+    experience: "12 years",
+    publications: 32,
+    degrees: ["Ph.D. in Biomedical Engineering", "M.Sc. in Medical Technology"],
+    status: "Under Review",
+    appliedFor: 1,
+    appliedDate: "2023-05-22",
+    proposalTitle: "🧬 Neural Network-Based Pathology Detection System",
+    proposalSummary:
+      "Innovative approach to automated pathology detection using advanced neural networks...",
+    proposalType: "Innovation Proposal",
+    submittedBy: "Dr. Sarah Williams",
+    approvals: 4,
+    totalReviewers: 4,
   },
 ];
 
@@ -167,11 +210,11 @@ export const TopicDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen ">
-      <div className="container mx-auto py-8 space-y-8">
+    <div className="min-h-screen">
+      <div className="container mx-auto py-4 space-y-4">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/20">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-white/20">
+          <div className="flex items-center gap-4 mb-3">
             <Button
               variant="outline"
               size="sm"
@@ -183,14 +226,14 @@ export const TopicDetailPage: React.FC = () => {
             </Button>
             <div className="h-6 w-px bg-gray-300"></div>
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl text-white shadow-lg">
-                <FileText className="h-6 w-6" />
+              <div className="p-2 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl text-white shadow-lg">
+                <FileText className="h-5 w-5" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                   Topic Details
                 </h1>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   Review topic information and proposals
                 </p>
               </div>
@@ -200,28 +243,28 @@ export const TopicDetailPage: React.FC = () => {
         </div>
 
         {/* Topic Overview */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-8">
-          <div className="flex items-start gap-6 mb-8">
-            <div className="p-4 bg-emerald-100 rounded-2xl">
-              <FileText className="h-8 w-8 text-emerald-600" />
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-4">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="p-3 bg-emerald-100 rounded-xl">
+              <FileText className="h-6 w-6 text-emerald-600" />
             </div>
             <div className="flex-1">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-xl font-bold text-gray-900 mb-3">
                 {topic.title}
               </h2>
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-3 mb-4">
                 <Badge
                   variant="outline"
                   className={
                     topic.status === "Waiting for PI"
-                      ? "bg-amber-50 text-amber-700 border-amber-200 font-medium px-4 py-2"
-                      : "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium px-4 py-2"
+                      ? "bg-amber-50 text-amber-700 border-amber-200 font-medium px-3 py-1 text-xs"
+                      : "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium px-3 py-1 text-xs"
                   }
                 >
                   {topic.status}
                 </Badge>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Calendar className="h-4 w-4" />
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <Calendar className="h-3 w-3" />
                   <span>
                     Created {new Date(topic.createdAt).toLocaleDateString()}
                   </span>
@@ -231,58 +274,85 @@ export const TopicDetailPage: React.FC = () => {
           </div>
 
           {/* Topic Info Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl">
-              <BookOpen className="h-8 w-8 text-blue-600" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+              <BookOpen className="h-6 w-6 text-blue-600" />
               <div>
                 <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
                   Research Field
                 </span>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900">
                   {topic.type}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-xl">
-              <FolderOpen className="h-8 w-8 text-purple-600" />
+            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+              <FolderOpen className="h-6 w-6 text-purple-600" />
               <div>
                 <span className="text-xs font-medium text-purple-600 uppercase tracking-wide">
                   Category
                 </span>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900">
                   {topic.category}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 p-4 bg-orange-50 rounded-xl">
-              <Users className="h-8 w-8 text-orange-600" />
+            <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+              <Users className="h-6 w-6 text-orange-600" />
               <div>
                 <span className="text-xs font-medium text-orange-600 uppercase tracking-wide">
                   Applications
                 </span>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900">
                   {topic.applicants} Proposal{topic.applicants !== 1 ? "s" : ""}
                 </p>
               </div>
             </div>
           </div>
+
+          {/* Related Majors/Fields */}
+          <div className="bg-gradient-to-r from-gray-50 to-white rounded-lg p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+              <span className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
+                Related Academic Fields
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {availableMajors.slice(0, 8).map((major, index) => (
+                <Badge
+                  key={index}
+                  variant="outline"
+                  className={`${major.color} border-0 text-xs px-2 py-0.5 font-medium`}
+                >
+                  {major.name}
+                </Badge>
+              ))}
+              <Badge
+                variant="outline"
+                className="bg-gray-100 text-gray-600 border-0 text-xs px-2 py-0.5 font-medium"
+              >
+                +{availableMajors.length - 8} more
+              </Badge>
+            </div>
+          </div>
         </div>
 
         {/* Proposals Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20">
-          <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-100">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20">
+          <div className="bg-gradient-to-r from-gray-50 to-white p-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <GraduationCap className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <GraduationCap className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-base font-semibold text-gray-900">
                     Principal Investigator Proposals
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs text-gray-500">
                     {topicProposals.length} proposal
                     {topicProposals.length !== 1 ? "s" : ""} submitted for
                     review
@@ -297,7 +367,8 @@ export const TopicDetailPage: React.FC = () => {
               {topicProposals.length > 0 && (
                 <Button
                   onClick={handleOpenProposalDialog}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-xs"
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
                   Select Proposal
@@ -359,7 +430,7 @@ export const TopicDetailPage: React.FC = () => {
                           <div className="flex-1">
                             <div className="flex items-center gap-3 mb-2">
                               <h4
-                                className={`text-xl font-semibold group-hover:text-emerald-700 transition-colors ${
+                                className={`text-lg font-semibold group-hover:text-emerald-700 transition-colors ${
                                   selectedProposalId === proposal.id
                                     ? "text-emerald-700"
                                     : "text-gray-900"
@@ -387,6 +458,21 @@ export const TopicDetailPage: React.FC = () => {
                               >
                                 {proposal.status}
                               </Badge>
+                              {proposal.approvals !== undefined && proposal.totalReviewers && (
+                                <Badge
+                                  variant="outline"
+                                  className={`${
+                                    proposal.approvals === proposal.totalReviewers
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                      : proposal.approvals / proposal.totalReviewers >= 0.6
+                                      ? "bg-amber-50 text-amber-700 border-amber-200"
+                                      : "bg-red-50 text-red-700 border-red-200"
+                                  }`}
+                                >
+                                  <CheckCircle className="h-3 w-3 mr-1" />
+                                  {proposal.approvals}/{proposal.totalReviewers} Approved
+                                </Badge>
+                              )}
                             </div>
                             <p className="text-gray-600 line-clamp-2 mb-3">
                               {proposal.proposalSummary}
