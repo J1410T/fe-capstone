@@ -6,12 +6,16 @@ import {
   createAppraisalCouncil,
   updateAppraisalCouncil,
   deleteAppraisalCouncil,
+  getAppraisalCouncilByProjectId,
+  assignAppraisalCouncilToProject,
 } from "@/services/resources/appraisal-council";
 import {
   AppraisalCouncilListRequest,
   CreateAppraisalCouncilRequest,
   UpdateAppraisalCouncilRequest,
+  AssignCouncilToProjectRequest,
 } from "@/types/appraisal-council";
+import { getUserRolesByAppraisalCouncil } from "@/services/resources/auth";
 
 // Query keys
 export const appraisalCouncilQueryKeys = {
@@ -110,6 +114,84 @@ export const useDeleteAppraisalCouncil = () => {
     onError: (error) => {
       console.error("Failed to delete appraisal council:", error);
       toast.error("Failed to delete appraisal council", {
+        description: "Please try again",
+      });
+    },
+  });
+};
+
+/**
+ * Hook to get appraisal council by project ID
+ */
+export const useAppraisalCouncilByProjectId = (projectId: string) => {
+  return useQuery({
+    queryKey: [...appraisalCouncilQueryKeys.all, "by-project", projectId],
+    queryFn: () => getAppraisalCouncilByProjectId(projectId),
+    enabled: !!projectId,
+    retry: (failureCount, error: unknown) => {
+      // Don't retry on 404 errors (no council assigned)
+      if (error && typeof error === "object" && "response" in error) {
+        const axiosError = error as { response?: { status?: number } };
+        if (axiosError.response?.status === 404) {
+          return false;
+        }
+      }
+      return failureCount < 3;
+    },
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+};
+
+/**
+ * Hook to get user roles by appraisal council ID
+ */
+export const useUserRolesByAppraisalCouncil = (
+  councilId: string,
+  pageIndex: number = 1,
+  pageSize: number = 100
+) => {
+  return useQuery({
+    queryKey: [
+      ...appraisalCouncilQueryKeys.all,
+      "members",
+      councilId,
+      pageIndex,
+      pageSize,
+    ],
+    queryFn: () =>
+      getUserRolesByAppraisalCouncil(councilId, pageIndex, pageSize),
+    enabled: !!councilId,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+};
+
+/**
+ * Hook to assign appraisal council to project
+ */
+export const useAssignAppraisalCouncilToProject = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: AssignCouncilToProjectRequest) =>
+      assignAppraisalCouncilToProject(data),
+    onSuccess: (_, variables) => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries({
+        queryKey: [
+          ...appraisalCouncilQueryKeys.all,
+          "by-project",
+          variables.sourceProjectId,
+        ],
+      });
+      queryClient.invalidateQueries({
+        queryKey: appraisalCouncilQueryKeys.all,
+      });
+
+      toast.success("Appraisal Council assigned successfully!");
+    },
+    onError: (error) => {
+      console.error("Failed to assign appraisal council:", error);
+      toast.error("Failed to assign appraisal council", {
         description: "Please try again",
       });
     },

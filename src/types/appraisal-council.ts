@@ -77,3 +77,39 @@ export interface RoleInfo {
   id: string;
   name: string;
 }
+
+export interface AppraisalCouncilByProject {
+  id: string;
+  code: string;
+  name: string;
+  "created-at": string;
+  "updated-at": string;
+  status: "created" | "deleted";
+  evaluations: null;
+  "evaluation-stages": null;
+  "council-members": null;
+}
+
+export interface AppraisalCouncilListRequest {
+  "key-word": string;
+  "page-index": number;
+  "page-size": number;
+  status?: "created" | "deleted";
+}
+
+export interface AssignCouncilToProjectRequest {
+  sourceProjectId: string;
+  appraisalCouncilId: string;
+}
+
+// Response when no council is assigned to project (404 case)
+export interface NoCouncilAssignedError {
+  status: 404;
+  message: "Not found any Appraisal Council belongs to this ProjectId";
+}
+
+// Success response for council assignment
+export interface AssignCouncilSuccessResponse {
+  status: 200;
+  message: "Appraisal Council assigned successfully.";
+}

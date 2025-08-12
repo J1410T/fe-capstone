@@ -73,7 +73,7 @@ function ProjectDetail() {
 
     if (isProposal) {
       // For Proposal projects: show Overview, Team, Document
-      baseTabs.push("team", "documents");
+      baseTabs.push("team", "documents", "evaluation");
     } else if (projectResponse?.data["is-member"]) {
       // For other projects: show all tabs if member
       baseTabs.push("team", "milestones", "documents", "budget", "evaluation");

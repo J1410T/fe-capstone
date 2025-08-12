@@ -23,8 +23,8 @@ export interface ProjectFilterRequest {
   desc: boolean;
   "page-index": number;
   "page-size": number;
-  status?: string;
-  genres?: string;
+  statuses?: string[];
+  genres?: string[];
 }
 
 export interface ProjectFilterResponse {
@@ -225,6 +225,83 @@ export interface CreateProjectRequest {
   language: string;
   category: string;
   type: string;
+}
+
+// Project Filter Request for Staff Management
+export interface StaffProjectFilterRequest {
+  title?: string;
+  genres: ("propose" | "normal")[];
+  statuses: ("created" | "in_progress" | "completed" | "cancelled")[];
+  "page-index": number;
+  "page-size": number;
+  "sort-by": "createdate" | "englishtitle";
+  desc: boolean;
+  "include-creator": boolean;
+  "include-members": boolean;
+}
+
+// Creator information in project response
+export interface ProjectCreator {
+  id: string;
+  code: string;
+  "group-name": string | null;
+  "is-official": boolean;
+  "expire-date": string;
+  "created-at": string;
+  status: string;
+  "account-id": string;
+  "full-name": string;
+  email: string;
+  "avatar-url": string;
+  "role-id": string;
+  name: string;
+  "project-id": string | null;
+  "appraisal-council-id": string | null;
+}
+
+// Project item in filter response
+export interface ProjectFilterItem {
+  id: string;
+  "logo-url": string | null;
+  "picture-url": string | null;
+  code: string;
+  "english-title": string;
+  "vietnamese-title": string;
+  abbreviations: string | null;
+  duration: number | null;
+  "start-date": string | null;
+  "end-date": string | null;
+  description: string | null;
+  "requirement-note": string | null;
+  budget: number;
+  progress: number;
+  "maximum-member": number;
+  language: string;
+  category: string;
+  type: string;
+  genre: "propose" | "normal";
+  "created-at": string;
+  "updated-at": string | null;
+  status: "created" | "in_progress" | "completed" | "cancelled";
+  "creator-id": string;
+  creator: ProjectCreator;
+  members: unknown[];
+  milestones: unknown[] | null;
+  evaluations: unknown[] | null;
+  "project-similarity": unknown | null;
+  majors: ProjectMajor[];
+  "project-tags": ProjectTag[];
+  documents: unknown[] | null;
+  transactions: unknown[] | null;
+}
+
+// Project Filter Response for Staff Management
+export interface StaffProjectFilterResponse {
+  "page-index": number;
+  "page-size": number;
+  "total-count": number;
+  "total-page": number;
+  "data-list": ProjectFilterItem[];
 }
 
 export interface CreateProjectResponse {
