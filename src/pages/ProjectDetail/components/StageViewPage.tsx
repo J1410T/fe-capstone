@@ -11,11 +11,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft, Plus, User, Bot, Calendar, FileText } from "lucide-react";
 import { EvaluationStage, IndividualEvaluation } from "@/types/task";
-import { getEvaluationStage } from "../data/mockEvaluationData";
+import { getEvaluationById } from "../data/mockEvaluationApiData";
 import { useAuth } from "@/contexts/AuthContext";
 import { canCreateIndividualEvaluation } from "@/utils/evaluationPermissions";
 
-export const StageViewPage: React.FC = () => {
+const StageViewPage: React.FC = () => {
   const { evaluationId, stageId } = useParams<{
     evaluationId: string;
     stageId: string;
@@ -29,13 +29,55 @@ export const StageViewPage: React.FC = () => {
   const hasCreatePermission = canCreateIndividualEvaluation(user);
 
   useEffect(() => {
-    if (stageId) {
+    if (evaluationId && stageId) {
       setIsLoading(true);
-      getEvaluationStage(stageId)
-        .then(setStage)
+      getEvaluationById(evaluationId)
+        .then((evaluation) => {
+          if (evaluation) {
+            const foundStage = evaluation["evaluation-stages"].find(
+              (s) => s.id === stageId
+            );
+            if (foundStage) {
+              // Convert API stage to local stage format
+              const convertedStage: EvaluationStage = {
+                id: foundStage.id,
+                name: foundStage.name,
+                type: foundStage.type,
+                phrase: foundStage.phrase,
+                stageOrder: foundStage["stage-order"],
+                title: foundStage.name,
+                description: foundStage.type + " - " + foundStage.phrase,
+                status: foundStage.status,
+                order: foundStage["stage-order"],
+                createdAt: "", // API doesn't provide this field
+                evaluationId: foundStage["evaluation-id"],
+                individualEvaluations: (foundStage["individual-evaluations"] || []).map((ie) => ({
+                  id: ie.id,
+                  evaluator: ie.name || "Unknown",
+                  status: ie.status,
+                  totalRate: ie["total-rate"] || 0,
+                  submittedAt: ie["submitted-at"] || "",
+                  documentId: ie.documents ? "attached" : "",
+                  isAIReport: ie["is-ai-report"] || false,
+                  comment: ie.comment || "",
+                  isApproved: ie["is-approved"],
+                  reviewerResult: Boolean(ie["reviewer-result"]),
+                  evaluationStageId: ie["evaluation-stage-id"],
+                  reviewerId: ie["reviewer-id"] || "",
+                  projectId: evaluation["project-id"],
+                  milestoneId: foundStage["milestone-id"] || "",
+                })),
+              };
+              setStage(convertedStage);
+            }
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching evaluation stage:", error);
+        })
         .finally(() => setIsLoading(false));
     }
-  }, [stageId]);
+  }, [evaluationId, stageId]);
 
   const handleBack = () => {
     // Navigate back to evaluation list

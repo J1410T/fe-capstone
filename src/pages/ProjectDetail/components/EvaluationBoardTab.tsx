@@ -1,7 +1,6 @@
 import React from "react";
 import {
   Badge,
-  Button,
   Card,
   CardHeader,
   CardTitle,
@@ -9,38 +8,58 @@ import {
   CardDescription,
 } from "@/components/ui";
 import { useNavigate, useParams } from "react-router-dom";
-import { EvaluationStage } from "@/types/task";
 import { FileText, Calendar, Users, ArrowRight } from "lucide-react";
+import { Evaluation } from "@/types/evaluation-api";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 
 interface EvaluationBoardTabProps {
-  evaluationStages: EvaluationStage[];
+  evaluations: Evaluation[];
 }
 
 const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
-  evaluationStages,
+  evaluations,
 }) => {
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
+  const { user } = useAuth();
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "completed":
         return <Badge className="bg-green-100 text-green-800">Completed</Badge>;
       case "in_progress":
+      case "in-progress":
         return <Badge className="bg-blue-100 text-blue-800">In Progress</Badge>;
       case "pending":
         return <Badge className="bg-yellow-100 text-yellow-800">Pending</Badge>;
+      case "created":
+        return <Badge className="bg-blue-100 text-blue-800">Created</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-700">{status}</Badge>;
     }
   };
 
-  const handleViewAllEvaluations = () => {
-    navigate(`/project/${projectId}/evaluation`);
-  };
-
-  const handleStageClick = (stageId: string) => {
-    navigate(`/project/${projectId}/evaluation/stage/${stageId}`);
+  const handleEvaluationClick = (evaluationId: string) => {
+    console.log(
+      "Navigating to evaluation:",
+      evaluationId,
+      "Project:",
+      projectId,
+      "User role:",
+      user?.role
+    );
+    
+    // Determine the correct route prefix based on user role
+    let routePrefix = "";
+    if (user?.role === UserRole.RESEARCHER) {
+      routePrefix = "/researcher";
+    } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+      routePrefix = "/pi";
+    }
+    
+    const targetRoute = `${routePrefix}/project/${projectId}/evaluation/${evaluationId}/view`;
+    console.log("Navigating to route:", targetRoute);
+    navigate(targetRoute);
   };
 
   return (
@@ -52,20 +71,13 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
               Evaluation Board
             </CardTitle>
             <CardDescription className="text-sm text-gray-600">
-              Overview of evaluation progress across all stages
+              View evaluation progress and results across all stages (View-only)
             </CardDescription>
           </div>
-          <Button
-            onClick={handleViewAllEvaluations}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white"
-          >
-            View All Evaluations
-            <ArrowRight className="h-4 w-4 ml-2" />
-          </Button>
         </div>
       </CardHeader>
       <CardContent>
-        {evaluationStages.length === 0 ? (
+        {evaluations.length === 0 ? (
           <div className="text-center py-12">
             <div className="flex flex-col items-center gap-4">
               <div className="p-4 bg-gray-100 rounded-full">
@@ -73,17 +85,11 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
               </div>
               <div>
                 <p className="text-lg font-medium text-gray-900 mb-1">
-                  No evaluations found
+                  No evaluations available
                 </p>
                 <p className="text-sm text-gray-500 mb-4">
-                  Start by creating your first evaluation stage
+                  This project doesn't have any evaluations yet
                 </p>
-                <Button
-                  onClick={handleViewAllEvaluations}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
-                >
-                  Go to Evaluations
-                </Button>
               </div>
             </div>
           </div>
@@ -95,10 +101,10 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
                 <FileText className="h-6 w-6 text-blue-600" />
                 <div>
                   <p className="text-sm font-medium text-blue-600">
-                    Total Stages
+                    Total Evaluations
                   </p>
                   <p className="text-xl font-bold text-blue-900">
-                    {evaluationStages.length}
+                    {evaluations.length}
                   </p>
                 </div>
               </div>
@@ -106,27 +112,25 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
                 <Users className="h-6 w-6 text-green-600" />
                 <div>
                   <p className="text-sm font-medium text-green-600">
-                    Completed
+                    Total Stages
                   </p>
                   <p className="text-xl font-bold text-green-900">
-                    {
-                      evaluationStages.filter(
-                        (stage) => stage.status === "completed"
-                      ).length
-                    }
+                    {evaluations.reduce(
+                      (total, evaluation) =>
+                        total + evaluation["evaluation-stages"].length,
+                      0
+                    )}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-4 bg-yellow-50 rounded-lg">
                 <Calendar className="h-6 w-6 text-yellow-600" />
                 <div>
-                  <p className="text-sm font-medium text-yellow-600">
-                    In Progress
-                  </p>
+                  <p className="text-sm font-medium text-yellow-600">Created</p>
                   <p className="text-xl font-bold text-yellow-900">
                     {
-                      evaluationStages.filter(
-                        (stage) => stage.status === "in_progress"
+                      evaluations.filter(
+                        (evaluation) => evaluation.status === "created"
                       ).length
                     }
                   </p>
@@ -134,20 +138,23 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
               </div>
             </div>
 
-            {/* Recent Stages */}
+            {/* All Project Evaluations */}
             <div>
               <h4 className="text-md font-semibold text-gray-900 mb-4">
-                Recent Evaluation Stages
+                Project Evaluations Overview
               </h4>
               <div className="space-y-3">
-                {evaluationStages
-                  .sort((a, b) => a.stageOrder - b.stageOrder)
-                  .slice(0, 3)
-                  .map((stage, index) => (
+                {evaluations
+                  .sort(
+                    (a, b) =>
+                      new Date(b["create-date"]).getTime() -
+                      new Date(a["create-date"]).getTime()
+                  )
+                  .map((evaluation, index) => (
                     <div
-                      key={stage.id}
+                      key={evaluation.id}
                       className="group cursor-pointer flex items-center justify-between border border-gray-200 rounded-lg bg-white px-4 py-3 hover:border-emerald-200 hover:bg-emerald-50 transition-all duration-200"
-                      onClick={() => handleStageClick(stage.id)}
+                      onClick={() => handleEvaluationClick(evaluation.id)}
                     >
                       <div className="flex items-center gap-3">
                         <div className="h-6 w-6 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">
@@ -155,35 +162,22 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
                         </div>
                         <div>
                           <p className="text-sm font-medium text-gray-900 group-hover:text-emerald-700">
-                            {stage.name}
+                            {evaluation.title}
                           </p>
                           <p className="text-xs text-gray-500">
-                            {stage.type} •{" "}
-                            {stage.individualEvaluations?.length || 0}{" "}
-                            evaluations
+                            {evaluation.code} •{" "}
+                            {evaluation["evaluation-stages"].length} stages •
+                            Click to view details
                           </p>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        {getStatusBadge(stage.status)}
+                        {getStatusBadge(evaluation.status)}
                         <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-emerald-600" />
                       </div>
                     </div>
                   ))}
               </div>
-
-              {evaluationStages.length > 3 && (
-                <div className="mt-4">
-                  <Button
-                    variant="outline"
-                    onClick={handleViewAllEvaluations}
-                    className="w-full border-gray-300 hover:border-emerald-300 hover:bg-emerald-50"
-                  >
-                    View All {evaluationStages.length} Evaluation Stages
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              )}
             </div>
           </div>
         )}

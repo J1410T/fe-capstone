@@ -19,23 +19,16 @@ import {
   useEnrollProjectAsPrincipal,
 } from "@/hooks/queries/project";
 import { useProjectMajors } from "@/hooks/queries/major";
-import {
-  getEvaluationStagesByProject,
-  getEvaluationSummaryByProject,
-} from "./data/mockEvaluationData";
+import { getEvaluationsByProject } from "./data/mockEvaluationApiData";
 import EvaluationBoardTab from "./components/EvaluationBoardTab";
-import { EvaluationStage, EvaluationSummary } from "@/types/task";
+import { Evaluation } from "@/types/evaluation-api";
 
 function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
-  const [evaluationStages, setEvaluationStages] = useState<EvaluationStage[]>(
-    []
-  );
-  const [evaluationSummary, setEvaluationSummary] =
-    useState<EvaluationSummary | null>(null);
+  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
 
   const { data: majorProject } = useProjectMajors(projectId || "");
   const {
@@ -47,8 +40,7 @@ function ProjectDetail() {
 
   useEffect(() => {
     if (projectId) {
-      getEvaluationStagesByProject(projectId).then(setEvaluationStages);
-      getEvaluationSummaryByProject(projectId).then(setEvaluationSummary);
+      getEvaluationsByProject(projectId).then(setEvaluations);
     }
   }, [projectId]);
 
@@ -187,11 +179,11 @@ function ProjectDetail() {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList
-          className={`grid w-full ${
-            visibleTabs.length <= 3
-              ? `grid-cols-${visibleTabs.length}`
-              : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"
-          } gap-1`}
+          className={
+            visibleTabs.length <= 4
+              ? "flex justify-center gap-1 w-full"
+              : "grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1"
+          }
         >
           {visibleTabs.map((tab) => (
             <TabsTrigger key={tab} value={tab} className="text-xs sm:text-sm">
@@ -264,9 +256,9 @@ function ProjectDetail() {
 
         {visibleTabs.includes("evaluation") && (
           <TabsContent value="evaluation" className="space-y-4">
-            {evaluationSummary && evaluationStages.length >= 0 ? (
+            {evaluations.length >= 0 ? (
               <EvaluationBoardTab
-                evaluationStages={evaluationStages}
+                evaluations={evaluations}
                 // evaluationSummary={evaluationSummary}
               />
             ) : (
