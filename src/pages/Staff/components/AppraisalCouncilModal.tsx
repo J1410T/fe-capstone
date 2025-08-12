@@ -55,7 +55,10 @@ export const AppraisalCouncilModal: React.FC<AppraisalCouncilModalProps> = ({
   const [pendingAction, setPendingAction] = useState<() => void>(() => {});
 
   // API hooks
-  const { data: searchResults } = useSearchAccounts(searchInput);
+  const { data: searchResults } = useSearchAccounts({
+    input: searchInput,
+    roleUser: "Appraisal Council",
+  });
   const { data: allRoles } = useAllRoles();
 
   // Filter roles for Appraisal council and Chairman

@@ -140,6 +140,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
         await createUserRoleMutation.mutateAsync({
           "account-id": (userResponse as { id: string }).id,
           "role-id": formData.roleId,
+          status: "Approved",
         });
       }
 
@@ -162,6 +163,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
       await createUserRoleMutation.mutateAsync({
         "account-id": user.id,
         "role-id": selectedRoleId,
+        status: "Approved",
       });
 
       toast.success("Role added successfully");

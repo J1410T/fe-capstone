@@ -82,7 +82,7 @@ export const getNotificationList = async (
     }
 
     const response = await axiosClient.post<NotificationListResponse>(
-      "/notification/list",
+      "/notification//user-notification",
       requestBody,
       {
         headers: {
