@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -10,18 +10,17 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, User, Bot, Calendar, FileText } from "lucide-react";
+import { User, Bot, Calendar, FileText, ChevronLeft } from "lucide-react";
 import { IndividualEvaluation } from "@/types/task";
 import { EvaluationOverviewTab } from "./evaluation/EvaluationOverviewTab";
 import { EvaluationDocumentTab } from "./evaluation/EvaluationDocumentTab";
+import Header from "@/components/layout/header";
 
 interface IndividualEvaluationDetailProps {
-  // In a real app, these would be fetched based on the route params
   evaluation?: IndividualEvaluation;
   stageName?: string;
 }
 
-// Mock data - in real app this would be fetched from API
 const mockEvaluation: IndividualEvaluation = {
   id: "eval-1",
   totalRate: 8.5,
@@ -43,27 +42,18 @@ const mockEvaluation: IndividualEvaluation = {
 export const IndividualEvaluationDetail: React.FC<
   IndividualEvaluationDetailProps
 > = ({ evaluation = mockEvaluation, stageName = "Evaluation Round 1" }) => {
-  const { projectId, stageId, evaluationId } = useParams<{
-    projectId?: string;
-    stageId: string;
-    individualId: string;
-    evaluationId?: string;
-  }>();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
+  const { projectId } = evaluation;
 
-  const handleBack = () => {
-    // Navigate back based on the current route pattern
-    if (evaluationId && stageId) {
-      // New routing pattern: /evaluation/:eid/stage/:sid/individual/:iid
-      navigate(`/evaluation/${evaluationId}/stage/${stageId}`);
-    } else if (projectId) {
-      // Legacy routing pattern: /projects/:id/evaluation-board/:stageId/:individualId
-      navigate(`/projects/${projectId}`);
-    } else {
-      // Fallback: go back in history
-      navigate(-1);
-    }
+  const handleNavigateToEvaluation = () => {
+    navigate(`/project/${projectId}`);
+  };
+
+  const handleNavigateToEvaluationStage = () => {
+    navigate(
+      `/project/${evaluation.projectId}/evaluation/stage/${evaluation.evaluationStageId}`
+    );
   };
 
   const getStatusColor = (status: string) => {
@@ -92,22 +82,35 @@ export const IndividualEvaluationDetail: React.FC<
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="max-w-4xl mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
+      <Header />
+
+      {/* Breadcrumb */}
+      <div className="flex items-center gap-2 text-sm text-gray-600 mt-15">
         <Button
           variant="ghost"
           size="sm"
-          onClick={handleBack}
-          className="flex items-center gap-2"
+          className="p-0 flex items-center gap-1"
+          onClick={handleNavigateToEvaluation}
         >
-          <ArrowLeft className="w-4 h-4" />
-          Back to Project
+          <ChevronLeft className="w-4 h-4" /> Evaluation
         </Button>
+        <span className="text-gray-400">/</span>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="p-0 flex items-center gap-1"
+          onClick={handleNavigateToEvaluationStage}
+        >
+          Evaluation Stage
+        </Button>
+        <span className="text-gray-400">/</span>
+        <span className="font-medium text-gray-900">Individual Evaluation</span>
       </div>
 
       {/* Evaluation Header Card */}
-      <Card className="shadow-sm">
+      <Card className="shadow-sm border rounded-xl">
         <CardHeader className="pb-4">
           <div className="flex items-start justify-between">
             <div className="space-y-2">

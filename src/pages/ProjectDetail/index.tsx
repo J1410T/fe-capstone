@@ -267,7 +267,7 @@ function ProjectDetail() {
             {evaluationSummary && evaluationStages.length >= 0 ? (
               <EvaluationBoardTab
                 evaluationStages={evaluationStages}
-                evaluationSummary={evaluationSummary}
+                // evaluationSummary={evaluationSummary}
               />
             ) : (
               <div className="flex items-center justify-center h-64">
