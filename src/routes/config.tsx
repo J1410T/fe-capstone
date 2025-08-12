@@ -68,6 +68,11 @@ import PIMeetings from "@/pages/PrincipalInvestigator/Meetings";
 import Meetings from "@/pages/Council/Meetings";
 import ProjectApproval from "@/pages/Council/ProjectApproval";
 import CreateEvaluation from "@/pages/Council/ProjectApproval/CreateEvaluation";
+import { TopicDetailPage } from "@/pages/Council/ProjectApproval/TopicDetailPage";
+import { ProposalDetailPage } from "@/pages/Council/ProjectApproval/ProposalDetailPage";
+import { CreateEvaluationPage } from "@/pages/Council/ProjectApproval/CreateEvaluationPage";
+import { IndividualEvaluationDetailPage } from "@/pages/Council/ProjectApproval/IndividualEvaluationDetailPage";
+import { AIEvaluationDetailPage } from "@/pages/Council/ProjectApproval/AIEvaluationDetailPage";
 // import FormRegister from "@/pages/FormRegister";
 import FormsOverview from "@/pages/FormRegister/FormsOverview";
 import FormCreate from "@/pages/FormRegister/FormCreate";
@@ -383,8 +388,28 @@ export const routes: RouteObject[] = [
             element: <ProjectApproval />,
           },
           {
+            path: "project-approval/topic/:topicId",
+            element: <TopicDetailPage />,
+          },
+          {
+            path: "project-approval/proposal/:proposalId",
+            element: <ProposalDetailPage />,
+          },
+          {
             path: "project-approval/create-evaluation",
             element: <CreateEvaluation />,
+          },
+          {
+            path: "evaluation/create",
+            element: <CreateEvaluationPage />,
+          },
+          {
+            path: "individual-evaluation/:evaluationId",
+            element: <IndividualEvaluationDetailPage />,
+          },
+          {
+            path: "ai-evaluation/:evaluationId",
+            element: <AIEvaluationDetailPage />,
           },
           {
             path: "evaluations",
