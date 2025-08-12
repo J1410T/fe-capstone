@@ -7,8 +7,7 @@ export const evaluationApi = {
   ): Promise<CreateFirstEvaluationResponse> => {
     try {
       const response = await axiosClient.post<string>(
-        "/evaluation/first-evaluation",
-        `"${projectId}"`,
+        `/evaluation/first-evaluation?projectId=${projectId}`,
         {
           headers: {
             "Content-Type": "application/json-patch+json",
