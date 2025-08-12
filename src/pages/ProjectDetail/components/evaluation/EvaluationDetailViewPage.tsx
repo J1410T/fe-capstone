@@ -168,7 +168,7 @@ const EvaluationDetailViewPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       <div className="container mx-auto py-8 space-y-8">
         {/* Back Button - Standalone */}
         <div className="flex items-center">
@@ -191,7 +191,7 @@ const EvaluationDetailViewPage: React.FC = () => {
                 {getStatusIcon(evaluation.status)}
                 <div>
                   <CardTitle className="text-2xl font-bold text-gray-900">
-                    {evaluation.title} - View Only
+                    {evaluation.title}
                   </CardTitle>
                   <CardDescription className="text-gray-600 mt-2">
                     {evaluation.code} • Created:{" "}

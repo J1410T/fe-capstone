@@ -96,54 +96,83 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
         ) : (
           <div className="space-y-4">
             {/* Summary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-                <FileText className="h-6 w-6 text-blue-600" />
-                <div>
-                  <p className="text-sm font-medium text-blue-600">
-                    Total Evaluations
-                  </p>
-                  <p className="text-xl font-bold text-blue-900">
-                    {evaluations.length}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-green-50 rounded-lg">
-                <Users className="h-6 w-6 text-green-600" />
-                <div>
-                  <p className="text-sm font-medium text-green-600">
-                    Total Stages
-                  </p>
-                  <p className="text-xl font-bold text-green-900">
-                    {evaluations.reduce(
-                      (total, evaluation) =>
-                        total + evaluation["evaluation-stages"].length,
-                      0
-                    )}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 p-4 bg-yellow-50 rounded-lg">
-                <Calendar className="h-6 w-6 text-yellow-600" />
-                <div>
-                  <p className="text-sm font-medium text-yellow-600">Created</p>
-                  <p className="text-xl font-bold text-yellow-900">
-                    {
-                      evaluations.filter(
-                        (evaluation) => evaluation.status === "created"
-                      ).length
-                    }
-                  </p>
-                </div>
-              </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-600 rounded-lg">
+                      <FileText className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-blue-700">
+                        Total Evaluations
+                      </p>
+                      <p className="text-2xl font-bold text-blue-900">
+                        {evaluations.length}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-green-600 rounded-lg">
+                      <Users className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-green-700">
+                        Total Stages
+                      </p>
+                      <p className="text-2xl font-bold text-green-900">
+                        {evaluations.reduce(
+                          (total, evaluation) =>
+                            total + evaluation["evaluation-stages"].length,
+                          0
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-yellow-600 rounded-lg">
+                      <Calendar className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-yellow-700">
+                        Individual Reviews
+                      </p>
+                      <p className="text-2xl font-bold text-yellow-900">
+                        {evaluations.reduce(
+                          (total, evaluation) =>
+                            total +
+                            evaluation["evaluation-stages"].reduce(
+                              (stageTotal, stage) =>
+                                stageTotal +
+                                (stage["individual-evaluations"]?.length || 0),
+                              0
+                            ),
+                          0
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
 
             {/* All Project Evaluations */}
             <div>
-              <h4 className="text-md font-semibold text-gray-900 mb-4">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                <FileText className="h-5 w-5 text-gray-700" />
                 Project Evaluations Overview
               </h4>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {evaluations
                   .sort(
                     (a, b) =>
@@ -151,31 +180,46 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
                       new Date(a["create-date"]).getTime()
                   )
                   .map((evaluation, index) => (
-                    <div
+                    <Card
                       key={evaluation.id}
-                      className="group cursor-pointer flex items-center justify-between border border-gray-200 rounded-lg bg-white px-4 py-3 hover:border-emerald-200 hover:bg-emerald-50 transition-all duration-200"
+                      className="group cursor-pointer border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all duration-200 overflow-hidden"
                       onClick={() => handleEvaluationClick(evaluation.id)}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="h-6 w-6 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 text-xs font-semibold">
-                          {index + 1}
+                      <CardContent className="p-0">
+                        <div className="flex items-center justify-between p-4 hover:bg-blue-50 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-100 text-blue-700 text-sm font-bold">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1">
+                              <h5 className="text-base font-semibold text-gray-900 group-hover:text-blue-700 mb-1">
+                                {evaluation.title}
+                              </h5>
+                              <div className="flex items-center gap-3 text-sm text-gray-500">
+                                <span className="font-mono text-xs bg-gray-100 px-2 py-1 rounded">
+                                  {evaluation.code}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Users className="h-3 w-3" />
+                                  {evaluation["evaluation-stages"].length}{" "}
+                                  stages
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Calendar className="h-3 w-3" />
+                                  {new Date(
+                                    evaluation["create-date"]
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            {getStatusBadge(evaluation.status)}
+                            <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors" />
+                          </div>
                         </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900 group-hover:text-emerald-700">
-                            {evaluation.title}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {evaluation.code} •{" "}
-                            {evaluation["evaluation-stages"].length} stages •
-                            Click to view details
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(evaluation.status)}
-                        <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-emerald-600" />
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   ))}
               </div>
             </div>

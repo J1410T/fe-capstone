@@ -1,5 +1,5 @@
 import React from "react";
-import { TinyMCEViewer } from "@/components/ui/tinymce-viewer";
+import { TinyMCEViewer } from "@/components/ui/TinyMCE";
 import { StatusBadge } from "./StatusBadge";
 
 interface SelectedPIRequest {

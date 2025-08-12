@@ -65,7 +65,7 @@ const EvaluationViewListPage: React.FC<EvaluationViewListPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="container mx-auto py-8 space-y-8">
         {/* Back Button - Standalone */}
         <div className="flex items-center">
@@ -86,10 +86,10 @@ const EvaluationViewListPage: React.FC<EvaluationViewListPageProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-2xl font-bold text-gray-900">
-                  Project Evaluations - View Only
+                  Project Evaluations
                 </CardTitle>
                 <CardDescription className="text-gray-600 mt-2">
-                  View all evaluations for this project (Read-only mode)
+                  View all evaluations for this project
                 </CardDescription>
               </div>
             </div>

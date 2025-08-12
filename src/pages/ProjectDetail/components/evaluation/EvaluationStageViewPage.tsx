@@ -127,10 +127,12 @@ const mockEvaluationStageData: EvaluationStageApi = {
 
 interface EvaluationStageViewPageProps {
   stage?: EvaluationStageApi;
+  evaluationId?: string;
 }
 
 const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
   stage: propStage,
+  evaluationId: propEvaluationId,
 }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -146,6 +148,10 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
 
   useEffect(() => {
     console.log("EvaluationStageViewPage received stage prop:", propStage);
+    console.log(
+      "EvaluationStageViewPage received evaluationId prop:",
+      propEvaluationId
+    );
     console.log(
       "URL params - projectId:",
       projectId,
@@ -164,11 +170,12 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
     }
 
     // Otherwise, fall back to mock data or fetch from API
-    if (stageId && evaluationId) {
+    if (stageId && (evaluationId || propEvaluationId)) {
       // Get the stage data from the evaluation API
+      const evalId = evaluationId || propEvaluationId;
       import("../../data/mockEvaluationApiData").then(
         ({ getEvaluationById }) => {
-          getEvaluationById(evaluationId)
+          getEvaluationById(evalId!)
             .then((evaluation) => {
               if (evaluation) {
                 const foundStage = evaluation["evaluation-stages"].find(
@@ -194,8 +201,12 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
             });
         }
       );
+    } else {
+      // No evaluation ID available, use mock data
+      setEvaluationStage(mockEvaluationStageData);
+      setLoading(false);
     }
-  }, [stageId, propStage, evaluationId, projectId]);
+  }, [stageId, propStage, propEvaluationId, evaluationId, projectId]);
 
   const handleBackToEvaluation = () => {
     // Determine the correct route prefix based on user role
@@ -205,9 +216,15 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       routePrefix = "/pi";
     }
-    navigate(
-      `${routePrefix}/project/${projectId}/evaluation/${evaluationId}/view`
-    );
+
+    // Use prop evaluationId first, then URL param, then fallback to evaluation list
+    const evalId = propEvaluationId || evaluationId;
+    if (evalId) {
+      navigate(`${routePrefix}/project/${projectId}/evaluation/${evalId}/view`);
+    } else {
+      // Navigate to evaluation list page instead
+      navigate(`${routePrefix}/project/${projectId}/evaluation/view`);
+    }
   };
 
   const handleViewIndividualEvaluation = (individualId: string) => {
@@ -295,7 +312,7 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
                     className="border-gray-300 text-gray-600 hover:bg-gray-50"
                   >
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Evaluation
+                    Back to Stage
                   </Button>
                 </div>
               </div>
@@ -317,7 +334,7 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
   ).length;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="container mx-auto py-8 space-y-8">
         {/* Back Button - Standalone */}
         <div className="flex items-center">
@@ -328,7 +345,7 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
             className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 shadow-sm font-medium"
           >
             <ArrowLeft className="h-5 w-5 mr-2" />
-            Back to Evaluation
+            Back to Stage
           </Button>
         </div>
 
@@ -340,7 +357,7 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
                 <Users className="h-8 w-8 text-blue-600" />
                 <div>
                   <CardTitle className="text-2xl font-bold text-gray-900">
-                    {evaluationStage.name} - View Only
+                    {evaluationStage.name}
                   </CardTitle>
                   <CardDescription className="text-gray-600 mt-2">
                     Evaluation Stage • Read-only evaluation stage

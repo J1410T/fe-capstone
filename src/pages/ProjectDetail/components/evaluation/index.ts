@@ -4,6 +4,5 @@ export { default as CreateIndividualEvaluationPage } from "./CreateIndividualEva
 export { default as EvaluationViewListPage } from "./EvaluationViewListPage";
 export { default as EvaluationStageViewPage } from "./EvaluationStageViewPage";
 export { default as EvaluationViewListPageWrapper } from "./EvaluationViewListPageWrapper";
-export { default as EvaluationStageViewPageWrapper } from "./EvaluationStageViewPageWrapper";
 export { default as EvaluationDetailViewPage } from "./EvaluationDetailViewPage";
 export { default as IndividualEvaluationDetailViewPage } from "./IndividualEvaluationDetailViewPage";

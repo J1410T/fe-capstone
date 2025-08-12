@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Editor } from "@tinymce/tinymce-react";
+import { TinyMCEViewer } from "@/components/ui/TinyMCE";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -63,7 +63,6 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
   onPrevious,
   isSubmitting,
 }) => {
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const { bm1Content } = enrollmentData;
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
@@ -346,48 +345,25 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="w-[96vw] h-[96vh] max-w-none p-0 overflow-hidden rounded-2xl">
-              <div className="flex flex-col h-full bg-white">
+            <DialogContent className="max-w-4xl max-h-[85vh] p-0 overflow-hidden">
+              <div className="flex flex-col h-[85vh] bg-white">
                 {/* Header */}
-                <div className="flex justify-between items-center p-6 border-b bg-blue-50">
-                  <h2 className="text-2xl font-bold text-gray-800">
+                <div className="flex justify-between items-center p-4 border-b bg-blue-50 shrink-0">
+                  <h2 className="text-xl font-semibold text-gray-800">
                     Project Register: {projectTitle}
                   </h2>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-auto px-6 py-4 bg-white">
-                  <Editor
-                    apiKey={apiKey}
-                    initialValue={bm1Document?.["content-html"] || bm1Content}
-                    init={{
-                      height: "100%",
-                      menubar: false,
-                      toolbar: false,
-                      branding: false,
-                      promotion: false,
-                      resize: false,
-                      statusbar: false,
-                      elementpath: false,
-                      content_style: `
-              body {
-                font-family: 'Times New Roman', serif;
-                padding: 24px;
-                color: #222;
-                background: #fff;
-              }
-              table {
-                width: 100%;
-                border-collapse: collapse;
-                margin-top: 1em;
-              }
-              th, td {
-                border: 1px solid #ccc;
-                padding: 8px;
-              }
-            `,
-                    }}
-                  />
+                <div className="flex-1 overflow-hidden p-4 bg-white">
+                  <div className="h-full w-full">
+                    <TinyMCEViewer
+                      content={bm1Document?.["content-html"] || bm1Content}
+                      height={600}
+                      useTinyMCE={true}
+                      className="w-full"
+                    />
+                  </div>
                 </div>
               </div>
             </DialogContent>
@@ -484,49 +460,26 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
                           View CV
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="w-[96vw] h-[96vh] max-w-none p-0 overflow-hidden rounded-2xl">
-                        <div className="flex flex-col h-full bg-white">
-                          <div className="flex justify-between items-center p-6 border-b bg-blue-50">
-                            <h2 className="text-2xl font-bold text-gray-800">
+                      <DialogContent className="max-w-4xl max-h-[85vh] p-0 overflow-hidden">
+                        <div className="flex flex-col h-[85vh] bg-white">
+                          <div className="flex justify-between items-center p-4 border-b bg-blue-50 shrink-0">
+                            <h2 className="text-xl font-semibold text-gray-800">
                               CV: {user.name}
                             </h2>
                           </div>
-                          <div className="flex-1 overflow-auto px-6 py-4 bg-white">
-                            <Editor
-                              apiKey={apiKey}
-                              initialValue={
-                                cvDocumentsByAccount[user.accountId]?.[
-                                  "content-html"
-                                ] || ""
-                              }
-                              init={{
-                                height: "100%",
-                                menubar: false,
-                                toolbar: false,
-                                branding: false,
-                                promotion: false,
-                                resize: false,
-                                statusbar: false,
-                                elementpath: false,
-                                content_style: `
-                                  body {
-                                    font-family: 'Times New Roman', serif;
-                                    padding: 24px;
-                                    color: #222;
-                                    background: #fff;
-                                  }
-                                  table {
-                                    width: 100%;
-                                    border-collapse: collapse;
-                                    margin-top: 1em;
-                                  }
-                                  th, td {
-                                    border: 1px solid #ccc;
-                                    padding: 8px;
-                                  }
-                                `,
-                              }}
-                            />
+                          <div className="flex-1 overflow-hidden p-4 bg-white">
+                            <div className="h-full w-full">
+                              <TinyMCEViewer
+                                content={
+                                  cvDocumentsByAccount[user.accountId]?.[
+                                    "content-html"
+                                  ] || ""
+                                }
+                                height={600}
+                                useTinyMCE={true}
+                                className="w-full"
+                              />
+                            </div>
                           </div>
                         </div>
                       </DialogContent>

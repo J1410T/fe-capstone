@@ -44,7 +44,7 @@ const EvaluationListPage: React.FC<EvaluationListPageProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="container mx-auto py-8 space-y-8">
         {/* Header */}
         <Card className="bg-white/80 backdrop-blur-sm shadow-sm border border-white/20">

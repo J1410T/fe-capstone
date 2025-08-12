@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import { Editor } from "@tinymce/tinymce-react";
-import type { Editor as TinyMCEEditor } from "tinymce";
+import type { Editor as TinyMCEEditorType } from "tinymce";
 import { useParams } from "react-router-dom";
 import {
   useDocumentsByFilter,
@@ -21,7 +21,7 @@ import { DocumentForm, DocumentProject } from "@/types/document";
 import { toast } from "sonner";
 import { Loading } from "@/components";
 
-type EditorInstance = TinyMCEEditor | null;
+type EditorInstance = TinyMCEEditorType | null;
 
 interface ProjectSummaryStepProps {
   onContentChange: (content: string) => void;

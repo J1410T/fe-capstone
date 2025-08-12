@@ -20,8 +20,9 @@ import {
   Star,
 } from "lucide-react";
 import { IndividualEvaluationApi } from "@/types/evaluation-api";
-import { TinyMCEViewer } from "@/components/common/TinyMCEViewer";
+import { TinyMCEViewer } from "@/components/ui/TinyMCE";
 import { mockEvaluationsData } from "../../data/mockEvaluationApiData";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 
 // Function to get all individual evaluations from all stages
 const getAllIndividualEvaluations = (): IndividualEvaluationApi[] => {
@@ -47,6 +48,7 @@ const getAllIndividualEvaluations = (): IndividualEvaluationApi[] => {
 
 const IndividualEvaluationDetailViewPage: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { projectId, evaluationId, stageId, individualEvaluationId } =
     useParams<{
       projectId: string;
@@ -83,9 +85,36 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
   }, [individualEvaluationId]);
 
   const handleBackToStage = () => {
-    navigate(
-      `/project/${projectId}/evaluation/${evaluationId}/stage/${stageId}/view`
-    );
+    // Determine the correct route prefix based on user role
+    let routePrefix = "";
+    if (user?.role === UserRole.RESEARCHER) {
+      routePrefix = "/researcher";
+    } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+      routePrefix = "/pi";
+    }
+
+    // Always try to go back to stage view first
+    if (stageId) {
+      navigate(
+        `${routePrefix}/project/${projectId}/evaluation/stage/${stageId}/view`
+      );
+    } else {
+      // If no stageId, we need to find the stage from the individual evaluation
+      // Look up the evaluation stage ID from the individual evaluation data
+      if (individualEvaluation && individualEvaluation["evaluation-stage-id"]) {
+        navigate(
+          `${routePrefix}/project/${projectId}/evaluation/stage/${individualEvaluation["evaluation-stage-id"]}/view`
+        );
+      } else if (evaluationId) {
+        // Fallback to evaluation detail view
+        navigate(
+          `${routePrefix}/project/${projectId}/evaluation/${evaluationId}/view`
+        );
+      } else {
+        // Last resort: evaluation list
+        navigate(`${routePrefix}/project/${projectId}/evaluation/view`);
+      }
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -154,7 +183,7 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen">
       <div className="container mx-auto py-8 space-y-8">
         {/* Back Button - Standalone */}
         <div className="flex items-center">
@@ -181,7 +210,7 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
                 )}
                 <div>
                   <CardTitle className="text-2xl font-bold text-gray-900">
-                    {individualEvaluation.name} - View Only
+                    {individualEvaluation.name}
                   </CardTitle>
                   <CardDescription className="text-gray-600 mt-2">
                     {individualEvaluation["is-ai-report"]
