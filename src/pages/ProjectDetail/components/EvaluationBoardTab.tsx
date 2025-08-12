@@ -95,83 +95,8 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Summary Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-              <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-blue-600 rounded-lg">
-                      <FileText className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-blue-700">
-                        Total Evaluations
-                      </p>
-                      <p className="text-2xl font-bold text-blue-900">
-                        {evaluations.length}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-600 rounded-lg">
-                      <Users className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-green-700">
-                        Total Stages
-                      </p>
-                      <p className="text-2xl font-bold text-green-900">
-                        {evaluations.reduce(
-                          (total, evaluation) =>
-                            total + evaluation["evaluation-stages"].length,
-                          0
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-yellow-600 rounded-lg">
-                      <Calendar className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-yellow-700">
-                        Individual Reviews
-                      </p>
-                      <p className="text-2xl font-bold text-yellow-900">
-                        {evaluations.reduce(
-                          (total, evaluation) =>
-                            total +
-                            evaluation["evaluation-stages"].reduce(
-                              (stageTotal, stage) =>
-                                stageTotal +
-                                (stage["individual-evaluations"]?.length || 0),
-                              0
-                            ),
-                          0
-                        )}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
             {/* All Project Evaluations */}
             <div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <FileText className="h-5 w-5 text-gray-700" />
-                Project Evaluations Overview
-              </h4>
               <div className="space-y-4">
                 {evaluations
                   .sort(
@@ -186,7 +111,7 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
                       onClick={() => handleEvaluationClick(evaluation.id)}
                     >
                       <CardContent className="p-0">
-                        <div className="flex items-center justify-between p-4 hover:bg-blue-50 transition-colors">
+                        <div className="flex items-center justify-between p-4 ">
                           <div className="flex items-center gap-4">
                             <div className="h-10 w-10 flex items-center justify-center rounded-full bg-blue-100 text-blue-700 text-sm font-bold">
                               {index + 1}
