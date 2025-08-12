@@ -111,7 +111,10 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
 
   // API hooks - search only when input length >= 2
   const { data: searchResults = [], isLoading: isSearching } =
-    useSearchAccounts(searchValue.trim().length > 0 ? searchValue.trim() : "");
+    useSearchAccounts({
+      input: searchValue.trim().length > 0 ? searchValue.trim() : "",
+      roleUser: "Researcher",
+    });
   const { data: allRoles = [], isLoading: isLoadingRoles } = useAllRoles();
   const { data: myAccountInfo } = useMyAccountInfo();
 

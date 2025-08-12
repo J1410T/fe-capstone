@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AuthResponse } from "@/types/auth";
+import { AuthResponse, SearchAccountsParams } from "@/types/auth";
 
 import {
   getAuthResponse,
@@ -97,11 +97,20 @@ export function useSetMyRole() {
   });
 }
 
-export function useSearchAccounts(input: string) {
+// export function useSearchAccounts(input: string) {
+//   return useQuery({
+//     queryKey: ["search-accounts", input],
+//     queryFn: () => searchAccounts(input),
+//     enabled: !!input && input.trim().length > 0, // Only search if input has at least 2 characters
+//     staleTime: 30000, // Cache for 30 seconds
+//   });
+// }
+
+export function useSearchAccounts(params: SearchAccountsParams) {
   return useQuery({
-    queryKey: ["search-accounts", input],
-    queryFn: () => searchAccounts(input),
-    enabled: !!input && input.trim().length > 0, // Only search if input has at least 2 characters
+    queryKey: ["search-accounts", params.input, params.roleUser],
+    queryFn: () => searchAccounts(params),
+    enabled: !!params.input && params.input.trim().length > 0,
     staleTime: 30000, // Cache for 30 seconds
   });
 }

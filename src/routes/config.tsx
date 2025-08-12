@@ -11,6 +11,7 @@ import UserLayout from "@/layouts/UserLayout";
 import UserHome from "@/pages/UserHome";
 import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
 import NavigationGuard from "@/components/auth/NavigationGuard";
+import CreateEvaluationDocumentPage from "@/pages/ProjectDetail/components/evaluation/CreateEvaluationDocumentPage";
 
 // Staff Pages
 import {
@@ -575,6 +576,10 @@ export const routes: RouteObject[] = [
       {
         path: "project/:projectId/evaluation/individual/:individualEvaluationId",
         element: <IndividualEvaluationDetail />,
+      },
+      {
+        path: "project/:projectId/evaluation/create",
+        element: <CreateEvaluationDocumentPage />,
       },
     ],
   },
