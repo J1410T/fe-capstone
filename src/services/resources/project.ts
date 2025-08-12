@@ -15,6 +15,7 @@ import {
   ProjectTag,
   SortOption,
   ProjectItem,
+  ProjectWithProposals,
 } from "@/types/project";
 import { axiosClient, getAccessToken } from "../api";
 
@@ -375,6 +376,26 @@ export const getStaffProjectFilter = async (
     return res.data;
   } catch (error) {
     console.error("getStaffProjectFilter error:", error);
+    throw error;
+  }
+};
+
+export const getProjectsByAppraisalCouncil = async (
+  councilId: string
+): Promise<ProjectWithProposals[]> => {
+  try {
+    const accessToken = getAccessToken();
+    const res = await axiosClient.get<ProjectWithProposals[]>(
+      `/appraisal-council/list-project/${councilId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.error("getProjectsByAppraisalCouncil error:", error);
     throw error;
   }
 };
