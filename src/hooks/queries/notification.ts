@@ -12,9 +12,6 @@ import {
   MarkNotificationRequest,
 } from "@/types/notification";
 
-import { getAuthResponse } from "@/utils/cookie-manager";
-import { AuthResponse } from "@/types/auth";
-
 /**
  * Hook to create a notification
  */
@@ -48,17 +45,17 @@ export function useNotificationList(
   pageSize: number = 10,
   isRead?: boolean
 ) {
-  const authResponse = getAuthResponse<AuthResponse>();
-  const email = authResponse?.email;
+  // const authResponse = getAuthResponse<AuthResponse>();
+  // const email = authResponse?.email;
 
   return useQuery({
-    queryKey: ["notifications", email, pageIndex, pageSize, isRead],
+    queryKey: ["notifications", pageIndex, pageSize, isRead],
     queryFn: () => {
-      if (!email) {
-        throw new Error("No email found in auth response");
-      }
+      // if (!email) {
+      //   throw new Error("No email found in auth response");
+      // }
       const request: NotificationListRequest = {
-        email,
+        // email,
         "page-index": pageIndex,
         "page-size": pageSize,
       };
@@ -69,7 +66,7 @@ export function useNotificationList(
 
       return getNotificationList(request);
     },
-    enabled: !!email,
+    // enabled: !!email,
     // staleTime: 60000, // Cache for 60 seconds for real-time updates
     // refetchInterval: 60000, // Refetch every 15 seconds for real-time updates
     refetchIntervalInBackground: true, // Continue refetching in background
@@ -97,12 +94,50 @@ export function useMarkNotification() {
   });
 }
 
-/**
- * Hook to create and send invitation notification
- */
+// export function useInviteMember() {
+//   const createNotificationMutation = useCreateNotification();
+//   const sendNotificationMutation = useSendNotification();
+
+//   return useMutation({
+//     mutationFn: async ({
+//       projectId,
+//       accountId,
+//     }: {
+//       projectId: string;
+//       accountId: string;
+//     }) => {
+//       // Step 1: Create notification
+//       const notificationRequest: NotificationRequest = {
+//         title: "Invite Enroll to project",
+//         type: "project",
+//         status: "pending",
+//         "objec-notification-id": projectId,
+//       };
+//       const notificationResponse = await createNotificationMutation.mutateAsync(
+//         notificationRequest
+//       );
+
+//       // Step 2: Send notification to user
+//       const sendRequest: SendNotificationRequest = {
+//         "list-account-id": [accountId],
+//         "notification-id": notificationResponse.id,
+//       };
+
+//       await sendNotificationMutation.mutateAsync(sendRequest);
+
+//       return {
+//         notificationId: notificationResponse.id,
+//         success: true,
+//       };
+//     },
+//     onError: (error) => {
+//       console.error("Failed to invite member:", error);
+//     },
+//   });
+// }
+
 export function useInviteMember() {
   const createNotificationMutation = useCreateNotification();
-  const sendNotificationMutation = useSendNotification();
 
   return useMutation({
     mutationFn: async ({
@@ -112,24 +147,18 @@ export function useInviteMember() {
       projectId: string;
       accountId: string;
     }) => {
-      // Step 1: Create notification
+      // Create notification with account ID directly in the request
       const notificationRequest: NotificationRequest = {
         title: "Invite Enroll to project",
         type: "project",
         status: "pending",
         "objec-notification-id": projectId,
+        "list-account-id": [accountId], // Send to specific account
       };
+
       const notificationResponse = await createNotificationMutation.mutateAsync(
         notificationRequest
       );
-
-      // Step 2: Send notification to user
-      const sendRequest: SendNotificationRequest = {
-        "list-account-id": [accountId],
-        "notification-id": notificationResponse.id,
-      };
-
-      await sendNotificationMutation.mutateAsync(sendRequest);
 
       return {
         notificationId: notificationResponse.id,

@@ -4,11 +4,12 @@ export interface NotificationRequest {
   title: string;
   type: "project";
   status: "pending" | "create";
-  "objec-notification-id": string; // project ID
+  "objec-notification-id": string;
+  "list-account-id": string[];
 }
 
 export interface NotificationResponse {
-  id: string; // notification ID returned from API
+  id: string;
 }
 
 export interface SendNotificationRequest {
@@ -21,7 +22,7 @@ export interface SendNotificationResponse {
 }
 
 export interface NotificationListRequest {
-  email: string;
+  // email: string;
   "page-index": number;
   "page-size": number;
   "is-read"?: boolean;
