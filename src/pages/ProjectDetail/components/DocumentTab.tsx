@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -44,7 +44,7 @@ import {
 import { DocumentWithUserRole } from "@/types/document";
 import { formatDateTime } from "@/utils";
 import { getStatusColor } from "../shared/utils";
-import { Editor } from "@tinymce/tinymce-react";
+import { TinyMCEViewer } from "@/components/ui/TinyMCE";
 import {
   useScientificCVByEmail,
   useCreateDocument,
@@ -186,9 +186,6 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
       setIsUploading(false);
     }
   };
-
-  type EditorInstance = { getContent: () => string } | null;
-  const editorRef = useRef<EditorInstance>(null);
 
   return (
     <Card className="shadow-sm">
@@ -390,7 +387,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
 
       {/* --- View Dialog --- */}
       <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="w-screen max-w-none px-4">
+        <DialogContent className="max-w-4xl max-h-[85vh] p-0 overflow-hidden px-4 pt-5">
           <DialogHeader>
             <DialogTitle>{selectedDocument?.name || "Document"}</DialogTitle>
           </DialogHeader>
@@ -408,45 +405,20 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
                   <strong>Status:</strong> {selectedDocument.status}
                 </div>
               </div>
-              <div className="w-full">
-                {selectedDocument?.["content-html"] ? (
-                  <Editor
-                    key={selectedDocument.id}
-                    apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
-                    initialValue={selectedDocument?.["content-html"] ?? ""}
-                    onInit={(_, editor) => (editorRef.current = editor)}
-                    disabled={true}
-                    init={{
-                      height: 600,
-                      width: "100%",
-                      menubar: false,
-                      toolbar: false,
-                      statusbar: false,
-                      plugins: [
-                        "advlist autolink lists link image charmap preview anchor",
-                        "searchreplace visualblocks media table wordcount",
-                      ],
-                      content_style: `
-      body {
-        font-family: Arial;
-        font-size: 14px;
-        line-height: 1.6;
-        color: #333;
-        padding: 20px;
-      }
-    `,
-                      setup: (editor) => {
-                        editor.on("init", () => {
-                          editor
-                            .getBody()
-                            .setAttribute("contenteditable", "false");
-                        });
-                      },
-                    }}
-                  />
-                ) : (
-                  <p className="text-gray-500">No content available.</p>
-                )}
+              <div className="flex-1 overflow-hidden p-4 bg-white">
+                <div className="w-full">
+                  {selectedDocument?.["content-html"] ? (
+                    <TinyMCEViewer
+                      key={selectedDocument.id}
+                      content={selectedDocument?.["content-html"] ?? ""}
+                      height={600}
+                      useTinyMCE={true}
+                      className="w-full"
+                    />
+                  ) : (
+                    <p className="text-gray-500">No content available.</p>
+                  )}
+                </div>
               </div>
             </div>
           ) : (

@@ -1497,7 +1497,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
         open={showUploadConfirmDialog}
         onOpenChange={setShowUploadConfirmDialog}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Upload Scientific CV</DialogTitle>
             <DialogDescription>

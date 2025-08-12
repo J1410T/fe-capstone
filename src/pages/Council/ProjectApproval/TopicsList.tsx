@@ -1,7 +1,13 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Users, BookOpen, FolderOpen, GraduationCap, CheckCircle } from "lucide-react";
+import {
+  Users,
+  BookOpen,
+  FolderOpen,
+  GraduationCap,
+  CheckCircle,
+} from "lucide-react";
 
 interface Topic {
   id: number;

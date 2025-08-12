@@ -1,6 +1,8 @@
 export { default as EvaluationListPage } from "./EvaluationListPage";
 export { default as EvaluationStageDetailPage } from "./EvaluationStageDetailPage";
 export { default as CreateIndividualEvaluationPage } from "./CreateIndividualEvaluationPage";
-export { default as CreateEvaluationDocumentPage } from "./CreateEvaluationDocumentPage";
-export { default as EvaluationDocumentTab } from "./EvaluationDocumentTab";
-export { default as EvaluationOverviewTab } from "./EvaluationOverviewTab";
+export { default as EvaluationViewListPage } from "./EvaluationViewListPage";
+export { default as EvaluationStageViewPage } from "./EvaluationStageViewPage";
+export { default as EvaluationViewListPageWrapper } from "./EvaluationViewListPageWrapper";
+export { default as EvaluationDetailViewPage } from "./EvaluationDetailViewPage";
+export { default as IndividualEvaluationDetailViewPage } from "./IndividualEvaluationDetailViewPage";

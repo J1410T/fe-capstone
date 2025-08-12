@@ -1,6 +1,6 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Editor } from "@tinymce/tinymce-react";
+import { TinyMCEViewer } from "@/components/ui/TinyMCE";
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -16,16 +16,9 @@ import { Loading, ScrollToTopButton } from "@/components";
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { useScientificCVByEmail } from "@/hooks/queries/document";
 
-type EditorInstance = {
-  getContent: () => string;
-  setContent: (content: string) => void;
-} | null;
-
 const ViewScientificCV: React.FC = () => {
   const navigate = useNavigate();
-  const editorRef = useRef<EditorInstance>(null);
   const [isRefetching, setIsRefetching] = useState(false);
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
 
   // Get user email and role from cookie
   const authResponse = getAuthResponse<{
@@ -80,39 +73,6 @@ const ViewScientificCV: React.FC = () => {
   };
 
   const handleEdit = () => navigate("/profile/scientific-cv/edit");
-
-  const formStyles = `
-    body {
-      font-family: "Times New Roman", Times, serif;
-      font-size: 13px;
-      line-height: 1.4;
-      color: #333;
-      padding: 20px;
-    }
-    .image-frame {
-      width: 150px;
-      height: 180px;
-      border: 2px dashed #999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      margin: 10px 0;
-    }
-    .image-frame img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: cover;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    table, th, td {
-      border: 1px solid #ccc;
-      padding: 6px 8px;
-    }
-  `;
 
   // Show loading when initially loading or refetching
   if (isLoading || isRefetching) {
@@ -239,18 +199,11 @@ const ViewScientificCV: React.FC = () => {
 
       {/* TinyMCE Viewer */}
       <div className="bg-white rounded-xl border shadow-inner overflow-hidden max-w-5xl mx-auto w-full">
-        <Editor
-          apiKey={apiKey}
-          onInit={(_, editor) => (editorRef.current = editor)}
-          initialValue={scientificCV.data["content-html"] || ""}
-          disabled={true}
-          init={{
-            height: 800,
-            menubar: false,
-            toolbar: false,
-            plugins: ["table"],
-            content_style: formStyles,
-          }}
+        <TinyMCEViewer
+          content={scientificCV.data["content-html"] || ""}
+          height={800}
+          useTinyMCE={true}
+          className="w-full"
         />
       </div>
     </div>
