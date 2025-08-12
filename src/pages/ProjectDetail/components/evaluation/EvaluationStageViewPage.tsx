@@ -19,9 +19,7 @@ import {
   Bot,
   User,
 } from "lucide-react";
-import {
-  EvaluationStageApi,
-} from "@/types/evaluation-api";
+import { EvaluationStageApi } from "@/types/evaluation-api";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 
 // Mock evaluation stage data
@@ -148,8 +146,15 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
 
   useEffect(() => {
     console.log("EvaluationStageViewPage received stage prop:", propStage);
-    console.log("URL params - projectId:", projectId, "evaluationId:", evaluationId, "stageId:", stageId);
-    
+    console.log(
+      "URL params - projectId:",
+      projectId,
+      "evaluationId:",
+      evaluationId,
+      "stageId:",
+      stageId
+    );
+
     // If stage prop is provided, use it directly
     if (propStage) {
       console.log("Using provided stage prop:", propStage.name);
@@ -157,34 +162,38 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
       setLoading(false);
       return;
     }
-    
+
     // Otherwise, fall back to mock data or fetch from API
     if (stageId && evaluationId) {
       // Get the stage data from the evaluation API
-      import("../../data/mockEvaluationApiData").then(({ getEvaluationById }) => {
-        getEvaluationById(evaluationId).then((evaluation) => {
-          if (evaluation) {
-            const foundStage = evaluation["evaluation-stages"].find(
-              (s) => s.id === stageId
-            );
-            if (foundStage) {
-              setEvaluationStage(foundStage);
-            } else {
-              // Fallback to mock data if stage not found
+      import("../../data/mockEvaluationApiData").then(
+        ({ getEvaluationById }) => {
+          getEvaluationById(evaluationId)
+            .then((evaluation) => {
+              if (evaluation) {
+                const foundStage = evaluation["evaluation-stages"].find(
+                  (s) => s.id === stageId
+                );
+                if (foundStage) {
+                  setEvaluationStage(foundStage);
+                } else {
+                  // Fallback to mock data if stage not found
+                  setEvaluationStage(mockEvaluationStageData);
+                }
+                setLoading(false);
+              } else {
+                // Fallback to mock data if evaluation not found
+                setEvaluationStage(mockEvaluationStageData);
+                setLoading(false);
+              }
+            })
+            .catch(() => {
+              // Fallback to mock data on error
               setEvaluationStage(mockEvaluationStageData);
-            }
-            setLoading(false);
-          } else {
-            // Fallback to mock data if evaluation not found
-            setEvaluationStage(mockEvaluationStageData);
-            setLoading(false);
-          }
-        }).catch(() => {
-          // Fallback to mock data on error
-          setEvaluationStage(mockEvaluationStageData);
-          setLoading(false);
-        });
-      });
+              setLoading(false);
+            });
+        }
+      );
     }
   }, [stageId, propStage, evaluationId, projectId]);
 
@@ -196,7 +205,9 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       routePrefix = "/pi";
     }
-    navigate(`${routePrefix}/project/${projectId}/evaluation/${evaluationId}/view`);
+    navigate(
+      `${routePrefix}/project/${projectId}/evaluation/${evaluationId}/view`
+    );
   };
 
   const handleViewIndividualEvaluation = (individualId: string) => {

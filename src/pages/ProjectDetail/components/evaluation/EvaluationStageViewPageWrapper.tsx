@@ -25,7 +25,12 @@ const EvaluationStageViewPageWrapper: React.FC = () => {
               (s) => s.id === stageId
             );
             if (foundStage) {
-              console.log("Found stage:", foundStage.name, "in evaluation:", evaluation.id);
+              console.log(
+                "Found stage:",
+                foundStage.name,
+                "in evaluation:",
+                evaluation.id
+              );
               break;
             }
           }

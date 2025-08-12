@@ -26,7 +26,7 @@ import { mockEvaluationsData } from "../../data/mockEvaluationApiData";
 // Function to get all individual evaluations from all stages
 const getAllIndividualEvaluations = (): IndividualEvaluationApi[] => {
   const allIndividualEvaluations: IndividualEvaluationApi[] = [];
-  
+
   // mockEvaluationsData has structure { "data-list": Evaluation[] }
   if (mockEvaluationsData && mockEvaluationsData["data-list"]) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,18 +41,19 @@ const getAllIndividualEvaluations = (): IndividualEvaluationApi[] => {
       }
     });
   }
-  
+
   return allIndividualEvaluations;
 };
 
 const IndividualEvaluationDetailViewPage: React.FC = () => {
   const navigate = useNavigate();
-  const { projectId, evaluationId, stageId, individualEvaluationId } = useParams<{
-    projectId: string;
-    evaluationId: string;
-    stageId: string;
-    individualEvaluationId: string;
-  }>();
+  const { projectId, evaluationId, stageId, individualEvaluationId } =
+    useParams<{
+      projectId: string;
+      evaluationId: string;
+      stageId: string;
+      individualEvaluationId: string;
+    }>();
   const [individualEvaluation, setIndividualEvaluation] = useState<
     IndividualEvaluationApi | undefined
   >(undefined);
@@ -66,8 +67,14 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
         const foundEvaluation = allIndividualEvaluations.find(
           (e: IndividualEvaluationApi) => e.id === individualEvaluationId
         );
-        console.log("Looking for individual evaluation:", individualEvaluationId);
-        console.log("Available evaluations:", allIndividualEvaluations.map(e => e.id));
+        console.log(
+          "Looking for individual evaluation:",
+          individualEvaluationId
+        );
+        console.log(
+          "Available evaluations:",
+          allIndividualEvaluations.map((e) => e.id)
+        );
         console.log("Found evaluation:", foundEvaluation);
         setIndividualEvaluation(foundEvaluation);
         setLoading(false);

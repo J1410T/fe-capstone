@@ -32,7 +32,9 @@ const EvaluationViewListPage: React.FC<EvaluationViewListPageProps> = ({
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       routePrefix = "/pi";
     }
-    navigate(`${routePrefix}/project/${projectId}/evaluation/${evaluationId}/view`);
+    navigate(
+      `${routePrefix}/project/${projectId}/evaluation/${evaluationId}/view`
+    );
   };
 
   const handleBackToProject = () => {

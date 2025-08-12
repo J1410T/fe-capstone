@@ -61,8 +61,17 @@ const EvaluationDetailViewPage: React.FC = () => {
   };
 
   const handleStageClick = (stageId: string) => {
-    console.log("Stage clicked:", stageId, "Evaluation:", evaluationId, "Project:", projectId, "User role:", user?.role);
-    
+    console.log(
+      "Stage clicked:",
+      stageId,
+      "Evaluation:",
+      evaluationId,
+      "Project:",
+      projectId,
+      "User role:",
+      user?.role
+    );
+
     // Determine the correct route prefix based on user role
     let routePrefix = "";
     if (user?.role === UserRole.RESEARCHER) {
@@ -70,7 +79,7 @@ const EvaluationDetailViewPage: React.FC = () => {
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       routePrefix = "/pi";
     }
-    
+
     // Updated route to match the actual route pattern in config.tsx
     const targetRoute = `${routePrefix}/project/${projectId}/evaluation/stage/${stageId}/view`;
     console.log("Navigating to stage route:", targetRoute);
@@ -279,26 +288,42 @@ const EvaluationDetailViewPage: React.FC = () => {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Evaluation Code</h4>
-                <p className="text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">{evaluation.code}</p>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  Evaluation Code
+                </h4>
+                <p className="text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
+                  {evaluation.code}
+                </p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Project ID</h4>
-                <p className="text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">{evaluation["project-id"]}</p>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  Project ID
+                </h4>
+                <p className="text-gray-900 font-mono bg-gray-50 px-3 py-2 rounded">
+                  {evaluation["project-id"]}
+                </p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Created Date</h4>
-                <p className="text-gray-900">{new Date(evaluation["create-date"]).toLocaleDateString()}</p>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  Created Date
+                </h4>
+                <p className="text-gray-900">
+                  {new Date(evaluation["create-date"]).toLocaleDateString()}
+                </p>
               </div>
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Status</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  Status
+                </h4>
                 <div>{getStatusBadge(evaluation.status)}</div>
               </div>
             </div>
-            
+
             {evaluation.comment && (
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Evaluation Comment</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">
+                  Evaluation Comment
+                </h4>
                 <div className="bg-gray-50 p-4 rounded-lg">
                   <p className="text-gray-800">{evaluation.comment}</p>
                 </div>

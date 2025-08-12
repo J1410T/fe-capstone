@@ -51,7 +51,8 @@ export const mockEvaluationsData: EvaluationApiResponse = {
               id: "b022f2ed-5c92-5df1-973d-64327bdcff0c",
               name: "Dr. Sarah Johnson - Philosophy Expert",
               "total-rate": 9.2,
-              comment: "Excellent philosophical foundation. The research approach is well-structured and addresses key ethical concerns in AI development. The methodology is sound and the expected outcomes are clearly defined.",
+              comment:
+                "Excellent philosophical foundation. The research approach is well-structured and addresses key ethical concerns in AI development. The methodology is sound and the expected outcomes are clearly defined.",
               "submitted-at": "2025-08-12T16:20:30.1234567",
               "is-approved": true,
               "reviewer-result": "approved",
@@ -66,7 +67,8 @@ export const mockEvaluationsData: EvaluationApiResponse = {
               id: "c033f3ed-6d03-6ef2-084e-75438cedd1d",
               name: "Prof. Michael Chen - AI Ethics Specialist",
               "total-rate": 8.8,
-              comment: "Strong interdisciplinary approach. The project addresses current gaps in AI ethics research. Minor suggestions for expanding the scope of case studies.",
+              comment:
+                "Strong interdisciplinary approach. The project addresses current gaps in AI ethics research. Minor suggestions for expanding the scope of case studies.",
               "submitted-at": "2025-08-12T14:45:15.9876543",
               "is-approved": true,
               "reviewer-result": "approved_with_conditions",
@@ -81,7 +83,8 @@ export const mockEvaluationsData: EvaluationApiResponse = {
               id: "d044f4ed-7e14-7fg3-195f-86549deed2e",
               name: "Dr. Emily Rodriguez - Computer Science",
               "total-rate": 8.0,
-              comment: "Good technical understanding of AI systems. The philosophical perspective adds valuable depth to the analysis. Recommend including more recent AI developments.",
+              comment:
+                "Good technical understanding of AI systems. The philosophical perspective adds valuable depth to the analysis. Recommend including more recent AI developments.",
               "submitted-at": "2025-08-12T13:30:22.5647382",
               "is-approved": true,
               "reviewer-result": "approved",
@@ -96,7 +99,8 @@ export const mockEvaluationsData: EvaluationApiResponse = {
               id: "e055f5ed-8f25-8gh4-2a6g-97660efff3f",
               name: "Council Review Panel",
               "total-rate": 8.7,
-              comment: "Comprehensive evaluation by the appraisal council. The project meets all required criteria and demonstrates strong potential for impact in the field of AI ethics.",
+              comment:
+                "Comprehensive evaluation by the appraisal council. The project meets all required criteria and demonstrates strong potential for impact in the field of AI ethics.",
               "submitted-at": "2025-08-12T12:15:10.3456789",
               "is-approved": true,
               "reviewer-result": "approved",
@@ -111,7 +115,8 @@ export const mockEvaluationsData: EvaluationApiResponse = {
               id: "f066f6ed-9g36-9hi5-3b7h-a8771fggg4g",
               name: "External Review - Industry Expert",
               "total-rate": 7.5,
-              comment: "Practical relevance is clear, though some aspects could benefit from industry case studies. The theoretical framework is solid.",
+              comment:
+                "Practical relevance is clear, though some aspects could benefit from industry case studies. The theoretical framework is solid.",
               "submitted-at": "2025-08-12T11:00:45.7890123",
               "is-approved": false,
               "reviewer-result": "needs_revision",
@@ -170,7 +175,8 @@ export const mockEvaluationsData: EvaluationApiResponse = {
               id: "g077g7ed-ah47-ah6i-4c8i-b9882hhhh5h",
               name: "Dr. Lisa Williams - Psychology Research Lead",
               "total-rate": 8.9,
-              comment: "Excellent research design for studying remote work psychology. The methodology is well-suited for capturing both quantitative and qualitative insights. Strong potential for practical applications.",
+              comment:
+                "Excellent research design for studying remote work psychology. The methodology is well-suited for capturing both quantitative and qualitative insights. Strong potential for practical applications.",
               "submitted-at": "2025-08-12T16:45:20.2468135",
               "is-approved": true,
               "reviewer-result": "approved",
@@ -185,7 +191,8 @@ export const mockEvaluationsData: EvaluationApiResponse = {
               id: "h088h8ed-bi58-bi7j-5d9j-ca993iiiii6i",
               name: "Prof. David Thompson - Organizational Psychology",
               "total-rate": 8.3,
-              comment: "The study addresses a critical contemporary issue. Good balance between academic rigor and practical relevance. Recommend expanding the sample size for better generalizability.",
+              comment:
+                "The study addresses a critical contemporary issue. Good balance between academic rigor and practical relevance. Recommend expanding the sample size for better generalizability.",
               "submitted-at": "2025-08-12T15:30:15.3579246",
               "is-approved": true,
               "reviewer-result": "approved_with_conditions",
@@ -200,7 +207,8 @@ export const mockEvaluationsData: EvaluationApiResponse = {
               id: "i099i9ed-cj69-cj8k-6e0k-db004jjjjj7j",
               name: "Dr. Amanda Foster - HR Research Specialist",
               "total-rate": 8.6,
-              comment: "Strong theoretical foundation with clear practical implications for HR policies. The interdisciplinary approach is commendable and will provide valuable insights for organizations.",
+              comment:
+                "Strong theoretical foundation with clear practical implications for HR policies. The interdisciplinary approach is commendable and will provide valuable insights for organizations.",
               "submitted-at": "2025-08-12T14:15:30.4680357",
               "is-approved": true,
               "reviewer-result": "approved",
@@ -215,7 +223,8 @@ export const mockEvaluationsData: EvaluationApiResponse = {
               id: "j100j0ed-dk70-dk9l-7f1l-ec115kkkkkk8k",
               name: "Council Evaluation Board",
               "total-rate": 8.1,
-              comment: "Comprehensive review by the evaluation board. The research proposal meets academic standards and addresses an important contemporary workplace issue. Minor revisions suggested for methodology section.",
+              comment:
+                "Comprehensive review by the evaluation board. The research proposal meets academic standards and addresses an important contemporary workplace issue. Minor revisions suggested for methodology section.",
               "submitted-at": "2025-08-12T13:00:45.5791468",
               "is-approved": true,
               "reviewer-result": "approved",
@@ -251,7 +260,7 @@ export const getEvaluationsByProject = async (
 ): Promise<Evaluation[]> => {
   // Simulate API call
   await new Promise((resolve) => setTimeout(resolve, 500));
-  
+
   // For testing purposes, return all evaluations regardless of project ID
   // In real implementation, this would filter by project ID
   console.log("Mock: Getting evaluations for project:", projectId);

@@ -48,7 +48,7 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
       "User role:",
       user?.role
     );
-    
+
     // Determine the correct route prefix based on user role
     let routePrefix = "";
     if (user?.role === UserRole.RESEARCHER) {
@@ -56,7 +56,7 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       routePrefix = "/pi";
     }
-    
+
     const targetRoute = `${routePrefix}/project/${projectId}/evaluation/${evaluationId}/view`;
     console.log("Navigating to route:", targetRoute);
     navigate(targetRoute);

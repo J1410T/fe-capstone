@@ -51,7 +51,9 @@ const StageViewPage: React.FC = () => {
                 order: foundStage["stage-order"],
                 createdAt: "", // API doesn't provide this field
                 evaluationId: foundStage["evaluation-id"],
-                individualEvaluations: (foundStage["individual-evaluations"] || []).map((ie) => ({
+                individualEvaluations: (
+                  foundStage["individual-evaluations"] || []
+                ).map((ie) => ({
                   id: ie.id,
                   evaluator: ie.name || "Unknown",
                   status: ie.status,
