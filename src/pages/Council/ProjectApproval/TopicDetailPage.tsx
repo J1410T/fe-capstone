@@ -478,6 +478,7 @@ export const TopicDetailPage: React.FC = () => {
                                     {proposal.totalReviewers} Approved
                                   </Badge>
                                 )}
+
                             </div>
                             <p className="text-gray-600 line-clamp-2 mb-3">
                               {proposal.proposalSummary}
