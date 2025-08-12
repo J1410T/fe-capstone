@@ -83,7 +83,8 @@ export const TopicsList: React.FC<TopicsListProps> = ({ topics }) => {
                     <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg">
                       <CheckCircle className="h-3 w-3 text-green-600" />
                       <span className="text-xs font-medium text-green-700">
-                        {topic.councilApprovals}/{topic.totalCouncilMembers} Council Approved
+                        {topic.councilApprovals}/{topic.totalCouncilMembers}{" "}
+                        Council Approved
                       </span>
                     </div>
                   )}
@@ -149,15 +150,17 @@ export const TopicsList: React.FC<TopicsListProps> = ({ topics }) => {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {getTopicMajors(topic.id).slice(0, 4).map((major, index) => (
-                      <Badge
-                        key={index}
-                        variant="outline"
-                        className="bg-gray-50 text-gray-700 border-gray-200 text-xs px-2 py-0.5 font-medium"
-                      >
-                        {major}
-                      </Badge>
-                    ))}
+                    {getTopicMajors(topic.id)
+                      .slice(0, 4)
+                      .map((major, index) => (
+                        <Badge
+                          key={index}
+                          variant="outline"
+                          className="bg-gray-50 text-gray-700 border-gray-200 text-xs px-2 py-0.5 font-medium"
+                        >
+                          {major}
+                        </Badge>
+                      ))}
                     {getTopicMajors(topic.id).length > 4 && (
                       <Badge
                         variant="outline"
