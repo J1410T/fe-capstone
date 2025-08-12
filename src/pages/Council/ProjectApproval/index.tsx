@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { ApprovalHeader } from "./components";
 import { TopicsList } from "./TopicsList";
-import { Search } from "lucide-react";
-import { Input } from "@/components";
+
 import {
   Select,
   SelectContent,
@@ -10,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useAppraisalCouncilsListBasic } from "@/hooks/queries/appraisal-council";
+import type { AppraisalCouncil } from "@/types/appraisal-council";
 
 // Mock data for research topics
 const proposedTopics = [
@@ -93,55 +94,39 @@ const proposedTopics = [
 ];
 
 const ProjectApproval: React.FC = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState<string>("all");
-  const [selectedType, setSelectedType] = useState<string>("all");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [searchTerm] = useState("");
+  const [selectedCouncil, setSelectedCouncil] = useState<string>("all");
 
-  const onSearchChange = (value: string) => {
-    setSearchTerm(value);
+  // Fetch appraisal councils
+  const { data: councilsResponse } = useAppraisalCouncilsListBasic({
+    "key-word": "",
+    "page-index": 1,
+    "page-size": 100,
+  });
+
+  const availableCouncils = useMemo(() => {
+    return councilsResponse?.["data-list"] || [];
+  }, [councilsResponse]);
+
+  // Auto-select first council if available and no council is selected
+  useEffect(() => {
+    if (availableCouncils.length > 0 && selectedCouncil === "all") {
+      setSelectedCouncil(availableCouncils[0].id);
+    }
+  }, [availableCouncils, selectedCouncil]);
+
+  const onCouncilChange = (value: string) => {
+    setSelectedCouncil(value);
   };
 
-  const onTypeChange = (value: string) => {
-    setSelectedType(value);
-  };
-
-  const onCategoryChange = (value: string) => {
-    setSelectedCategory(value);
-  };
-
-  const onStatusChange = (value: string) => {
-    setSelectedStatus(value);
-  };
-
-  // Filter topics based on search term, type, category and status
+  // Filter topics based on search term and selected council
   const filteredTopics = proposedTopics.filter((topic) => {
     const matchesSearch = topic.title
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
-    const matchesType = selectedType === "all" || topic.type === selectedType;
-    const matchesCategory =
-      selectedCategory === "all" || topic.category === selectedCategory;
-    const matchesStatus =
-      selectedStatus === "all" || topic.status === selectedStatus;
-    return matchesSearch && matchesType && matchesCategory && matchesStatus;
+    const matchesCouncil = selectedCouncil === "all" || true; // For now, show all topics regardless of council
+    return matchesSearch && matchesCouncil;
   });
-
-  // Fixed categories for filter (Applied Science and Basic Science)
-  const categories = ["all", "Applied Science", "Basic Science"];
-  // Fixed statuses for filter
-  const statuses = ["all", "Waiting for PI", "PI Assigned"];
-  // Fixed types for filter
-  const types = [
-    "all",
-    "Information Technology",
-    "Environment",
-    "Biology",
-    "Physics",
-    "Biotechnology",
-    "Civil Engineering",
-    "Environmental Science",
-  ];
 
   return (
     <div className="min-h-screen ">
@@ -151,54 +136,18 @@ const ProjectApproval: React.FC = () => {
         {/* Enhanced Search and Filters Section */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/20">
           <div className="flex flex-col lg:flex-row gap-6">
-            {/* Search Bar */}
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="search"
-                placeholder="Search research topics..."
-                className="pl-10 h-11 bg-white/50 border-gray-200 focus:border-emerald-300 focus:ring-emerald-200 rounded-xl"
-                value={searchTerm}
-                onChange={(e) => onSearchChange(e.target.value)}
-              />
-            </div>
-
             {/* Filter Controls */}
-            <div className="flex flex-wrap gap-3">
-              <Select value={selectedType} onValueChange={onTypeChange}>
-                <SelectTrigger className="w-[160px] h-11 bg-white/50 border-gray-200 rounded-xl">
-                  <SelectValue placeholder="Field" />
+            <div className="flex flex-wrap gap-3 ">
+              Select Appraisal Council
+              <Select value={selectedCouncil} onValueChange={onCouncilChange}>
+                <SelectTrigger className="w-[300px] h-[90px] bg-white/50 border-gray-200 rounded-xl">
+                  <SelectValue placeholder="Select Appraisal Council" />
                 </SelectTrigger>
                 <SelectContent>
-                  {types.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type === "all" ? "All Fields" : type}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedCategory} onValueChange={onCategoryChange}>
-                <SelectTrigger className="w-[160px] h-11 bg-white/50 border-gray-200 rounded-xl">
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category === "all" ? "All Categories" : category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={selectedStatus} onValueChange={onStatusChange}>
-                <SelectTrigger className="w-[160px] h-11 bg-white/50 border-gray-200 rounded-xl">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {statuses.map((status) => (
-                    <SelectItem key={status} value={status}>
-                      {status === "all" ? "All Statuses" : status}
+                  <SelectItem value="all">All Councils</SelectItem>
+                  {availableCouncils.map((council: AppraisalCouncil) => (
+                    <SelectItem key={council.id} value={council.id}>
+                      {council.name}
                     </SelectItem>
                   ))}
                 </SelectContent>

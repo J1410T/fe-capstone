@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
+  CardDescription,
 } from "@/components/ui";
 import { useNavigate, useParams } from "react-router-dom";
 import { EvaluationStage } from "@/types/task";
@@ -58,6 +59,9 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
         <CardTitle className="text-lg sm:text-xl font-semibold text-gray-900">
           Evaluation Board
         </CardTitle>
+        <CardDescription className="text-sm text-gray-600">
+          Overview of evaluation progress across all stages
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <Accordion type="single" collapsible className="mt-4">
