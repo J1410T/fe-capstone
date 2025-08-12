@@ -355,7 +355,6 @@ export const getProjectByHostInstitution = async (): Promise<ProjectItem[]> => {
     throw error;
   }
 };
-<<<<<<< HEAD
 
 // New API function for project filtering (Staff Management)
 export const getStaffProjectFilter = async (
@@ -379,5 +378,3 @@ export const getStaffProjectFilter = async (
     throw error;
   }
 };
-=======
->>>>>>> e616cad (feat: Implement project retrieval by host institution and update ProjectHistory component)
