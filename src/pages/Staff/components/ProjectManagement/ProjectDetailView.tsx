@@ -74,39 +74,16 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     }
   };
 
-  // Mock data for project details
-  // const projectDocuments = [
-  //   { id: "doc-1", name: "Project Proposal", type: "proposal" },
-  //   { id: "doc-2", name: "Technical Specification", type: "technical" },
-  //   { id: "doc-3", name: "Budget Plan", type: "budget" },
-  // ];
+  // Separate chairman and other members
+  const chairman = councilMembers?.["data-list"]?.find(
+    (member) => member.name === "Chairman"
+  );
+  const otherMembers = councilMembers?.["data-list"]?.filter(
+    (member) => member.name !== "Chairman"
+  );
 
-  // const milestones = [
-  //   { id: "milestone-1", title: "Project Initiation", status: "completed" },
-  //   { id: "milestone-2", title: "Research Phase", status: "in-progress" },
-  //   { id: "milestone-3", title: "Development Phase", status: "pending" },
-  // ];
-
-  // const evaluations = [
-  //   {
-  //     id: "eval-1",
-  //     title: "Initial Assessment",
-  //     type: "preliminary",
-  //     stages: [
-  //       { id: "stage-1", name: "Proposal Review", status: "completed" },
-  //       { id: "stage-2", name: "Technical Assessment", status: "in-progress" },
-  //     ],
-  //   },
-  //   {
-  //     id: "eval-2",
-  //     title: "Mid-term Assessment",
-  //     type: "interim",
-  //     stages: [
-  //       { id: "stage-3", name: "Progress Review", status: "pending" },
-  //       { id: "stage-4", name: "Quality Assessment", status: "pending" },
-  //     ],
-  //   },
-  // ];
+  const defaultAvatar =
+    "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
 
   return (
     <div className="space-y-8 p-8">
@@ -215,15 +192,11 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
               {selectedProject.creator ? (
                 <div className="flex items-center space-x-3">
                   <img
-                    src={
-                      selectedProject.creator["avatar-url"] ||
-                      "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg"
-                    }
+                    src={selectedProject.creator["avatar-url"] || defaultAvatar}
                     alt={selectedProject.creator["full-name"]}
                     className="w-10 h-10 rounded-full object-cover"
                     onError={(e) => {
-                      e.currentTarget.src =
-                        "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
+                      e.currentTarget.src = defaultAvatar;
                     }}
                   />
                   <div>
@@ -320,22 +293,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <div className="flex items-center space-x-2 mb-2">
-                  <Crown className="w-4 h-4 text-yellow-500" />
-                  <span className="text-sm font-medium">Council Info</span>
-                </div>
-                <div className="ml-6 text-sm text-gray-700">
-                  <p>Status: {assignedCouncil.status}</p>
-                  <p>
-                    Created:{" "}
-                    {new Date(
-                      assignedCouncil["created-at"]
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center space-x-2 mb-2">
                   <Users className="w-4 h-4 text-blue-500" />
                   <span className="text-sm font-medium">
                     Members{" "}
@@ -344,30 +301,80 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                       : ""}
                   </span>
                 </div>
-                <div className="ml-6 text-sm text-gray-600">
+                <div className="ml-6 space-y-2">
                   {councilMembers && councilMembers["data-list"] ? (
-                    <>
-                      {councilMembers["data-list"]
-                        .slice(0, 2)
-                        .map((member, index) => (
-                          <span key={member.id}>
-                            {member["full-name"]}
-                            {index <
-                              Math.min(
-                                1,
-                                councilMembers["data-list"]!.length - 1
-                              ) && ", "}
-                          </span>
-                        ))}
-                      {councilMembers["data-list"].length > 2 && (
-                        <span>
-                          {" "}
-                          and {councilMembers["data-list"].length - 2} more...
-                        </span>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                      {/* Chairman on the left */}
+                      {chairman && (
+                        <div className=" p-3">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Crown className="w-4 h-4 text-yellow-500" />
+                            <span className="text-sm font-medium text-yellow-700">
+                              Chairman
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <img
+                              src={chairman["avatar-url"] || defaultAvatar}
+                              alt={chairman["full-name"]}
+                              className="w-10 h-10 rounded-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.src = defaultAvatar;
+                              }}
+                            />
+                            <div>
+                              <p className="font-medium text-sm">
+                                {chairman["full-name"]}
+                              </p>
+                              <p className="text-xs text-gray-500">
+                                {chairman.email}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       )}
-                    </>
+
+                      {/* Other members on the right */}
+                      {otherMembers && otherMembers.length > 0 && (
+                        <div className="p-3">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <Users className="w-4 h-4 text-blue-500" />
+                            <span className="text-sm font-medium text-blue-700">
+                              Council Members
+                            </span>
+                          </div>
+                          <div className="space-y-2">
+                            {otherMembers.map((member) => (
+                              <div
+                                key={member.id}
+                                className="flex items-center space-x-3"
+                              >
+                                <img
+                                  src={member["avatar-url"] || defaultAvatar}
+                                  alt={member["full-name"]}
+                                  className="w-8 h-8 rounded-full object-cover"
+                                  onError={(e) => {
+                                    e.currentTarget.src = defaultAvatar;
+                                  }}
+                                />
+                                <div>
+                                  <p className="font-medium text-sm">
+                                    {member["full-name"]}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {member.email}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   ) : (
-                    <span>Loading members...</span>
+                    <span className="text-sm text-gray-600">
+                      Loading members...
+                    </span>
                   )}
                 </div>
               </div>
@@ -397,157 +404,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           </div>
         )}
       </div>
-
-      {/* Project Documents Section */}
-      {/* <div className="rounded-xl p-6 border">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <FileText className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Project Documents
-              </h2>
-              <p className="text-gray-600">
-                View and manage project documentation
-              </p>
-            </div>
-          </div>
-          <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded-full">
-            {projectDocuments.length} files
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {projectDocuments.map((doc) => (
-            <div
-              key={doc.id}
-              className="bg-white border border-gray-200 rounded-lg p-4 hover:border-blue-300 hover:bg-blue-50 transition-all cursor-pointer group"
-              onClick={() => navigateToPage("document", doc)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <FileText className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">{doc.name}</h4>
-                    <p className="text-sm text-gray-500">{doc.type}</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-blue-500" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div> */}
-
-      {/* Milestones Section */}
-      {/* <div className="rounded-xl p-6 border">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Calendar className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">Milestones</h2>
-              <p className="text-gray-600">Track project progress and phases</p>
-            </div>
-          </div>
-          <span className="bg-green-100 text-green-800 text-sm font-medium px-3 py-1 rounded-full">
-            {milestones.length} milestones
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {milestones.map((milestone) => (
-            <div
-              key={milestone.id}
-              className="bg-white border border-gray-200 rounded-lg p-4 hover:border-green-300 hover:bg-green-50 transition-all cursor-pointer group"
-              onClick={() => navigateToPage("milestone", milestone)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <Calendar className="w-5 h-5 text-gray-400 group-hover:text-green-500" />
-                  <div>
-                    <h4 className="font-medium text-gray-900">
-                      {milestone.title}
-                    </h4>
-                    <StatusBadge status={milestone.status} size="sm" />
-                  </div>
-                </div>
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-green-500" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div> */}
-
-      {/* Evaluations & Stages Section */}
-      {/* <div className="rounded-xl p-6 border">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <Users className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-gray-900">
-                Evaluations & Stages
-              </h2>
-              <p className="text-gray-600">
-                Assessment phases and evaluation stages
-              </p>
-            </div>
-          </div>
-          <span className="bg-purple-100 text-purple-800 text-sm font-medium px-3 py-1 rounded-full">
-            {evaluations.length} evaluations
-          </span>
-        </div>
-
-        <div className="space-y-6">
-          {evaluations.map((evaluation) => (
-            <div
-              key={evaluation.id}
-              className="bg-white rounded-lg border border-gray-200 p-6"
-            >
-              <div
-                className="flex items-center justify-between mb-4 cursor-pointer hover:bg-purple-50 p-2 rounded-lg transition-colors"
-                onClick={() => navigateToPage("evaluation", evaluation)}
-              >
-                <div className="flex items-center space-x-3">
-                  <Users className="w-5 h-5 text-purple-500" />
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      {evaluation.title}
-                    </h3>
-                    <p className="text-sm text-gray-600">{evaluation.type}</p>
-                  </div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-gray-400" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-8">
-                {evaluation.stages.map((stage) => (
-                  <div
-                    key={stage.id}
-                    className="bg-orange-50 border border-orange-200 rounded-lg p-4 hover:border-orange-300 hover:bg-orange-100 transition-all cursor-pointer group"
-                    onClick={() => navigateToPage("evaluation-stage", stage)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-900">
-                          {stage.name}
-                        </h4>
-                        <StatusBadge status={stage.status} size="sm" />
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-orange-500" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div> */}
 
       {/* Council Assignment Modal */}
       <CouncilAssignmentModal
