@@ -1,7 +1,7 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
-import { Users, BookOpen, FolderOpen } from "lucide-react";
+import { Users, BookOpen, FolderOpen, GraduationCap, CheckCircle } from "lucide-react";
 
 interface Topic {
   id: number;
@@ -24,6 +24,20 @@ export const TopicsList: React.FC<TopicsListProps> = ({ topics }) => {
 
   const handleTopicClick = (topicId: number) => {
     navigate(`/council/project-approval/topic/${topicId}`);
+  };
+
+  // Sample majors for different topics
+  const getTopicMajors = (topicId: number) => {
+    const majorsByTopic: { [key: number]: string[] } = {
+      1: ["Computer Science", "AI", "Biomedical Eng.", "Data Science"],
+      2: ["Environmental Sci.", "Engineering", "Physics", "Chemistry"],
+      3: ["Biology", "Environmental Sci.", "Ecology", "Conservation"],
+      4: ["Physics", "Computer Science", "Mathematics", "Engineering"],
+      5: ["Biotechnology", "Ethics", "Biology", "Philosophy"],
+      6: ["Civil Engineering", "Urban Planning", "Technology", "Architecture"],
+      7: ["Environmental Sci.", "Climate Science", "Geography", "Physics"],
+    };
+    return majorsByTopic[topicId] || ["General Sciences"];
   };
 
   return (
@@ -54,16 +68,26 @@ export const TopicsList: React.FC<TopicsListProps> = ({ topics }) => {
             >
               {/* Status and Progress */}
               <div className="flex items-center justify-between mb-3">
-                <Badge
-                  variant="outline"
-                  className={
-                    topic.status === "Waiting for PI"
-                      ? "bg-amber-50 text-amber-700 border-amber-200 font-medium px-3 py-1 text-xs"
-                      : "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium px-3 py-1 text-xs"
-                  }
-                >
-                  {topic.status}
-                </Badge>
+                <div className="flex items-center gap-3">
+                  <Badge
+                    variant="outline"
+                    className={
+                      topic.status === "Waiting for PI"
+                        ? "bg-amber-50 text-amber-700 border-amber-200 font-medium px-3 py-1 text-xs"
+                        : "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium px-3 py-1 text-xs"
+                    }
+                  >
+                    {topic.status}
+                  </Badge>
+                  {topic.councilApprovals && topic.totalCouncilMembers && (
+                    <div className="flex items-center gap-1.5 px-2 py-1 bg-green-50 rounded-lg">
+                      <CheckCircle className="h-3 w-3 text-green-600" />
+                      <span className="text-xs font-medium text-green-700">
+                        {topic.councilApprovals}/{topic.totalCouncilMembers} Council Approved
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Topic Content */}
@@ -113,6 +137,35 @@ export const TopicsList: React.FC<TopicsListProps> = ({ topics }) => {
                         {topic.applicants} Submitted
                       </p>
                     </div>
+                  </div>
+                </div>
+
+                {/* Related Majors */}
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <GraduationCap className="h-3 w-3 text-gray-500" />
+                    <span className="text-xs font-medium text-gray-600 uppercase tracking-wide">
+                      Related Fields
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {getTopicMajors(topic.id).slice(0, 4).map((major, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="bg-gray-50 text-gray-700 border-gray-200 text-xs px-2 py-0.5 font-medium"
+                      >
+                        {major}
+                      </Badge>
+                    ))}
+                    {getTopicMajors(topic.id).length > 4 && (
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-50 text-blue-600 border-blue-200 text-xs px-2 py-0.5 font-medium"
+                      >
+                        +{getTopicMajors(topic.id).length - 4} more
+                      </Badge>
+                    )}
                   </div>
                 </div>
               </div>
