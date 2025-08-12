@@ -167,11 +167,11 @@ export const TopicDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen ">
-      <div className="container mx-auto py-8 space-y-8">
+    <div className="min-h-screen">
+      <div className="container mx-auto py-4 space-y-4">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/20">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-white/20">
+          <div className="flex items-center gap-4 mb-3">
             <Button
               variant="outline"
               size="sm"
@@ -183,14 +183,14 @@ export const TopicDetailPage: React.FC = () => {
             </Button>
             <div className="h-6 w-px bg-gray-300"></div>
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl text-white shadow-lg">
-                <FileText className="h-6 w-6" />
+              <div className="p-2 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl text-white shadow-lg">
+                <FileText className="h-5 w-5" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                <h1 className="text-xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                   Topic Details
                 </h1>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-xs text-gray-600 mt-1">
                   Review topic information and proposals
                 </p>
               </div>
@@ -200,28 +200,28 @@ export const TopicDetailPage: React.FC = () => {
         </div>
 
         {/* Topic Overview */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-8">
-          <div className="flex items-start gap-6 mb-8">
-            <div className="p-4 bg-emerald-100 rounded-2xl">
-              <FileText className="h-8 w-8 text-emerald-600" />
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-4">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="p-3 bg-emerald-100 rounded-xl">
+              <FileText className="h-6 w-6 text-emerald-600" />
             </div>
             <div className="flex-1">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
                 {topic.title}
               </h2>
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-3 mb-4">
                 <Badge
                   variant="outline"
                   className={
                     topic.status === "Waiting for PI"
-                      ? "bg-amber-50 text-amber-700 border-amber-200 font-medium px-4 py-2"
-                      : "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium px-4 py-2"
+                      ? "bg-amber-50 text-amber-700 border-amber-200 font-medium px-3 py-1 text-xs"
+                      : "bg-emerald-50 text-emerald-700 border-emerald-200 font-medium px-3 py-1 text-xs"
                   }
                 >
                   {topic.status}
                 </Badge>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Calendar className="h-4 w-4" />
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <Calendar className="h-3 w-3" />
                   <span>
                     Created {new Date(topic.createdAt).toLocaleDateString()}
                   </span>
@@ -231,38 +231,38 @@ export const TopicDetailPage: React.FC = () => {
           </div>
 
           {/* Topic Info Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl">
-              <BookOpen className="h-8 w-8 text-blue-600" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+              <BookOpen className="h-6 w-6 text-blue-600" />
               <div>
                 <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
                   Research Field
                 </span>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900">
                   {topic.type}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 p-4 bg-purple-50 rounded-xl">
-              <FolderOpen className="h-8 w-8 text-purple-600" />
+            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+              <FolderOpen className="h-6 w-6 text-purple-600" />
               <div>
                 <span className="text-xs font-medium text-purple-600 uppercase tracking-wide">
                   Category
                 </span>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900">
                   {topic.category}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 p-4 bg-orange-50 rounded-xl">
-              <Users className="h-8 w-8 text-orange-600" />
+            <div className="flex items-center gap-3 p-3 bg-orange-50 rounded-lg">
+              <Users className="h-6 w-6 text-orange-600" />
               <div>
                 <span className="text-xs font-medium text-orange-600 uppercase tracking-wide">
                   Applications
                 </span>
-                <p className="text-lg font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-gray-900">
                   {topic.applicants} Proposal{topic.applicants !== 1 ? "s" : ""}
                 </p>
               </div>
@@ -271,18 +271,18 @@ export const TopicDetailPage: React.FC = () => {
         </div>
 
         {/* Proposals Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20">
-          <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-100">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20">
+          <div className="bg-gradient-to-r from-gray-50 to-white p-4 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <GraduationCap className="h-6 w-6 text-blue-600" />
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <GraduationCap className="h-5 w-5 text-blue-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-base font-semibold text-gray-900">
                     Principal Investigator Proposals
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs text-gray-500">
                     {topicProposals.length} proposal
                     {topicProposals.length !== 1 ? "s" : ""} submitted for
                     review
@@ -297,7 +297,8 @@ export const TopicDetailPage: React.FC = () => {
               {topicProposals.length > 0 && (
                 <Button
                   onClick={handleOpenProposalDialog}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                  size="sm"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-3 py-1 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 text-xs"
                 >
                   <CheckSquare className="h-4 w-4 mr-2" />
                   Select Proposal

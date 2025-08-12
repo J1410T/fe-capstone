@@ -327,7 +327,19 @@ This project, if executed effectively, could serve as a model for similar educat
           "Currently reviewing the digital signature implementation and security protocols. Initial assessment shows promising security architecture but requires detailed cryptographic analysis.",
       },
       {
-        id: "eval-4",
+        id: "e2105b84-b602-4ab8-917e-24f1e8439433",
+        evaluatorName: "AI Evaluation System",
+        evaluatorRole: "AI Reviewer",
+        status: "completed",
+        score: 8.7,
+        totalRate: 8.7,
+        submittedAt: "2025-08-11T14:05:12.000Z",
+        comment:
+          "AI-generated evaluation completed. The project shows strong technical merit and addresses practical needs in aviation education. Comprehensive analysis available in detailed view.",
+        isAiReport: true,
+      },
+      {
+        id: "eval-5",
         evaluatorName: "Dr. Mark Thompson",
         evaluatorRole: "Educational Technology Expert",
         status: "pending",
@@ -477,11 +489,11 @@ export const ProposalDetailPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen ">
-      <div className="container mx-auto py-8 space-y-8">
+    <div className="min-h-screen">
+      <div className="container mx-auto py-4 space-y-4">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/20">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-white/20">
+          <div className="flex items-center gap-4 mb-3">
             <Button
               variant="outline"
               size="sm"
@@ -510,31 +522,31 @@ export const ProposalDetailPage: React.FC = () => {
         </div>
 
         {/* Proposal Overview */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-8">
-          <div className="flex items-start gap-6 mb-8">
-            <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center">
-              <span className="text-2xl font-bold text-blue-700">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-4">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+              <span className="text-lg font-bold text-blue-700">
                 {proposal.name.charAt(0)}
               </span>
             </div>
             <div className="flex-1">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
                 {proposal.proposalTitle}
               </h2>
-              <div className="flex flex-wrap gap-3 mb-6">
+              <div className="flex flex-wrap gap-2 mb-4">
                 <Badge
                   variant="outline"
-                  className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2"
+                  className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1 text-xs"
                 >
                   {proposal.proposalType}
                 </Badge>
                 <Badge
                   variant="outline"
-                  className="bg-green-50 text-green-700 border-green-200 px-4 py-2"
+                  className="bg-green-50 text-green-700 border-green-200 px-3 py-1 text-xs"
                 >
                   {proposal.status}
                 </Badge>
-                <div className="flex items-center gap-2 text-sm text-gray-500 px-4 py-2 bg-gray-50 rounded-full">
+                <div className="flex items-center gap-2 text-xs text-gray-500 px-3 py-1 bg-gray-50 rounded-full">
                   <Calendar className="h-4 w-4" />
                   <span>
                     Applied{" "}
@@ -546,35 +558,36 @@ export const ProposalDetailPage: React.FC = () => {
           </div>
 
           {/* Proposal Summary */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 mb-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4 mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-base font-semibold text-gray-900">
                 Proposal Document
               </h3>
               <Button
                 onClick={handleViewProposalDocument}
                 variant="outline"
-                className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 rounded-lg"
+                size="sm"
+                className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 rounded-lg text-xs"
               >
-                <FileText className="h-4 w-4" />
+                <FileText className="h-3 w-3" />
                 View Full Document
               </Button>
             </div>
-            <p className="text-gray-700 leading-relaxed">
+            <p className="text-sm text-gray-700 leading-relaxed">
               {proposal.proposalSummary}
             </p>
           </div>
 
           {/* Team Members Table */}
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-              <User className="h-5 w-5 text-blue-600" />
+          <div className="space-y-3">
+            <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+              <User className="h-4 w-4 text-blue-600" />
               Research Team & Scientific CVs
             </h3>
 
-            <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-              <div className="bg-gradient-to-r from-gray-50 to-white px-6 py-4 border-b border-gray-200">
-                <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wide">
+            <div className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
+              <div className="bg-gradient-to-r from-gray-50 to-white px-4 py-2 border-b border-gray-200">
+                <h4 className="text-xs font-semibold text-gray-900 uppercase tracking-wide">
                   Team Members
                 </h4>
               </div>
@@ -583,19 +596,19 @@ export const ProposalDetailPage: React.FC = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Name
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Role
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Institution
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Department
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Scientific CV
                       </th>
                     </tr>
@@ -606,10 +619,10 @@ export const ProposalDetailPage: React.FC = () => {
                         key={member.id}
                         className="hover:bg-gray-50 transition-colors"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <div className="flex items-center">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                              <span className="text-sm font-medium text-blue-700">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                              <span className="text-xs font-medium text-blue-700">
                                 {member.name.charAt(0)}
                               </span>
                             </div>
@@ -617,16 +630,16 @@ export const ProposalDetailPage: React.FC = () => {
                               <div className="text-sm font-medium text-gray-900">
                                 {member.name}
                               </div>
-                              <div className="text-sm text-gray-500">
+                              <div className="text-xs text-gray-500">
                                 {member.email}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <Badge
                             variant="outline"
-                            className={`
+                            className={`text-xs px-2 py-1
                               ${
                                 member.role === "PI"
                                   ? "bg-emerald-50 text-emerald-700 border-emerald-200"
@@ -641,20 +654,20 @@ export const ProposalDetailPage: React.FC = () => {
                             {member.role}
                           </Badge>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {member.institution}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
                           {member.department}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => handleViewCV(member)}
-                            className="flex items-center gap-2 hover:bg-blue-50 hover:border-blue-200 rounded-lg"
+                            className="flex items-center gap-1 hover:bg-blue-50 hover:border-blue-200 rounded-lg text-xs"
                           >
-                            <Eye className="h-4 w-4" />
+                            <Eye className="h-3 w-3" />
                             View CV
                           </Button>
                         </td>
@@ -670,85 +683,102 @@ export const ProposalDetailPage: React.FC = () => {
         </div>
 
         {/* Evaluation Section */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20">
-          <div className="bg-gradient-to-r from-gray-50 to-white p-6 border-b border-gray-100">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20">
+          <div className="bg-gradient-to-r from-gray-50 to-white p-3 border-b border-gray-100">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-3 bg-emerald-100 rounded-xl">
-                  <FileText className="h-6 w-6 text-emerald-600" />
+                <div className="p-2 bg-emerald-100 rounded-lg">
+                  <FileText className="h-4 w-4 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-base font-semibold text-gray-900">
                     Evaluation Stages
                   </h3>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-xs text-gray-500">
                     View and manage evaluation stages for this proposal
                   </p>
                 </div>
               </div>
               <Button
                 onClick={handleCreateEvaluation}
-                className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-medium px-6 py-3 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                size="sm"
+                className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-medium px-3 py-1 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 text-xs"
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-3 w-3 mr-1" />
                 Create Evaluation
               </Button>
             </div>
           </div>
 
-          <div className="p-6">
+          <div className="p-3">
             {evaluationStages.length > 0 ? (
-              <div className="space-y-6">
+              <div className="space-y-3">
                 {evaluationStages.map((stage) => (
                   <div
                     key={stage.id}
-                    className="border border-gray-200 rounded-xl overflow-hidden"
+                    className="border border-gray-200 rounded-lg overflow-hidden"
                   >
                     {/* Individual Evaluations */}
-                    <div className="p-4 bg-white">
-                      <h5 className="text-sm font-semibold text-gray-700 mb-3 uppercase tracking-wide">
+                    <div className="p-3 bg-white">
+                      <h5 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
                         Individual Evaluations
                       </h5>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         {stage.individualEvaluations.map((evaluation) => (
                           <div
                             key={evaluation.id}
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer transition-colors"
+                            className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all duration-200 ${
+                              evaluation.isAiReport
+                                ? "bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 hover:from-emerald-100 hover:to-teal-100 shadow-sm"
+                                : "bg-gray-50 hover:bg-gray-100 border border-gray-200"
+                            }`}
                             onClick={() =>
                               handleViewIndividualEvaluation(evaluation.id)
                             }
                           >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                               <div
-                                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                                className={`w-6 h-6 rounded-full flex items-center justify-center shadow-sm ${
                                   evaluation.isAiReport
-                                    ? "bg-emerald-100"
-                                    : "bg-blue-100"
+                                    ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
+                                    : "bg-blue-100 text-blue-700"
                                 }`}
                               >
                                 {evaluation.isAiReport ? (
-                                  <span className="text-xs font-bold text-emerald-700">
+                                  <span className="text-[10px] font-bold">
                                     AI
                                   </span>
                                 ) : (
-                                  <span className="text-xs font-medium text-blue-700">
+                                  <span className="text-[10px] font-medium">
                                     {evaluation.evaluatorName.charAt(0)}
                                   </span>
                                 )}
                               </div>
                               <div>
-                                <p className="text-sm font-medium text-gray-900">
+                                <p
+                                  className={`text-sm font-medium ${
+                                    evaluation.isAiReport
+                                      ? "text-emerald-900"
+                                      : "text-gray-900"
+                                  }`}
+                                >
                                   {evaluation.evaluatorName}
                                 </p>
-                                <p className="text-xs text-gray-500">
+                                <p
+                                  className={`text-xs ${
+                                    evaluation.isAiReport
+                                      ? "text-emerald-600"
+                                      : "text-gray-500"
+                                  }`}
+                                >
                                   {evaluation.evaluatorRole}
                                 </p>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-2">
                               {(evaluation.score || evaluation.totalRate) && (
                                 <div className="text-right">
-                                  <p className="text-sm font-medium text-gray-900">
+                                  <p className="text-xs font-medium text-gray-900">
                                     {evaluation.isAiReport
                                       ? `Rate: ${evaluation.totalRate}/10`
                                       : `Score: ${
@@ -760,17 +790,15 @@ export const ProposalDetailPage: React.FC = () => {
                               )}
                               <Badge
                                 variant="outline"
-                                className={`
-                                  ${
-                                    evaluation.status === "completed"
-                                      ? evaluation.isAiReport
-                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                        : "bg-green-50 text-green-700 border-green-200"
-                                      : evaluation.status === "in-progress"
-                                      ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                                      : "bg-gray-50 text-gray-700 border-gray-200"
-                                  }
-                                `}
+                                className={`text-xs px-2 py-1 ${
+                                  evaluation.status === "completed"
+                                    ? evaluation.isAiReport
+                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                      : "bg-green-50 text-green-700 border-green-200"
+                                    : evaluation.status === "in-progress"
+                                    ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                    : "bg-gray-50 text-gray-700 border-gray-200"
+                                }`}
                               >
                                 {evaluation.isAiReport &&
                                 evaluation.status === "completed"
@@ -786,24 +814,25 @@ export const ProposalDetailPage: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-12">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="p-6 bg-gray-100 rounded-full">
-                    <FileText className="h-12 w-12 text-gray-400" />
+              <div className="text-center py-8">
+                <div className="flex flex-col items-center gap-3">
+                  <div className="p-4 bg-gray-100 rounded-full">
+                    <FileText className="h-8 w-8 text-gray-400" />
                   </div>
                   <div>
-                    <p className="text-xl font-medium text-gray-900 mb-2">
+                    <p className="text-lg font-medium text-gray-900 mb-1">
                       No evaluation stages yet
                     </p>
-                    <p className="text-gray-500 mb-4">
+                    <p className="text-sm text-gray-500 mb-3">
                       Start by creating an evaluation stage for this proposal
                     </p>
                     <Button
                       onClick={handleCreateEvaluation}
                       variant="outline"
-                      className="rounded-xl"
+                      size="sm"
+                      className="rounded-lg"
                     >
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="h-4 w-4 mr-1" />
                       Create First Evaluation Stage
                     </Button>
                   </div>
@@ -821,7 +850,7 @@ export const ProposalDetailPage: React.FC = () => {
           onClose={handleCloseProposalDialog}
           title={`${proposal.proposalTitle} - Full Document`}
           content={selectedProposalContent}
-          height={700}
+          height="auto"
         />
       )}
 
@@ -832,7 +861,7 @@ export const ProposalDetailPage: React.FC = () => {
           onClose={handleCloseCVDialog}
           title={`${selectedCV.name} - Scientific CV`}
           content={selectedCV.content}
-          height={700}
+          height="auto"
         />
       )}
     </div>

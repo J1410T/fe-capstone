@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AIEvaluationDisplay } from "@/components/ui/ai-evaluation-display";
 import {
   ArrowLeft,
   Bot,
@@ -120,10 +121,10 @@ export const AIEvaluationDetailPage: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="container mx-auto py-8 space-y-8">
+      <div className="container mx-auto py-4 space-y-6">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-white/20">
-          <div className="flex items-center gap-4 mb-4">
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-sm border border-white/20">
+          <div className="flex items-center gap-3 mb-3">
             <Button
               variant="outline"
               size="sm"
@@ -135,8 +136,8 @@ export const AIEvaluationDetailPage: React.FC = () => {
             </Button>
             <div className="h-6 w-px bg-gray-300"></div>
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl text-white shadow-lg">
-                <Bot className="h-6 w-6" />
+              <div className="p-2 bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-xl text-white shadow-lg">
+                <Bot className="h-5 w-5" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
@@ -152,25 +153,25 @@ export const AIEvaluationDetailPage: React.FC = () => {
         </div>
 
         {/* AI Evaluation Overview */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-8">
-          <div className="flex items-start gap-6 mb-8">
-            <div className="w-16 h-16 bg-emerald-100 rounded-2xl flex items-center justify-center">
-              <Bot className="h-8 w-8 text-emerald-600" />
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6">
+          <div className="flex items-start gap-4 mb-6">
+            <div className="w-12 h-12 bg-emerald-100 rounded-xl flex items-center justify-center">
+              <Bot className="h-6 w-6 text-emerald-600" />
             </div>
             <div className="flex-1">
-              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">
                 {aiEvaluation.name}
               </h2>
-              <div className="flex items-center gap-4 mb-6">
+              <div className="flex items-center gap-3 mb-4">
                 <Badge
                   variant="outline"
-                  className="bg-emerald-50 text-emerald-700 border-emerald-200 font-medium px-4 py-2"
+                  className="bg-emerald-50 text-emerald-700 border-emerald-200 font-medium px-3 py-1 text-xs"
                 >
                   AI Generated
                 </Badge>
                 <Badge
                   variant="outline"
-                  className={`font-medium px-4 py-2 ${getStatusColor(
+                  className={`font-medium px-3 py-1 text-xs ${getStatusColor(
                     aiEvaluation.status
                   )}`}
                 >
@@ -190,9 +191,9 @@ export const AIEvaluationDetailPage: React.FC = () => {
           </div>
 
           {/* Evaluation Metadata */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl">
-              <FileText className="h-8 w-8 text-blue-600" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-xl">
+              <FileText className="h-6 w-6 text-blue-600" />
               <div>
                 <span className="text-xs font-medium text-blue-600 uppercase tracking-wide">
                   Evaluation ID
@@ -235,36 +236,22 @@ export const AIEvaluationDetailPage: React.FC = () => {
           </div>
 
           {/* AI Analysis Content */}
-          <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-6 border border-emerald-100">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-emerald-100 rounded-lg">
-                <Bot className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  AI Analysis & Commentary
-                </h3>
-                <p className="text-sm text-gray-600">
-                  Automated evaluation generated on{" "}
-                  {new Date(aiEvaluation["submitted-at"]).toLocaleDateString()}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-white/80 rounded-xl p-6 border border-emerald-100">
-              <div className="prose prose-sm max-w-none text-gray-700">
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: aiEvaluation.comment.replace(/\n/g, "<br/>"),
-                  }}
-                />
-              </div>
-            </div>
+          <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+            <AIEvaluationDisplay
+              content={aiEvaluation.comment}
+              title="AI Analysis & Commentary"
+              score={aiEvaluation["total-rate"]}
+              status={aiEvaluation.status}
+              submittedAt={aiEvaluation["submitted-at"]}
+              showProjectDetails={true}
+              className="w-full"
+              compact={false}
+            />
           </div>
 
           {/* Technical Details */}
-          <div className="mt-8 bg-gray-50 rounded-xl p-6">
-            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+          <div className="mt-6 bg-gray-50 rounded-xl p-4">
+            <h4 className="text-base font-semibold text-gray-900 mb-3">
               Technical Information
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">

@@ -12,6 +12,9 @@ import UserHome from "@/pages/UserHome";
 import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
 import NavigationGuard from "@/components/auth/NavigationGuard";
 import CreateEvaluationDocumentPage from "@/pages/ProjectDetail/components/evaluation/CreateEvaluationDocumentPage";
+import EvaluationListPage from "@/pages/ProjectDetail/components/evaluation/EvaluationListPage";
+import EvaluationStageDetailPage from "@/pages/ProjectDetail/components/evaluation/EvaluationStageDetailPage";
+import CreateIndividualEvaluationPage from "@/pages/ProjectDetail/components/evaluation/CreateIndividualEvaluationPage";
 
 // Staff Pages
 import {
@@ -80,12 +83,10 @@ import FormView from "@/pages/FormRegister/FormView";
 import FormEdit from "@/pages/FormRegister/FormEdit";
 import MyProject from "@/pages/PrincipalInvestigator";
 import IndividualEvaluationDetail from "@/pages/ProjectDetail/components/IndividualEvaluationDetail";
-import EvaluationListPage from "@/pages/ProjectDetail/components/EvaluationListPage";
 import StageViewPage from "@/pages/ProjectDetail/components/StageViewPage";
 import MyCouncil from "@/pages/Council/MyCouncil";
 import { ViewAllNotifications } from "@/pages/Notifications";
 import { ScrollRestoration } from "@/components/common/ScrollRestoration";
-import EvaluationStageDetail from "@/pages/ProjectDetail/components/EvaluationStageDetail";
 
 /**
  * Main application routes configuration
@@ -238,6 +239,26 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId/detail/evaluation",
             element: <EvaluationListPage />,
+          },
+          {
+            path: "project/:projectId/evaluation",
+            element: <EvaluationListPage />,
+          },
+          {
+            path: "project/:projectId/evaluation/stage/:stageId",
+            element: <EvaluationStageDetailPage />,
+          },
+          {
+            path: "project/:projectId/evaluation/stage/:stageId/create-individual",
+            element: <CreateIndividualEvaluationPage />,
+          },
+          {
+            path: "project/:projectId/evaluation/individual/:individualEvaluationId",
+            element: <IndividualEvaluationDetail />,
+          },
+          {
+            path: "project/:projectId/evaluation/create",
+            element: <CreateEvaluationDocumentPage />,
           },
           {
             path: "evaluation/:evaluationId/stage/:stageId",
@@ -490,6 +511,26 @@ export const routes: RouteObject[] = [
             element: <EvaluationListPage />,
           },
           {
+            path: "project/:projectId/evaluation",
+            element: <EvaluationListPage />,
+          },
+          {
+            path: "project/:projectId/evaluation/stage/:stageId",
+            element: <EvaluationStageDetailPage />,
+          },
+          {
+            path: "project/:projectId/evaluation/stage/:stageId/create-individual",
+            element: <CreateIndividualEvaluationPage />,
+          },
+          {
+            path: "project/:projectId/evaluation/individual/:individualEvaluationId",
+            element: <IndividualEvaluationDetail />,
+          },
+          {
+            path: "project/:projectId/evaluation/create",
+            element: <CreateEvaluationDocumentPage />,
+          },
+          {
             path: "evaluation/:evaluationId/stage/:stageId",
             element: <StageViewPage />,
           },
@@ -596,7 +637,7 @@ export const routes: RouteObject[] = [
       },
       {
         path: "project/:projectId/evaluation/stage/:stageId",
-        element: <EvaluationStageDetail />,
+        element: <EvaluationStageDetailPage />,
       },
       {
         path: "project/:projectId/evaluation/individual/:individualEvaluationId",

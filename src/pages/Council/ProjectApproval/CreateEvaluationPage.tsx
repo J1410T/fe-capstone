@@ -87,9 +87,9 @@ export const CreateEvaluationPage: React.FC = () => {
 
   return (
     <div className="min-h-screen ">
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto py-4 px-4">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-3 mb-6">
           <Button
             variant="outline"
             onClick={() =>
@@ -101,7 +101,7 @@ export const CreateEvaluationPage: React.FC = () => {
             Back to Proposal
           </Button>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
               Create Individual Evaluation
             </h1>
             <p className="text-gray-600 mt-1">
@@ -111,17 +111,17 @@ export const CreateEvaluationPage: React.FC = () => {
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Sidebar - Form Fields */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-4">
             {/* Scoring */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-emerald-100 rounded-xl">
-                  <Star className="h-6 w-6 text-emerald-600" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-emerald-100 rounded-xl">
+                  <Star className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                  <h3 className="text-base font-semibold text-gray-900">
                     Evaluation Scoring
                   </h3>
                   <p className="text-sm text-gray-500">
@@ -245,15 +245,15 @@ export const CreateEvaluationPage: React.FC = () => {
           </div>
 
           {/* Main Content - Evaluation Form */}
-          <div className="lg:col-span-3 space-y-6">
+          <div className="lg:col-span-3 space-y-4">
             {/* Evaluation Content */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-emerald-100 rounded-xl">
-                  <FileText className="h-6 w-6 text-emerald-600" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-emerald-100 rounded-xl">
+                  <FileText className="h-5 w-5 text-emerald-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     Detailed Evaluation
                   </h3>
                   <p className="text-sm text-gray-500">
@@ -309,13 +309,13 @@ export const CreateEvaluationPage: React.FC = () => {
             </div>
 
             {/* Comments Section */}
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-white/20 p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 bg-purple-100 rounded-xl">
-                  <FileText className="h-6 w-6 text-purple-600" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-purple-100 rounded-xl">
+                  <FileText className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">
+                  <h3 className="text-lg font-semibold text-gray-900">
                     Additional Comments
                   </h3>
                   <p className="text-sm text-gray-500">

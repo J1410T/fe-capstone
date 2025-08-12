@@ -1,5 +1,5 @@
 import React from "react";
-import { TinyMCEViewer } from "@/components/ui/tinymce-viewer";
+import { ResponsiveTinyMCEViewer } from "@/components/ui/responsive-tinymce-viewer";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +12,7 @@ interface TinyMCEViewDialogProps {
   onClose: () => void;
   title?: string;
   content: string;
-  height?: number;
+  height?: number | string;
 }
 
 export const TinyMCEViewDialog: React.FC<TinyMCEViewDialogProps> = ({
@@ -20,19 +20,20 @@ export const TinyMCEViewDialog: React.FC<TinyMCEViewDialogProps> = ({
   onClose,
   title = "Document Viewer",
   content,
-  height = 600,
 }) => {
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-4xl max-h-[80vh]">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+      <DialogContent className="max-w-5xl w-[95vw] max-h-[90vh] h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0 pb-4">
+          <DialogTitle className="text-lg font-semibold">{title}</DialogTitle>
         </DialogHeader>
-        <div className="h-full overflow-hidden">
-          <TinyMCEViewer
+        <div className="flex-1 min-h-0 overflow-auto bg-white rounded-lg border">
+          <ResponsiveTinyMCEViewer
             content={content}
-            height={height}
-            className="h-full border-0 rounded-lg shadow-inner"
+            height="100%"
+            className="h-full border-0"
+            maxHeight="100%"
+            autoResize={false}
           />
         </div>
       </DialogContent>
