@@ -12,7 +12,6 @@ import {
   Calendar,
   FileText,
   CheckSquare,
-  CheckCircle,
 } from "lucide-react";
 
 interface Topic {
