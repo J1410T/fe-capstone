@@ -8,12 +8,14 @@ import {
   deleteAppraisalCouncil,
   getAppraisalCouncilByProjectId,
   assignAppraisalCouncilToProject,
+  getMyAppraisalCouncils,
 } from "@/services/resources/appraisal-council";
 import {
   AppraisalCouncilListRequest,
   CreateAppraisalCouncilRequest,
   UpdateAppraisalCouncilRequest,
   AssignCouncilToProjectRequest,
+  MyAppraisalCouncilRequest,
 } from "@/types/appraisal-council";
 import { getUserRolesByAppraisalCouncil } from "@/services/resources/auth";
 
@@ -195,5 +197,14 @@ export const useAssignAppraisalCouncilToProject = () => {
         description: "Please try again",
       });
     },
+  });
+};
+
+export const useMyAppraisalCouncils = (request: MyAppraisalCouncilRequest) => {
+  return useQuery({
+    queryKey: [...appraisalCouncilQueryKeys.all, "my-councils", request],
+    queryFn: () => getMyAppraisalCouncils(request),
+    staleTime: 5 * 60 * 1000,
+    // refetchOnWindowFocus: true,
   });
 };

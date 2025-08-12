@@ -1,7 +1,3 @@
-/**
- * Appraisal Council types and interfaces
- */
-
 import { UserRole } from "./auth";
 
 // Base AppraisalCouncil interface matching API response
@@ -112,4 +108,9 @@ export interface NoCouncilAssignedError {
 export interface AssignCouncilSuccessResponse {
   status: 200;
   message: "Appraisal Council assigned successfully.";
+}
+
+export interface MyAppraisalCouncilRequest {
+  "page-index": number;
+  "page-size": number;
 }
