@@ -13,7 +13,7 @@ import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, Send, Users, FileText, Info } from "lucide-react";
 import { FormPIRegister } from "@/types/form";
 import { SimpleInvitedUser } from "@/components/common";
-import { TinyMCEViewer } from "@/components/ui/tinymce-viewer";
+import { TinyMCEViewer } from "@/components/ui/TinyMCE";
 
 interface ReviewStepProps {
   formData: FormPIRegister;
