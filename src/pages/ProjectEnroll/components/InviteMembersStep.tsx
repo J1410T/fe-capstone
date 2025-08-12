@@ -48,11 +48,7 @@ import {
 } from "@/hooks/queries/useAuth";
 import { GroupMember, UserRole } from "@/types/auth";
 import { UserRoleStatus } from "@/types/notification";
-import {
-  useInviteMember,
-  useCreateNotification,
-  useSendNotification,
-} from "@/hooks/queries/notification";
+import { useInviteMember } from "@/hooks/queries/notification";
 import {
   useScientificCVByEmail,
   useCreateDocument,
@@ -113,7 +109,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   const { data: searchResults = [], isLoading: isSearching } =
     useSearchAccounts({
       input: searchValue.trim().length > 0 ? searchValue.trim() : "",
-      roleUser: "Researcher",
     });
   const { data: allRoles = [], isLoading: isLoadingRoles } = useAllRoles();
   const { data: myAccountInfo } = useMyAccountInfo();
@@ -128,8 +123,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   // Invitation hooks
   const inviteMemberMutation = useInviteMember();
   const createUserRoleMutation = useCreateUserRole();
-  const createNotificationMutation = useCreateNotification();
-  const sendNotificationMutation = useSendNotification();
   const deleteUserRoleMutation = useDeleteUserRole();
 
   // Document hooks
@@ -213,7 +206,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
         }
       );
 
-      const membersFromUserRoles: GroupMember[] = [];
       const accountGroups = allMembersFromUserRoles.reduce((acc, member) => {
         if (!acc[member.id]) {
           acc[member.id] = [];
@@ -226,17 +218,30 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
       // Prioritize other roles over Researcher (Secretary & Researcher → select Secretary)
       const rolePriority: Record<string, number> = {
         Researcher: 1,
-        Secretary: 3,
-        Leader: 2,
+        Secretary: 2,
+        Leader: 3,
         "Principal Investigator": 4,
       };
 
+      const membersFromUserRoles: GroupMember[] = Object.values(
+        accountGroups
+      ).map((members) => {
+        if (members.length === 1) {
+          return members[0];
+        } else {
+          // Prioritize role cao nhất
+          return members.reduce((highest, current) => {
+            const currentPriority = rolePriority[current.role] || 0;
+            const highestPriority = rolePriority[highest.role] || 0;
+            return currentPriority > highestPriority ? current : highest;
+          });
+        }
+      });
+
       Object.values(accountGroups).forEach((members) => {
         if (members.length === 1) {
-          // Only one role for this account, add it
           membersFromUserRoles.push(members[0]);
         } else {
-          // Multiple roles for same account, get the highest priority role
           const prioritizedMember = members.reduce((highest, current) => {
             const currentPriority = rolePriority[current.role] || 0;
             const highestPriority = rolePriority[highest.role] || 0;
@@ -246,13 +251,33 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
         }
       });
 
+      console.log(
+        "membersFromUserRoles after processing:",
+        membersFromUserRoles
+      );
+
       setGroupMembers((prev) => {
-        // Merge with any manually added members (isInvitation: true) that don't have UserRole data yet
         const manualMembers = prev.filter(
           (m) =>
             m.isInvitation && !membersFromUserRoles.some((ur) => ur.id === m.id)
         );
-        return [...membersFromUserRoles, ...manualMembers];
+
+        // Sửa logic combine: ưu tiên membersFromUserRoles và không duplicate
+        const memberMap = new Map<string, GroupMember>();
+
+        // Add members from UserRoles first (higher priority)
+        membersFromUserRoles.forEach((member) => {
+          memberMap.set(member.id, member);
+        });
+
+        // Add manual members if not already exists
+        manualMembers.forEach((member) => {
+          if (!memberMap.has(member.id)) {
+            memberMap.set(member.id, member);
+          }
+        });
+
+        return Array.from(memberMap.values());
       });
 
       // Set the member status from UserRole data
@@ -317,14 +342,14 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
 
         // Batch update all statuses at once
         const statusUpdates: Record<string, UserRoleStatus> = {};
-        const membersToUpdate: GroupMember[] = [];
+        // const membersToUpdate: GroupMember[] = [];
         const notificationsToSend: {
           memberId: string;
           currentStatus: UserRoleStatus;
           newStatus: UserRoleStatus;
         }[] = [];
 
-        statusResults.forEach(({ memberId, status, userRole }) => {
+        statusResults.forEach(({ memberId, status }) => {
           const currentStatus = memberInvitationStatus[memberId];
 
           if (currentStatus !== status) {
@@ -341,59 +366,26 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
           }
 
           // Update member role information if available
-          if (
-            userRole &&
-            !groupMembers.find((m) => m.id === memberId)?.isInvitation
-          ) {
-            const memberRole = allRoles.find(
-              (role) => role.id === userRole["role-id"]
-            );
-            if (memberRole) {
-              membersToUpdate.push({
-                ...groupMembers.find((m) => m.id === memberId)!,
-                roleId: userRole["role-id"],
-                role: memberRole.name as "Researcher" | "Secretary" | "Leader",
-              });
-            }
-          }
+          // if (
+          //   userRole &&
+          //   !groupMembers.find((m) => m.id === memberId)?.isInvitation
+          // ) {
+          //   const memberRole = allRoles.find(
+          //     (role) => role.id === userRole["role-id"]
+          //   );
+          //   if (memberRole) {
+          //     membersToUpdate.push({
+          //       ...groupMembers.find((m) => m.id === memberId)!,
+          //       roleId: userRole["role-id"],
+          //       role: memberRole.name as "Researcher" | "Secretary" | "Leader",
+          //     });
+          //   }
+          // }
         });
 
         // Batch update statuses
         if (Object.keys(statusUpdates).length > 0) {
           setMemberInvitationStatus((prev) => ({ ...prev, ...statusUpdates }));
-        }
-
-        // Batch update member information
-        if (membersToUpdate.length > 0) {
-          setGroupMembers((prev) =>
-            prev.map((m) => {
-              const updatedMember = membersToUpdate.find(
-                (um) => um.id === m.id
-              );
-              return updatedMember || m;
-            })
-          );
-        }
-
-        // Send notifications for newly approved members
-        for (const { memberId } of notificationsToSend) {
-          try {
-            const notificationResponse =
-              await createNotificationMutation.mutateAsync({
-                title:
-                  "Please Submit your Scientific Resume to the project you have agreed to join in My Project",
-                type: "project",
-                status: "create",
-                "objec-notification-id": projectId,
-              });
-
-            await sendNotificationMutation.mutateAsync({
-              "list-account-id": [memberId],
-              "notification-id": notificationResponse.id,
-            });
-          } catch (error) {
-            console.error("Failed to send approval notification:", error);
-          }
         }
       } catch (error) {
         console.error("Failed to batch check user role status:", error);
@@ -411,8 +403,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     memberInvitationStatus,
     allRoles,
     lastStatusCheck,
-    createNotificationMutation,
-    sendNotificationMutation,
   ]);
 
   // Check CV status specifically for Principal Investigator
@@ -621,64 +611,6 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
       (filteredUsers.length > 0 || isSearching);
     setShowResults(shouldShow);
   }, [searchValue, filteredUsers.length, isSearching]);
-
-  // const handleUserSelect = (user: {
-  //   id: string;
-  //   name: string;
-  //   email: string;
-  //   avatar?: string;
-  // }) => {
-  //   if (groupMembers.some((u) => u.email === user.email)) return;
-
-  //   // Determine default role - Leader if none exists, otherwise Researcher
-  //   const hasLeader = groupMembers.some((u) => u.role === "Leader");
-  //   const defaultRole: "Researcher" | "Secretary" | "Leader" = !hasLeader
-  //     ? "Leader"
-  //     : "Researcher";
-  //   const defaultRoleId =
-  //     allowedRoles.find((r) => r.name === defaultRole)?.id || "";
-
-  //   const newMember: GroupMember = {
-  //     id: user.id,
-  //     name: user.name,
-  //     email: user.email,
-  //     avatar: user.avatar,
-  //     role: defaultRole,
-  //     roleId: defaultRoleId,
-  //     isInvitation: !user.id || user.id.startsWith("invite-"),
-  //     // Add required fields from Member interface
-  //     code: "",
-  //     groupName: "",
-  //     isOfficial: null,
-  //     expireDate: null,
-  //     createdAt: null,
-  //     status: null,
-  //     accountId: user.id,
-  //     "full-name": user.name,
-  //     phoneNumber: null,
-  //     address: null,
-  //     companyName: null,
-  //     "avatar-url": user.avatar || null,
-  //     projectId: null,
-  //     appraisalCouncilId: null,
-  //   };
-
-  //   setGroupMembers([...groupMembers, newMember]);
-
-  //   // Update collaborators for backward compatibility
-  //   const newCollaborator: SimpleInvitedUser = {
-  //     id: user.id,
-  //     name: user.name,
-  //     email: user.email,
-  //     avatar: user.avatar,
-  //     role: defaultRole,
-  //     isInvitation: newMember.isInvitation,
-  //   };
-
-  //   onCollaboratorsChange([...collaborators, newCollaborator]);
-  //   setSearchValue("");
-  //   setShowResults(false);
-  // };
 
   const handleUserSelect = (user: {
     id: string;
@@ -1329,6 +1261,12 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
               </h4>
               <div className="space-y-3">
                 {groupMembers.map((member) => {
+                  console.log(
+                    "Rendering member:",
+                    member.id,
+                    "role:",
+                    member.role
+                  );
                   const availableRoles = getAvailableRoles(member.id);
 
                   return (

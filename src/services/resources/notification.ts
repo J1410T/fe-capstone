@@ -72,7 +72,7 @@ export const getNotificationList = async (
 
     // Build request body, only include is-read if it's defined
     const requestBody: Record<string, unknown> = {
-      email: request.email,
+      // email: request.email,
       "page-index": request["page-index"],
       "page-size": request["page-size"],
     };
@@ -82,7 +82,7 @@ export const getNotificationList = async (
     }
 
     const response = await axiosClient.post<NotificationListResponse>(
-      "/notification//user-notification",
+      "/notification/user-notification",
       requestBody,
       {
         headers: {
