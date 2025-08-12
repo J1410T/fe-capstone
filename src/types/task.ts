@@ -154,6 +154,21 @@ export type MemberTaskResponse = {
   "data-list": MemberTask[];
 };
 
+export type EvaluationStage = {
+  id: string;
+  name: string;
+  type: string;
+  phrase: string;
+  stageOrder: number; // Added stageOrder property
+  evaluationId?: string; // Made evaluationId optional
+  individualEvaluations: IndividualEvaluation[];
+  title: string; // Added title property
+  description?: string; // Added optional description property
+  status: string; // Added status property
+  createdAt?: string; // Added createdAt property
+  order?: number; // Added order property
+};
+
 export type Evaluation = {
   id: string;
   code: string;
@@ -164,6 +179,7 @@ export type Evaluation = {
   type: string;
   createDate: string;
   status: string;
+  evaluationStages: EvaluationStage[]; // Added evaluationStages property
 };
 
 export type IndividualEvaluation = {
@@ -201,17 +217,6 @@ export type ProjectEvaluation = {
   dueDate?: string;
   status: "active" | "completed" | "cancelled" | "pending";
   stages: EvaluationStage[];
-};
-
-export type EvaluationStage = {
-  id: string;
-  title: string;
-  description?: string;
-  evaluationId: string;
-  order: number;
-  createdAt: string;
-  status: "active" | "completed" | "cancelled";
-  individualEvaluations: IndividualEvaluation[];
 };
 
 export type EvaluationSummary = {

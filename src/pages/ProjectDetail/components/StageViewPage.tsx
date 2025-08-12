@@ -171,7 +171,9 @@ export const StageViewPage: React.FC = () => {
               <label className="font-medium text-gray-700">Created Date</label>
               <div className="flex items-center gap-2 mt-1">
                 <Calendar className="w-4 h-4 text-gray-500" />
-                <p className="text-gray-900">{formatDate(stage.createdAt)}</p>
+                <p className="text-gray-900">
+                  {stage.createdAt ? formatDate(stage.createdAt) : "N/A"}
+                </p>
               </div>
             </div>
             <div>
