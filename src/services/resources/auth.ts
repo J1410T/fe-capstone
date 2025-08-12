@@ -11,6 +11,7 @@ import {
   UserFilterRequest,
   UserFilterResponse,
   CreateUserRequest,
+  SearchAccountsParams,
 } from "@/types/auth";
 import { axiosClient, getAccessToken } from "../api";
 
@@ -87,17 +88,48 @@ export const setMyRole = async (roleName: string) => {
   }
 };
 
+// export const searchAccounts = async (
+//   input: string
+// ): Promise<SearchAccountResult[]> => {
+//   try {
+//     const accessToken = getAccessToken();
+
+//     const res = await axiosClient.get<SearchAccountResult[]>(
+//       `/account/search?input=${encodeURIComponent(input)}`,
+//       {
+//         headers: {
+//           Authorization: `Bearer ${accessToken}`,
+//         },
+//       }
+//     );
+
+//     return res.data;
+//   } catch (error) {
+//     console.error("searchAccounts error:", error);
+//     throw error;
+//   }
+// };
+
 export const searchAccounts = async (
-  input: string
+  params: SearchAccountsParams
 ): Promise<SearchAccountResult[]> => {
   try {
     const accessToken = getAccessToken();
 
+    // Build query parameters
+    const queryParams = new URLSearchParams();
+    queryParams.append("input", params.input);
+
+    if (params.roleUser) {
+      queryParams.append("roleUser", params.roleUser);
+    }
+
     const res = await axiosClient.get<SearchAccountResult[]>(
-      `/account/search?input=${encodeURIComponent(input)}`,
+      `/account/search?${queryParams.toString()}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          accept: "*/*",
         },
       }
     );

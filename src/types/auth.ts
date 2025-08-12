@@ -173,6 +173,10 @@ export interface SearchAccountResult {
   email: string;
   "avatar-url": string | null;
 }
+export interface SearchAccountsParams {
+  input: string;
+  roleUser?: string;
+}
 
 export interface UserSearchResult {
   id: string;
