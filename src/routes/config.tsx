@@ -540,6 +540,39 @@ export const routes: RouteObject[] = [
             path: "evaluation/:evaluationId/stage/:stageId/individual/:individualId",
             element: <IndividualEvaluationDetailViewPage />,
           },
+          // {
+          //   path: "project/:projectId/evaluation/create",
+          //   element: <CreateEvaluationDocumentPage />,
+          // },
+          {
+            path: "project/:projectId/evaluation",
+            element: <EvaluationListPage />,
+          },
+          {
+            path: "project/:projectId/evaluation/view",
+            element: <EvaluationViewListPageWrapper />,
+          },
+          {
+            path: "project/:projectId/evaluation/:evaluationId/view",
+            element: <EvaluationDetailViewPage />,
+          },
+          {
+            path: "project/:projectId/evaluation/stage/:stageId",
+            element: <EvaluationStageDetailPage />,
+          },
+          {
+            path: "project/:projectId/evaluation/stage/:stageId/view",
+            element: <EvaluationStageViewPageWrapper />,
+          },
+          {
+            path: "project/:projectId/evaluation/individual/:individualEvaluationId",
+            element: <IndividualEvaluationDetailViewPage />,
+          },
+
+          {
+            path: "evaluation/:evaluationId/stage/:stageId/individual/:individualId",
+            element: <IndividualEvaluationDetailViewPage />,
+          },
           {
             path: "project-enroll-form",
             element: <ProjectRegistration />,

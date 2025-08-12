@@ -458,26 +458,6 @@ export const TopicDetailPage: React.FC = () => {
                               >
                                 {proposal.status}
                               </Badge>
-                              {proposal.approvals !== undefined &&
-                                proposal.totalReviewers && (
-                                  <Badge
-                                    variant="outline"
-                                    className={`${
-                                      proposal.approvals ===
-                                      proposal.totalReviewers
-                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                        : proposal.approvals /
-                                            proposal.totalReviewers >=
-                                          0.6
-                                        ? "bg-amber-50 text-amber-700 border-amber-200"
-                                        : "bg-red-50 text-red-700 border-red-200"
-                                    }`}
-                                  >
-                                    <CheckCircle className="h-3 w-3 mr-1" />
-                                    {proposal.approvals}/
-                                    {proposal.totalReviewers} Approved
-                                  </Badge>
-                                )}
                             </div>
                             <p className="text-gray-600 line-clamp-2 mb-3">
                               {proposal.proposalSummary}
