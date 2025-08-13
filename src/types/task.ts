@@ -1,5 +1,13 @@
 import { User } from "@/contexts/AuthContext";
 import { Member } from "./auth";
+import {
+  Evaluation,
+  EvaluationStage,
+  IndividualEvaluation,
+} from "./evaluation";
+
+// Re-export evaluation types for backward compatibility
+export type { EvaluationStage, IndividualEvaluation };
 
 export type TaskStatus = "ToDo" | "InProgress" | "Completed" | "Overdue";
 export type UserTaskStatus =
@@ -98,7 +106,6 @@ export type Milestone = {
   project: string | null;
   creator: Member | null;
   evaluations: Evaluation[] | null;
-  // individualEvaluations: IndividualEvaluation[];
   tasks: ProjectTask[] | null;
 };
 
@@ -152,81 +159,6 @@ export type MemberTaskResponse = {
   "total-count": number;
   "total-page": number;
   "data-list": MemberTask[];
-};
-
-export type EvaluationStage = {
-  id: string;
-  name: string;
-  type: string;
-  phrase: string;
-  stageOrder: number; // Added stageOrder property
-  evaluationId?: string; // Made evaluationId optional
-  individualEvaluations: IndividualEvaluation[];
-  title: string; // Added title property
-  description?: string; // Added optional description property
-  status: string; // Added status property
-  createdAt?: string; // Added createdAt property
-  order?: number; // Added order property
-};
-
-export type Evaluation = {
-  id: string;
-  code: string;
-  title: string;
-  totalRate: number;
-  comment: string;
-  phrase: string;
-  type: string;
-  createDate: string;
-  status: string;
-  evaluationStages: EvaluationStage[]; // Added evaluationStages property
-};
-
-export type IndividualEvaluation = {
-  id: string;
-  totalRate: number;
-  comment: string;
-  submittedAt: string;
-  isApproved: boolean;
-  reviewerResult: boolean;
-  isAIReport: boolean;
-  status: string;
-  evaluationStageId: string;
-  reviewerId: string;
-  projectId: string;
-  milestoneId: string;
-  evaluator?: string; // Evaluator name for display
-  documentId?: string; // Associated document ID
-};
-
-export type EvaluationType =
-  | "milestone"
-  | "midterm"
-  | "summary"
-  | "final"
-  | "proposal";
-
-export type ProjectEvaluation = {
-  id: string;
-  title: string;
-  type: EvaluationType;
-  description?: string;
-  projectId: string;
-  milestoneId?: string;
-  createdAt: string;
-  dueDate?: string;
-  status: "active" | "completed" | "cancelled" | "pending";
-  stages: EvaluationStage[];
-};
-
-export type EvaluationSummary = {
-  totalEvaluations: number;
-  totalStages: number;
-  completedEvaluations: number;
-  pendingEvaluations: number;
-  averageScore?: number;
-  overallStatus: "not_started" | "in_progress" | "completed";
-  evaluationsByType: Record<EvaluationType, number>;
 };
 
 // New types for task management operations

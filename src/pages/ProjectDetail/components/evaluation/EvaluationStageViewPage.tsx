@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,111 +19,13 @@ import {
   Bot,
   User,
 } from "lucide-react";
-import { EvaluationStageApi } from "@/types/evaluation-api";
+import {
+  EvaluationStageApi,
+  IndividualEvaluationApi,
+} from "@/types/evaluation";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-
-// Mock evaluation stage data
-const mockEvaluationStageData: EvaluationStageApi = {
-  id: "a6802afe-759a-490c-8ab4-5d39dfe75e2e",
-  name: "Initial Review",
-  "stage-order": 1,
-  phrase: "Approval",
-  type: "project",
-  status: "created",
-  "evaluation-id": "e7c34a2b-8f5d-4e3f-9a1c-6b7d8e9f0123",
-  "milestone-id": null,
-  "appraisal-council-id": null,
-  transactions: null,
-  "individual-evaluations": [
-    {
-      id: "a011f1ed-4b91-4ce0-872c-53216acbee9b",
-      name: "AI Review",
-      "total-rate": null,
-      comment: `<h3>Evaluation Report - Philosophy in the Age of Artificial Intelligence</h3>
-
-<p>Based on the provided data for the project titled <strong>"Philosophy in the Age of Artificial Intelligence,"</strong> several key aspects can be evaluated and analyzed for clarity, purpose, and potential impact.</p>
-
-<h4>Title and Description</h4>
-
-<p>The title effectively encapsulates the core theme by merging two significant domains: philosophy and artificial intelligence (AI). The description succinctly outlines the study's objectives, emphasizing the exploration of ethical considerations, human identity, and decision-making autonomy within the context of AI. This focus is both timely and relevant, given the rapid advancements in AI technology and its implications for society.</p>`,
-      "submitted-at": "2025-08-12T17:35:44.4527859",
-      "is-approved": false,
-      "reviewer-result": null,
-      "is-ai-report": true,
-      status: "created",
-      "evaluation-stage-id": "a6802afe-759a-490c-8ab4-5d39dfe75e2e",
-      "reviewer-id": null,
-      documents: null,
-      "projects-similarity-result": null,
-    },
-    {
-      id: "b021f2ed-5c92-5df1-973d-64327bdcff0c",
-      name: "Expert Review #1",
-      "total-rate": 8.5,
-      comment: `<h3>Expert Evaluation Report</h3>
-
-<p>This project presents a <strong>well-structured approach</strong> to examining the philosophical implications of artificial intelligence in contemporary society.</p>
-
-<h4>Strengths:</h4>
-<ul>
-  <li>Clear research objectives and methodology</li>
-  <li>Interdisciplinary approach combining philosophy and technology</li>
-  <li>Relevant and timely research topic</li>
-  <li>Strong potential for practical applications</li>
-</ul>
-
-<h4>Areas for Improvement:</h4>
-<ul>
-  <li>Could benefit from more specific research questions</li>
-  <li>Timeline could be more detailed</li>
-  <li>Budget considerations need refinement</li>
-</ul>
-
-<p><em>Overall, this is a promising research proposal with significant potential for impact in both academic and practical domains.</em></p>`,
-      "submitted-at": "2025-08-12T16:20:30.1234567",
-      "is-approved": true,
-      "reviewer-result": "approved",
-      "is-ai-report": false,
-      status: "completed",
-      "evaluation-stage-id": "a6802afe-759a-490c-8ab4-5d39dfe75e2e",
-      "reviewer-id": "rev-123-456-789",
-      documents: null,
-      "projects-similarity-result": null,
-    },
-    {
-      id: "c031f3ed-6d03-6ef2-084e-75438cedd1d",
-      name: "Expert Review #2",
-      "total-rate": 7.2,
-      comment: `<h3>Secondary Expert Evaluation</h3>
-
-<p>The project <strong>"Philosophy in the Age of Artificial Intelligence"</strong> addresses crucial contemporary issues at the intersection of technology and ethics.</p>
-
-<h4>Evaluation Summary:</h4>
-
-<p>The research proposal demonstrates a solid understanding of the philosophical challenges posed by AI development. The methodology appears sound, though some aspects could be strengthened.</p>
-
-<div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0;">
-  <h4 style="color: #92400e; margin-top: 0;">Recommendations:</h4>
-  <ul>
-    <li>Include more diverse philosophical perspectives</li>
-    <li>Consider international ethical frameworks</li>
-    <li>Expand the scope of AI applications examined</li>
-  </ul>
-</div>
-
-<p>With these modifications, this project could make significant contributions to the field of AI ethics and philosophy.</p>`,
-      "submitted-at": "2025-08-12T14:45:15.9876543",
-      "is-approved": true,
-      "reviewer-result": "approved_with_conditions",
-      "is-ai-report": false,
-      status: "completed",
-      "evaluation-stage-id": "a6802afe-759a-490c-8ab4-5d39dfe75e2e",
-      "reviewer-id": "rev-987-654-321",
-      documents: null,
-      "projects-similarity-result": null,
-    },
-  ],
-};
+import { useGetIndividualEvaluationsByStageId } from "@/hooks/queries/evaluation";
+import { Loading } from "@/components/ui";
 
 interface EvaluationStageViewPageProps {
   stage?: EvaluationStageApi;
@@ -141,72 +43,25 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
     evaluationId: string;
     stageId: string;
   }>();
-  const [evaluationStage, setEvaluationStage] = useState<
-    EvaluationStageApi | undefined
-  >(propStage);
-  const [loading, setLoading] = useState(!propStage);
 
-  useEffect(() => {
-    console.log("EvaluationStageViewPage received stage prop:", propStage);
-    console.log(
-      "EvaluationStageViewPage received evaluationId prop:",
-      propEvaluationId
-    );
-    console.log(
-      "URL params - projectId:",
-      projectId,
-      "evaluationId:",
-      evaluationId,
-      "stageId:",
-      stageId
-    );
+  // Use the stage prop if provided, otherwise use stageId to fetch individual evaluations
+  const currentStageId = propStage?.id || stageId;
 
-    // If stage prop is provided, use it directly
-    if (propStage) {
-      console.log("Using provided stage prop:", propStage.name);
-      setEvaluationStage(propStage);
-      setLoading(false);
-      return;
-    }
+  // Fetch individual evaluations for this stage
+  const {
+    data: individualEvaluationsResponse,
+    isLoading: isLoadingIndividualEvaluations,
+  } = useGetIndividualEvaluationsByStageId(currentStageId || "");
 
-    // Otherwise, fall back to mock data or fetch from API
-    if (stageId && (evaluationId || propEvaluationId)) {
-      // Get the stage data from the evaluation API
-      const evalId = evaluationId || propEvaluationId;
-      import("../../data/mockEvaluationApiData").then(
-        ({ getEvaluationById }) => {
-          getEvaluationById(evalId!)
-            .then((evaluation) => {
-              if (evaluation) {
-                const foundStage = evaluation["evaluation-stages"].find(
-                  (s) => s.id === stageId
-                );
-                if (foundStage) {
-                  setEvaluationStage(foundStage);
-                } else {
-                  // Fallback to mock data if stage not found
-                  setEvaluationStage(mockEvaluationStageData);
-                }
-                setLoading(false);
-              } else {
-                // Fallback to mock data if evaluation not found
-                setEvaluationStage(mockEvaluationStageData);
-                setLoading(false);
-              }
-            })
-            .catch(() => {
-              // Fallback to mock data on error
-              setEvaluationStage(mockEvaluationStageData);
-              setLoading(false);
-            });
-        }
-      );
-    } else {
-      // No evaluation ID available, use mock data
-      setEvaluationStage(mockEvaluationStageData);
-      setLoading(false);
-    }
-  }, [stageId, propStage, propEvaluationId, evaluationId, projectId]);
+  // Create a stage object with the fetched individual evaluations
+  const evaluationStage: EvaluationStageApi | undefined = propStage
+    ? {
+        ...propStage,
+        "individual-evaluations":
+          individualEvaluationsResponse?.["data-list"] ||
+          propStage["individual-evaluations"],
+      }
+    : undefined;
 
   const handleBackToEvaluation = () => {
     // Determine the correct route prefix based on user role
@@ -274,19 +129,8 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
     return <Badge className="bg-red-100 text-red-800">Not Approved</Badge>;
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="container mx-auto py-8">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-              <p className="text-gray-600">Loading evaluation stage...</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  if (isLoadingIndividualEvaluations) {
+    return <Loading />;
   }
 
   if (!evaluationStage) {
@@ -325,12 +169,12 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
 
   const completedEvaluations = (
     evaluationStage["individual-evaluations"] || []
-  ).filter((e) => e.status === "completed").length;
+  ).filter((e: { status: string }) => e.status === "completed").length;
   const approvedEvaluations = (
     evaluationStage["individual-evaluations"] || []
-  ).filter((e) => e["is-approved"]).length;
+  ).filter((e: { "is-approved": boolean }) => e["is-approved"]).length;
   const aiReports = (evaluationStage["individual-evaluations"] || []).filter(
-    (e) => e["is-ai-report"]
+    (e: { "is-ai-report": boolean }) => e["is-ai-report"]
   ).length;
 
   return (
@@ -458,7 +302,7 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
             {(evaluationStage["individual-evaluations"] || []).length > 0 ? (
               <div className="space-y-4">
                 {(evaluationStage["individual-evaluations"] || []).map(
-                  (evaluation) => (
+                  (evaluation: IndividualEvaluationApi) => (
                     <Card
                       key={evaluation.id}
                       className="hover:shadow-md transition-shadow"

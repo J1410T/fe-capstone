@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,32 +19,9 @@ import {
   Bot,
   Star,
 } from "lucide-react";
-import { IndividualEvaluationApi } from "@/types/evaluation-api";
 import { TinyMCEViewer } from "@/components/ui/TinyMCE";
-import { mockEvaluationsData } from "../../data/mockEvaluationApiData";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-
-// Function to get all individual evaluations from all stages
-const getAllIndividualEvaluations = (): IndividualEvaluationApi[] => {
-  const allIndividualEvaluations: IndividualEvaluationApi[] = [];
-
-  // mockEvaluationsData has structure { "data-list": Evaluation[] }
-  if (mockEvaluationsData && mockEvaluationsData["data-list"]) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    mockEvaluationsData["data-list"].forEach((evaluation: any) => {
-      if (evaluation["evaluation-stages"]) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        evaluation["evaluation-stages"].forEach((stage: any) => {
-          if (stage["individual-evaluations"]) {
-            allIndividualEvaluations.push(...stage["individual-evaluations"]);
-          }
-        });
-      }
-    });
-  }
-
-  return allIndividualEvaluations;
-};
+import { useGetIndividualEvaluationById } from "@/hooks/queries/evaluation";
 
 const IndividualEvaluationDetailViewPage: React.FC = () => {
   const navigate = useNavigate();
@@ -56,33 +33,13 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
       stageId: string;
       individualEvaluationId: string;
     }>();
-  const [individualEvaluation, setIndividualEvaluation] = useState<
-    IndividualEvaluationApi | undefined
-  >(undefined);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (individualEvaluationId) {
-      // Simulate API call
-      setTimeout(() => {
-        const allIndividualEvaluations = getAllIndividualEvaluations();
-        const foundEvaluation = allIndividualEvaluations.find(
-          (e: IndividualEvaluationApi) => e.id === individualEvaluationId
-        );
-        console.log(
-          "Looking for individual evaluation:",
-          individualEvaluationId
-        );
-        console.log(
-          "Available evaluations:",
-          allIndividualEvaluations.map((e) => e.id)
-        );
-        console.log("Found evaluation:", foundEvaluation);
-        setIndividualEvaluation(foundEvaluation);
-        setLoading(false);
-      }, 500);
-    }
-  }, [individualEvaluationId]);
+  const {
+    data: individualEvaluation,
+    isLoading: loading,
+    isError,
+    error,
+  } = useGetIndividualEvaluationById(individualEvaluationId || "");
 
   const handleBackToStage = () => {
     // Determine the correct route prefix based on user role
@@ -148,7 +105,7 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
     );
   }
 
-  if (!individualEvaluation) {
+  if (isError || !individualEvaluation) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto py-8">
@@ -163,7 +120,9 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
                     Individual Evaluation Not Found
                   </p>
                   <p className="text-sm text-gray-500 mb-4">
-                    The individual evaluation you're looking for doesn't exist
+                    {isError && error
+                      ? `Error: ${error.message}`
+                      : "The individual evaluation you're looking for doesn't exist"}
                   </p>
                   <Button
                     onClick={handleBackToStage}

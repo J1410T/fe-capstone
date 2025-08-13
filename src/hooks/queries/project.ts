@@ -11,6 +11,7 @@ import {
   enrollProjectAsPrincipal,
   getProjectByHostInstitution,
   getStaffProjectFilter,
+  getProjectsByAppraisalCouncil,
 } from "@/services/resources/project";
 import {
   CreateProjectMajorRequest,
@@ -157,6 +158,16 @@ export function useStaffProjectFilter(
     queryKey: ["staff-project-filter", request],
     queryFn: () => getStaffProjectFilter(request),
     enabled,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+  });
+}
+
+export function useProjectsByAppraisalCouncil(councilId: string) {
+  return useQuery({
+    queryKey: ["projects-by-appraisal-council", councilId],
+    queryFn: () => getProjectsByAppraisalCouncil(councilId),
+    enabled: !!councilId,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
   });

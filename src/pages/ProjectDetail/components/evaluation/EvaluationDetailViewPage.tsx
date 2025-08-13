@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,9 +18,12 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
-import { Evaluation } from "@/types/evaluation-api";
-import { getEvaluationById } from "../../data/mockEvaluationApiData";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
+import {
+  useGetEvaluationsByProjectId,
+  useGetEvaluationStagesByEvaluationId,
+} from "@/hooks/queries/evaluation";
+import { Evaluation, EvaluationStageApi } from "@/types/evaluation";
 
 const EvaluationDetailViewPage: React.FC = () => {
   const navigate = useNavigate();
@@ -29,25 +32,32 @@ const EvaluationDetailViewPage: React.FC = () => {
     evaluationId: string;
   }>();
   const { user } = useAuth();
-  const [evaluation, setEvaluation] = useState<Evaluation | undefined>(
-    undefined
-  );
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (evaluationId) {
-      // Use the mock API function
-      getEvaluationById(evaluationId)
-        .then((foundEvaluation) => {
-          setEvaluation(foundEvaluation);
-          setLoading(false);
-        })
-        .catch((error) => {
-          console.error("Error fetching evaluation:", error);
-          setLoading(false);
-        });
-    }
-  }, [evaluationId]);
+  // Get evaluations to find the current evaluation
+  const {
+    data: evaluationsResponse,
+    isLoading: evaluationsLoading,
+    error: evaluationsError,
+  } = useGetEvaluationsByProjectId(projectId || "");
+
+  // Get evaluation stages
+  const {
+    data: evaluationStagesResponse,
+    isLoading: stagesLoading,
+    error: stagesError,
+  } = useGetEvaluationStagesByEvaluationId(evaluationId || "");
+
+  // Find the current evaluation from the evaluations list
+  const evaluation: Evaluation | undefined = evaluationsResponse?.[
+    "data-list"
+  ]?.find((evaluationItem) => evaluationItem.id === evaluationId);
+
+  // Get evaluation stages from API
+  const evaluationStages: EvaluationStageApi[] =
+    evaluationStagesResponse?.["data-list"] || [];
+
+  // Combined loading state
+  const isLoadingData = evaluationsLoading || stagesLoading;
 
   const handleBackToEvaluations = () => {
     // Determine the correct route prefix based on user role
@@ -118,7 +128,22 @@ const EvaluationDetailViewPage: React.FC = () => {
     }
   };
 
-  if (loading) {
+  // Show error if there are API errors
+  if (evaluationsError) {
+    console.error("Error fetching evaluations:", evaluationsError);
+  }
+  if (stagesError) {
+    console.error("Error fetching evaluation stages:", stagesError);
+  }
+
+  // Calculate statistics from API data
+  const totalIndividualEvaluations = evaluationStages.reduce(
+    (total, stage) => total + (stage["individual-evaluations"]?.length || 0),
+    0
+  );
+
+  // Loading state
+  if (isLoadingData) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto py-8">
@@ -133,7 +158,8 @@ const EvaluationDetailViewPage: React.FC = () => {
     );
   }
 
-  if (!evaluation) {
+  // Error state or evaluation not found
+  if (!evaluation || evaluationsError) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="container mx-auto py-8">
@@ -145,10 +171,14 @@ const EvaluationDetailViewPage: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-lg font-medium text-gray-900 mb-1">
-                    Evaluation Not Found
+                    {evaluationsError
+                      ? "Error Loading Evaluation"
+                      : "Evaluation Not Found"}
                   </p>
                   <p className="text-sm text-gray-500 mb-4">
-                    The evaluation you're looking for doesn't exist
+                    {evaluationsError
+                      ? "There was an error loading the evaluation details"
+                      : "The evaluation you're looking for doesn't exist"}
                   </p>
                   <Button
                     onClick={handleBackToEvaluations}
@@ -168,7 +198,7 @@ const EvaluationDetailViewPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen">
       <div className="container mx-auto py-8 space-y-8">
         {/* Back Button - Standalone */}
         <div className="flex items-center">
@@ -218,7 +248,7 @@ const EvaluationDetailViewPage: React.FC = () => {
                     Total Stages
                   </p>
                   <p className="text-2xl font-bold text-blue-900">
-                    {evaluation["evaluation-stages"].length}
+                    {evaluationStages.length}
                   </p>
                 </div>
               </div>
@@ -250,11 +280,7 @@ const EvaluationDetailViewPage: React.FC = () => {
                     Individual Evaluations
                   </p>
                   <p className="text-2xl font-bold text-purple-900">
-                    {evaluation["evaluation-stages"].reduce(
-                      (total, stage) =>
-                        total + (stage["individual-evaluations"]?.length || 0),
-                      0
-                    )}
+                    {totalIndividualEvaluations}
                   </p>
                 </div>
               </div>
@@ -334,14 +360,14 @@ const EvaluationDetailViewPage: React.FC = () => {
 
         {/* Evaluation Stages */}
         <div className="space-y-6">
-          {evaluation["evaluation-stages"].length > 0 ? (
+          {evaluationStages.length > 0 ? (
             <>
               <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                 <FileText className="h-5 w-5 text-gray-600" />
-                Evaluation Stages ({evaluation["evaluation-stages"].length})
+                Evaluation Stages ({evaluationStages.length})
               </h3>
               <div className="grid gap-4">
-                {evaluation["evaluation-stages"]
+                {evaluationStages
                   .sort((a, b) => a["stage-order"] - b["stage-order"])
                   .map((stage, index) => (
                     <Card

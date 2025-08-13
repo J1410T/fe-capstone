@@ -8,20 +8,22 @@ import {
   CardDescription,
 } from "@/components/ui";
 import { useNavigate, useParams } from "react-router-dom";
-import { FileText, Calendar, Users, ArrowRight } from "lucide-react";
-import { Evaluation } from "@/types/evaluation-api";
+import { FileText, Calendar, Users, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
+import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
 
-interface EvaluationBoardTabProps {
-  evaluations: Evaluation[];
-}
-
-const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
-  evaluations,
-}) => {
+const EvaluationBoardTab: React.FC = () => {
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
   const { user } = useAuth();
+
+  // Fetch evaluations using the new hook
+  const {
+    data: evaluationsResponse,
+    isLoading,
+    error,
+  } = useGetEvaluationsByProjectId(projectId!);
+  const evaluations = evaluationsResponse?.["data-list"] || [];
 
   const getStatusBadge = (status: string) => {
     switch (status.toLowerCase()) {
@@ -77,7 +79,30 @@ const EvaluationBoardTab: React.FC<EvaluationBoardTabProps> = ({
         </div>
       </CardHeader>
       <CardContent>
-        {evaluations.length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="flex flex-col items-center gap-4">
+              <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+              <p className="text-lg font-medium text-gray-900">
+                Loading evaluations...
+              </p>
+            </div>
+          </div>
+        ) : error ? (
+          <div className="text-center py-12">
+            <div className="flex flex-col items-center gap-4">
+              <div className="p-4 bg-red-100 rounded-full">
+                <FileText className="h-8 w-8 text-red-400" />
+              </div>
+              <div>
+                <p className="text-lg font-medium text-red-600 mb-1">
+                  Error loading evaluations
+                </p>
+                <p className="text-sm text-gray-500">Please try again later</p>
+              </div>
+            </div>
+          </div>
+        ) : evaluations.length === 0 ? (
           <div className="text-center py-12">
             <div className="flex flex-col items-center gap-4">
               <div className="p-4 bg-gray-100 rounded-full">

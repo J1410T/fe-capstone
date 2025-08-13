@@ -9,6 +9,7 @@ import {
   AppraisalCouncilListResponse,
   AssignCouncilToProjectRequest,
   CreateAppraisalCouncilRequest,
+  MyAppraisalCouncilRequest,
   UpdateAppraisalCouncilRequest,
 } from "@/types/appraisal-council";
 import { getUserRolesByAppraisalCouncil } from "./auth";
@@ -212,6 +213,31 @@ export const assignAppraisalCouncilToProject = async (
     );
   } catch (error) {
     console.error("assignAppraisalCouncilToProject error:", error);
+    throw error;
+  }
+};
+
+export const getMyAppraisalCouncils = async (
+  request: MyAppraisalCouncilRequest
+): Promise<AppraisalCouncilListResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.get<AppraisalCouncilListResponse>(
+      `/appraisal-council/online-user?pageIndex=${request["page-index"]}&pageSize=${request["page-size"]}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getMyAppraisalCouncils error:", error);
     throw error;
   }
 };
