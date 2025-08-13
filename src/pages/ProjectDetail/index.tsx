@@ -6,7 +6,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { OverviewTab, ProjectHeader, TeamTab } from "./components";
 import BudgetTab from "./components/BudgetTab";
@@ -19,16 +19,16 @@ import {
   useEnrollProjectAsPrincipal,
 } from "@/hooks/queries/project";
 import { useProjectMajors } from "@/hooks/queries/major";
-import { getEvaluationsByProject } from "./data/mockEvaluationApiData";
+// import { getEvaluationsByProject } from "./data/mockEvaluationApiData";
 import EvaluationBoardTab from "./components/EvaluationBoardTab";
-import { Evaluation } from "@/types/evaluation-api";
+// import { Evaluation } from "@/types/evaluation-api";
 
 function ProjectDetail() {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
+  // const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
 
   const { data: majorProject } = useProjectMajors(projectId || "");
   const {
@@ -38,11 +38,11 @@ function ProjectDetail() {
   } = useProject(projectId || "");
   const enrollProjectMutation = useEnrollProjectAsPrincipal();
 
-  useEffect(() => {
-    if (projectId) {
-      getEvaluationsByProject(projectId).then(setEvaluations);
-    }
-  }, [projectId]);
+  // useEffect(() => {
+  //   if (projectId) {
+  //     getEvaluationsByProject(projectId).then(setEvaluations);
+  //   }
+  // }, [projectId]);
 
   const handleEnrollProject = async () => {
     if (!projectId) return;
@@ -256,19 +256,9 @@ function ProjectDetail() {
 
         {visibleTabs.includes("evaluation") && (
           <TabsContent value="evaluation" className="space-y-4">
-            {evaluations.length >= 0 ? (
-              <EvaluationBoardTab
-                evaluations={evaluations}
-                // evaluationSummary={evaluationSummary}
-              />
-            ) : (
-              <div className="flex items-center justify-center h-64">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-                  <p className="text-gray-600">Loading evaluation data...</p>
-                </div>
-              </div>
-            )}
+            <EvaluationBoardTab
+            // projectId={project.id}
+            />
           </TabsContent>
         )}
       </Tabs>

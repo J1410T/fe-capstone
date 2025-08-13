@@ -1,70 +1,43 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
-import { EvaluationStageApi } from "@/types/evaluation-api";
-import { getEvaluationsByProject } from "../../data/mockEvaluationApiData";
+import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
 import EvaluationStageViewPage from "./EvaluationStageViewPage";
 import { Loading } from "@/components/ui";
-
-interface EvaluationStageViewPageWrapperState {
-  stage: EvaluationStageApi | undefined;
-  evaluationId: string | undefined;
-}
 
 const EvaluationStageViewPageWrapper: React.FC = () => {
   const { projectId, stageId } = useParams<{
     projectId: string;
     stageId: string;
   }>();
-  const [state, setState] = useState<EvaluationStageViewPageWrapperState>({
-    stage: undefined,
-    evaluationId: undefined,
-  });
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (projectId && stageId) {
-      console.log("Looking for stage:", stageId, "in project:", projectId);
-      getEvaluationsByProject(projectId)
-        .then((evaluations) => {
-          // Find the stage across all evaluations
-          let foundStage: EvaluationStageApi | undefined;
-          let foundEvaluationId: string | undefined;
+  const { data: evaluationsResponse, isLoading } = useGetEvaluationsByProjectId(
+    projectId || ""
+  );
 
-          for (const evaluation of evaluations) {
-            foundStage = evaluation["evaluation-stages"].find(
-              (s) => s.id === stageId
-            );
-            if (foundStage) {
-              foundEvaluationId = evaluation.id;
-              console.log(
-                "Found stage:",
-                foundStage.name,
-                "in evaluation:",
-                evaluation.id
-              );
-              break;
-            }
-          }
-          setState({
-            stage: foundStage,
-            evaluationId: foundEvaluationId,
-          });
-        })
-        .catch((error) => {
-          console.error("Error fetching evaluation stage:", error);
-        })
-        .finally(() => setLoading(false));
-    }
-  }, [projectId, stageId]);
-
-  if (loading) {
+  if (isLoading) {
     return <Loading />;
+  }
+
+  // Find the stage across all evaluations
+  let foundStage = undefined;
+  let foundEvaluationId = undefined;
+
+  if (evaluationsResponse?.["data-list"] && stageId) {
+    for (const evaluation of evaluationsResponse["data-list"]) {
+      foundStage = evaluation["evaluation-stages"].find(
+        (s) => s.id === stageId
+      );
+      if (foundStage) {
+        foundEvaluationId = evaluation.id;
+        break;
+      }
+    }
   }
 
   return (
     <EvaluationStageViewPage
-      stage={state.stage}
-      evaluationId={state.evaluationId}
+      stage={foundStage}
+      evaluationId={foundEvaluationId}
     />
   );
 };
