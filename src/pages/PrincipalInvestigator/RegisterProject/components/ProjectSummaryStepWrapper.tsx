@@ -142,6 +142,7 @@ export const ProjectSummaryStepWrapper: React.FC<
 
   const handleEditorChange = (content: string) => {
     setEditorContent(content);
+    setFormContent(content); // Sync formContent with editorContent
     onContentChange(content);
   };
 

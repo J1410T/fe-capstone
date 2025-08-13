@@ -85,13 +85,12 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
       return;
     }
 
-    console.log("Creating BM1 document from template...");
     setIsCreatingDocument(true);
     const templateDoc: DocumentForm = templateData.data["data-list"][0];
     const templateContent = templateDoc["content-html"].replace(/\\"/g, '"');
 
     try {
-      const newDocument = await createDocumentMutation.mutateAsync({
+      await createDocumentMutation.mutateAsync({
         name: "Registration form",
         type: "BM1",
         "is-template": false,
@@ -99,16 +98,13 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
         "project-id": projectId,
         status: "draft",
       });
-
-      console.log("BM1 document created successfully:", newDocument);
       setDocumentCreated(true);
       onDocumentCreated?.();
 
-      // FIX: Set the created content to state
+      // Set the created content to state
       setFormContent(templateContent);
       setEditorContent(templateContent);
-    } catch (error) {
-      console.error("Failed to create document:", error);
+    } catch {
       // Fallback: use template content directly
       setFormContent(templateContent);
       setEditorContent(templateContent);
@@ -128,33 +124,32 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   ]);
 
   useEffect(() => {
-    // FIX: Wait for documents API to finish loading before making decisions
+    // Wait for documents API to finish loading before making decisions
     if (isLoadingDocuments) {
-      console.log("Still loading documents...");
       return;
     }
 
     if (bm1Document) {
-      // FIX: If we have existing BM1 document, use it and don't try to create new one
+      // If we have existing BM1 document, use it and don't try to create new one
       const unescapedHtml = bm1Document["content-html"].replace(/\\"/g, '"');
       setFormContent(unescapedHtml);
       setEditorContent(unescapedHtml);
-      console.log("Using existing BM1 document:", bm1Document.id);
     } else if (!documentCreated && !isCreatingDocument) {
-      // FIX: Only try to create if we haven't created one yet and not currently creating
-      console.log("No BM1 document found, attempting to create from template");
+      // Only try to create if we haven't created one yet and not currently creating
       createDocumentFromTemplate();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    isLoadingDocuments, // FIX: Add this dependency
-    bm1Document,
-    createDocumentFromTemplate,
+    isLoadingDocuments,
+    bm1Document?.id, // Only depend on ID to avoid unnecessary re-renders
     documentCreated,
     isCreatingDocument,
+    // Intentionally exclude createDocumentFromTemplate to avoid infinite loops
   ]);
 
   const handleEditorChange = (content: string) => {
     setEditorContent(content);
+    setFormContent(content); // Sync formContent with editorContent
     onContentChange(content);
   };
 

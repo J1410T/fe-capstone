@@ -27,13 +27,13 @@ interface UnifiedTinyMCEProps {
 
   // Legacy props for backward compatibility
   formStyles?: string;
-  formId?: string;
   placeholder?: string;
 }
 
 const PRESETS = {
   basic: {
     plugins: [
+      "advlist",
       "autolink",
       "lists",
       "link",
@@ -49,9 +49,12 @@ const PRESETS = {
       "table",
       "help",
       "wordcount",
+      "quickbars",
+      "autosave",
+      "imagetools",
     ],
     toolbar:
-      "undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | help",
+      "undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | help",
     menubar: false,
     styles: `
       body {
@@ -66,6 +69,7 @@ const PRESETS = {
 
   document: {
     plugins: [
+      "advlist",
       "autolink",
       "lists",
       "link",
@@ -81,9 +85,12 @@ const PRESETS = {
       "table",
       "help",
       "wordcount",
+      "pagebreak",
+      "quickbars",
+      "autosave",
     ],
     toolbar:
-      "undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen",
+      "undo redo | formatselect | bold italic underline | forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | pagebreak | preview code fullscreen",
     menubar: false,
     styles: `
       body {
@@ -108,6 +115,7 @@ const PRESETS = {
 
   form: {
     plugins: [
+      "advlist",
       "autolink",
       "lists",
       "link",
@@ -124,9 +132,12 @@ const PRESETS = {
       "help",
       "wordcount",
       "paste",
+      "quickbars",
+      "autosave",
+      "imagetools",
     ],
     toolbar:
-      "undo redo | formatselect | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | help",
+      "undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | help",
     menubar: true,
     styles: `
       html, body {
@@ -159,6 +170,7 @@ const PRESETS = {
 
   "scientific-cv": {
     plugins: [
+      "advlist",
       "autolink",
       "lists",
       "link",
@@ -174,9 +186,12 @@ const PRESETS = {
       "table",
       "help",
       "wordcount",
+      "pagebreak",
+      "quickbars",
+      "autosave",
     ],
     toolbar:
-      "undo redo | formatselect | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen",
+      "undo redo | formatselect | bold italic underline | forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | pagebreak | preview code fullscreen",
     menubar: true,
     styles: `
       body {
@@ -229,7 +244,6 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
       plugins,
       // Legacy props
       formStyles = "",
-      formId,
       placeholder = "",
     },
     ref
@@ -250,6 +264,57 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
     };
 
     const setupEditor = (editor: TinyMCEEditor) => {
+      // Enhanced drag and drop functionality
+      editor.on("init", () => {
+        const editorBody = editor.getBody();
+
+        // Add drag over styling
+        editorBody.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          editorBody.style.backgroundColor = "#f0f8ff";
+          editorBody.style.border = "2px dashed #007cba";
+        });
+
+        // Remove drag over styling
+        editorBody.addEventListener("dragleave", (e) => {
+          e.preventDefault();
+          editorBody.style.backgroundColor = "";
+          editorBody.style.border = "";
+        });
+
+        // Handle file drop
+        editorBody.addEventListener("drop", (e) => {
+          e.preventDefault();
+          editorBody.style.backgroundColor = "";
+          editorBody.style.border = "";
+
+          const files = Array.from(e.dataTransfer?.files || []);
+          const imageFiles = files.filter((file) =>
+            file.type.startsWith("image/")
+          );
+
+          imageFiles.forEach((file) => {
+            if (file.size > 5 * 1024 * 1024) {
+              alert(
+                `File "${file.name}" is too large. Please choose an image smaller than 5MB.`
+              );
+              return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+              const img = `<img src="${
+                event.target?.result
+              }" alt="${file.name.replace(/\.[^/.]+$/, "")}" title="${
+                file.name
+              }" />`;
+              editor.insertContent(img);
+            };
+            reader.readAsDataURL(file);
+          });
+        });
+      });
+
       // Scientific CV specific setup
       if (preset === "scientific-cv") {
         editor.on("NodeChange", (e) => {
@@ -273,13 +338,28 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
           });
         });
       }
+
+      // Add custom image resize handles
+      editor.on("ObjectSelected", (e) => {
+        if (e.target.tagName === "IMG") {
+          const img = e.target as HTMLImageElement;
+          // Add resize handles or custom styling if needed
+          img.style.outline = "2px solid #007cba";
+        }
+      });
+
+      editor.on("ObjectDeselected", (e) => {
+        if (e.target.tagName === "IMG") {
+          const img = e.target as HTMLImageElement;
+          img.style.outline = "";
+        }
+      });
     };
 
     return (
       <div className={`border rounded-lg overflow-hidden ${className}`}>
         <Editor
-          key={formId || value.slice(0, 100)}
-          apiKey={editorApiKey}
+          apiKey={editorApiKey || "no-api-key"}
           onInit={(_, editor) => (editorRef.current = editor)}
           value={value}
           onEditorChange={handleEditorChange}
@@ -296,23 +376,81 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
             statusbar: !readOnly,
             resize: !readOnly,
 
-            // Image upload capabilities
+            // Content handling
+            entity_encoding: "raw",
+            verify_html: false,
+            convert_urls: false,
+            relative_urls: false,
+
+            // Performance optimizations
+            skin: "oxide",
+            content_css: "default",
+
+            // Better UX
+            contextmenu: "link image table",
+            quickbars_selection_toolbar:
+              "bold italic | quicklink h2 h3 blockquote",
+            quickbars_insert_toolbar: "quickimage quicktable",
+
+            // Auto-save functionality
+            autosave_ask_before_unload: false,
+            autosave_interval: "30s",
+            autosave_restore_when_empty: false,
+
+            // Enhanced image upload capabilities
             image_description: false,
             image_title: true,
+            image_caption: true,
             file_picker_types: "image",
+
+            // File picker callback for image uploads
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             file_picker_callback: (callback: any, _value: any, meta: any) => {
               if (meta.filetype === "image") {
                 const input = document.createElement("input");
                 input.setAttribute("type", "file");
-                input.setAttribute("accept", "image/*");
+                input.setAttribute(
+                  "accept",
+                  "image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                );
+                input.setAttribute("multiple", "false");
 
                 input.onchange = function () {
                   const file = (this as HTMLInputElement).files?.[0];
                   if (file) {
+                    // Validate file size (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                      alert(
+                        "File size too large. Please choose an image smaller than 5MB."
+                      );
+                      return;
+                    }
+
+                    // Validate file type
+                    const allowedTypes = [
+                      "image/jpeg",
+                      "image/jpg",
+                      "image/png",
+                      "image/gif",
+                      "image/webp",
+                    ];
+                    if (!allowedTypes.includes(file.type)) {
+                      alert(
+                        "Invalid file type. Please choose a JPEG, PNG, GIF, or WebP image."
+                      );
+                      return;
+                    }
+
                     const reader = new FileReader();
                     reader.onload = function () {
-                      callback(reader.result, { alt: file.name });
+                      // Return the base64 image with metadata
+                      callback(reader.result, {
+                        alt: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for alt text
+                        title: file.name,
+                      });
+                    };
+                    reader.onerror = function () {
+                      alert("Error reading file. Please try again.");
                     };
                     reader.readAsDataURL(file);
                   }
@@ -321,8 +459,40 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
                 input.click();
               }
             },
+
+            // Enhanced paste and drag-drop support
             paste_data_images: true,
+            paste_as_text: false,
             automatic_uploads: true,
+
+            // Drag and drop support
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            images_upload_handler: (blobInfo: any) => {
+              return new Promise((resolve, reject) => {
+                // Validate file size
+                if (blobInfo.blob().size > 5 * 1024 * 1024) {
+                  reject(
+                    "File size too large. Please choose an image smaller than 5MB."
+                  );
+                  return;
+                }
+
+                // Convert blob to base64
+                const reader = new FileReader();
+                reader.onload = () => {
+                  resolve(reader.result as string);
+                };
+                reader.onerror = () => {
+                  reject("Error processing image. Please try again.");
+                };
+                reader.readAsDataURL(blobInfo.blob());
+              });
+            },
+
+            // Image upload settings
+            images_upload_url: "", // Disable server upload, use base64
+            images_reuse_filename: true,
+            images_file_types: "jpg,jpeg,png,gif,webp",
 
             setup: setupEditor,
           }}
