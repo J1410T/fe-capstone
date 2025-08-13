@@ -23,8 +23,6 @@ import { useAppraisalCouncilsListBasic } from "@/hooks/queries/appraisal-council
 import { AppraisalCouncil } from "@/types/appraisal-council";
 import { councilApi, CouncilProject } from "./api";
 
-
-
 const CouncilProjectsPage: React.FC = () => {
   const navigate = useNavigate();
 
@@ -41,17 +39,19 @@ const CouncilProjectsPage: React.FC = () => {
         const apiProjects = projectsResponse?.data || [];
         if (apiProjects.length > 0) {
           // Convert API response to CouncilProject format
-          const convertedProjects: CouncilProject[] = apiProjects.map(project => ({
-            id: project.id,
-            "english-title": project["english-title"],
-            "vietnamese-title": project["vietnamese-title"] || undefined,
-            category: project.category || "General",
-            type: project.type || "Research",
-            status: project.status,
-            "created-at": project["created-at"],
-            "council-id": undefined, // API doesn't have council-id field
-            description: project.description || undefined
-          }));
+          const convertedProjects: CouncilProject[] = apiProjects.map(
+            (project) => ({
+              id: project.id,
+              "english-title": project["english-title"],
+              "vietnamese-title": project["vietnamese-title"] || undefined,
+              category: project.category || "General",
+              type: project.type || "Research",
+              status: project.status,
+              "created-at": project["created-at"],
+              "council-id": undefined, // API doesn't have council-id field
+              description: project.description || undefined,
+            })
+          );
           setProjects(convertedProjects);
         } else {
           // Use consolidated API as fallback
@@ -65,13 +65,16 @@ const CouncilProjectsPage: React.FC = () => {
           const consolidatedProjects = await councilApi.getAllProjects();
           setProjects(consolidatedProjects);
         } catch (consolidatedError) {
-          console.error("Error loading consolidated projects:", consolidatedError);
+          console.error(
+            "Error loading consolidated projects:",
+            consolidatedError
+          );
         }
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     loadProjects();
   }, [projectsResponse]);
 

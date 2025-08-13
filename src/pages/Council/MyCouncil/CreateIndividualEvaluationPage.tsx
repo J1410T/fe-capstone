@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { 
+import {
   ArrowLeft,
   FileText,
   Save,
@@ -21,7 +21,7 @@ import {
   Star,
   MessageSquare,
   Eye,
-  Upload
+  Upload,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { TinyMCEEditor, TinyMCEViewer } from "@/components/ui/TinyMCE";
@@ -62,7 +62,7 @@ const CreateIndividualEvaluationPage: React.FC = () => {
         evaluationId,
         reviewerId: user?.id || "",
       });
-      
+
       // Navigate back to evaluation stages
       navigate(`/council/evaluation-stages/${projectId}/${evaluationId}`);
     } catch (error) {
@@ -86,7 +86,7 @@ const CreateIndividualEvaluationPage: React.FC = () => {
         evaluationId,
         reviewerId: user?.id || "",
       });
-      
+
       // Submit the evaluation
       if (newEvaluation.id) {
         await councilApi.submitIndividualEvaluation(newEvaluation.id, {
@@ -95,7 +95,7 @@ const CreateIndividualEvaluationPage: React.FC = () => {
           isApproved: rate >= 7, // Auto-approve if rating is 7 or higher
         });
       }
-      
+
       // Navigate back to evaluation stages
       navigate(`/council/evaluation-stages/${projectId}/${evaluationId}`);
     } catch (error) {
@@ -133,7 +133,8 @@ const CreateIndividualEvaluationPage: React.FC = () => {
                   Create Individual Evaluation
                 </CardTitle>
                 <CardDescription className="text-gray-600 mt-1">
-                  Create a comprehensive evaluation with document content, comments, and ratings
+                  Create a comprehensive evaluation with document content,
+                  comments, and ratings
                 </CardDescription>
               </div>
             </div>
@@ -186,7 +187,8 @@ const CreateIndividualEvaluationPage: React.FC = () => {
                     />
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Use the rich text editor to format your evaluation with headings, lists, tables, and images.
+                    Use the rich text editor to format your evaluation with
+                    headings, lists, tables, and images.
                   </p>
                 </div>
 
@@ -224,7 +226,8 @@ const CreateIndividualEvaluationPage: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    Rate the quality and completeness of the work being evaluated.
+                    Rate the quality and completeness of the work being
+                    evaluated.
                   </p>
                 </div>
               </CardContent>
@@ -235,11 +238,16 @@ const CreateIndividualEvaluationPage: React.FC = () => {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="text-lg">{name || "Untitled Evaluation"}</CardTitle>
+                    <CardTitle className="text-lg">
+                      {name || "Untitled Evaluation"}
+                    </CardTitle>
                     <CardDescription>Evaluation Preview</CardDescription>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="bg-blue-100 text-blue-800">
+                    <Badge
+                      variant="outline"
+                      className="bg-blue-100 text-blue-800"
+                    >
                       Draft
                     </Badge>
                     <div className="flex items-center gap-1 text-sm font-medium">
@@ -251,7 +259,9 @@ const CreateIndividualEvaluationPage: React.FC = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">Document Content:</p>
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Document Content:
+                  </p>
                   <div className="border rounded-lg bg-gray-50 p-1">
                     <TinyMCEViewer
                       content={content || "<p><em>No content yet...</em></p>"}
@@ -265,9 +275,13 @@ const CreateIndividualEvaluationPage: React.FC = () => {
                   <>
                     <Separator />
                     <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">Comment:</p>
+                      <p className="text-sm font-medium text-gray-700 mb-2">
+                        Comment:
+                      </p>
                       <div className="bg-gray-50 p-3 rounded-lg border">
-                        <p className="text-gray-800 leading-relaxed">{comment}</p>
+                        <p className="text-gray-800 leading-relaxed">
+                          {comment}
+                        </p>
                       </div>
                     </div>
                   </>
@@ -315,9 +329,12 @@ const CreateIndividualEvaluationPage: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <div>
-                <h4 className="font-medium text-gray-900 mb-1">Document Content</h4>
+                <h4 className="font-medium text-gray-900 mb-1">
+                  Document Content
+                </h4>
                 <p className="text-gray-600">
-                  Provide comprehensive analysis, findings, and recommendations. Use headings, lists, and formatting for clarity.
+                  Provide comprehensive analysis, findings, and recommendations.
+                  Use headings, lists, and formatting for clarity.
                 </p>
               </div>
               <div>
@@ -333,7 +350,8 @@ const CreateIndividualEvaluationPage: React.FC = () => {
               <div>
                 <h4 className="font-medium text-gray-900 mb-1">Comments</h4>
                 <p className="text-gray-600">
-                  Summarize key points, highlight strengths and areas for improvement.
+                  Summarize key points, highlight strengths and areas for
+                  improvement.
                 </p>
               </div>
             </CardContent>
