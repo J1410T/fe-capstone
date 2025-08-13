@@ -194,7 +194,7 @@ export default function DocumentForms() {
             }
             ${formStyles}
           `}
-          formId={selectedForm}
+
         />
       </div>
 
