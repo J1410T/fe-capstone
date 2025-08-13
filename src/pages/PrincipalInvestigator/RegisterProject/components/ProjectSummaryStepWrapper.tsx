@@ -98,9 +98,11 @@ export const ProjectSummaryStepWrapper: React.FC<
       onDocumentCreated?.();
       setFormContent(templateContent);
       setEditorContent(templateContent);
+      setEditorContent(templateContent);
     } catch (error) {
       console.error("Failed to create document:", error);
       setFormContent(templateContent);
+      setEditorContent(templateContent);
       setEditorContent(templateContent);
       toast.error("Failed to create document, using template content directly");
     } finally {
@@ -127,6 +129,7 @@ export const ProjectSummaryStepWrapper: React.FC<
       const unescapedHtml = bm1Document["content-html"].replace(/\\"/g, '"');
       setFormContent(unescapedHtml);
       setEditorContent(unescapedHtml);
+      setEditorContent(unescapedHtml);
       console.log("Using existing BM1 document:", bm1Document.id);
     } else if (!documentCreated && !isCreatingDocument) {
       console.log("No BM1 document found, attempting to create from template");
@@ -148,6 +151,7 @@ export const ProjectSummaryStepWrapper: React.FC<
 
   const handleNext = () => {
     onContentChange(editorContent);
+    onContentChange(editorContent);
     onNext();
   };
 
@@ -157,6 +161,7 @@ export const ProjectSummaryStepWrapper: React.FC<
       return;
     }
 
+    onContentChange(editorContent);
     onContentChange(editorContent);
 
     try {

@@ -108,6 +108,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
       // Fallback: use template content directly
       setFormContent(templateContent);
       setEditorContent(templateContent);
+      setEditorContent(templateContent);
       toast.error("Failed to create document, using template content directly");
     } finally {
       setIsCreatingDocument(false);
@@ -155,6 +156,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
 
   const handleNext = () => {
     onContentChange(editorContent);
+    onContentChange(editorContent);
     onNext();
   };
 
@@ -164,6 +166,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
       return;
     }
 
+    onContentChange(editorContent);
     onContentChange(editorContent);
 
     try {
