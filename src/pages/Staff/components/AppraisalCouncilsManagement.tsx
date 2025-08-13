@@ -11,20 +11,25 @@ import {
   PageHeader,
   ConfirmDialog,
   createCommonActions,
-  formatDate,
 } from "../shared";
 import { AppraisalCouncilModal } from "./AppraisalCouncilModal";
 import {
   useCreateUserRole,
   useDeleteUserRole,
-  useUpdateUserRole,
+  useAllRoles,
 } from "@/hooks/queries/useAuth";
 import {
   AppraisalCouncilWithMembers,
   SelectedMember,
   AppraisalCouncilListRequest,
+  MemberRoleUpdate,
 } from "@/types/appraisal-council";
 import { UserRole } from "@/types/auth";
+import {
+  filterMembersForDisplay,
+  convertUserRoleToSelectedMember,
+  determineRoleActions,
+} from "@/utils/appraisal-council-roles";
 import {
   useAppraisalCouncilsList,
   useCreateAppraisalCouncil,
@@ -63,23 +68,32 @@ const AppraisalCouncilsManagement: React.FC = () => {
   const deleteCouncilMutation = useDeleteAppraisalCouncil();
   const createUserRoleMutation = useCreateUserRole();
   const deleteUserRoleMutation = useDeleteUserRole();
-  const updateUserRoleMutation = useUpdateUserRole();
+
+  // Additional hooks for role management
+  const { data: allRoles } = useAllRoles();
 
   // Enhanced councils data with member information
   const enhancedCouncils = useMemo(() => {
     if (!councilsResponse?.["data-list"]) return [];
 
     return councilsResponse["data-list"].map(
-      (council: AppraisalCouncilWithMembers) => ({
-        ...council,
-        memberCount: council.member?.length || 0,
-        president:
-          council.member?.find((m: UserRole) => m.name === "Chairman")?.[
-            "full-name"
-          ] || "Not assigned",
-        // Ensure member array is properly typed
-        member: council.member || [],
-      })
+      (council: AppraisalCouncilWithMembers) => {
+        // Filter members for display to handle duplicates
+        const filteredMembers = council.member
+          ? filterMembersForDisplay(council.member)
+          : [];
+
+        return {
+          ...council,
+          memberCount: filteredMembers.length,
+          president:
+            filteredMembers.find((m: UserRole) => m.name === "Chairman")?.[
+              "full-name"
+            ] || "Not assigned",
+          // Ensure member array is properly typed with filtered members
+          member: filteredMembers,
+        };
+      }
     );
   }, [councilsResponse]);
 
@@ -98,15 +112,6 @@ const AppraisalCouncilsManagement: React.FC = () => {
         header: "Name",
         cell: ({ row }) => (
           <div className="font-medium">{row.getValue("name")}</div>
-        ),
-      },
-      {
-        accessorKey: "created-at",
-        header: "Created At",
-        cell: ({ row }) => (
-          <div className="text-sm text-muted-foreground">
-            {formatDate(row.getValue("created-at"))}
-          </div>
         ),
       },
       {
@@ -183,7 +188,39 @@ const AppraisalCouncilsManagement: React.FC = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  // Modal save handler
+  // Helper function to execute role actions
+  const executeRoleActions = async (
+    actions: MemberRoleUpdate[],
+    appraisalCouncilId: string
+  ) => {
+    const results = [];
+
+    for (const action of actions) {
+      try {
+        if (action.action === "create") {
+          const result = await createUserRoleMutation.mutateAsync({
+            "account-id": action.accountId,
+            "role-id": action.roleId,
+            "appraisal-council-id": appraisalCouncilId,
+            status: "Approved",
+          });
+          results.push(result);
+        } else if (action.action === "delete" && action.userRoleId) {
+          await deleteUserRoleMutation.mutateAsync(action.userRoleId);
+        }
+      } catch (error) {
+        console.error(
+          `Failed to ${action.action} role ${action.roleName} for account ${action.accountId}:`,
+          error
+        );
+        throw error;
+      }
+    }
+
+    return results;
+  };
+
+  // Modal save handler with complex role management
   const handleModalSave = async (data: {
     code: string;
     name: string;
@@ -198,25 +235,52 @@ const AppraisalCouncilsManagement: React.FC = () => {
           status: "created",
         });
 
-        // Create user roles for members with better error handling
-        const memberCreationPromises = data.members.map(async (member) => {
-          try {
-            return await createUserRoleMutation.mutateAsync({
-              "account-id": member["account-id"],
-              "role-id": member["role-id"],
-              "appraisal-council-id": newCouncilId,
-              status: "Approved",
-            });
-          } catch (error) {
-            console.error(
-              `Failed to create role for member ${member["full-name"]}:`,
-              error
-            );
-            throw new Error(`Failed to add member ${member["full-name"]}`);
-          }
-        });
+        // For create mode, we need to handle role creation based on selected roles
+        const roleActions: MemberRoleUpdate[] = [];
 
-        await Promise.all(memberCreationPromises);
+        for (const member of data.members) {
+          if (!allRoles) {
+            throw new Error("Roles not loaded");
+          }
+
+          // Always create Appraisal Council role first
+          const appraisalCouncilRole = allRoles.find(
+            (r) => r.name === "Appraisal Council"
+          );
+          if (appraisalCouncilRole) {
+            roleActions.push({
+              action: "create",
+              accountId: member["account-id"],
+              roleId: appraisalCouncilRole.id,
+              roleName: "Appraisal Council",
+            });
+          }
+
+          // Create additional role if Chairman or Secretary
+          if (member["role-name"] === "Chairman") {
+            const chairmanRole = allRoles.find((r) => r.name === "Chairman");
+            if (chairmanRole) {
+              roleActions.push({
+                action: "create",
+                accountId: member["account-id"],
+                roleId: chairmanRole.id,
+                roleName: "Chairman",
+              });
+            }
+          } else if (member["role-name"] === "Secretary") {
+            const secretaryRole = allRoles.find((r) => r.name === "Secretary");
+            if (secretaryRole) {
+              roleActions.push({
+                action: "create",
+                accountId: member["account-id"],
+                roleId: secretaryRole.id,
+                roleName: "Secretary",
+              });
+            }
+          }
+        }
+
+        await executeRoleActions(roleActions, newCouncilId);
         toast.success("Appraisal Council created successfully");
       } else if (modalMode === "edit" && selectedCouncil) {
         // Update council basic information
@@ -227,7 +291,11 @@ const AppraisalCouncilsManagement: React.FC = () => {
           status: selectedCouncil.status,
         });
 
-        // Get existing members for comparison
+        if (!allRoles) {
+          throw new Error("Roles not loaded");
+        }
+
+        // Complex role management for edit mode
         const existingMembers = selectedCouncil.member || [];
         const existingMemberIds = new Set(
           existingMembers.map((m) => m["account-id"])
@@ -244,88 +312,91 @@ const AppraisalCouncilsManagement: React.FC = () => {
           (member) => !newMemberIds.has(member["account-id"])
         );
 
-        // Add new members
-        if (membersToAdd.length > 0) {
-          const addMemberPromises = membersToAdd.map(async (member) => {
-            try {
-              return await createUserRoleMutation.mutateAsync({
-                "account-id": member["account-id"],
-                "role-id": member["role-id"],
-                "appraisal-council-id": selectedCouncil.id,
-                status: "Approved",
-              });
-            } catch (error) {
-              console.error(
-                `Failed to add member ${member["full-name"]}:`,
-                error
-              );
-              // Don't throw here to allow partial success
-              return null;
-            }
-          });
+        // Find members whose roles might have changed
+        const membersToUpdate = data.members.filter((member) =>
+          existingMemberIds.has(member["account-id"])
+        );
 
-          await Promise.allSettled(addMemberPromises);
-        }
+        const allRoleActions: MemberRoleUpdate[] = [];
 
-        // Remove members that are no longer in the list
-        if (membersToRemove.length > 0) {
-          const removeMemberPromises = membersToRemove.map(async (member) => {
-            try {
-              return await deleteUserRoleMutation.mutateAsync(member.id);
-            } catch (error) {
-              console.error(
-                `Failed to remove member ${member["full-name"]}:`,
-                error
-              );
-              // Don't throw here to allow partial success
-              return null;
-            }
-          });
-
-          await Promise.allSettled(removeMemberPromises);
-        }
-
-        // Update existing members (for role changes like chairman assignment)
-        const membersToUpdate = data.members.filter((newMember) => {
-          const existingMember = existingMembers.find(
-            (existing) => existing["account-id"] === newMember["account-id"]
+        // Handle new members
+        for (const member of membersToAdd) {
+          // Always create Appraisal Council role first
+          const appraisalCouncilRole = allRoles.find(
+            (r) => r.name === "Appraisal Council"
           );
-          return (
-            existingMember && existingMember["role-id"] !== newMember["role-id"]
-          );
-        });
+          if (appraisalCouncilRole) {
+            allRoleActions.push({
+              action: "create",
+              accountId: member["account-id"],
+              roleId: appraisalCouncilRole.id,
+              roleName: "Appraisal Council",
+            });
+          }
 
-        if (membersToUpdate.length > 0) {
-          const updateMemberPromises = membersToUpdate.map(async (member) => {
-            const existingMember = existingMembers.find(
-              (existing) => existing["account-id"] === member["account-id"]
-            );
-            if (!existingMember) return null;
-
-            try {
-              return await updateUserRoleMutation.mutateAsync({
-                userRoleId: existingMember.id,
-                status: "Approved",
-                request: {
-                  "account-id": member["account-id"],
-                  "role-id": member["role-id"],
-                  "project-id": null,
-                  "appraisal-council-id": selectedCouncil.id,
-                },
+          // Create additional role if Chairman or Secretary
+          if (member["role-name"] === "Chairman") {
+            const chairmanRole = allRoles.find((r) => r.name === "Chairman");
+            if (chairmanRole) {
+              allRoleActions.push({
+                action: "create",
+                accountId: member["account-id"],
+                roleId: chairmanRole.id,
+                roleName: "Chairman",
               });
-            } catch (error) {
-              console.error(
-                `Failed to update member ${member["full-name"]}:`,
-                error
-              );
-              // Don't throw here to allow partial success
-              return null;
             }
-          });
-
-          await Promise.allSettled(updateMemberPromises);
+          } else if (member["role-name"] === "Secretary") {
+            const secretaryRole = allRoles.find((r) => r.name === "Secretary");
+            if (secretaryRole) {
+              allRoleActions.push({
+                action: "create",
+                accountId: member["account-id"],
+                roleId: secretaryRole.id,
+                roleName: "Secretary",
+              });
+            }
+          }
         }
 
+        // Handle removed members
+        for (const member of membersToRemove) {
+          const memberRoles = existingMembers.filter(
+            (m) => m["account-id"] === member["account-id"]
+          );
+          for (const role of memberRoles) {
+            allRoleActions.push({
+              action: "delete",
+              accountId: member["account-id"],
+              roleId: role["role-id"],
+              roleName: role.name as
+                | "Appraisal Council"
+                | "Chairman"
+                | "Secretary",
+              userRoleId: role.id,
+            });
+          }
+        }
+
+        // Handle role updates for existing members
+        for (const newMember of membersToUpdate) {
+          const existingMemberRoles = existingMembers.filter(
+            (m) => m["account-id"] === newMember["account-id"]
+          );
+
+          // Use the role management utility to determine actions
+          const actions = determineRoleActions(
+            newMember["account-id"],
+            newMember["role-name"],
+            existingMemberRoles,
+            selectedCouncil.id,
+            allRoles
+          );
+
+          allRoleActions.push(...actions);
+        }
+
+        // Execute all role actions
+        await executeRoleActions(allRoleActions, selectedCouncil.id);
         toast.success("Appraisal Council updated successfully");
       }
 
@@ -481,16 +552,11 @@ const AppraisalCouncilsManagement: React.FC = () => {
                 id: selectedCouncil.id,
                 code: selectedCouncil.code,
                 name: selectedCouncil.name,
-                members:
-                  selectedCouncil.member?.map((m) => ({
-                    id: m.id || "",
-                    "account-id": m["account-id"],
-                    "full-name": m["full-name"],
-                    email: m.email || "",
-                    "avatar-url": m["avatar-url"] || null,
-                    isChairman: m.name === "Chairman",
-                    "role-id": m["role-id"],
-                  })) || [],
+                members: selectedCouncil.member
+                  ? filterMembersForDisplay(selectedCouncil.member).map((m) =>
+                      convertUserRoleToSelectedMember(m)
+                    )
+                  : [],
               }
             : undefined
         }

@@ -467,3 +467,18 @@ export function useUpdateUserRole() {
     },
   });
 }
+
+/**
+ * Hook to get user roles by account ID for role management
+ */
+export function useUserRolesByAccountId(
+  accountId: string,
+  enabled: boolean = true
+) {
+  return useQuery({
+    queryKey: ["user-roles-by-account", accountId],
+    queryFn: () => getUserRoleByAccountId(accountId),
+    enabled: enabled && !!accountId,
+    staleTime: 30000, // Cache for 30 seconds
+  });
+}

@@ -56,8 +56,29 @@ export interface SelectedMember {
   "full-name": string;
   email: string;
   "avatar-url": string | null;
-  isChairman: boolean;
   "role-id": string;
+  "role-name": "Appraisal Council" | "Chairman" | "Secretary";
+}
+
+// Role management types
+export type AppraisalCouncilRoleType =
+  | "Appraisal Council"
+  | "Chairman"
+  | "Secretary";
+
+export interface RoleManagementInfo {
+  accountId: string;
+  currentRoles: UserRole[];
+  newRole: AppraisalCouncilRoleType;
+  appraisalCouncilId: string;
+}
+
+export interface MemberRoleUpdate {
+  action: "create" | "update" | "delete";
+  accountId: string;
+  roleId: string;
+  roleName: AppraisalCouncilRoleType;
+  userRoleId?: string; // For update/delete operations
 }
 
 // UserRole filter request for appraisal council members

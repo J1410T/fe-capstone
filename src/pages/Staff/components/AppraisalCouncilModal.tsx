@@ -10,11 +10,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Search, Star, X, UserPlus } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search, X, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { useSearchAccounts, useAllRoles } from "@/hooks/queries/useAuth";
-import { SelectedMember } from "@/types/appraisal-council";
+import {
+  SelectedMember,
+  AppraisalCouncilRoleType,
+} from "@/types/appraisal-council";
 import { SearchAccountResult } from "@/types/auth";
+import { getAvailableRoles } from "@/utils/appraisal-council-roles";
+import { useAuth } from "@/contexts/AuthContext";
 
 const DEFAULT_AVATAR =
   "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
@@ -60,12 +72,14 @@ export const AppraisalCouncilModal: React.FC<AppraisalCouncilModalProps> = ({
     roleUser: "Appraisal Council",
   });
   const { data: allRoles } = useAllRoles();
+  const { user } = useAuth();
 
-  // Filter roles for Appraisal council and Chairman
+  // Filter roles for Appraisal council, Chairman, and Secretary
   const appraisalCouncilRole = allRoles?.find(
     (role) => role.name === "Appraisal Council"
   );
   const chairmanRole = allRoles?.find((role) => role.name === "Chairman");
+  const secretaryRole = allRoles?.find((role) => role.name === "Secretary");
 
   useEffect(() => {
     if (councilData) {
@@ -91,14 +105,30 @@ export const AppraisalCouncilModal: React.FC<AppraisalCouncilModalProps> = ({
       return;
     }
 
+    // Determine default role based on current user's role and available roles
+    const availableRoles = getAvailableRoles(selectedMembers, account.id);
+    let defaultRole: AppraisalCouncilRoleType = "Appraisal Council";
+    let defaultRoleId = appraisalCouncilRole.id;
+
+    // If current user has Appraisal Council role, set that as default if available
+    if (
+      user?.role === "Appraisal Council" &&
+      availableRoles.includes("Appraisal Council")
+    ) {
+      defaultRole = "Appraisal Council";
+      defaultRoleId = appraisalCouncilRole.id;
+    }
+    // For other roles, default to Appraisal Council since Chairman/Secretary
+    // are specific roles within the appraisal council context
+
     const newMember: SelectedMember = {
       id: "", // Will be set when creating UserRole
       "account-id": account.id,
       "full-name": account["full-name"],
       email: account.email || "",
       "avatar-url": account["avatar-url"] || null,
-      isChairman: false,
-      "role-id": appraisalCouncilRole.id,
+      "role-id": defaultRoleId,
+      "role-name": defaultRole,
     };
 
     setSelectedMembers((prev) => [...prev, newMember]);
@@ -122,16 +152,26 @@ export const AppraisalCouncilModal: React.FC<AppraisalCouncilModalProps> = ({
     }
   };
 
-  const handleSetChairman = (accountId: string) => {
+  const handleRoleChange = (
+    accountId: string,
+    newRole: AppraisalCouncilRoleType
+  ) => {
     const action = () => {
+      // Get the appropriate role ID
+      let roleId = appraisalCouncilRole?.id || "";
+      if (newRole === "Chairman" && chairmanRole?.id) {
+        roleId = chairmanRole.id;
+      } else if (newRole === "Secretary" && secretaryRole?.id) {
+        roleId = secretaryRole.id;
+      }
+
       setSelectedMembers((prev) =>
         prev.map((member) => ({
           ...member,
-          isChairman: member["account-id"] === accountId,
           "role-id":
-            member["account-id"] === accountId
-              ? chairmanRole?.id || appraisalCouncilRole?.id || ""
-              : appraisalCouncilRole?.id || "",
+            member["account-id"] === accountId ? roleId : member["role-id"],
+          "role-name":
+            member["account-id"] === accountId ? newRole : member["role-name"],
         }))
       );
     };
@@ -170,7 +210,8 @@ export const AppraisalCouncilModal: React.FC<AppraisalCouncilModalProps> = ({
   };
 
   const isReadOnly = mode === "view";
-  const chairman = selectedMembers.find((m) => m.isChairman);
+  const chairman = selectedMembers.find((m) => m["role-name"] === "Chairman");
+  const secretary = selectedMembers.find((m) => m["role-name"] === "Secretary");
 
   return (
     <>
@@ -274,6 +315,11 @@ export const AppraisalCouncilModal: React.FC<AppraisalCouncilModalProps> = ({
                   Chairman: {chairman["full-name"]}
                 </p>
               )}
+              {secretary && (
+                <p className="text-sm text-muted-foreground mb-2">
+                  Secretary: {secretary["full-name"]}
+                </p>
+              )}
 
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {selectedMembers.map((member) => (
@@ -300,30 +346,42 @@ export const AppraisalCouncilModal: React.FC<AppraisalCouncilModalProps> = ({
                           {member.email}
                         </p>
                       </div>
-                      {member.isChairman && (
-                        <Badge variant="secondary">Chairman</Badge>
-                      )}
+                      <Badge
+                        variant={
+                          member["role-name"] === "Chairman"
+                            ? "default"
+                            : member["role-name"] === "Secretary"
+                            ? "secondary"
+                            : "outline"
+                        }
+                      >
+                        {member["role-name"]}
+                      </Badge>
                     </div>
 
                     <div className="flex items-center space-x-2">
                       {!isReadOnly && (
                         <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              handleSetChairman(member["account-id"])
-                            }
-                            className={
-                              member.isChairman ? "text-yellow-600" : ""
+                          <Select
+                            value={member["role-name"]}
+                            onValueChange={(value: AppraisalCouncilRoleType) =>
+                              handleRoleChange(member["account-id"], value)
                             }
                           >
-                            <Star
-                              className={`h-4 w-4 ${
-                                member.isChairman ? "fill-current" : ""
-                              }`}
-                            />
-                          </Button>
+                            <SelectTrigger className="w-40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {getAvailableRoles(
+                                selectedMembers,
+                                member["account-id"]
+                              ).map((role) => (
+                                <SelectItem key={role} value={role}>
+                                  {role}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <Button
                             variant="ghost"
                             size="sm"
