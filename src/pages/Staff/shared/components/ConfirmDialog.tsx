@@ -88,10 +88,10 @@ export function ConfirmDialog({
               </div>
             )}
             <div className="flex-1">
-              <DialogTitle className={DIALOG_STYLES.title}>
-                {title}
-              </DialogTitle>
-              <DialogDescription className={cn(DIALOG_STYLES.description, "mt-2")}>
+              <DialogTitle className={DIALOG_STYLES.title}>{title}</DialogTitle>
+              <DialogDescription
+                className={cn(DIALOG_STYLES.description, "mt-2")}
+              >
                 {description}
               </DialogDescription>
             </div>
@@ -122,6 +122,7 @@ export function ConfirmDialog({
 }
 
 // Predefined confirm dialogs for common actions
+// eslint-disable-next-line react-refresh/only-export-components
 export const createConfirmDialogs = {
   delete: (
     itemName: string,

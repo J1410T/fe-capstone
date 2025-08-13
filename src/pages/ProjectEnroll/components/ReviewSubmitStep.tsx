@@ -14,7 +14,7 @@ import {
   useUpdateDocument,
 } from "@/hooks/queries/document";
 import { useProject, useUpdateProject } from "@/hooks/queries/project";
-import { UserRole } from "@/types/auth";
+import { TeamMember, UserRole } from "@/types/auth";
 import { DocumentWithUserRole } from "@/types/document";
 import { toast } from "sonner";
 import {
@@ -45,16 +45,6 @@ interface ReviewSubmitStepProps {
   projectTitle: string;
   onPrevious: () => void;
   isSubmitting: boolean;
-}
-
-interface TeamMember {
-  id: string;
-  accountId: string;
-  name: string;
-  email: string;
-  avatar: string;
-  role: string;
-  status: string;
 }
 
 export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
