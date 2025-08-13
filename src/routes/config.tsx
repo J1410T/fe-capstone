@@ -13,7 +13,6 @@ import GlobalAuthListener from "@/components/auth/GlobalAuthListener";
 import NavigationGuard from "@/components/auth/NavigationGuard";
 import EvaluationListPage from "@/pages/ProjectDetail/components/evaluation/EvaluationListPage";
 import EvaluationStageDetailPage from "@/pages/ProjectDetail/components/evaluation/EvaluationStageDetailPage";
-import EvaluationViewListPageWrapper from "@/pages/ProjectDetail/components/evaluation/EvaluationViewListPageWrapper";
 import EvaluationDetailViewPage from "@/pages/ProjectDetail/components/evaluation/EvaluationDetailViewPage";
 import EvaluationStageViewPageWrapper from "@/pages/ProjectDetail/components/evaluation/EvaluationStageViewPageWrapper";
 import IndividualEvaluationDetailViewPage from "@/pages/ProjectDetail/components/evaluation/IndividualEvaluationDetailViewPage";
@@ -248,10 +247,6 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId/evaluation",
             element: <EvaluationListPage />,
-          },
-          {
-            path: "project/:projectId/evaluation/view",
-            element: <EvaluationViewListPageWrapper />,
           },
           {
             path: "project/:projectId/evaluation/:evaluationId/view",
@@ -541,10 +536,6 @@ export const routes: RouteObject[] = [
             element: <EvaluationListPage />,
           },
           {
-            path: "project/:projectId/evaluation/view",
-            element: <EvaluationViewListPageWrapper />,
-          },
-          {
             path: "project/:projectId/evaluation/:evaluationId/view",
             element: <EvaluationDetailViewPage />,
           },
@@ -572,10 +563,6 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId/evaluation",
             element: <EvaluationListPage />,
-          },
-          {
-            path: "project/:projectId/evaluation/view",
-            element: <EvaluationViewListPageWrapper />,
           },
           {
             path: "project/:projectId/evaluation/:evaluationId/view",

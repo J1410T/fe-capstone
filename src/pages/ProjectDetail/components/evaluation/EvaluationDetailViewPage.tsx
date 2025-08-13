@@ -12,11 +12,11 @@ import { Button } from "@/components/ui/button";
 import {
   FileText,
   Users,
-  Eye,
   ArrowLeft,
   CheckCircle,
   Clock,
   AlertTriangle,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import {
@@ -67,7 +67,7 @@ const EvaluationDetailViewPage: React.FC = () => {
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       routePrefix = "/pi";
     }
-    navigate(`${routePrefix}/project/${projectId}/evaluation/view`);
+    navigate(`${routePrefix}/project/${projectId}`);
   };
 
   const handleStageClick = (stageId: string) => {
@@ -225,8 +225,7 @@ const EvaluationDetailViewPage: React.FC = () => {
                   </CardTitle>
                   <CardDescription className="text-gray-600 mt-2">
                     {evaluation.code} • Created:{" "}
-                    {new Date(evaluation["create-date"]).toLocaleDateString()} •
-                    Read-only evaluation
+                    {new Date(evaluation["create-date"]).toLocaleDateString()}
                   </CardDescription>
                 </div>
               </div>
@@ -400,7 +399,7 @@ const EvaluationDetailViewPage: React.FC = () => {
                             View Only
                           </Badge>
                           <div className="opacity-0 group-hover:opacity-100 transition-opacity p-2 bg-emerald-100 rounded-full">
-                            <Eye className="w-5 h-5 text-emerald-600" />
+                            <ChevronRight className="w-5 h-5 text-emerald-600" />
                           </div>
                         </div>
                       </div>

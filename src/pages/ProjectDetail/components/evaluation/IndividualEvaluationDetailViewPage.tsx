@@ -20,6 +20,7 @@ import {
   Star,
 } from "lucide-react";
 import { TinyMCEViewer } from "@/components/ui/TinyMCE";
+import AIEvaluationDisplay from "@/components/ui/ai-evaluation-display";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { useGetIndividualEvaluationById } from "@/hooks/queries/evaluation";
 
@@ -179,7 +180,6 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
                     {new Date(
                       individualEvaluation["submitted-at"]
                     ).toLocaleDateString()}{" "}
-                    • Read-only evaluation
                   </CardDescription>
                 </div>
               </div>
@@ -263,11 +263,37 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
               Evaluation Content
             </CardTitle>
             <CardDescription>
-              Detailed evaluation comments and feedback (Read-only)
+              Detailed evaluation comments and feedback
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {individualEvaluation.comment ? (
+            {individualEvaluation["is-ai-report"] ? (
+              individualEvaluation.comment ? (
+                <AIEvaluationDisplay
+                  content={individualEvaluation.comment}
+                  title={individualEvaluation.name}
+                  score={individualEvaluation["total-rate"]}
+                  status={individualEvaluation.status}
+                  submittedAt={individualEvaluation["submitted-at"]}
+                />
+              ) : (
+                <div className="text-center py-12">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="p-4 bg-gray-100 rounded-full">
+                      <FileText className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-medium text-gray-900 mb-1">
+                        No AI evaluation content
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        This AI evaluation doesn't have any content yet
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )
+            ) : individualEvaluation.comment ? (
               <TinyMCEViewer
                 content={individualEvaluation.comment}
                 height={600}
