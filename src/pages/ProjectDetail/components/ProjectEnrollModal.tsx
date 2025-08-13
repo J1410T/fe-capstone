@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Editor } from "@tinymce/tinymce-react";
+import React, { useState, useEffect } from "react";
+import { DocumentTinyMCE } from "@/components/ui/TinyMCE";
 import {
   Dialog,
   DialogContent,
@@ -21,8 +21,6 @@ import {
   ArrowLeft,
   ArrowRight,
 } from "lucide-react";
-
-type EditorInstance = { getContent: () => string } | null;
 
 interface ProjectEnrollModalProps {
   isOpen: boolean;
@@ -53,8 +51,7 @@ export const ProjectEnrollModal: React.FC<ProjectEnrollModalProps> = ({
     collaborators: [],
   });
 
-  const editorRef = useRef<EditorInstance>(null);
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
+  const [editorContent, setEditorContent] = useState<string>("");
 
   const steps = [
     { number: 1, title: "Description", icon: FileText },
@@ -70,8 +67,14 @@ export const ProjectEnrollModal: React.FC<ProjectEnrollModalProps> = ({
         description: "",
         collaborators: [],
       });
+      setEditorContent("");
     }
   }, [isOpen]);
+
+  // Sync editorContent with enrollmentData.description
+  useEffect(() => {
+    setEditorContent(enrollmentData.description);
+  }, [enrollmentData.description]);
 
   const handleClose = () => {
     if (!isLoading) {
@@ -82,11 +85,10 @@ export const ProjectEnrollModal: React.FC<ProjectEnrollModalProps> = ({
   const handleNext = () => {
     if (currentStep === 1) {
       // Save description from editor
-      const content = editorRef.current?.getContent() ?? "";
-      if (!content.trim()) {
+      if (!editorContent.trim()) {
         return; // Don't proceed if no content
       }
-      setEnrollmentData((prev) => ({ ...prev, description: content }));
+      setEnrollmentData((prev) => ({ ...prev, description: editorContent }));
     }
 
     if (currentStep < 3) {
@@ -108,8 +110,11 @@ export const ProjectEnrollModal: React.FC<ProjectEnrollModalProps> = ({
   };
 
   const canProceedFromStep1 = () => {
-    const content = editorRef.current?.getContent() ?? "";
-    return content.trim().length > 0;
+    return editorContent.trim().length > 0;
+  };
+
+  const handleEditorChange = (content: string) => {
+    setEditorContent(content);
   };
 
   const canProceedFromStep2 = () => {
@@ -197,48 +202,12 @@ export const ProjectEnrollModal: React.FC<ProjectEnrollModalProps> = ({
                 </p>
               </div>
 
-              <div className="min-h-[400px] border rounded-lg">
-                <Editor
-                  apiKey={apiKey}
-                  onInit={(_, editor) => (editorRef.current = editor)}
-                  initialValue={enrollmentData.description}
-                  init={{
-                    height: 400,
-                    width: "100%",
-                    menubar: false,
-                    plugins: [
-                      "advlist",
-                      "autolink",
-                      "lists",
-                      "link",
-                      "charmap",
-                      "preview",
-                      "anchor",
-                      "searchreplace",
-                      "visualblocks",
-                      "insertdatetime",
-                      "table",
-                      "help",
-                      "wordcount",
-                    ],
-                    toolbar: [
-                      "undo redo | blocks | bold italic underline | alignleft aligncenter alignright",
-                      "bullist numlist outdent indent | removeformat | table | help",
-                    ].join(" | "),
-                    content_style: `
-                      body {
-                        font-family: Arial, Helvetica, sans-serif;
-                        font-size: 14px;
-                        line-height: 1.6;
-                        color: #333;
-                        padding: 20px;
-                      }
-                    `,
-                    branding: false,
-                    promotion: false,
-                    resize: false,
-                    statusbar: false,
-                  }}
+              <div className="min-h-[400px]">
+                <DocumentTinyMCE
+                  value={enrollmentData.description}
+                  onChange={handleEditorChange}
+                  height={400}
+                  preset="document"
                 />
               </div>
 

@@ -1,6 +1,9 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Editor } from "@tinymce/tinymce-react";
+import {
+  ScientificCVEditor,
+  ScientificCVEditorRef,
+} from "@/components/ui/TinyMCE";
 import {
   useCreateDocument,
   useDocumentsByFilter,
@@ -11,18 +14,12 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts";
 import { UserRole } from "@/contexts/auth-types";
 
-type EditorInstance = {
-  getContent: () => string;
-  setContent: (content: string) => void;
-} | null;
-
 const CreateScientificCV: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const editorRef = useRef<EditorInstance>(null);
+  const editorRef = useRef<ScientificCVEditorRef>(null);
   const [formContent, setFormContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const handleBack = () => navigate(-1);
 
   const {
@@ -172,38 +169,6 @@ const CreateScientificCV: React.FC = () => {
     );
   };
 
-  const formStyles = `
-  body {
-    font-family: "Times New Roman", Times, serif;
-    font-size: 14px;
-    line-height: 1.4;
-    color: #333;
-    padding: 20px;
-  }
-  .image-frame {
-    width: 150px;
-    height: 180px;
-    border: 2px dashed #999;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    margin: 10px 0;
-  }
-  .image-frame img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: cover;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  table, th, td {
-    border: 1px solid #ccc;
-  }
-`;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-6 py-4">
       {/* Header */}
@@ -291,62 +256,12 @@ const CreateScientificCV: React.FC = () => {
             </Button>
           </div>
         ) : (
-          <Editor
-            apiKey={apiKey}
-            onInit={(_, editor) => (editorRef.current = editor)}
-            initialValue={formContent}
-            onEditorChange={handleEditorChange}
-            init={{
-              height: 800,
-              menubar: true,
-              plugins: [
-                "advlist",
-                "autolink",
-                "lists",
-                "link",
-                "image",
-                "charmap",
-                "preview",
-                "anchor",
-                "searchreplace",
-                "visualblocks",
-                "code",
-                "fullscreen",
-                "insertdatetime",
-                "media",
-                "table",
-                "help",
-                "wordcount",
-              ],
-              toolbar:
-                "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen",
-              content_style: formStyles,
-
-              setup: (editor) => {
-                // Khi chèn hình xong, resize nếu không phải ảnh khung
-                editor.on("NodeChange", (e) => {
-                  const imgs =
-                    e.element?.tagName === "IMG"
-                      ? [e.element as HTMLImageElement]
-                      : Array.from(editor.getBody().querySelectorAll("img"));
-
-                  imgs.forEach((img) => {
-                    const isFrameImg = img.classList.contains("frame-image");
-                    const alreadySized =
-                      img.style.width === "113px" &&
-                      img.style.height === "151px";
-
-                    if (!alreadySized && !isFrameImg) {
-                      img.setAttribute("width", "113");
-                      img.setAttribute("height", "151");
-                      img.style.width = "113px";
-                      img.style.height = "151px";
-                      img.style.objectFit = "cover";
-                    }
-                  });
-                });
-              },
-            }}
+          <ScientificCVEditor
+            ref={editorRef}
+            value={formContent}
+            onChange={handleEditorChange}
+            height={800}
+            preset="scientific-cv"
           />
         )}
       </div>

@@ -1,7 +1,12 @@
 // TinyMCE Components
-export { TinyMCEEditorComponent as TinyMCEEditor } from "./TinyMCEEditor";
+export { UnifiedTinyMCE as TinyMCEEditor } from "./UnifiedTinyMCE";
 export { TinyMCEViewerComponent as TinyMCEViewer } from "./TinyMCEViewer";
-export { DocumentTinyMCE } from "./DocumentTinyMCE";
+
+// Legacy exports for backward compatibility
+export { UnifiedTinyMCE as DocumentTinyMCE } from "./UnifiedTinyMCE";
+export { UnifiedTinyMCE as ScientificCVEditor } from "./UnifiedTinyMCE";
+export { UnifiedTinyMCE as FormTinyMCE } from "./UnifiedTinyMCE";
 
 // Re-export types for convenience
 export type { Editor as TinyMCEEditorType } from "tinymce";
+export type { TinyMCERef as ScientificCVEditorRef } from "./UnifiedTinyMCE";
