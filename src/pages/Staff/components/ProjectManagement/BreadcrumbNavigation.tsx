@@ -56,6 +56,7 @@ export const BreadcrumbNavigation: React.FC<BreadcrumbNavigationProps> = ({
 };
 
 // Helper function to create breadcrumb items
+// eslint-disable-next-line react-refresh/only-export-components
 export const createBreadcrumbItem = (
   id: string,
   label: string,
@@ -71,6 +72,7 @@ export const createBreadcrumbItem = (
 });
 
 // Helper function to get breadcrumb label based on type and data
+// eslint-disable-next-line react-refresh/only-export-components
 export const getBreadcrumbLabel = (
   type: string,
   data: Record<string, unknown>

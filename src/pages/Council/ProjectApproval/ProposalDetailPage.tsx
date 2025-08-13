@@ -1,399 +1,181 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TinyMCEViewDialog } from "./components/TinyMCEViewDialog";
 import { ArrowLeft, FileText, User, Calendar, Plus, Eye } from "lucide-react";
+import { useProject } from "@/hooks/queries/project";
+import { useAllRoles, useUserRolesByProjectId } from "@/hooks/queries";
+import { TeamMember, UserRole } from "@/types/auth";
+// import { useScientificCVByEmail } from "@/hooks/queries/document";
+import { getScientificCVByEmail } from "@/services/resources/document";
+import { DocumentForm } from "@/types/document";
+import {
+  useGetEvaluationsByProjectId,
+  useGetIndividualEvaluationsByStageId,
+} from "@/hooks/queries/evaluation";
+import { useDocumentsByFilter } from "@/hooks/queries/document";
+// import { IndividualEvaluationApi } from "@/types/evaluation";
 
-interface Applicant {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  department: string;
-  institution: string;
-  experience: string;
-  publications: number;
-  degrees: string[];
-  status: string;
-  appliedFor: number;
-  appliedDate: string;
-  proposalTitle: string;
-  proposalSummary: string;
-  proposalType: string;
-  submittedBy: string;
-}
+// interface AIReview {
+//   id: string;
+//   name: string;
+//   totalRate: number | null;
+//   comment: string;
+//   submittedAt: string;
+//   isApproved: boolean;
+//   reviewerResult: unknown | null;
+//   isAiReport: boolean;
+//   status: string;
+//   evaluationStageId: string;
+//   reviewerId: string | null;
+//   documents: unknown | null;
+//   projectsSimilarityResult: unknown | null;
+// }
 
-interface TeamMember {
-  id: number;
-  name: string;
-  role: "PI" | "Co-Investigator" | "Research Assistant" | "Consultant";
-  email: string;
-  institution: string;
-  department: string;
-  scientificCV: string; // TinyMCE content
-}
+// interface IndividualEvaluation {
+//   id: string;
+//   evaluatorName: string;
+//   evaluatorRole: string;
+//   status: "completed" | "pending" | "in-progress";
+//   score: number | null;
+//   submittedAt: string | null;
+//   comment: string;
+//   totalRate?: number | null;
+//   isAiReport?: boolean;
+// }
 
-interface AIReview {
-  id: string;
-  name: string;
-  totalRate: number | null;
-  comment: string;
-  submittedAt: string;
-  isApproved: boolean;
-  reviewerResult: unknown | null;
-  isAiReport: boolean;
-  status: string;
-  evaluationStageId: string;
-  reviewerId: string | null;
-  documents: unknown | null;
-  projectsSimilarityResult: unknown | null;
-}
-
-interface IndividualEvaluation {
-  id: string;
-  evaluatorName: string;
-  evaluatorRole: string;
-  status: "completed" | "pending" | "in-progress";
-  score: number | null;
-  submittedAt: string | null;
-  comment: string;
-  totalRate?: number | null;
-  isAiReport?: boolean;
-}
-
-interface EvaluationStage {
-  id: string;
-  name: string;
-  description: string;
-  status: "active" | "completed" | "pending";
-  totalEvaluations: number;
-  completedEvaluations: number;
-  createdAt: string;
-  aiReview?: AIReview;
-  individualEvaluations: IndividualEvaluation[];
-}
-
-// Mock scientific CV data
-const mockScientificCVs = {
-  1: `
-    <h2>Dr. Jane Smith - Scientific CV</h2>
-    <h3>Personal Information</h3>
-    <p><strong>Name:</strong> Dr. Jane Smith<br>
-    <strong>Title:</strong> Professor of Computer Science<br>
-    <strong>Institution:</strong> University of Technology<br>
-    <strong>Email:</strong> jane.smith@example.com</p>
-    
-    <h3>Education</h3>
-    <ul>
-      <li><strong>Ph.D. in Computer Science</strong> - MIT (2015)</li>
-      <li><strong>M.Sc. in Data Science</strong> - Stanford University (2010)</li>
-      <li><strong>B.Sc. in Computer Science</strong> - University of California, Berkeley (2007)</li>
-    </ul>
-    
-    <h3>Research Experience</h3>
-    <p><strong>2015-Present:</strong> Professor, University of Technology<br>
-    Research focus: Artificial Intelligence, Machine Learning, Medical Imaging</p>
-    
-    <h3>Publications (Last 5 Years)</h3>
-    <ol>
-      <li>Smith, J. et al. (2023). "AI-Driven Medical Diagnostics: A Comprehensive Review." <em>Nature Medicine</em>, 45(3), 123-145.</li>
-      <li>Smith, J., Johnson, M. (2022). "Deep Learning Applications in Healthcare." <em>IEEE Transactions on Medical Imaging</em>, 41(8), 2156-2168.</li>
-      <li>Smith, J. (2021). "Automated Diagnosis Systems Using Computer Vision." <em>Computer Vision and Pattern Recognition</em>, 2021, pp. 1234-1245.</li>
-    </ol>
-    
-    <h3>Grants and Funding</h3>
-    <ul>
-      <li>NSF Grant #1234567 - "AI for Medical Diagnostics" ($500,000, 2020-2023)</li>
-      <li>NIH Grant #7654321 - "Machine Learning in Healthcare" ($750,000, 2019-2022)</li>
-    </ul>
-  `,
-  2: `
-    <h2>Dr. Michael Johnson - Scientific CV</h2>
-    <h3>Personal Information</h3>
-    <p><strong>Name:</strong> Dr. Michael Johnson<br>
-    <strong>Title:</strong> Associate Professor of Artificial Intelligence<br>
-    <strong>Institution:</strong> National Institute of Technology<br>
-    <strong>Email:</strong> michael.johnson@example.com</p>
-    
-    <h3>Education</h3>
-    <ul>
-      <li><strong>Ph.D. in Artificial Intelligence</strong> - Carnegie Mellon University (2018)</li>
-      <li><strong>M.Sc. in Computer Science</strong> - Carnegie Mellon University (2013)</li>
-      <li><strong>B.Sc. in Computer Science</strong> - University of Illinois (2010)</li>
-    </ul>
-    
-    <h3>Research Experience</h3>
-    <p><strong>2018-Present:</strong> Associate Professor, National Institute of Technology<br>
-    Research focus: Deep Learning, Neural Networks, Healthcare AI</p>
-    
-    <h3>Publications (Last 5 Years)</h3>
-    <ol>
-      <li>Johnson, M., Smith, J. (2023). "Neural Networks for Medical Image Analysis." <em>Journal of AI in Medicine</em>, 12(4), 78-92.</li>
-      <li>Johnson, M. et al. (2022). "Intelligent Diagnostic Platforms." <em>ACM Computing Surveys</em>, 54(7), 1-35.</li>
-    </ol>
-  `,
-  3: `
-    <h2>Dr. Sarah Williams - Scientific CV</h2>
-    <h3>Personal Information</h3>
-    <p><strong>Name:</strong> Dr. Sarah Williams<br>
-    <strong>Title:</strong> Research Scientist<br>
-    <strong>Institution:</strong> Tech University<br>
-    <strong>Email:</strong> sarah.williams@example.com</p>
-    
-    <h3>Education</h3>
-    <ul>
-      <li><strong>Ph.D. in Machine Learning</strong> - University of Washington (2012)</li>
-      <li><strong>M.Sc. in Computer Engineering</strong> - University of Washington (2007)</li>
-    </ul>
-    
-    <h3>Research Experience</h3>
-    <p><strong>2012-Present:</strong> Research Scientist, Tech University<br>
-    Research focus: Machine Learning Frameworks, Medical Applications</p>
-  `,
-  4: `
-    <h2>Dr. Robert Chen - Scientific CV</h2>
-    <h3>Personal Information</h3>
-    <p><strong>Name:</strong> Dr. Robert Chen<br>
-    <strong>Title:</strong> Assistant Professor<br>
-    <strong>Institution:</strong> University of Technology<br>
-    <strong>Email:</strong> robert.chen@example.com</p>
-    
-    <h3>Education</h3>
-    <ul>
-      <li><strong>Ph.D. in Biomedical Engineering</strong> - Johns Hopkins University (2019)</li>
-      <li><strong>M.Sc. in Electrical Engineering</strong> - MIT (2015)</li>
-    </ul>
-    
-    <h3>Research Experience</h3>
-    <p><strong>2019-Present:</strong> Assistant Professor, University of Technology<br>
-    Research focus: Medical Device Development, Signal Processing</p>
-  `,
-};
-
-// Mock team members for each proposal
-const mockTeamMembers: { [key: number]: TeamMember[] } = {
-  1: [
-    {
-      id: 1,
-      name: "Dr. Jane Smith",
-      role: "PI",
-      email: "jane.smith@example.com",
-      institution: "University of Technology",
-      department: "Computer Science",
-      scientificCV: mockScientificCVs[1],
-    },
-    {
-      id: 2,
-      name: "Dr. Michael Johnson",
-      role: "Co-Investigator",
-      email: "michael.johnson@example.com",
-      institution: "National Institute of Technology",
-      department: "Computer Science",
-      scientificCV: mockScientificCVs[2],
-    },
-    {
-      id: 3,
-      name: "Dr. Sarah Williams",
-      role: "Research Assistant",
-      email: "sarah.williams@example.com",
-      institution: "Tech University",
-      department: "Machine Learning",
-      scientificCV: mockScientificCVs[3],
-    },
-    {
-      id: 4,
-      name: "Dr. Robert Chen",
-      role: "Consultant",
-      email: "robert.chen@example.com",
-      institution: "University of Technology",
-      department: "Biomedical Engineering",
-      scientificCV: mockScientificCVs[4],
-    },
-  ],
-  2: [
-    {
-      id: 2,
-      name: "Dr. Michael Johnson",
-      role: "PI",
-      email: "michael.johnson@example.com",
-      institution: "National Institute of Technology",
-      department: "Computer Science",
-      scientificCV: mockScientificCVs[2],
-    },
-    {
-      id: 1,
-      name: "Dr. Jane Smith",
-      role: "Co-Investigator",
-      email: "jane.smith@example.com",
-      institution: "University of Technology",
-      department: "Computer Science",
-      scientificCV: mockScientificCVs[1],
-    },
-  ],
-};
+// interface EvaluationStage {
+//   id: string;
+//   name: string;
+//   description: string;
+//   status: "active" | "completed" | "pending";
+//   totalEvaluations: number;
+//   completedEvaluations: number;
+//   createdAt: string;
+//   aiReview?: AIReview;
+//   individualEvaluations: IndividualEvaluation[];
+// }
 
 // Mock evaluation stages data
-const mockEvaluationStages: EvaluationStage[] = [
-  {
-    id: "a44bebc5-0324-4e3e-987e-4014cee7fef8",
-    name: "Initial Review",
-    description:
-      "First stage evaluation including AI review and individual assessments",
-    status: "active",
-    totalEvaluations: 4,
-    completedEvaluations: 2,
-    createdAt: "2025-08-11T14:05:12.0316727",
-    aiReview: {
-      id: "e2105b84-b602-4ab8-917e-24f1e8439433",
-      name: "AI Review",
-      totalRate: null,
-      comment: `The project titled "Build an Online Certification Management System with Digital Signature Integration for an Aviation Academy" presents a compelling initiative aimed at enhancing the management of certification processes within an educational context, specifically tailored for aviation training.
+// const mockEvaluationStages: EvaluationStage[] = [
+//   {
+//     id: "a44bebc5-0324-4e3e-987e-4014cee7fef8",
+//     name: "Initial Review",
+//     description:
+//       "First stage evaluation including AI review and individual assessments",
+//     status: "active",
+//     totalEvaluations: 4,
+//     completedEvaluations: 2,
+//     createdAt: "2025-08-11T14:05:12.0316727",
+//     aiReview: {
+//       id: "e2105b84-b602-4ab8-917e-24f1e8439433",
+//       name: "AI Review",
+//       totalRate: null,
+//       comment: `The project titled "Build an Online Certification Management System with Digital Signature Integration for an Aviation Academy" presents a compelling initiative aimed at enhancing the management of certification processes within an educational context, specifically tailored for aviation training.
 
-### Project Overview
+// ### Project Overview
 
-**Title:** Build an Online Certification Management System with Digital Signature Integration for an Aviation Academy  
-**Description:** This system serves as a comprehensive tool to streamline the implementation and management of projects, beginning from registration through to certification issuance. The platform will facilitate students in easily searching, registering for, and tracking their projects, while also assisting instructors in managing, evaluating, and providing feedback to students efficiently.
+// **Title:** Build an Online Certification Management System with Digital Signature Integration for an Aviation Academy
+// **Description:** This system serves as a comprehensive tool to streamline the implementation and management of projects, beginning from registration through to certification issuance. The platform will facilitate students in easily searching, registering for, and tracking their projects, while also assisting instructors in managing, evaluating, and providing feedback to students efficiently.
 
-### Key Elements
+// ### Key Elements
 
-1. **Target Audience:** 
-   - The primary users are students and instructors at an aviation academy. Students will benefit from a user-friendly interface that simplifies the certification process, while instructors will have tools to manage and evaluate student projects effectively.
+// 1. **Target Audience:**
+//    - The primary users are students and instructors at an aviation academy. Students will benefit from a user-friendly interface that simplifies the certification process, while instructors will have tools to manage and evaluate student projects effectively.
 
-2. **Functionality:**
-   - The system will incorporate digital signature integration, enhancing the legitimacy and security of the issued certifications. This feature is crucial in ensuring that the documentation is tamper-proof and recognized within the aviation industry.
+// 2. **Functionality:**
+//    - The system will incorporate digital signature integration, enhancing the legitimacy and security of the issued certifications. This feature is crucial in ensuring that the documentation is tamper-proof and recognized within the aviation industry.
 
-3. **Team Composition:**
-   - The maximum number of team members for the project is set at six, indicating a collaborative approach that leverages diverse skills and expertise.
+// 3. **Team Composition:**
+//    - The maximum number of team members for the project is set at six, indicating a collaborative approach that leverages diverse skills and expertise.
 
-4. **Project Type:** 
-   - Classified as a cooperative project, emphasizing teamwork and shared responsibilities in the development and implementation phases.
+// 4. **Project Type:**
+//    - Classified as a cooperative project, emphasizing teamwork and shared responsibilities in the development and implementation phases.
 
-5. **Category and Genre:**
-   - The project falls under the application/implementation category and is framed as a proposal, suggesting it is in the planning stage and seeks approval or support for execution.
+// 5. **Category and Genre:**
+//    - The project falls under the application/implementation category and is framed as a proposal, suggesting it is in the planning stage and seeks approval or support for execution.
 
-### Conclusion
+// ### Conclusion
 
-The proposed Online Certification Management System is a forward-thinking solution that addresses significant needs within the aviation education sector. By incorporating features that enhance usability for students and operational efficiency for instructors, it stands to contribute positively to the landscape of aviation training programs.
-The integration of digital signatures further adds value, ensuring that the certifications issued are secure and credible.
+// The proposed Online Certification Management System is a forward-thinking solution that addresses significant needs within the aviation education sector. By incorporating features that enhance usability for students and operational efficiency for instructors, it stands to contribute positively to the landscape of aviation training programs.
+// The integration of digital signatures further adds value, ensuring that the certifications issued are secure and credible.
 
-**Next Steps:**
-- Detailed planning and resource allocation should be initiated to move from the proposal stage to implementation.
-- Engaging stakeholders for feedback and refining the system's functionalities based on their needs will be crucial for the project's success.
+// **Next Steps:**
+// - Detailed planning and resource allocation should be initiated to move from the proposal stage to implementation.
+// - Engaging stakeholders for feedback and refining the system's functionalities based on their needs will be crucial for the project's success.
 
-This project, if executed effectively, could serve as a model for similar educational initiatives across various fields.`,
-      submittedAt: "2025-08-11T14:05:12.0316727",
-      isApproved: false,
-      reviewerResult: null,
-      isAiReport: true,
-      status: "created",
-      evaluationStageId: "a44bebc5-0324-4e3e-987e-4014cee7fef8",
-      reviewerId: null,
-      documents: null,
-      projectsSimilarityResult: null,
-    },
-    individualEvaluations: [
-      {
-        id: "eval-1",
-        evaluatorName: "Prof. Dr. Emily Davis",
-        evaluatorRole: "Technical Reviewer",
-        status: "completed",
-        score: 8.5,
-        totalRate: 8.5,
-        submittedAt: "2025-08-12T10:30:00.000Z",
-        comment:
-          "The technical approach is sound with good integration of digital signature technology. The system architecture is well-designed for scalability. I recommend approval with minor revisions to the security protocols.",
-      },
-      {
-        id: "eval-2",
-        evaluatorName: "Dr. Robert Wilson",
-        evaluatorRole: "Domain Expert",
-        status: "completed",
-        score: 9.0,
-        totalRate: 9.0,
-        submittedAt: "2025-08-12T14:15:00.000Z",
-        comment:
-          "Excellent understanding of aviation academy requirements. The certification management process is well-structured and addresses industry needs. The digital signature integration is particularly well-thought-out and addresses compliance requirements.",
-      },
-      {
-        id: "eval-3",
-        evaluatorName: "Prof. Lisa Anderson",
-        evaluatorRole: "Security Specialist",
-        status: "in-progress",
-        score: null,
-        totalRate: null,
-        submittedAt: null,
-        comment:
-          "Currently reviewing the digital signature implementation and security protocols. Initial assessment shows promising security architecture but requires detailed cryptographic analysis.",
-      },
-      {
-        id: "e2105b84-b602-4ab8-917e-24f1e8439433",
-        evaluatorName: "AI Evaluation System",
-        evaluatorRole: "AI Reviewer",
-        status: "completed",
-        score: 8.7,
-        totalRate: 8.7,
-        submittedAt: "2025-08-11T14:05:12.000Z",
-        comment:
-          "AI-generated evaluation completed. The project shows strong technical merit and addresses practical needs in aviation education. Comprehensive analysis available in detailed view.",
-        isAiReport: true,
-      },
-      {
-        id: "eval-5",
-        evaluatorName: "Dr. Mark Thompson",
-        evaluatorRole: "Educational Technology Expert",
-        status: "pending",
-        score: null,
-        totalRate: null,
-        submittedAt: null,
-        comment:
-          "Evaluation not yet started. Will focus on user experience and educational effectiveness.",
-      },
-    ],
-  },
-];
-
-// Mock data - in real app this would come from API
-const mockApplicants: Applicant[] = [
-  {
-    id: 1,
-    name: "Dr. Jane Smith",
-    email: "jane.smith@example.com",
-    phone: "+1 (555) 123-4567",
-    department: "Computer Science",
-    institution: "University of Technology",
-    experience: "10 years",
-    publications: 25,
-    degrees: ["Ph.D. in Computer Science", "M.Sc. in Data Science"],
-    status: "Pending Review",
-    appliedFor: 1,
-    appliedDate: "2023-05-20",
-    proposalTitle: "Advanced AI Diagnostic System for Medical Imaging",
-    proposalSummary:
-      "A comprehensive proposal for developing an AI-powered diagnostic system that can analyze medical images with 95% accuracy, reducing diagnosis time by 60%.",
-    proposalType: "Research Proposal",
-    submittedBy: "Dr. Jane Smith",
-  },
-  {
-    id: 2,
-    name: "Dr. Michael Johnson",
-    email: "michael.johnson@example.com",
-    phone: "+1 (555) 987-6543",
-    department: "Computer Science",
-    institution: "National Institute of Technology",
-    experience: "8 years",
-    publications: 18,
-    degrees: ["Ph.D. in Artificial Intelligence", "B.Sc. in Computer Science"],
-    status: "Pending Review",
-    appliedFor: 1,
-    appliedDate: "2023-05-18",
-    proposalTitle: "Intelligent Medical Diagnosis Platform Using Deep Learning",
-    proposalSummary:
-      "Development of a comprehensive AI platform that integrates multiple diagnostic tools and machine learning algorithms to provide accurate medical diagnoses across various specialties.",
-    proposalType: "Technical Proposal",
-    submittedBy: "Dr. Michael Johnson",
-  },
-];
+// This project, if executed effectively, could serve as a model for similar educational initiatives across various fields.`,
+//       submittedAt: "2025-08-11T14:05:12.0316727",
+//       isApproved: false,
+//       reviewerResult: null,
+//       isAiReport: true,
+//       status: "created",
+//       evaluationStageId: "a44bebc5-0324-4e3e-987e-4014cee7fef8",
+//       reviewerId: null,
+//       documents: null,
+//       projectsSimilarityResult: null,
+//     },
+//     individualEvaluations: [
+//       {
+//         id: "eval-1",
+//         evaluatorName: "Prof. Dr. Emily Davis",
+//         evaluatorRole: "Technical Reviewer",
+//         status: "completed",
+//         score: 8.5,
+//         totalRate: 8.5,
+//         submittedAt: "2025-08-12T10:30:00.000Z",
+//         comment:
+//           "The technical approach is sound with good integration of digital signature technology. The system architecture is well-designed for scalability. I recommend approval with minor revisions to the security protocols.",
+//       },
+//       {
+//         id: "eval-2",
+//         evaluatorName: "Dr. Robert Wilson",
+//         evaluatorRole: "Domain Expert",
+//         status: "completed",
+//         score: 9.0,
+//         totalRate: 9.0,
+//         submittedAt: "2025-08-12T14:15:00.000Z",
+//         comment:
+//           "Excellent understanding of aviation academy requirements. The certification management process is well-structured and addresses industry needs. The digital signature integration is particularly well-thought-out and addresses compliance requirements.",
+//       },
+//       {
+//         id: "eval-3",
+//         evaluatorName: "Prof. Lisa Anderson",
+//         evaluatorRole: "Security Specialist",
+//         status: "in-progress",
+//         score: null,
+//         totalRate: null,
+//         submittedAt: null,
+//         comment:
+//           "Currently reviewing the digital signature implementation and security protocols. Initial assessment shows promising security architecture but requires detailed cryptographic analysis.",
+//       },
+//       {
+//         id: "e2105b84-b602-4ab8-917e-24f1e8439433",
+//         evaluatorName: "AI Evaluation System",
+//         evaluatorRole: "AI Reviewer",
+//         status: "completed",
+//         score: 8.7,
+//         totalRate: 8.7,
+//         submittedAt: "2025-08-11T14:05:12.000Z",
+//         comment:
+//           "AI-generated evaluation completed. The project shows strong technical merit and addresses practical needs in aviation education. Comprehensive analysis available in detailed view.",
+//         isAiReport: true,
+//       },
+//       {
+//         id: "eval-5",
+//         evaluatorName: "Dr. Mark Thompson",
+//         evaluatorRole: "Educational Technology Expert",
+//         status: "pending",
+//         score: null,
+//         totalRate: null,
+//         submittedAt: null,
+//         comment:
+//           "Evaluation not yet started. Will focus on user experience and educational effectiveness.",
+//       },
+//     ],
+//   },
+// ];
 
 export const ProposalDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -402,18 +184,126 @@ export const ProposalDetailPage: React.FC = () => {
     name: string;
     content: string;
   } | null>(null);
-  const [evaluationStages] = useState<EvaluationStage[]>(mockEvaluationStages);
+  const [scientificCVResults, setScientificCVResults] = useState<
+    DocumentForm[]
+  >([]);
+
   const [selectedProposalContent, setSelectedProposalContent] = useState<
     string | null
   >(null);
 
-  const proposal = mockApplicants.find((a) => a.id === Number(proposalId));
-  const teamMembers = mockTeamMembers[Number(proposalId)] || [];
+  const { data: proposalData } = useProject(proposalId || "");
+  const { data: allRoles } = useAllRoles();
+  const { data: userRolesResponse } = useUserRolesByProjectId(
+    proposalId || "",
+    1,
+    100
+  );
+  const { data: evaluationData } = useGetEvaluationsByProjectId(
+    proposalId || ""
+  );
+
+  const { data: registerDocument } = useDocumentsByFilter(
+    "BM1",
+    false,
+    1,
+    10,
+    true,
+    "submitted"
+  );
+  const proposalContentData = registerDocument?.data["data-list"];
+  const registerContent = proposalContentData?.[0]?.["content-html"] || "";
+
+  const evaluation = evaluationData?.["data-list"];
+  const evaluationStageId = evaluation?.[0]?.["evaluation-stages"]?.[0]?.id;
+  const { data: individualEvaluationsData } =
+    useGetIndividualEvaluationsByStageId(evaluationStageId || "");
+  const individualEvaluations = individualEvaluationsData?.["data-list"];
+
+  const proposal = proposalData?.data["project-detail"];
+
+  const teamMembersBase = React.useMemo(() => {
+    if (!userRolesResponse?.["data-list"] || !allRoles) return [];
+
+    // Group user roles by account-id
+    const userRolesByAccount: Record<string, UserRole[]> = {};
+    userRolesResponse["data-list"].forEach((userRole: UserRole) => {
+      if (userRole.status === "approved") {
+        const accountId = userRole["account-id"];
+        if (!userRolesByAccount[accountId]) {
+          userRolesByAccount[accountId] = [];
+        }
+        userRolesByAccount[accountId].push(userRole);
+      }
+    });
+
+    // Process each account and prioritize roles
+    const teamMembersData: TeamMember[] = [];
+    Object.entries(userRolesByAccount).forEach(([accountId, userRoles]) => {
+      if (userRoles.length === 0) return;
+
+      // Find role names for all user roles
+      const rolesWithNames = userRoles.map((userRole) => {
+        const role = allRoles.find((r) => r.id === userRole["role-id"]);
+        return {
+          ...userRole,
+          roleName: role?.name || "Researcher",
+        };
+      });
+
+      // Prioritize roles: Leader > Secretary > Researcher
+      let selectedRole = rolesWithNames.find((r) => r.roleName === "Leader");
+      if (!selectedRole) {
+        selectedRole = rolesWithNames.find((r) => r.roleName === "Secretary");
+      }
+      if (!selectedRole) {
+        selectedRole = rolesWithNames.find((r) => r.roleName === "Researcher");
+      }
+      if (!selectedRole) {
+        selectedRole = rolesWithNames[0]; // Fallback to first role
+      }
+
+      teamMembersData.push({
+        id: accountId,
+        accountId: accountId,
+        name: selectedRole["full-name"] || "",
+        email: selectedRole.email || "",
+        avatar: selectedRole["avatar-url"] || "",
+        role: selectedRole.roleName,
+        status: selectedRole.status,
+      });
+    });
+
+    return teamMembersData;
+  }, [userRolesResponse, allRoles]);
+
+  useEffect(() => {
+    if (teamMembersBase.length === 0) return;
+
+    Promise.all(
+      teamMembersBase.map((member) => getScientificCVByEmail(member.email))
+    )
+      .then((responses) =>
+        setScientificCVResults(responses.map((res) => res.data))
+      )
+      .catch(console.error);
+  }, [teamMembersBase]);
+
+  const ScientificCVs = useMemo(() => {
+    return scientificCVResults.map((res) => {
+      const documentForm = res as DocumentForm | undefined;
+      return documentForm?.["content-html"] || "";
+    });
+  }, [scientificCVResults]);
+  const teamMembers = teamMembersBase.map((member, index) => ({
+    ...member,
+    scientificCV: ScientificCVs[index],
+  }));
 
   const handleViewCV = (member: TeamMember) => {
     setSelectedCV({
       name: member.name,
-      content: member.scientificCV,
+      content: member.scientificCV || "",
     });
   };
 
@@ -422,31 +312,7 @@ export const ProposalDetailPage: React.FC = () => {
   };
 
   const handleViewProposalDocument = () => {
-    const mockProposalContent = `
-      <h2>Advanced AI Diagnostic System for Medical Imaging</h2>
-      <h3>Project Overview</h3>
-      <p>This project aims to develop a comprehensive AI-powered diagnostic system that can analyze medical images with 95% accuracy, reducing diagnosis time by 60%.</p>
-      
-      <h3>Technical Approach</h3>
-      <p>We will utilize deep learning algorithms and convolutional neural networks to process and analyze medical imaging data.</p>
-      
-      <h3>Expected Outcomes</h3>
-      <ul>
-        <li>Improved diagnostic accuracy</li>
-        <li>Reduced time for medical image analysis</li>
-        <li>Enhanced patient care through faster diagnosis</li>
-      </ul>
-      
-      <h3>Implementation Timeline</h3>
-      <p>The project will be completed over 24 months with the following milestones:</p>
-      <ol>
-        <li>Data collection and preprocessing (Months 1-6)</li>
-        <li>Model development and training (Months 7-18)</li>
-        <li>Testing and validation (Months 19-24)</li>
-      </ol>
-    `;
-
-    setSelectedProposalContent(mockProposalContent);
+    setSelectedProposalContent(registerContent);
   };
 
   const handleCloseProposalDialog = () => {
@@ -454,12 +320,11 @@ export const ProposalDetailPage: React.FC = () => {
   };
 
   const handleViewIndividualEvaluation = (evaluationId: string) => {
-    // Check if this is an AI evaluation
-    const evaluation = evaluationStages[0]?.individualEvaluations.find(
-      (item) => item.id === evaluationId
+    const evaluation = individualEvaluations?.find(
+      (stageEval) => stageEval.id === evaluationId
     );
 
-    if (evaluation?.isAiReport) {
+    if (evaluation?.["is-ai-report"]) {
       navigate(`/council/ai-evaluation/${evaluationId}`);
     } else {
       navigate(`/council/individual-evaluation/${evaluationId}`);
@@ -526,19 +391,19 @@ export const ProposalDetailPage: React.FC = () => {
           <div className="flex items-start gap-4 mb-4">
             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
               <span className="text-lg font-bold text-blue-700">
-                {proposal.name.charAt(0)}
+                {proposal["logo-url"]}
               </span>
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900 mb-3">
-                {proposal.proposalTitle}
+                {proposal["english-title"]}
               </h2>
               <div className="flex flex-wrap gap-2 mb-4">
                 <Badge
                   variant="outline"
                   className="bg-blue-50 text-blue-700 border-blue-200 px-3 py-1 text-xs"
                 >
-                  {proposal.proposalType}
+                  {proposal.type}
                 </Badge>
                 <Badge
                   variant="outline"
@@ -550,7 +415,7 @@ export const ProposalDetailPage: React.FC = () => {
                   <Calendar className="h-4 w-4" />
                   <span>
                     Applied{" "}
-                    {new Date(proposal.appliedDate).toLocaleDateString()}
+                    {new Date(proposal["created-at"]).toLocaleDateString()}
                   </span>
                 </div>
               </div>
@@ -574,7 +439,7 @@ export const ProposalDetailPage: React.FC = () => {
               </Button>
             </div>
             <p className="text-sm text-gray-700 leading-relaxed">
-              {proposal.proposalSummary}
+              {proposal.description}
             </p>
           </div>
 
@@ -603,10 +468,7 @@ export const ProposalDetailPage: React.FC = () => {
                         Role
                       </th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Institution
-                      </th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Department
+                        Email
                       </th>
                       <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Scientific CV
@@ -655,11 +517,11 @@ export const ProposalDetailPage: React.FC = () => {
                           </Badge>
                         </td>
                         <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {member.institution}
+                          {member.email}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                          {member.department}
-                        </td>
+                        {/* <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
+                          {member.}
+                        </td> */}
                         <td className="px-4 py-3 whitespace-nowrap">
                           <Button
                             variant="outline"
@@ -711,24 +573,23 @@ export const ProposalDetailPage: React.FC = () => {
           </div>
 
           <div className="p-3">
-            {evaluationStages.length > 0 ? (
+            {individualEvaluations && individualEvaluations.length > 0 ? (
               <div className="space-y-3">
-                {evaluationStages.map((stage) => (
-                  <div
-                    key={stage.id}
-                    className="border border-gray-200 rounded-lg overflow-hidden"
-                  >
-                    {/* Individual Evaluations */}
-                    <div className="p-3 bg-white">
-                      <h5 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
-                        Individual Evaluations
-                      </h5>
-                      <div className="space-y-1">
-                        {stage.individualEvaluations.map((evaluation) => (
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  {/* Individual Evaluations */}
+                  <div className="p-3 bg-white">
+                    <h5 className="text-xs font-semibold text-gray-700 mb-2 uppercase tracking-wide">
+                      Individual Evaluations
+                    </h5>
+                    <div className="space-y-1">
+                      {individualEvaluations.map(
+                        (
+                          evaluation // ✅ ĐÚNG
+                        ) => (
                           <div
                             key={evaluation.id}
                             className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all duration-200 ${
-                              evaluation.isAiReport
+                              evaluation["is-ai-report"]
                                 ? "bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 hover:from-emerald-100 hover:to-teal-100 shadow-sm"
                                 : "bg-gray-50 hover:bg-gray-100 border border-gray-200"
                             }`}
@@ -739,52 +600,49 @@ export const ProposalDetailPage: React.FC = () => {
                             <div className="flex items-center gap-2">
                               <div
                                 className={`w-6 h-6 rounded-full flex items-center justify-center shadow-sm ${
-                                  evaluation.isAiReport
+                                  evaluation["is-ai-report"]
                                     ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
                                     : "bg-blue-100 text-blue-700"
                                 }`}
                               >
-                                {evaluation.isAiReport ? (
+                                {evaluation["is-ai-report"] ? (
                                   <span className="text-[10px] font-bold">
                                     AI
                                   </span>
                                 ) : (
                                   <span className="text-[10px] font-medium">
-                                    {evaluation.evaluatorName.charAt(0)}
+                                    {evaluation.name?.charAt(0) || "U"}
                                   </span>
                                 )}
                               </div>
                               <div>
                                 <p
                                   className={`text-sm font-medium ${
-                                    evaluation.isAiReport
+                                    evaluation["is-ai-report"]
                                       ? "text-emerald-900"
                                       : "text-gray-900"
                                   }`}
                                 >
-                                  {evaluation.evaluatorName}
+                                  {evaluation.name || "Unknown"}
                                 </p>
                                 <p
                                   className={`text-xs ${
-                                    evaluation.isAiReport
+                                    evaluation["is-ai-report"]
                                       ? "text-emerald-600"
                                       : "text-gray-500"
                                   }`}
                                 >
-                                  {evaluation.evaluatorRole}
+                                  {evaluation["is-ai-report"]
+                                    ? "AI Reviewer"
+                                    : "Human Reviewer"}
                                 </p>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              {(evaluation.score || evaluation.totalRate) && (
+                              {evaluation["total-rate"] && (
                                 <div className="text-right">
                                   <p className="text-xs font-medium text-gray-900">
-                                    {evaluation.isAiReport
-                                      ? `Rate: ${evaluation.totalRate}/10`
-                                      : `Score: ${
-                                          evaluation.score ||
-                                          evaluation.totalRate
-                                        }/10`}
+                                    Rate: {evaluation["total-rate"]}/10
                                   </p>
                                 </div>
                               )}
@@ -792,7 +650,7 @@ export const ProposalDetailPage: React.FC = () => {
                                 variant="outline"
                                 className={`text-xs px-2 py-1 ${
                                   evaluation.status === "completed"
-                                    ? evaluation.isAiReport
+                                    ? evaluation["is-ai-report"]
                                       ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                                       : "bg-green-50 text-green-700 border-green-200"
                                     : evaluation.status === "in-progress"
@@ -800,18 +658,18 @@ export const ProposalDetailPage: React.FC = () => {
                                     : "bg-gray-50 text-gray-700 border-gray-200"
                                 }`}
                               >
-                                {evaluation.isAiReport &&
-                                evaluation.status === "completed"
+                                {evaluation["is-ai-report"] &&
+                                evaluation.status === "created"
                                   ? "AI Generated"
                                   : evaluation.status}
                               </Badge>
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        )
+                      )}
                     </div>
                   </div>
-                ))}
+                </div>
               </div>
             ) : (
               <div className="text-center py-8">
@@ -848,7 +706,7 @@ export const ProposalDetailPage: React.FC = () => {
         <TinyMCEViewDialog
           isOpen={true}
           onClose={handleCloseProposalDialog}
-          title={`${proposal.proposalTitle} - Full Document`}
+          title={`${proposal["english-title"]} - Full Document`}
           content={selectedProposalContent}
           height="auto"
         />

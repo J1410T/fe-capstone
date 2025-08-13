@@ -34,6 +34,7 @@ const PRESETS = {
   basic: {
     plugins: [
       "advlist",
+      "advlist",
       "autolink",
       "lists",
       "link",
@@ -91,6 +92,7 @@ const PRESETS = {
   document: {
     plugins: [
       "advlist",
+      "advlist",
       "autolink",
       "lists",
       "link",
@@ -106,6 +108,9 @@ const PRESETS = {
       "table",
       "help",
       "wordcount",
+      "pagebreak",
+      "quickbars",
+      "autosave",
       "pagebreak",
       "quickbars",
       "autosave",
@@ -191,6 +196,7 @@ const PRESETS = {
 
   form: {
     plugins: [
+      "advlist",
       "advlist",
       "autolink",
       "lists",
@@ -296,6 +302,7 @@ const PRESETS = {
   "scientific-cv": {
     plugins: [
       "advlist",
+      "advlist",
       "autolink",
       "lists",
       "link",
@@ -311,6 +318,9 @@ const PRESETS = {
       "table",
       "help",
       "wordcount",
+      "pagebreak",
+      "quickbars",
+      "autosave",
       "pagebreak",
       "quickbars",
       "autosave",
@@ -595,6 +605,22 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
           img.style.outline = "";
         }
       });
+
+      // Add custom image resize handles
+      editor.on("ObjectSelected", (e) => {
+        if (e.target.tagName === "IMG") {
+          const img = e.target as HTMLImageElement;
+          // Add resize handles or custom styling if needed
+          img.style.outline = "2px solid #007cba";
+        }
+      });
+
+      editor.on("ObjectDeselected", (e) => {
+        if (e.target.tagName === "IMG") {
+          const img = e.target as HTMLImageElement;
+          img.style.outline = "";
+        }
+      });
     };
 
     return (
@@ -654,11 +680,18 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
             file_picker_types: "image",
 
             // File picker callback for image uploads
+
+            // File picker callback for image uploads
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             file_picker_callback: (callback: any, _value: any, meta: any) => {
               if (meta.filetype === "image") {
                 const input = document.createElement("input");
                 input.setAttribute("type", "file");
+                input.setAttribute(
+                  "accept",
+                  "image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                );
+                input.setAttribute("multiple", "false");
                 input.setAttribute(
                   "accept",
                   "image/jpeg,image/jpg,image/png,image/gif,image/webp"
@@ -691,8 +724,30 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
                       return;
                     }
 
+                    // Validate file size (max 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                      alert(
+                        "File size too large. Please choose an image smaller than 5MB."
+                      );
+                      return;
+                    }
+                    if (!allowedTypes.includes(file.type)) {
+                      alert(
+                        "Invalid file type. Please choose a JPEG, PNG, GIF, or WebP image."
+                      );
+                      return;
+                    }
+
                     const reader = new FileReader();
                     reader.onload = function () {
+                      // Return the base64 image with metadata
+                      callback(reader.result, {
+                        alt: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for alt text
+                        title: file.name,
+                      });
+                    };
+                    reader.onerror = function () {
+                      alert("Error reading file. Please try again.");
                       // Return the base64 image with metadata
                       callback(reader.result, {
                         alt: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for alt text
@@ -711,9 +766,11 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
             },
 
             // Enhanced paste and drag-drop support
-            paste_data_images: true,
-            paste_as_text: false,
-            automatic_uploads: true,
+
+            // Image upload settings
+            images_upload_url: "", // Disable server upload, use base64
+            images_reuse_filename: true,
+            images_file_types: "jpg,jpeg,png,gif,webp",
 
             // Drag and drop support
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -738,11 +795,6 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
                 reader.readAsDataURL(blobInfo.blob());
               });
             },
-
-            // Image upload settings
-            images_upload_url: "", // Disable server upload, use base64
-            images_reuse_filename: true,
-            images_file_types: "jpg,jpeg,png,gif,webp",
 
             setup: setupEditor,
           }}

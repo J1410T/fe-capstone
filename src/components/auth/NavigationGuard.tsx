@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -22,34 +22,65 @@ const NavigationGuard: React.FC = () => {
   const redirectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Routes that are considered redirects
-  const redirectRoutes = [
-    "/",
-    "/dashboard",
-    "/home",
-    "/staff/dashboard",
-    "/host/dashboard",
-    "/pi/dashboard",
-    "/council/dashboard",
-    "/researcher/dashboard",
-  ];
+  const redirectRoutes = useMemo(
+    () => [
+      "/",
+      "/dashboard",
+      "/home",
+      "/staff/dashboard",
+      "/host/dashboard",
+      "/pi/dashboard",
+      "/council/dashboard",
+      "/researcher/dashboard",
+    ],
+    []
+  );
 
   // Role-specific route patterns
-  const roleRoutePatterns = {
-    STAFF: ["/staff"],
-    HOST_INSTITUTION: ["/host"],
-    PRINCIPAL_INVESTIGATOR: ["/pi"],
-    APPRAISAL_COUNCIL: ["/council"],
-    RESEARCHER: ["/researcher"],
-  };
+  const roleRoutePatterns = useMemo(
+    () => ({
+      STAFF: ["/staff"],
+      HOST_INSTITUTION: ["/host"],
+      PRINCIPAL_INVESTIGATOR: ["/pi"],
+      APPRAISAL_COUNCIL: ["/council"],
+      RESEARCHER: ["/researcher"],
+    }),
+    []
+  );
 
   // Routes that should be accessible without strict redirect checking
-  const publicRoutes = [
-    "/auth/login",
-    "/auth/login-staff",
-    "/auth/forgot-password",
-    "/unauthorized",
-    "/auth",
-  ];
+  const publicRoutes = useMemo(
+    () => [
+      "/auth/login",
+      "/auth/login-staff",
+      "/auth/forgot-password",
+      "/unauthorized",
+      "/auth",
+    ],
+    []
+  );
+
+  const handleUnauthorizedAccess = useCallback(
+    (reason: string) => {
+      console.error(
+        `NavigationGuard: Unauthorized access detected - ${reason}`
+      );
+
+      // Clear navigation history to prevent further issues
+      navigationHistory.current = [];
+
+      // Navigate to unauthorized page
+      navigate("/unauthorized", {
+        replace: true,
+        state: {
+          reason,
+          from: location.pathname,
+          timestamp: Date.now(),
+        },
+      });
+    },
+    [navigate, location.pathname]
+  );
 
   useEffect(() => {
     const currentPath = location.pathname;
@@ -228,24 +259,16 @@ const NavigationGuard: React.FC = () => {
         clearTimeout(redirectTimeoutRef.current);
       }
     };
-  }, [location.pathname, user?.role, isAuthenticated]);
-
-  const handleUnauthorizedAccess = (reason: string) => {
-    console.error(`NavigationGuard: Unauthorized access detected - ${reason}`);
-
-    // Clear navigation history to prevent further issues
-    navigationHistory.current = [];
-
-    // Navigate to unauthorized page
-    navigate("/unauthorized", {
-      replace: true,
-      state: {
-        reason,
-        from: location.pathname,
-        timestamp: Date.now(),
-      },
-    });
-  };
+  }, [
+    location.pathname,
+    user?.role,
+    isAuthenticated,
+    handleUnauthorizedAccess,
+    publicRoutes,
+    redirectRoutes,
+    roleRoutePatterns,
+    user,
+  ]);
 
   // Log navigation history for debugging (only in development)
   useEffect(() => {

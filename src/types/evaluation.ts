@@ -167,3 +167,17 @@ export interface GetIndividualEvaluationByIdRequest {
 export interface GetIndividualEvaluationByIdResponse {
   data: IndividualEvaluationApi;
 }
+
+export interface CreateIndividualEvaluationRequest {
+  name: string;
+  "total-rate": number;
+  comment: string;
+  "reviewer-result": boolean;
+  "is-ai-report": boolean;
+  status: string;
+  "evaluation-stage-id": string;
+}
+
+export interface CreateIndividualEvaluationResponse {
+  id: string;
+}

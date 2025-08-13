@@ -141,3 +141,16 @@ export interface UpdateDocumentRequest {
 export interface UpdateDocumentResponse {
   message: string;
 }
+
+export interface CreateDocumentByIndividualEvaluationRequest {
+  name: string;
+  type: string;
+  "is-template": boolean;
+  status: string;
+  "content-html": string;
+  "individual-evaluation-id": string;
+}
+
+export interface CreateDocumentByIndividualEvaluationResponse {
+  id: string;
+}

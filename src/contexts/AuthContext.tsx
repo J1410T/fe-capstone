@@ -10,7 +10,9 @@ import { getAuthResponse, setAuthResponse } from "@/utils/cookie-manager";
 
 // Re-export for compatibility (but keep them in separate files for fast refresh)
 export type { User } from "./auth-types";
+// eslint-disable-next-line react-refresh/only-export-components
 export { UserRole } from "./auth-types";
+// eslint-disable-next-line react-refresh/only-export-components
 export { useAuth } from "./auth-hooks";
 
 // Auth provider props

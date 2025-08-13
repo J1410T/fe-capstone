@@ -127,6 +127,7 @@ export function ActionButtons({
 }
 
 // Predefined common action sets
+// eslint-disable-next-line react-refresh/only-export-components
 export const createCommonActions = {
   view: (onClick: () => void): ActionItem => ({
     label: "View Details",
