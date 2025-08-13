@@ -17,6 +17,7 @@ import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
 import { useCreateIndividualEvaluation } from "@/hooks/queries/evaluation";
 import { useCreateDocumentByIndividualEvaluation } from "@/hooks/queries/document";
 import { useDocumentsByFilter } from "@/hooks/queries/document";
+import { useAuth } from "@/contexts/auth-hooks";
 
 interface EvaluationForm {
   name: string;
@@ -32,6 +33,7 @@ export const CreateEvaluationPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const proposalId = searchParams.get("proposalId");
+  const { user } = useAuth();
 
   const { data: evaluationData } = useGetEvaluationsByProjectId(
     proposalId || ""
@@ -106,6 +108,7 @@ export const CreateEvaluationPage: React.FC = () => {
         await createIndividualEvaluationMutation.mutateAsync({
           ...evaluationForm,
           "evaluation-stage-id": evaluationStageId,
+          "reviewer-id": user?.id || "",
         });
 
       // Step 2: Create Document by Individual Evaluation ID with content from TinyMCE

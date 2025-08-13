@@ -176,6 +176,7 @@ export interface CreateIndividualEvaluationRequest {
   "is-ai-report": boolean;
   status: string;
   "evaluation-stage-id": string;
+  "reviewer-id": string;
 }
 
 export interface CreateIndividualEvaluationResponse {
