@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -228,7 +228,16 @@ const NavigationGuard: React.FC = () => {
         clearTimeout(redirectTimeoutRef.current);
       }
     };
-  }, [location.pathname, user?.role, isAuthenticated]);
+  }, [
+    location.pathname,
+    user?.role,
+    isAuthenticated,
+    handleUnauthorizedAccess,
+    publicRoutes,
+    redirectRoutes,
+    roleRoutePatterns,
+    user,
+  ]);
 
   const handleUnauthorizedAccess = (reason: string) => {
     console.error(`NavigationGuard: Unauthorized access detected - ${reason}`);

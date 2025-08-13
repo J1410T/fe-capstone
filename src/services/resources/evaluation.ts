@@ -1,5 +1,7 @@
 import {
   CreateFirstEvaluationResponse,
+  CreateIndividualEvaluationRequest,
+  CreateIndividualEvaluationResponse,
   EvaluationApiResponse,
   EvaluationStageApiResponse,
   GetEvaluationsByProjectIdRequest,
@@ -9,7 +11,7 @@ import {
   IndividualEvaluationApi,
   IndividualEvaluationApiResponse,
 } from "@/types/evaluation";
-import { axiosClient } from "../api";
+import { axiosClient, getAccessToken } from "../api";
 
 export const createFirstEvaluation = async (
   projectId: string
@@ -112,6 +114,32 @@ export const getIndividualEvaluationById = async (
     return response.data;
   } catch (error) {
     console.error("Error fetching individual evaluation by ID:", error);
+    throw error;
+  }
+};
+
+export const createIndividualEvaluation = async (
+  request: CreateIndividualEvaluationRequest
+): Promise<CreateIndividualEvaluationResponse> => {
+  try {
+    const accessToken = getAccessToken();
+
+    const response = await axiosClient.post<string>(
+      "/individual-evaluation",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return {
+      id: response.data,
+    };
+  } catch (error) {
+    console.error("Error creating individual evaluation:", error);
     throw error;
   }
 };

@@ -1,11 +1,16 @@
 import {
   createFirstEvaluation,
+  createIndividualEvaluation,
   getEvaluationsByProjectId,
   getEvaluationStagesByEvaluationId,
   getIndividualEvaluationById,
   getIndividualEvaluationsByStageId,
 } from "@/services/resources/evaluation";
-import { CreateFirstEvaluationResponse } from "@/types/evaluation";
+import {
+  CreateFirstEvaluationResponse,
+  CreateIndividualEvaluationRequest,
+  CreateIndividualEvaluationResponse,
+} from "@/types/evaluation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 export const useCreateFirstEvaluation = () => {
@@ -69,5 +74,22 @@ export const useGetIndividualEvaluationById = (
         id: individualEvaluationId,
       }),
     enabled: !!individualEvaluationId,
+  });
+};
+
+export const useCreateIndividualEvaluation = () => {
+  return useMutation<
+    CreateIndividualEvaluationResponse,
+    Error,
+    CreateIndividualEvaluationRequest
+  >({
+    mutationFn: (request: CreateIndividualEvaluationRequest) =>
+      createIndividualEvaluation(request),
+    onSuccess: (data) => {
+      console.log("Individual evaluation created successfully:", data.id);
+    },
+    onError: (error) => {
+      console.error("Failed to create individual evaluation:", error);
+    },
   });
 };

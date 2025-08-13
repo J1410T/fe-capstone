@@ -8,11 +8,14 @@ import {
   updateDocument,
   getDocumentByProjectId,
   getDocumentByProjectIdWithUserRole,
+  createDocumentByIndividualEvaluation,
 } from "@/services/resources/document";
 import {
   CreateDocumentRequest,
   UpdateDocumentRequest,
   GetDocumentByProjectIdRequest,
+  CreateDocumentByIndividualEvaluationResponse,
+  CreateDocumentByIndividualEvaluationRequest,
 } from "@/types/document";
 
 export function useDocumentsByFilter(
@@ -20,11 +23,13 @@ export function useDocumentsByFilter(
   isTemplate: boolean = true,
   pageIndex: number = 1,
   pageSize: number = 10,
-  enabled: boolean = true
+  enabled: boolean = true,
+  status?: string
 ) {
   return useQuery({
-    queryKey: ["document", type, isTemplate, pageIndex, pageSize],
-    queryFn: () => getDocumentsByFilter(type, isTemplate, pageIndex, pageSize),
+    queryKey: ["document", type, isTemplate, pageIndex, pageSize, status],
+    queryFn: () =>
+      getDocumentsByFilter(type, isTemplate, pageIndex, pageSize, status),
     enabled: !!type && enabled,
   });
 }
@@ -184,3 +189,43 @@ export function useDocumentByProjectIdWithUserRole(
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes since user role data doesn't change frequently
   });
 }
+
+export const useCreateDocumentByIndividualEvaluation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    CreateDocumentByIndividualEvaluationResponse,
+    Error,
+    CreateDocumentByIndividualEvaluationRequest
+  >({
+    mutationFn: (request: CreateDocumentByIndividualEvaluationRequest) =>
+      createDocumentByIndividualEvaluation(request),
+    onSuccess: (data, variables) => {
+      console.log(
+        "Document created by individual evaluation successfully:",
+        data.id
+      );
+
+      // Invalidate relevant queries after successful creation
+      queryClient.invalidateQueries({
+        queryKey: ["document"],
+      });
+
+      // Invalidate individual evaluation queries if needed
+      if (variables["individual-evaluation-id"]) {
+        queryClient.invalidateQueries({
+          queryKey: [
+            "individual-evaluation",
+            variables["individual-evaluation-id"],
+          ],
+        });
+      }
+    },
+    onError: (error) => {
+      console.error(
+        "Failed to create document by individual evaluation:",
+        error
+      );
+    },
+  });
+};

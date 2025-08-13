@@ -70,6 +70,8 @@ export interface IndividualEvaluationApi {
   status: string;
   "evaluation-stage-id": string;
   "reviewer-id": string | null;
+  "reviewer-name": string | null;
+  "reviewer-email": string | null;
   documents: unknown[] | null;
   "projects-similarity-result": unknown | null;
 }
@@ -160,4 +162,18 @@ export interface GetIndividualEvaluationByIdRequest {
 
 export interface GetIndividualEvaluationByIdResponse {
   data: IndividualEvaluationApi;
+}
+
+export interface CreateIndividualEvaluationRequest {
+  name: string;
+  "total-rate": number;
+  comment: string;
+  "reviewer-result": boolean;
+  "is-ai-report": boolean;
+  status: string;
+  "evaluation-stage-id": string;
+}
+
+export interface CreateIndividualEvaluationResponse {
+  id: string;
 }

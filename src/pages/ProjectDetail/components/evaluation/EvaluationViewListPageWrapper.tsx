@@ -1,25 +1,26 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { useParams } from "react-router-dom";
-import { Evaluation } from "@/types/evaluation-api";
-import { getEvaluationsByProject } from "../../data/mockEvaluationApiData";
+import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
 import EvaluationViewListPage from "./EvaluationViewListPage";
 import { Loading } from "@/components/ui";
 
 const EvaluationViewListPageWrapper: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (projectId) {
-      getEvaluationsByProject(projectId)
-        .then(setEvaluations)
-        .finally(() => setLoading(false));
-    }
-  }, [projectId]);
+  const {
+    data: evaluationsResponse,
+    isLoading,
+    error,
+  } = useGetEvaluationsByProjectId(projectId!);
 
-  if (loading) {
+  const evaluations = evaluationsResponse?.["data-list"] || [];
+
+  if (isLoading) {
     return <Loading />;
+  }
+
+  if (error) {
+    return <div>Error loading evaluations: {error.message}</div>;
   }
 
   return <EvaluationViewListPage evaluations={evaluations} />;

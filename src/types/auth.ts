@@ -274,3 +274,14 @@ export interface CreateUserRequest {
 export interface UpdateUserStatusRequest {
   status: "created" | "deleted";
 }
+
+export interface TeamMember {
+  id: string;
+  accountId: string;
+  name: string;
+  email: string;
+  avatar: string;
+  role: string;
+  status: string;
+  scientificCV?: string;
+}

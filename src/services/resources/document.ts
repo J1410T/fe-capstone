@@ -8,6 +8,8 @@ import {
   GetDocumentByProjectIdRequest,
   DocumentListWithUserRoleResponse,
   DocumentWithUserRole,
+  CreateDocumentByIndividualEvaluationRequest,
+  CreateDocumentByIndividualEvaluationResponse,
 } from "@/types/document";
 import { getUserRoleById } from "./auth";
 
@@ -15,7 +17,8 @@ export const getDocumentsByFilter = async (
   type: string,
   isTemplate: boolean = true,
   pageIndex: number = 1,
-  pageSize: number = 10
+  pageSize: number = 10,
+  status?: string
 ) => {
   const accessToken = getAccessToken();
 
@@ -23,6 +26,7 @@ export const getDocumentsByFilter = async (
     "/document/list",
     {
       type,
+      status,
       "is-template": isTemplate,
       "page-index": pageIndex,
       "page-size": pageSize,
@@ -142,6 +146,28 @@ export const getDocumentByProjectIdWithUserRole = async (
     };
   } catch (error) {
     console.error("Failed to fetch documents with user role data:", error);
+    throw error;
+  }
+};
+
+export const createDocumentByIndividualEvaluation = async (
+  request: CreateDocumentByIndividualEvaluationRequest
+): Promise<CreateDocumentByIndividualEvaluationResponse> => {
+  try {
+    const accessToken = getAccessToken();
+
+    const response = await axiosClient.post<string>("/document", request, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json-patch+json",
+      },
+    });
+
+    return {
+      id: response.data,
+    };
+  } catch (error) {
+    console.error("Error creating document by individual evaluation:", error);
     throw error;
   }
 };

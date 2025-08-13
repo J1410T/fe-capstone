@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,16 +13,19 @@ import {
 } from "@/components/ui/select";
 import { Editor } from "@tinymce/tinymce-react";
 import { ArrowLeft, Save, FileText, Star } from "lucide-react";
+import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
+import { useCreateIndividualEvaluation } from "@/hooks/queries/evaluation";
+import { useCreateDocumentByIndividualEvaluation } from "@/hooks/queries/document";
+import { useDocumentsByFilter } from "@/hooks/queries/document";
 
 interface EvaluationForm {
-  evaluatorName: string;
-  evaluatorRole: string;
-  evaluationType: string;
-  score: number | null;
-  totalRate: number | null;
-  evaluationContent: string;
-  recommendation: string;
-  comments: string;
+  name: string;
+  "total-rate": number;
+  comment: string;
+  "reviewer-result": boolean;
+  "is-ai-report": boolean;
+  status: string;
+  "evaluation-stage-id": string;
 }
 
 export const CreateEvaluationPage: React.FC = () => {
@@ -30,21 +33,59 @@ export const CreateEvaluationPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const proposalId = searchParams.get("proposalId");
 
+  const { data: evaluationData } = useGetEvaluationsByProjectId(
+    proposalId || ""
+  );
+
+  // Get template data for evaluation document type
+  const { data: templateData } = useDocumentsByFilter(
+    "BM3", // evaluation document type
+    true, // is template
+    1, // page index
+    10, // page size
+    true, // enabled
+    "created" // status
+  );
+
+  const evaluation = evaluationData?.["data-list"];
+  const evaluationStageId = evaluation?.[0]?.["evaluation-stages"]?.[0]?.id;
+
+  const createIndividualEvaluationMutation = useCreateIndividualEvaluation();
+  const createDocumentMutation = useCreateDocumentByIndividualEvaluation();
+
   const [isLoading, setIsLoading] = useState(false);
+  const [evaluationContent, setEvaluationContent] = useState("");
   const [evaluationForm, setEvaluationForm] = useState<EvaluationForm>({
-    evaluatorName: "",
-    evaluatorRole: "",
-    evaluationType: "",
-    score: null,
-    totalRate: null,
-    evaluationContent: "",
-    recommendation: "",
-    comments: "",
+    name: "",
+    "total-rate": 0,
+    comment: "",
+    "reviewer-result": false,
+    "is-ai-report": false,
+    status: "created",
+    "evaluation-stage-id": evaluationStageId || "",
   });
+
+  // Load template content when templateData is available
+  useEffect(() => {
+    if (templateData?.data?.["data-list"]?.[0]?.["content-html"]) {
+      const templateContent = templateData.data["data-list"][0]["content-html"];
+      setEvaluationContent(templateContent);
+    }
+  }, [templateData]);
+
+  // Update evaluation stage id when available
+  useEffect(() => {
+    if (evaluationStageId) {
+      setEvaluationForm((prev) => ({
+        ...prev,
+        "evaluation-stage-id": evaluationStageId,
+      }));
+    }
+  }, [evaluationStageId]);
 
   const handleInputChange = (
     field: keyof EvaluationForm,
-    value: string | number | null
+    value: string | number | boolean
   ) => {
     setEvaluationForm((prev) => ({
       ...prev,
@@ -53,12 +94,37 @@ export const CreateEvaluationPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!evaluationStageId) {
+      console.error("Evaluation stage ID not found");
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // Step 1: Create Individual Evaluation
+      const individualEvaluationResponse =
+        await createIndividualEvaluationMutation.mutateAsync({
+          ...evaluationForm,
+          "evaluation-stage-id": evaluationStageId,
+        });
 
-      console.log("Creating evaluation:", evaluationForm);
+      // Step 2: Create Document by Individual Evaluation ID with content from TinyMCE
+      const documentResponse = await createDocumentMutation.mutateAsync({
+        name: "Feedback Science Research Document",
+        type: "BM3",
+        "is-template": false,
+        status: "created",
+        "content-html":
+          evaluationContent ||
+          `<html lang="en"><head><meta charset="UTF-8" /></head><body><p>Default evaluation content</p></body></html>`,
+        "individual-evaluation-id": individualEvaluationResponse.id,
+      });
+
+      console.log(
+        "Individual Evaluation created:",
+        individualEvaluationResponse.id
+      );
+      console.log("Document created:", documentResponse.id);
 
       // Navigate back to proposal detail
       navigate(`/council/project-approval/proposal/${proposalId}`);
@@ -75,7 +141,10 @@ export const CreateEvaluationPage: React.FC = () => {
       // Simulate API call for saving draft
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      console.log("Saving draft:", evaluationForm);
+      console.log("Saving draft:", {
+        ...evaluationForm,
+        contentHtml: evaluationContent,
+      });
 
       // Show success message or stay on page
     } catch (error) {
@@ -122,10 +191,10 @@ export const CreateEvaluationPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-base font-semibold text-gray-900">
-                    Evaluation Scoring
+                    Evaluation Details
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Provide scores and ratings
+                    Provide evaluation information
                   </p>
                 </div>
               </div>
@@ -133,39 +202,30 @@ export const CreateEvaluationPage: React.FC = () => {
               <div className="space-y-4">
                 <div>
                   <Label className="text-sm font-medium text-gray-700">
-                    Individual Score (0-10)
+                    Evaluation Name *
                   </Label>
                   <Input
-                    type="number"
-                    min="0"
-                    max="10"
-                    step="0.1"
-                    value={evaluationForm.score || ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "score",
-                        parseFloat(e.target.value) || null
-                      )
-                    }
-                    placeholder="Enter score (e.g., 8.5)"
+                    value={evaluationForm.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    placeholder="Enter evaluation name"
                     className="mt-1"
                   />
                 </div>
 
                 <div>
                   <Label className="text-sm font-medium text-gray-700">
-                    Total Rate (0-10)
+                    Total Rate (0-10) *
                   </Label>
                   <Input
                     type="number"
                     min="0"
                     max="10"
                     step="0.1"
-                    value={evaluationForm.totalRate || ""}
+                    value={evaluationForm["total-rate"]}
                     onChange={(e) =>
                       handleInputChange(
-                        "totalRate",
-                        parseFloat(e.target.value) || null
+                        "total-rate",
+                        parseFloat(e.target.value) || 0
                       )
                     }
                     placeholder="Enter total rate (e.g., 8.5)"
@@ -175,29 +235,20 @@ export const CreateEvaluationPage: React.FC = () => {
 
                 <div>
                   <Label className="text-sm font-medium text-gray-700">
-                    Recommendation *
+                    Reviewer Result *
                   </Label>
                   <Select
-                    value={evaluationForm.recommendation}
+                    value={evaluationForm["reviewer-result"] ? "true" : "false"}
                     onValueChange={(value) =>
-                      handleInputChange("recommendation", value)
+                      handleInputChange("reviewer-result", value === "true")
                     }
                   >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Select recommendation" />
+                    <SelectTrigger className="mt-1 w-full">
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Approve">Approve</SelectItem>
-                      <SelectItem value="Approve with Minor Revisions">
-                        Approve with Minor Revisions
-                      </SelectItem>
-                      <SelectItem value="Major Revisions Required">
-                        Major Revisions Required
-                      </SelectItem>
-                      <SelectItem value="Reject">Reject</SelectItem>
-                      <SelectItem value="Conditional Approval">
-                        Conditional Approval
-                      </SelectItem>
+                      <SelectItem value="true">Approve</SelectItem>
+                      <SelectItem value="false">Reject</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -211,10 +262,9 @@ export const CreateEvaluationPage: React.FC = () => {
                   onClick={handleSubmit}
                   disabled={
                     isLoading ||
-                    !evaluationForm.evaluatorName ||
-                    !evaluationForm.evaluatorRole ||
-                    !evaluationForm.evaluationType ||
-                    !evaluationForm.recommendation
+                    !evaluationForm.name ||
+                    !evaluationForm["total-rate"] ||
+                    !evaluationStageId
                   }
                   className="w-full bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-medium rounded-xl"
                 >
@@ -269,9 +319,9 @@ export const CreateEvaluationPage: React.FC = () => {
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <Editor
                     apiKey={import.meta.env.VITE_TINYMCE_API_KEY}
-                    value={evaluationForm.evaluationContent}
+                    value={evaluationContent}
                     onEditorChange={(content: string) =>
-                      handleInputChange("evaluationContent", content)
+                      setEvaluationContent(content)
                     }
                     init={{
                       height: 400,
@@ -316,7 +366,7 @@ export const CreateEvaluationPage: React.FC = () => {
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Additional Comments
+                    Comments & Feedback
                   </h3>
                   <p className="text-sm text-gray-500">
                     Provide specific feedback and suggestions
@@ -329,10 +379,8 @@ export const CreateEvaluationPage: React.FC = () => {
                   Comments & Feedback *
                 </Label>
                 <Textarea
-                  value={evaluationForm.comments}
-                  onChange={(e) =>
-                    handleInputChange("comments", e.target.value)
-                  }
+                  value={evaluationForm.comment}
+                  onChange={(e) => handleInputChange("comment", e.target.value)}
                   placeholder="Enter detailed comments, suggestions, and feedback about the proposal..."
                   rows={6}
                   className="resize-none"

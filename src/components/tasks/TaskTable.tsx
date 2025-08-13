@@ -175,7 +175,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
     // });
 
     return finalTasks;
-  }, [milestoneId, fetchedTasks, propTasks, fetchingTasks, fetchError]);
+  }, [milestoneId, fetchedTasks, propTasks]);
 
   const isLoading = milestoneId ? fetchingTasks : false;
   const [globalFilter, setGlobalFilter] = useState("");
