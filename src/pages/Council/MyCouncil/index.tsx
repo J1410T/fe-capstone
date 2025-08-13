@@ -1,3 +1,3 @@
-import CouncilProjectsPage from "./CouncilProjectsPage";
+import MyCouncilPage from "./MyCouncilPage";
 
-export default CouncilProjectsPage;
+export default MyCouncilPage;

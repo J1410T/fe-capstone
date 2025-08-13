@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useRef, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -8,375 +8,409 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Separator } from "@/components/ui/separator";
 import {
-  ArrowLeft,
-  FileText,
-  Save,
-  Send,
-  Star,
-  MessageSquare,
-  Eye,
-  Upload,
-} from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { TinyMCEEditor, TinyMCEViewer } from "@/components/ui/TinyMCE";
-import { councilApi } from "./api";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ArrowLeft, Save, FileText } from "lucide-react";
+import {
+  ScientificCVEditor,
+  ScientificCVEditorRef,
+} from "@/components/ui/TinyMCE";
+import { useDocumentsByFilter } from "@/hooks/queries/document";
+import {
+  createIndividualEvaluation,
+  getIndividualEvaluationById,
+  updateIndividualEvaluation,
+} from "@/services/resources/evaluation";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth-hooks";
+import { getMyAccountInfo } from "@/services/resources/auth";
 
 const CreateIndividualEvaluationPage: React.FC = () => {
-  const navigate = useNavigate();
-  const { projectId, evaluationId, stageId } = useParams<{
-    projectId: string;
+  const { evaluationId, stageId, individualId } = useParams<{
     evaluationId: string;
     stageId: string;
+    individualId?: string; // Present in edit mode
   }>();
+  const navigate = useNavigate();
+  const editorRef = useRef<ScientificCVEditorRef>(null);
   const { user } = useAuth();
 
-  const [name, setName] = useState("");
-  const [content, setContent] = useState("");
-  const [comment, setComment] = useState("");
-  const [rate, setRate] = useState(0);
-  const [previewMode, setPreviewMode] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  // Determine if this is edit mode
+  const isEditMode = Boolean(individualId);
 
-  const handleBack = () => {
-    navigate(`/council/evaluation-stages/${projectId}/${evaluationId}`);
-  };
+  // Form state
+  const [formData, setFormData] = useState({
+    name: "",
+    content: "",
+    rate: "",
+    comment: "",
+    status: "created",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSaveDraft = async () => {
-    if (!stageId || !evaluationId) return;
+  // Get BM3 template for individual evaluation
+  const {
+    data: templateData,
+    isLoading: isTemplateLoading,
+    refetch: refetchTemplate,
+  } = useDocumentsByFilter("BM3", true, 1, 1, false);
 
-    try {
-      setSaving(true);
-      await councilApi.createIndividualEvaluation({
-        name,
-        content,
-        comment,
-        rate,
-        stageId,
-        evaluationId,
-        reviewerId: user?.id || "",
-      });
+  // Load existing individual evaluation data in edit mode
+  useEffect(() => {
+    const loadExistingData = async () => {
+      if (!isEditMode || !individualId) return;
 
-      // Navigate back to evaluation stages
-      navigate(`/council/evaluation-stages/${projectId}/${evaluationId}`);
-    } catch (error) {
-      console.error("Error saving individual evaluation:", error);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSubmitEvaluation = async () => {
-    if (!stageId || !evaluationId) return;
-
-    try {
-      setSubmitting(true);
-      const newEvaluation = await councilApi.createIndividualEvaluation({
-        name,
-        content,
-        comment,
-        rate,
-        stageId,
-        evaluationId,
-        reviewerId: user?.id || "",
-      });
-
-      // Submit the evaluation
-      if (newEvaluation.id) {
-        await councilApi.submitIndividualEvaluation(newEvaluation.id, {
-          rate,
-          comment,
-          isApproved: rate >= 7, // Auto-approve if rating is 7 or higher
+      try {
+        setIsLoading(true);
+        const existingData = await getIndividualEvaluationById({
+          id: individualId,
         });
+
+        setFormData({
+          name: existingData.name || "",
+          content: existingData.comment || "",
+          rate: existingData["total-rate"]?.toString() || "",
+          comment: existingData.comment || "",
+          status: existingData.status || "created",
+        });
+
+        // Set content in editor if available - with delay to ensure editor is ready
+        if (existingData.comment) {
+          setTimeout(() => {
+            if (editorRef.current && existingData.comment) {
+              editorRef.current.setContent(existingData.comment);
+            }
+          }, 500); // Wait for editor to be fully initialized
+        }
+      } catch (error) {
+        console.error("Failed to load existing individual evaluation:", error);
+        toast.error("Failed to load existing evaluation data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadExistingData();
+  }, [isEditMode, individualId]);
+
+  // Fetch template on component mount
+  useEffect(() => {
+    refetchTemplate();
+  }, [refetchTemplate]);
+
+  // Load template content when available (only for Create mode)
+  useEffect(() => {
+    if (
+      !isEditMode && // Only load template in create mode
+      !isTemplateLoading &&
+      templateData?.data?.["data-list"]?.[0]?.["content-html"]
+    ) {
+      const templateContent = templateData.data["data-list"][0]["content-html"];
+      setFormData((prev) => ({
+        ...prev,
+        content: templateContent,
+      }));
+    }
+  }, [templateData, isTemplateLoading, isEditMode]);
+
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name.trim()) {
+      toast.error("Please enter evaluation name");
+      return;
+    }
+
+    if (!formData.content.trim()) {
+      toast.error("Please enter evaluation content");
+      return;
+    }
+
+    if (!stageId) {
+      toast.error("Stage ID is required");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      // Get reviewer ID with fallback mechanism
+      let reviewerId = user?.id;
+      if (!reviewerId) {
+        try {
+          const accountInfo = await getMyAccountInfo();
+          reviewerId = accountInfo?.id;
+        } catch (error) {
+          console.error("Failed to get account info:", error);
+        }
       }
 
-      // Navigate back to evaluation stages
-      navigate(`/council/evaluation-stages/${projectId}/${evaluationId}`);
+      // Prepare API request data according to the required format
+      const rate = formData.rate ? parseInt(formData.rate) : 0;
+
+      // Base data for both create and update
+      const baseData = {
+        name: formData.name.trim(),
+        "total-rate": rate,
+        comment: formData.content.trim() || formData.name.trim(),
+        "reviewer-result": true,
+        "is-ai-report": false,
+      };
+
+      // For create: include foreign keys
+      const createData = {
+        ...baseData,
+        "evaluation-stage-id": stageId,
+        "reviewer-id": reviewerId || "",
+      };
+
+      // For update: only base data (no foreign keys)
+      const updateData = baseData;
+
+      // Additional validation
+      if (!baseData.name) {
+        toast.error("Name cannot be empty");
+        return;
+      }
+      if (rate < 0 || rate > 10) {
+        toast.error("Rating must be between 0 and 10");
+        return;
+      }
+
+      // Validation for create mode only
+      if (!isEditMode) {
+        if (!stageId) {
+          toast.error("Stage ID is missing");
+          return;
+        }
+        if (!reviewerId) {
+          toast.error("Unable to identify user - please login again");
+          return;
+        }
+      }
+
+      const currentData = isEditMode ? updateData : createData;
+
+      console.log("Mode:", isEditMode ? "Edit" : "Create");
+      console.log("API data:", currentData);
+      console.log("Data types:", {
+        name: typeof currentData.name,
+        "total-rate": typeof currentData["total-rate"],
+        comment: typeof currentData.comment,
+        "reviewer-result": typeof currentData["reviewer-result"],
+        "is-ai-report": typeof currentData["is-ai-report"],
+      });
+
+      // Check if content contains images (base64)
+      const hasImages = currentData.comment.includes("data:image/");
+      const imageCount = (currentData.comment.match(/data:image\//g) || [])
+        .length;
+      console.log("Content analysis:", {
+        hasImages,
+        imageCount,
+        contentSizeKB: Math.round(currentData.comment.length / 1024),
+        contentPreview: currentData.comment.substring(0, 200) + "...",
+      });
+
+      // Real API call - Create or Update based on mode
+      let response;
+      if (isEditMode && individualId) {
+        response = await updateIndividualEvaluation(individualId, updateData);
+        console.log("Individual evaluation updated successfully:", response);
+        toast.success("Individual evaluation updated successfully!");
+      } else {
+        response = await createIndividualEvaluation(createData);
+        console.log("Individual evaluation created successfully:", response);
+        toast.success("Individual evaluation created successfully!");
+      }
+
+      navigate(`/council/evaluation-stages/${evaluationId}/${stageId}`);
     } catch (error) {
-      console.error("Error submitting individual evaluation:", error);
+      console.error(
+        `Failed to ${isEditMode ? "update" : "create"} individual evaluation:`,
+        error
+      );
+      console.error(
+        "Error details:",
+        (error as Error & { response?: { data?: unknown } })?.response?.data
+      );
+      console.error(
+        "Error status:",
+        (error as Error & { response?: { status?: number } })?.response?.status
+      );
+
+      const axiosError = error as Error & {
+        response?: {
+          data?: { message?: string; error?: string };
+        };
+      };
+
+      const errorMessage =
+        axiosError?.response?.data?.message ||
+        axiosError?.response?.data?.error ||
+        `An error occurred while ${
+          isEditMode ? "updating" : "creating"
+        } the evaluation`;
+      toast.error(errorMessage);
     } finally {
-      setSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
-  const isValid = name.trim() && content.trim() && comment.trim() && rate > 0;
+  const handleCancel = () => {
+    navigate(`/council/evaluation-stages/${evaluationId}/${stageId}`);
+  };
+
+  // Show loading spinner
+  if (isTemplateLoading || isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <p className="mt-4 text-gray-600">
+            {isLoading ? "Loading evaluation data..." : "Loading template..."}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mx-auto py-4 space-y-4 max-w-6xl">
-      {/* Back Button */}
-      <div className="flex items-center">
-        <Button
-          onClick={handleBack}
-          variant="outline"
-          size="sm"
-          className="border-gray-300 text-gray-700 hover:bg-gray-50"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Evaluation Stages
-        </Button>
-      </div>
-
+    <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <Card className="bg-white shadow-sm border">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FileText className="h-6 w-6 text-blue-600" />
-              <div>
-                <CardTitle className="text-xl font-bold text-gray-900">
-                  Create Individual Evaluation
-                </CardTitle>
-                <CardDescription className="text-gray-600 mt-1">
-                  Create a comprehensive evaluation with document content,
-                  comments, and ratings
-                </CardDescription>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Button
-                onClick={() => setPreviewMode(!previewMode)}
-                variant="outline"
-                size="sm"
-              >
-                <Eye className="h-4 w-4 mr-1" />
-                {previewMode ? "Edit" : "Preview"}
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-4">
-          {!previewMode ? (
-            /* Edit Mode */
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Evaluation Content</CardTitle>
-                <CardDescription>
-                  Create your detailed evaluation using the rich text editor
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="name">Evaluation Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter evaluation name (e.g., Expert Review - Literature Analysis)"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label>Document Content</Label>
-                  <div className="mt-1">
-                    <TinyMCEEditor
-                      value={content}
-                      onChange={setContent}
-                      height={400}
-                      placeholder="Create your comprehensive evaluation document. Include analysis, findings, recommendations, and detailed feedback..."
-                    />
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Use the rich text editor to format your evaluation with
-                    headings, lists, tables, and images.
-                  </p>
-                </div>
-
-                <Separator />
-
-                <div>
-                  <Label htmlFor="comment">Evaluation Comment</Label>
-                  <Textarea
-                    id="comment"
-                    placeholder="Provide a summary comment about this evaluation..."
-                    value={comment}
-                    onChange={(e) => setComment(e.target.value)}
-                    rows={4}
-                    className="mt-1"
-                  />
-                </div>
-
-                <div>
-                  <Label htmlFor="rate">Rating (0-10)</Label>
-                  <div className="flex items-center gap-3 mt-1">
-                    <Input
-                      id="rate"
-                      type="number"
-                      min="0"
-                      max="10"
-                      step="0.1"
-                      value={rate || ""}
-                      onChange={(e) => setRate(parseFloat(e.target.value) || 0)}
-                      className="w-32"
-                      placeholder="0.0"
-                    />
-                    <div className="flex items-center gap-1 text-sm">
-                      <Star className="h-4 w-4 text-yellow-500" />
-                      <span className="font-medium">{rate}/10</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Rate the quality and completeness of the work being
-                    evaluated.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            /* Preview Mode */
-            <Card>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">
-                      {name || "Untitled Evaluation"}
-                    </CardTitle>
-                    <CardDescription>Evaluation Preview</CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className="bg-blue-100 text-blue-800"
-                    >
-                      Draft
-                    </Badge>
-                    <div className="flex items-center gap-1 text-sm font-medium">
-                      <Star className="h-4 w-4 text-yellow-500" />
-                      {rate}/10
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-2">
-                    Document Content:
-                  </p>
-                  <div className="border rounded-lg bg-gray-50 p-1">
-                    <TinyMCEViewer
-                      content={content || "<p><em>No content yet...</em></p>"}
-                      height={400}
-                      className="rounded-md"
-                    />
-                  </div>
-                </div>
-
-                {comment && (
-                  <>
-                    <Separator />
-                    <div>
-                      <p className="text-sm font-medium text-gray-700 mb-2">
-                        Comment:
-                      </p>
-                      <div className="bg-gray-50 p-3 rounded-lg border">
-                        <p className="text-gray-800 leading-relaxed">
-                          {comment}
-                        </p>
-                      </div>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-4">
-          {/* Actions */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg">Actions</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <Button
-                onClick={handleSaveDraft}
-                variant="outline"
-                className="w-full"
-                disabled={!isValid || saving}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {saving ? "Saving..." : "Save as Draft"}
-              </Button>
-              <Button
-                onClick={handleSubmitEvaluation}
-                className="w-full"
-                disabled={!isValid || submitting}
-              >
-                <Send className="h-4 w-4 mr-2" />
-                {submitting ? "Submitting..." : "Submit Evaluation"}
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Help */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-                Evaluation Guidelines
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <div>
-                <h4 className="font-medium text-gray-900 mb-1">
-                  Document Content
-                </h4>
-                <p className="text-gray-600">
-                  Provide comprehensive analysis, findings, and recommendations.
-                  Use headings, lists, and formatting for clarity.
-                </p>
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 mb-1">Rating Scale</h4>
-                <ul className="text-gray-600 space-y-1">
-                  <li>• 9-10: Excellent</li>
-                  <li>• 7-8: Good</li>
-                  <li>• 5-6: Satisfactory</li>
-                  <li>• 3-4: Needs Improvement</li>
-                  <li>• 1-2: Poor</li>
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-medium text-gray-900 mb-1">Comments</h4>
-                <p className="text-gray-600">
-                  Summarize key points, highlight strengths and areas for
-                  improvement.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* File Upload */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Upload className="h-5 w-5 text-blue-600" />
-                Additional Documents
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 mb-3">
-                Upload supporting documents after creating the evaluation.
-              </p>
-              <Button variant="outline" size="sm" className="w-full" disabled>
-                <Upload className="h-3 w-3 mr-1" />
-                Available after creation
-              </Button>
-            </CardContent>
-          </Card>
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={handleCancel}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Stage
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            {isEditMode
+              ? "Edit Individual Evaluation"
+              : "Create Individual Evaluation"}
+          </h1>
+          <p className="text-gray-600 mt-1">
+            {isEditMode
+              ? "Edit the individual evaluation for this stage"
+              : "Create a new individual evaluation for this stage"}
+          </p>
         </div>
       </div>
+
+      {/* Form */}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Basic Information
+            </CardTitle>
+            <CardDescription>
+              Basic information about the evaluation
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Name */}
+            <div className="space-y-2">
+              <Label htmlFor="name">Evaluation Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                placeholder="Enter evaluation name..."
+                required
+              />
+            </div>
+
+            {/* Rating */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="rate">Rating (1-10)</Label>
+                <Select
+                  value={formData.rate}
+                  onValueChange={(value) => handleInputChange("rate", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select rating..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        {num}/10
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Content Editor */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Evaluation Content *</CardTitle>
+            <CardDescription>
+              Write detailed evaluation content using the editor
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <ScientificCVEditor
+                ref={editorRef}
+                value={formData.content}
+                onChange={(content: string) =>
+                  handleInputChange("content", content)
+                }
+                height={500}
+                placeholder="Enter detailed evaluation content..."
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <Card>
+          <CardContent className="flex justify-end gap-4 pt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleCancel}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  {isEditMode ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  {isEditMode ? "Update Evaluation" : "Create Evaluation"}
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </form>
     </div>
   );
 };

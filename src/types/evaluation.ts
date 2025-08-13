@@ -70,6 +70,9 @@ export interface IndividualEvaluationApi {
   status: string;
   "evaluation-stage-id": string;
   "reviewer-id": string | null;
+  "reviewer-name": string | null;
+  "reviewer-email": string | null;
+  "reviewer-avatar": string | null;
   documents: unknown[] | null;
   "projects-similarity-result": unknown | null;
 }
@@ -112,6 +115,9 @@ export type IndividualEvaluation = {
   status: string;
   evaluationStageId: string;
   reviewerId: string;
+  reviewerName?: string | null; // Reviewer name
+  reviewerEmail?: string | null; // Reviewer email
+  reviewerAvatar?: string | null; // Reviewer avatar
   projectId: string;
   milestoneId: string;
   evaluator?: string; // Evaluator name for display

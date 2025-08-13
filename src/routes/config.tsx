@@ -84,11 +84,11 @@ import FormView from "@/pages/FormRegister/FormView";
 import FormEdit from "@/pages/FormRegister/FormEdit";
 import MyProject from "@/pages/PrincipalInvestigator";
 import MyCouncil from "@/pages/Council/MyCouncil";
-import ProjectMilestonesPage from "@/pages/Council/MyCouncil/ProjectMilestonesPage";
-import EvaluationDetailPage from "@/pages/Council/MyCouncil/EvaluationDetailPage";
-import EvaluationStagesPage from "@/pages/Council/MyCouncil/EvaluationStagesPage";
-import MyCouncilIndividualEvaluationDetailPage from "@/pages/Council/MyCouncil/IndividualEvaluationDetailPage";
-import CreateIndividualEvaluationPage from "@/pages/Council/MyCouncil/CreateIndividualEvaluationPage";
+import MyCouncilEvaluationDetailPage from "@/pages/Council/MyCouncil/EvaluationDetailPage";
+import MyCouncilEvaluationStageDetailPage from "@/pages/Council/MyCouncil/EvaluationStageDetailPage";
+import MyCouncilCreateIndividualEvaluationPage from "@/pages/Council/MyCouncil/CreateIndividualEvaluationPage";
+import MyCouncilIndividualEvaluationViewPage from "@/pages/Council/MyCouncil/IndividualEvaluationViewPage";
+import MyCouncilProjectDetailPage from "@/pages/Council/MyCouncil/ProjectDetailPage";
 import { ViewAllNotifications } from "@/pages/Notifications";
 import { ScrollRestoration } from "@/components/common/ScrollRestoration";
 
@@ -460,26 +460,33 @@ export const routes: RouteObject[] = [
             element: <MyCouncil />,
           },
           {
-            path: "project-milestones/:projectId",
-            element: <ProjectMilestonesPage />,
+            path: "project/:projectId",
+            element: <MyCouncilProjectDetailPage />,
           },
           {
-            path: "evaluation-detail/:projectId",
-            element: <EvaluationDetailPage />,
+            path: "evaluation-detail/:evaluationId",
+            element: <MyCouncilEvaluationDetailPage />,
           },
           {
-            path: "evaluation-stages/:projectId/:evaluationId",
-            element: <EvaluationStagesPage />,
+            path: "evaluation-stages/:evaluationId/:stageId",
+            element: <MyCouncilEvaluationStageDetailPage />,
+          },
+          {
+            path: "create-individual-evaluation/:evaluationId/:stageId",
+            element: <MyCouncilCreateIndividualEvaluationPage />,
+          },
+          {
+            path: "edit-individual-evaluation/:evaluationId/:stageId/:individualId",
+            element: <MyCouncilCreateIndividualEvaluationPage />,
+          },
+          {
+            path: "individual-evaluation/:evaluationId/:stageId/:individualId",
+            element: <MyCouncilIndividualEvaluationViewPage />,
           },
           {
             path: "create-individual-evaluation/:projectId/:evaluationId/:stageId",
-            element: <CreateIndividualEvaluationPage />,
+            element: <MyCouncilCreateIndividualEvaluationPage />,
           },
-          {
-            path: "individual-evaluation/:projectId/:evaluationId/:stageId/:individualId",
-            element: <MyCouncilIndividualEvaluationDetailPage />,
-          },
-
           {
             path: "project/:projectId",
             element: <ProjectDetail />,
