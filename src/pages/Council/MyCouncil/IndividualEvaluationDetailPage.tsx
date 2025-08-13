@@ -23,16 +23,11 @@ import { Separator } from "@/components/ui/separator";
 import {
   ArrowLeft,
   FileText,
-  Calendar,
   Star,
-  User,
   MessageSquare,
-  Plus,
   Edit,
   Save,
   X,
-  Eye,
-  Upload,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/contexts/auth-types";
@@ -386,85 +381,6 @@ const IndividualEvaluationDetailPage: React.FC = () => {
                       </div>
                     </>
                   )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Documents Section */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Upload className="h-5 w-5 text-blue-600" />
-                  <CardTitle className="text-lg">
-                    Documents ({evaluation.documents.length})
-                  </CardTitle>
-                </div>
-                {canEdit && (
-                  <Button
-                    onClick={() => setDocumentDialogOpen(true)}
-                    size="sm"
-                    variant="outline"
-                  >
-                    <Plus className="h-4 w-4 mr-1" />
-                    Add Document
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              {evaluation.documents.length === 0 ? (
-                <div className="text-center py-6">
-                  <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm font-medium text-gray-900 mb-1">
-                    No documents yet
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Add evaluation documents with TinyMCE content
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {evaluation.documents.map((document) => (
-                    <Card key={document.id} className="border">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-gray-900">
-                              {document.title}
-                            </h4>
-                            <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                              <span className="flex items-center gap-1">
-                                <User className="h-3 w-3" />
-                                {document.author}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3" />
-                                {formatDate(document["created-at"])}
-                              </span>
-                              <Badge variant="outline" className="text-xs">
-                                {document.type}
-                              </Badge>
-                            </div>
-                            <div className="mt-2 border rounded-lg overflow-hidden">
-                              <TinyMCEViewer
-                                content={document.content}
-                                height={200}
-                                className="rounded-md"
-                              />
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-1 ml-3">
-                            <Button size="sm" variant="outline">
-                              <Eye className="h-3 w-3 mr-1" />
-                              View
-                            </Button>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
                 </div>
               )}
             </CardContent>

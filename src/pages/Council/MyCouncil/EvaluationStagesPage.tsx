@@ -10,19 +10,47 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
   ArrowLeft,
   Users,
   Plus,
   FileText,
   Calendar,
   Star,
-  Eye,
+  ChevronRight,
+  MessageCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/contexts/auth-types";
 import { Loading } from "@/components/ui/loaders";
 import { councilApi } from "./api";
 import { Evaluation } from "@/types/evaluation-api";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+interface EvaluationComment {
+  id: string;
+  content: string;
+  author: string;
+  timestamp: string;
+  "created-at": string;
+  "author-role": string;
+  evaluationId: string;
+}
 
 const EvaluationStagesPage: React.FC = () => {
   const navigate = useNavigate();
@@ -34,24 +62,43 @@ const EvaluationStagesPage: React.FC = () => {
 
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [evaluationComments, setEvaluationComments] = useState<
+    EvaluationComment[]
+  >([]);
+  const [newEvaluationComment, setNewEvaluationComment] = useState("");
+  const [createStageOpen, setCreateStageOpen] = useState(false);
 
   useEffect(() => {
     const fetchEvaluation = async () => {
+      console.log("EvaluationStagesPage - params:", {
+        projectId,
+        evaluationId,
+      });
+
       if (evaluationId) {
         try {
           setLoading(true);
+          console.log("Fetching evaluation detail for:", evaluationId);
           const data = await councilApi.getEvaluationDetail(evaluationId);
+          console.log("Evaluation data received:", data);
           setEvaluation(data);
+
+          // Fetch evaluation comments
+          const comments = await councilApi.getEvaluationComments(evaluationId);
+          setEvaluationComments(comments);
         } catch (error) {
           console.error("Error fetching evaluation:", error);
         } finally {
           setLoading(false);
         }
+      } else {
+        console.log("No evaluationId provided");
+        setLoading(false);
       }
     };
 
     fetchEvaluation();
-  }, [evaluationId]);
+  }, [evaluationId, projectId]);
 
   const handleBackToMilestones = () => {
     navigate(`/council/project-milestones/${projectId}`);
@@ -70,6 +117,24 @@ const EvaluationStagesPage: React.FC = () => {
     navigate(
       `/council/create-individual-evaluation/${projectId}/${evaluationId}/${stageId}`
     );
+  };
+
+  const handleAddEvaluationComment = async () => {
+    if (!newEvaluationComment.trim() || !evaluationId) return;
+
+    try {
+      const comment = await councilApi.addEvaluationComment({
+        content: newEvaluationComment,
+        evaluationId,
+        authorId: user?.id || "",
+        authorName: user?.name || "Anonymous",
+      });
+
+      setEvaluationComments((prev) => [...prev, comment]);
+      setNewEvaluationComment("");
+    } catch (error) {
+      console.error("Error adding evaluation comment:", error);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -174,6 +239,81 @@ const EvaluationStagesPage: React.FC = () => {
         </CardHeader>
       </Card>
 
+      {/* Evaluation Comments Section */}
+      <Card className="border">
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <MessageCircle className="h-5 w-5 text-blue-600" />
+              <div>
+                <CardTitle className="text-lg text-gray-900">
+                  💬 Evaluation Comments
+                </CardTitle>
+                <CardDescription className="text-gray-600">
+                  General comments about this evaluation (
+                  {evaluationComments.length} comments)
+                </CardDescription>
+              </div>
+            </div>
+            {canCreateEvaluations && (
+              <Button
+                onClick={() => setCreateStageOpen(true)}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+              >
+                <Plus className="h-4 w-4 mr-1" />
+                Add Evaluation Stage
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {/* Existing Comments */}
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {evaluationComments.map((comment) => (
+              <div key={comment.id} className="p-3 bg-blue-50 rounded-lg">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-medium text-blue-900 text-sm">
+                    {comment.author}
+                  </span>
+                  <span className="text-blue-600 text-xs">
+                    {formatDate(comment.timestamp)}
+                  </span>
+                </div>
+                <p className="text-blue-800 text-sm">{comment.content}</p>
+              </div>
+            ))}
+            {evaluationComments.length === 0 && (
+              <p className="text-gray-500 text-sm text-center py-4">
+                No comments yet
+              </p>
+            )}
+          </div>
+
+          {/* Add New Comment */}
+          {canCreateEvaluations && (
+            <div className="flex gap-2">
+              <Textarea
+                value={newEvaluationComment}
+                onChange={(e) => setNewEvaluationComment(e.target.value)}
+                placeholder="Add a comment about this evaluation..."
+                rows={2}
+                className="flex-1 text-sm"
+              />
+              <Button
+                onClick={handleAddEvaluationComment}
+                size="sm"
+                disabled={!newEvaluationComment.trim()}
+                className="text-sm px-3"
+              >
+                <MessageCircle className="h-4 w-4 mr-1" />
+                Add
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Evaluation Stages */}
       <div className="space-y-4">
         {evaluation["evaluation-stages"].length === 0 ? (
@@ -198,9 +338,11 @@ const EvaluationStagesPage: React.FC = () => {
                   <div className="flex items-center gap-3">
                     <Users className="h-5 w-5 text-blue-600" />
                     <div>
-                      <CardTitle className="text-lg">{stage.name}</CardTitle>
+                      <CardTitle className="text-lg">🏆 {stage.name}</CardTitle>
                       <CardDescription className="text-sm">
-                        Stage {stage["stage-order"]} • {stage.phrase}
+                        Stage {stage["stage-order"]} • {stage.phrase} •{" "}
+                        {(stage["individual-evaluations"] || []).length}{" "}
+                        individual evaluation(s)
                       </CardDescription>
                     </div>
                   </div>
@@ -211,10 +353,10 @@ const EvaluationStagesPage: React.FC = () => {
                           handleCreateIndividualEvaluation(stage.id)
                         }
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-medium"
+                        className="bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm"
                       >
                         <Plus className="h-4 w-4 mr-1" />
-                        Create Evaluation
+                        Create Individual Evaluation
                       </Button>
                     )}
                   </div>
@@ -273,7 +415,7 @@ const EvaluationStagesPage: React.FC = () => {
                                     {individual.status}
                                   </Badge>
                                   {getApprovalBadge(individual["is-approved"])}
-                                  <Eye className="h-4 w-4 text-gray-400 group-hover:text-blue-600" />
+                                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors ml-3" />
                                 </div>
                               </div>
                             </CardContent>
@@ -288,7 +430,116 @@ const EvaluationStagesPage: React.FC = () => {
           ))
         )}
       </div>
+
+      {/* Create Evaluation Stage Dialog */}
+      <CreateStageDialog
+        evaluationId={evaluationId || ""}
+        isOpen={createStageOpen}
+        onClose={() => setCreateStageOpen(false)}
+        onStageCreated={() => {
+          // Refresh evaluation data
+          if (evaluationId) {
+            councilApi.getEvaluationDetail(evaluationId).then(setEvaluation);
+          }
+        }}
+      />
     </div>
+  );
+};
+
+// Create Stage Dialog Component
+interface CreateStageDialogProps {
+  evaluationId: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onStageCreated: () => void;
+}
+
+const CreateStageDialog: React.FC<CreateStageDialogProps> = ({
+  evaluationId,
+  isOpen,
+  onClose,
+  onStageCreated,
+}) => {
+  const [name, setName] = useState("");
+  const [phrase, setPhrase] = useState("");
+  const [type, setType] = useState("review");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      await councilApi.createEvaluationStage({
+        name,
+        phrase,
+        type,
+        evaluationId,
+      });
+
+      onStageCreated();
+      setName("");
+      setPhrase("");
+      setType("review");
+      onClose();
+    } catch (error) {
+      console.error("Error creating evaluation stage:", error);
+    }
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Create New Evaluation Stage</DialogTitle>
+          <DialogDescription>
+            Add a new stage to this evaluation. Each stage can contain multiple
+            individual evaluations.
+          </DialogDescription>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="stage-name">Stage Name</Label>
+            <Input
+              id="stage-name"
+              placeholder="e.g., Technical Review, Final Assessment"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stage-phrase">Stage Phrase</Label>
+            <Input
+              id="stage-phrase"
+              placeholder="e.g., Technical Analysis, Final Recommendation"
+              value={phrase}
+              onChange={(e) => setPhrase(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="stage-type">Stage Type</Label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select stage type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="review">Review</SelectItem>
+                <SelectItem value="assessment">Assessment</SelectItem>
+                <SelectItem value="evaluation">Evaluation</SelectItem>
+                <SelectItem value="analysis">Analysis</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex justify-end space-x-2">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button type="submit">Create Stage</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 };
 

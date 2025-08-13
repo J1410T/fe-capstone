@@ -28,6 +28,7 @@ import {
   CheckCircle,
   Clock,
   AlertCircle,
+  ChevronRight,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { UserRole } from "@/contexts/auth-types";
@@ -123,6 +124,10 @@ const ProjectMilestonesPage: React.FC = () => {
   };
 
   const handleViewEvaluation = (projectId: string, evaluationId: string) => {
+    console.log("Navigating to evaluation stages:", {
+      projectId,
+      evaluationId,
+    });
     navigate(`/council/evaluation-stages/${projectId}/${evaluationId}`);
   };
 
@@ -163,7 +168,7 @@ const ProjectMilestonesPage: React.FC = () => {
     });
   };
 
-  const canCreateEvaluations = user?.role === UserRole.STAFF;
+  const canCreateEvaluations = user?.role === UserRole.APPRAISAL_COUNCIL;
 
   if (loading) {
     return (
@@ -342,6 +347,7 @@ const ProjectMilestonesPage: React.FC = () => {
                                 >
                                   {evaluation.status}
                                 </Badge>
+                                <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition-colors ml-3" />
                               </div>
                             </CardContent>
                           </Card>
