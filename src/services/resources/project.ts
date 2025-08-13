@@ -380,13 +380,38 @@ export const getStaffProjectFilter = async (
   }
 };
 
-export const getProjectsByAppraisalCouncil = async (
+export const getProjectsByCouncilId = async (
   councilId: string
-): Promise<ProjectWithProposals[]> => {
+): Promise<Record<string, unknown>[]> => {
   try {
     const accessToken = getAccessToken();
-    const res = await axiosClient.get<ProjectWithProposals[]>(
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.get<Record<string, unknown>[]>(
       `/appraisal-council/list-project/${councilId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getProjectsByCouncilId error:", error);
+    throw error;
+  }
+};
+
+export const getProjectById = async (
+  projectId: string
+): Promise<ProjectWithProposals> => {
+  try {
+    const accessToken = getAccessToken();
+    const res = await axiosClient.get<ProjectWithProposals>(
+      `/project/${projectId}`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -395,7 +420,7 @@ export const getProjectsByAppraisalCouncil = async (
     );
     return res.data;
   } catch (error) {
-    console.error("getProjectsByAppraisalCouncil error:", error);
+    console.error("getProjectById error:", error);
     throw error;
   }
 };

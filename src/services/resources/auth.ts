@@ -191,6 +191,39 @@ export const getUserRolesByProjectId = async (
   }
 };
 
+export const getUserRolesByAppraisalCouncilId = async (
+  appraisalCouncilId: string,
+  pageIndex: number = 1,
+  pageSize: number = 100
+) => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.post(
+      "/user-role/filter",
+      {
+        "appraisal-council-id": appraisalCouncilId,
+        "page-index": pageIndex,
+        "page-size": pageSize,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getUserRolesByAppraisalCouncilId error:", error);
+    throw error;
+  }
+};
+
 export const getUserRoleByFilter = async (
   request: UserRoleFilterRequest
 ): Promise<UserRoleResponse> => {

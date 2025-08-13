@@ -74,7 +74,7 @@ export const TopicsList: React.FC<TopicsListProps> = ({ selectedCouncil }) => {
         </div>
       ) : (
         <div className="grid gap-4">
-          {projects.map((project) => (
+          {projects.map((project: any) => (
             <div
               key={project.id}
               onClick={() => handleTopicClick(project)}
