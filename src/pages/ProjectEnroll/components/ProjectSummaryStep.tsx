@@ -1,6 +1,5 @@
-import React, { useRef, useEffect, useState, useCallback } from "react";
-import { Editor } from "@tinymce/tinymce-react";
-import type { Editor as TinyMCEEditorType } from "tinymce";
+import React, { useEffect, useState, useCallback } from "react";
+import { DocumentTinyMCE } from "@/components/ui/TinyMCE";
 import { useParams } from "react-router-dom";
 import {
   useDocumentsByFilter,
@@ -21,8 +20,6 @@ import { DocumentForm, DocumentProject } from "@/types/document";
 import { toast } from "sonner";
 import { Loading } from "@/components";
 
-type EditorInstance = TinyMCEEditorType | null;
-
 interface ProjectSummaryStepProps {
   onContentChange: (content: string) => void;
   onNext: () => void;
@@ -36,8 +33,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   onDocumentCreated,
 }) => {
   const { projectId } = useParams<{ projectId: string }>();
-  const editorRef = useRef<EditorInstance>(null);
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
+  const [editorContent, setEditorContent] = useState<string>("");
 
   const [formContent, setFormContent] = useState<string>("");
   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
@@ -89,13 +85,12 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
       return;
     }
 
-    console.log("Creating BM1 document from template...");
     setIsCreatingDocument(true);
     const templateDoc: DocumentForm = templateData.data["data-list"][0];
     const templateContent = templateDoc["content-html"].replace(/\\"/g, '"');
 
     try {
-      const newDocument = await createDocumentMutation.mutateAsync({
+      await createDocumentMutation.mutateAsync({
         name: "Registration form",
         type: "BM1",
         "is-template": false,
@@ -103,17 +98,17 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
         "project-id": projectId,
         status: "draft",
       });
-
-      console.log("BM1 document created successfully:", newDocument);
       setDocumentCreated(true);
       onDocumentCreated?.();
 
-      // FIX: Set the created content to state
+      // Set the created content to state
       setFormContent(templateContent);
-    } catch (error) {
-      console.error("Failed to create document:", error);
+      setEditorContent(templateContent);
+    } catch {
       // Fallback: use template content directly
       setFormContent(templateContent);
+      setEditorContent(templateContent);
+      setEditorContent(templateContent);
       toast.error("Failed to create document, using template content directly");
     } finally {
       setIsCreatingDocument(false);
@@ -130,37 +125,38 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   ]);
 
   useEffect(() => {
-    // FIX: Wait for documents API to finish loading before making decisions
+    // Wait for documents API to finish loading before making decisions
     if (isLoadingDocuments) {
-      console.log("Still loading documents...");
       return;
     }
 
     if (bm1Document) {
-      // FIX: If we have existing BM1 document, use it and don't try to create new one
+      // If we have existing BM1 document, use it and don't try to create new one
       const unescapedHtml = bm1Document["content-html"].replace(/\\"/g, '"');
       setFormContent(unescapedHtml);
-      console.log("Using existing BM1 document:", bm1Document.id);
+      setEditorContent(unescapedHtml);
     } else if (!documentCreated && !isCreatingDocument) {
-      // FIX: Only try to create if we haven't created one yet and not currently creating
-      console.log("No BM1 document found, attempting to create from template");
+      // Only try to create if we haven't created one yet and not currently creating
       createDocumentFromTemplate();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    isLoadingDocuments, // FIX: Add this dependency
-    bm1Document,
-    createDocumentFromTemplate,
+    isLoadingDocuments,
+    bm1Document?.id, // Only depend on ID to avoid unnecessary re-renders
     documentCreated,
     isCreatingDocument,
+    // Intentionally exclude createDocumentFromTemplate to avoid infinite loops
   ]);
 
   const handleEditorChange = (content: string) => {
+    setEditorContent(content);
+    setFormContent(content); // Sync formContent with editorContent
     onContentChange(content);
   };
 
   const handleNext = () => {
-    const currentContent = editorRef.current?.getContent() || "";
-    onContentChange(currentContent);
+    onContentChange(editorContent);
+    onContentChange(editorContent);
     onNext();
   };
 
@@ -170,8 +166,8 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
       return;
     }
 
-    const currentContent = editorRef.current?.getContent() || "";
-    onContentChange(currentContent);
+    onContentChange(editorContent);
+    onContentChange(editorContent);
 
     try {
       await updateDocumentMutation.mutateAsync({
@@ -179,7 +175,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
         name: bm1Document.name,
         type: bm1Document.type,
         "is-template": false,
-        "content-html": currentContent,
+        "content-html": editorContent,
         status: "draft",
         "project-id": projectId,
       });
@@ -190,23 +186,6 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
       toast.error("Failed to save document. Please try again.");
     }
   };
-
-  const formStyles = `
-    body {
-      font-family: "Times New Roman", Times, serif;
-      font-size: 14px;
-      line-height: 1.4;
-      color: #333;
-      padding: 20px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    table, th, td {
-      border: 1px solid #ccc;
-    }
-  `;
 
   const isLoading =
     isLoadingDocuments ||
@@ -250,36 +229,11 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
               {createDocumentMutation.error?.message}
             </div>
           ) : (
-            <Editor
-              apiKey={apiKey}
-              onInit={(_, editor) => (editorRef.current = editor)}
-              initialValue={formContent}
-              onEditorChange={handleEditorChange}
-              init={{
-                height: 800,
-                width: "100%",
-                menubar: true,
-                plugins: [
-                  "advlist autolink lists link image charmap preview anchor",
-                  "searchreplace visualblocks code fullscreen",
-                  "insertdatetime media table help wordcount",
-                ],
-                toolbar:
-                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | insertSignature",
-                setup: (editor) => {
-                  editor.ui.registry.addButton("insertSignature", {
-                    text: "Insert Signature",
-                    icon: "image",
-                    onAction: () => {
-                      const signatureUrl = "https://example.com/signature.png"; // URL ảnh chữ ký
-                      editor.insertContent(
-                        `<img src="${signatureUrl}" alt="Signature" style="width:150px;height:auto;" />`
-                      );
-                    },
-                  });
-                },
-                content_style: formStyles,
-              }}
+            <DocumentTinyMCE
+              value={formContent}
+              onChange={handleEditorChange}
+              height={800}
+              preset="document"
             />
           )}
         </CardContent>

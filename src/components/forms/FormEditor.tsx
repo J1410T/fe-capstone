@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Editor } from "@tinymce/tinymce-react";
+import React, { useEffect, useState } from "react";
+import { FormTinyMCE } from "@/components/ui/TinyMCE";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,8 +10,6 @@ import {
   FORM_TYPES,
 } from "@/pages/FormRegister/constants";
 import { getStatusColor } from "@/utils/status";
-
-type EditorInstance = { getContent: () => string } | null;
 
 interface FormEditorProps {
   form: FormMetadata;
@@ -30,10 +28,9 @@ export const FormEditor: React.FC<FormEditorProps> = ({
   readOnly = false,
   showMetadata = true,
 }) => {
-  const editorRef = useRef<EditorInstance>(null);
   const [formContent, setFormContent] = useState<string>("");
+  const [editorContent, setEditorContent] = useState<string>("");
   const [formStyles, setFormStyles] = useState<string>("");
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
 
   // Load form template and content
   useEffect(() => {
@@ -69,8 +66,11 @@ export const FormEditor: React.FC<FormEditorProps> = ({
   }, [form.formType, form.content]);
 
   const handleSave = () => {
-    const content = editorRef.current?.getContent() ?? "";
-    onSave(content);
+    onSave(editorContent);
+  };
+
+  const handleEditorChange = (content: string) => {
+    setEditorContent(content);
   };
 
   // Format date for display
@@ -182,135 +182,14 @@ export const FormEditor: React.FC<FormEditorProps> = ({
       <Card>
         <CardContent className="p-0">
           <div className="min-h-[600px]">
-            <Editor
-              key={formContent + formStyles + form.id}
-              apiKey={apiKey}
-              onInit={(_, editor) => (editorRef.current = editor)}
-              initialValue={formContent}
+            <FormTinyMCE
+              value={formContent}
+              onChange={handleEditorChange}
+              height={600}
               disabled={readOnly}
-              init={{
-                height: 600,
-                width: "100%",
-                menubar: !readOnly,
-                plugins: [
-                  "advlist",
-                  "autolink",
-                  "lists",
-                  "link",
-                  "image",
-                  "charmap",
-                  "preview",
-                  "anchor",
-                  "searchreplace",
-                  "visualblocks",
-                  "code",
-                  "fullscreen",
-                  "insertdatetime",
-                  "media",
-                  "table",
-                  "help",
-                  "wordcount",
-                  "paste",
-                ],
-                toolbar: readOnly
-                  ? false
-                  : [
-                      "undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright alignjustify",
-                      "bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | help",
-                    ].join(" | "),
-                content_style: `
-                  html, body {
-                    width: 100% !important;
-                    min-height: 600px !important;
-                    background: #fff !important;
-                    margin: 0 auto !important;
-                    font-family: Arial, Helvetica, sans-serif;
-                    font-size: 14px;
-                    line-height: 1.6;
-                    color: #333;
-                    padding: 20px;
-                    box-sizing: border-box !important;
-                  }
-                  ${formStyles}
-                  * {
-                    max-width: 100% !important;
-                    box-sizing: border-box !important;
-                  }
-                  table {
-                    border-collapse: collapse;
-                    width: 100%;
-                    margin: 1em 0;
-                  }
-                  table td, table th {
-                    border: 1px solid #ddd;
-                    padding: 8px;
-                    text-align: left;
-                  }
-                  table th {
-                    background-color: #f2f2f2;
-                    font-weight: bold;
-                  }
-                  .form-section {
-                    margin: 2em 0;
-                    padding: 1em;
-                    border: 1px solid #e0e0e0;
-                    border-radius: 4px;
-                  }
-                  .form-section h3 {
-                    margin-top: 0;
-                    color: #333;
-                    border-bottom: 2px solid #007cba;
-                    padding-bottom: 0.5em;
-                  }
-                  .form-field {
-                    margin: 1em 0;
-                  }
-                  .form-field label {
-                    display: block;
-                    font-weight: bold;
-                    margin-bottom: 0.5em;
-                    color: #555;
-                  }
-                  .form-field input, .form-field textarea {
-                    width: 100%;
-                    padding: 0.5em;
-                    border: 1px solid #ccc;
-                    border-radius: 4px;
-                    font-size: 14px;
-                  }
-                  .signature-section {
-                    margin-top: 3em;
-                    display: flex;
-                    justify-content: space-between;
-                  }
-                  .signature-box {
-                    width: 200px;
-                    text-align: center;
-                    border-top: 1px solid #333;
-                    padding-top: 0.5em;
-                  }
-                `,
-                paste_data_images: true,
-                paste_as_text: false,
-                paste_webkit_styles:
-                  "font-weight font-style color text-decoration",
-                paste_retain_style_properties:
-                  "color font-size font-family font-weight font-style text-decoration",
-                branding: false,
-                promotion: false,
-                resize: false,
-                statusbar: !readOnly,
-                elementpath: false,
-
-                setup: (editor) => {
-                  editor.on("init", () => {
-                    // Ensure content is loaded properly
-                    if (formContent) {
-                      editor.setContent(formContent);
-                    }
-                  });
-                },
-              }}
+              formStyles={formStyles}
+              readOnly={readOnly}
+              preset="form"
             />
           </div>
         </CardContent>

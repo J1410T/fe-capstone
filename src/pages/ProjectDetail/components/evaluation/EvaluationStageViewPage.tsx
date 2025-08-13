@@ -204,7 +204,7 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
                     {evaluationStage.name}
                   </CardTitle>
                   <CardDescription className="text-gray-600 mt-2">
-                    Evaluation Stage • Read-only evaluation stage
+                    Evaluation Stage
                   </CardDescription>
                 </div>
               </div>
@@ -294,9 +294,7 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
               <Users className="h-5 w-5" />
               Individual Evaluations
             </CardTitle>
-            <CardDescription>
-              All evaluations within this stage (Read-only)
-            </CardDescription>
+            <CardDescription>All evaluations within this stage</CardDescription>
           </CardHeader>
           <CardContent>
             {(evaluationStage["individual-evaluations"] || []).length > 0 ? (

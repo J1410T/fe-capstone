@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -39,6 +39,7 @@ import { Loading } from "@/components/ui/loaders";
 
 const MyProject: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -47,8 +48,24 @@ const MyProject: React.FC = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const { user } = useAuth();
 
-  const { data: projectsResponse, isLoading, error } = useMyProject();
+  // Add user id and role to query key so it refetches on role change
+  const {
+    data: projectsResponse,
+    isLoading: isQueryLoading,
+    error,
+  } = useMyProject(user?.id, user?.role);
   const projects = projectsResponse?.data || [];
+
+  // Loader: reset on every navigation or role change
+  const [isPageLoading, setIsPageLoading] = useState(true);
+  useEffect(() => {
+    setIsPageLoading(true);
+  }, [location.pathname, user?.role, user?.id]);
+  useEffect(() => {
+    if (!isQueryLoading) {
+      setIsPageLoading(false);
+    }
+  }, [isQueryLoading]);
 
   // Get status color
   const getStatusColor = (status: string) => {
@@ -162,7 +179,7 @@ const MyProject: React.FC = () => {
     return str.charAt(0).toUpperCase() + str.slice(1);
   };
 
-  if (isLoading) {
+  if (isPageLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <Loading className="w-full max-w-md" />
@@ -186,7 +203,7 @@ const MyProject: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">My Projects</h1>
           <p className="text-muted-foreground">
-            Manage and track your research projects as Principal Investigator
+            Manage and track your research projects
           </p>
         </div>
       </div>

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Editor } from "@tinymce/tinymce-react";
+import { useEffect, useState } from "react";
+import { FormTinyMCE } from "@/components/ui/TinyMCE";
 
 import {
   Dialog,
@@ -18,8 +18,6 @@ import {
 
 import styleText from "@/assets/style.css?inline"; // your CSS imported inline
 
-type EditorInstance = { getContent: () => string } | null;
-
 const DOCUMENT_FORMS = [
   "BM1.html",
   "BM2.html",
@@ -32,13 +30,12 @@ const DOCUMENT_FORMS = [
 ];
 
 export default function DocumentForms() {
-  const editorRef = useRef<EditorInstance>(null);
   const [selectedForm, setSelectedForm] = useState<string>(DOCUMENT_FORMS[0]);
   const [formContent, setFormContent] = useState<string>("");
+  const [editorContent, setEditorContent] = useState<string>("");
   const [formStyles, setFormStyles] = useState<string>("");
   const [pdfPreviewHtml, setPdfPreviewHtml] = useState<string>("");
   const [isPreviewOpen, setIsPreviewOpen] = useState<boolean>(false);
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
 
   // Load the form HTML & extract styles when selectedForm changes
   useEffect(() => {
@@ -58,18 +55,24 @@ export default function DocumentForms() {
           : htmlText.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
 
         setFormContent(content);
+        setEditorContent(content);
       } catch (error) {
         console.error("Failed to load form:", error);
         setFormContent("");
         setFormStyles("");
+        setEditorContent("");
       }
     }
     fetchForm();
   }, [selectedForm]);
 
+  const handleEditorChange = (content: string) => {
+    setEditorContent(content);
+  };
+
   // Preview PDF - create HTML string with styles and content
   const previewPdf = () => {
-    const content = editorRef.current?.getContent() ?? "";
+    const content = editorContent;
     const html = `
       <style>${styleText}</style>
       <style>${formStyles}</style>
@@ -84,7 +87,7 @@ export default function DocumentForms() {
 
   // Download PDF with html2pdf.js
   const downloadPdf = async () => {
-    const content = editorRef.current?.getContent() ?? "";
+    const content = editorContent;
     const html = `
       <style>${styleText}</style>
       <style>${formStyles}</style>
@@ -142,72 +145,61 @@ export default function DocumentForms() {
           boxSizing: "border-box",
         }}
       >
-        <Editor
-          key={formContent + formStyles}
-          apiKey={apiKey}
-          onInit={(_, editor) => (editorRef.current = editor)}
-          initialValue={formContent}
-          init={{
-            height: contentHeight,
-            width: "100%",
-            menubar: true,
-            plugins: ["table", "lists", "link", "code"],
-            toolbar:
-              "undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | table | code",
-            content_style: `
-              html, body {
-                width: 100% !important;
-                min-height: ${contentHeight}px !important;
-                background: #fff !important;
-                margin: 0 auto !important;
-                font-family: Arial, Helvetica, sans-serif;
-                font-size: 14px;
-                overflow-x: hidden !important;
-                overflow-y: auto !important;
-                box-sizing: border-box !important;
-              }
-              * {
-                max-width: 100% !important;
-                box-sizing: border-box !important;
-              }
-              table {
-                width: 100% !important;
-                max-width: 100% !important;
-                table-layout: fixed !important;
-                word-wrap: break-word !important;
-                overflow-wrap: break-word !important;
-                border-collapse: collapse !important;
-              }
-              td, th {
-                word-break: break-word !important;
-                overflow-wrap: break-word !important;
-                hyphens: auto !important;
-                max-width: 0 !important;
-                overflow: hidden !important;
-                text-overflow: ellipsis !important;
-                white-space: normal !important;
-              }
-              img {
-                max-width: 100% !important;
-                height: auto !important;
-              }
-              .non-editable {
-                background-color: #eee;
-                padding: 8px;
-                border-radius: 4px;
-              }
-              ${formStyles}
-            `,
-          }}
+        <FormTinyMCE
+          value={formContent}
+          onChange={handleEditorChange}
+          height={contentHeight}
+          preset="form"
+          formStyles={`
+            html, body {
+              width: 100% !important;
+              min-height: ${contentHeight}px !important;
+              background: #fff !important;
+              margin: 0 auto !important;
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 14px;
+              overflow-x: hidden !important;
+              overflow-y: auto !important;
+              box-sizing: border-box !important;
+            }
+            * {
+              max-width: 100% !important;
+              box-sizing: border-box !important;
+            }
+            table {
+              width: 100% !important;
+              max-width: 100% !important;
+              table-layout: fixed !important;
+              word-wrap: break-word !important;
+              overflow-wrap: break-word !important;
+              border-collapse: collapse !important;
+            }
+            td, th {
+              word-break: break-word !important;
+              overflow-wrap: break-word !important;
+              hyphens: auto !important;
+              max-width: 0 !important;
+              overflow: hidden !important;
+              text-overflow: ellipsis !important;
+              white-space: normal !important;
+            }
+            img {
+              max-width: 100% !important;
+              height: auto !important;
+            }
+            .non-editable {
+              background-color: #eee;
+              padding: 8px;
+              border-radius: 4px;
+            }
+            ${formStyles}
+          `}
         />
       </div>
 
       {/* Action buttons */}
       <div className="flex justify-center gap-4">
-        <Button
-          variant="outline"
-          onClick={() => console.log(editorRef.current?.getContent())}
-        >
+        <Button variant="outline" onClick={() => console.log(editorContent)}>
           Log Content
         </Button>
         <Button onClick={previewPdf}>Preview PDF</Button>

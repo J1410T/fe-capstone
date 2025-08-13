@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Editor } from "@tinymce/tinymce-react";
+import {
+  ScientificCVEditor,
+  ScientificCVEditorRef,
+} from "@/components/ui/TinyMCE";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -31,16 +34,11 @@ import { useAuth } from "@/contexts";
 import { UserRole } from "@/contexts/auth-types";
 import { useQueryClient } from "@tanstack/react-query";
 
-type EditorInstance = {
-  getContent: () => string;
-  setContent: (content: string) => void;
-} | null;
-
 const EditScientificCV: React.FC = () => {
   const navigate = useNavigate();
   const [formContent, setFormContent] = useState<string>("");
-  const editorRef = useRef<EditorInstance>(null);
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
+  const editorRef = useRef<ScientificCVEditorRef>(null);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -101,7 +99,9 @@ const EditScientificCV: React.FC = () => {
     }
   }, [scientificCV, isCVLoading]);
 
-  const handleEditorChange = () => {};
+  const handleEditorChange = (content: string) => {
+    setFormContent(content);
+  };
 
   const handleSaveConfirm = async () => {
     if (!scientificCV?.data?.id) {
@@ -157,30 +157,6 @@ const EditScientificCV: React.FC = () => {
       }
     );
   };
-
-  // const handleDeleteConfirm = async () => {
-  //   if (!scientificCV?.data?.id) {
-  //     toast.error("Scientific CV not found");
-  //     return;
-  //   }
-
-  //   setIsDeleting(true);
-  //   setDeleteDialogOpen(false);
-
-  //   deleteDocument.mutate(scientificCV.data.id, {
-  //     onSuccess: () => {
-  //       toast.success("Scientific CV deleted successfully!");
-  //       navigate(getProfileRoute());
-  //     },
-  //     onError: (error) => {
-  //       console.error("Failed to delete Scientific CV:", error);
-  //       toast.error("Failed to delete Scientific CV");
-  //     },
-  //     onSettled: () => {
-  //       setIsDeleting(false);
-  //     },
-  //   });
-  // };
 
   const handleDeleteConfirm = async () => {
     if (!scientificCV?.data?.id) {
@@ -265,38 +241,6 @@ const EditScientificCV: React.FC = () => {
     }
   };
 
-  const formStyles = `
-    body {
-      font-family: "Times New Roman", Times, serif;
-      font-size: 14px;
-      line-height: 1.4;
-      color: #333;
-      padding: 20px;
-    }
-    .image-frame {
-      width: 150px;
-      height: 180px;
-      border: 2px dashed #999;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-      margin: 10px 0;
-    }
-    .image-frame img {
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: cover;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    table, th, td {
-      border: 1px solid #ccc;
-    }
-  `;
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-6 py-4">
       {/* Header */}
@@ -363,60 +307,12 @@ const EditScientificCV: React.FC = () => {
             ⚠️ Error: {(error as Error).message}
           </div>
         ) : (
-          <Editor
-            apiKey={apiKey}
-            onInit={(_, editor) => (editorRef.current = editor)}
-            initialValue={formContent}
-            onEditorChange={handleEditorChange}
-            init={{
-              height: 800,
-              menubar: true,
-              plugins: [
-                "advlist",
-                "autolink",
-                "lists",
-                "link",
-                "image",
-                "charmap",
-                "preview",
-                "anchor",
-                "searchreplace",
-                "visualblocks",
-                "code",
-                "fullscreen",
-                "insertdatetime",
-                "media",
-                "table",
-                "help",
-                "wordcount",
-              ],
-              toolbar:
-                "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen",
-              content_style: formStyles,
-              setup: (editor) => {
-                editor.on("NodeChange", (e) => {
-                  const imgs =
-                    e.element?.tagName === "IMG"
-                      ? [e.element as HTMLImageElement]
-                      : Array.from(editor.getBody().querySelectorAll("img"));
-
-                  imgs.forEach((img) => {
-                    const isFrameImg = img.classList.contains("frame-image");
-                    const alreadySized =
-                      img.style.width === "113px" &&
-                      img.style.height === "151px";
-
-                    if (!alreadySized && !isFrameImg) {
-                      img.setAttribute("width", "113");
-                      img.setAttribute("height", "151");
-                      img.style.width = "113px";
-                      img.style.height = "151px";
-                      img.style.objectFit = "cover";
-                    }
-                  });
-                });
-              },
-            }}
+          <ScientificCVEditor
+            ref={editorRef}
+            value={formContent}
+            onChange={handleEditorChange}
+            height={800}
+            preset="scientific-cv"
           />
         )}
       </div>

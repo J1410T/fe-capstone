@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -23,9 +23,14 @@ export interface EnrollmentData {
 const ProjectEnroll: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  // const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
-  const [currentStep, setCurrentStep] = useState(1);
+
+  // Get step from URL params, default to 1
+  const stepFromUrl = parseInt(searchParams.get("step") || "1");
+  const [currentStep, setCurrentStep] = useState(
+    stepFromUrl >= 1 && stepFromUrl <= 3 ? stepFromUrl : 1
+  );
   const [collaborators, setCollaborators] = useState<SimpleInvitedUser[]>([]);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const queryClient = useQueryClient();
@@ -61,12 +66,21 @@ const ProjectEnroll: React.FC = () => {
     }
   };
 
+  // Sync currentStep with URL params
   useEffect(() => {
-    // If user navigated here directly via enrollment flow, set flag
-    if (location.pathname.includes("/enroll")) {
-      // setIsEnrollmentProcess(true);
+    const stepFromUrl = parseInt(searchParams.get("step") || "1");
+    const validStep = stepFromUrl >= 1 && stepFromUrl <= 3 ? stepFromUrl : 1;
+    if (currentStep !== validStep) {
+      setCurrentStep(validStep);
     }
-  }, []);
+  }, [searchParams, currentStep]);
+
+  // Initialize URL with step=1 if no step param exists
+  useEffect(() => {
+    if (!searchParams.has("step")) {
+      setSearchParams({ step: "1" });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleBack = () => {
     navigate(getBackPath());
@@ -74,13 +88,17 @@ const ProjectEnroll: React.FC = () => {
 
   const handleNext = () => {
     if (currentStep < 3) {
-      setCurrentStep((prev) => prev + 1);
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      setSearchParams({ step: nextStep.toString() });
     }
   };
 
   const handlePrevious = () => {
     if (currentStep > 1) {
-      setCurrentStep((prev) => prev - 1);
+      const prevStep = currentStep - 1;
+      setCurrentStep(prevStep);
+      setSearchParams({ step: prevStep.toString() });
     }
   };
 
