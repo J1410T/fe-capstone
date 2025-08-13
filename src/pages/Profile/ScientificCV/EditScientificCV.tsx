@@ -99,7 +99,9 @@ const EditScientificCV: React.FC = () => {
     }
   }, [scientificCV, isCVLoading]);
 
-  const handleEditorChange = () => {};
+  const handleEditorChange = (content: string) => {
+    setFormContent(content);
+  };
 
   const handleSaveConfirm = async () => {
     if (!scientificCV?.data?.id) {

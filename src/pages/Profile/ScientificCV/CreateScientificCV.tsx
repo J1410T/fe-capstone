@@ -61,9 +61,8 @@ const CreateScientificCV: React.FC = () => {
     }
   }, [templateData, isTemplateLoading]);
 
-  const handleEditorChange = () => {
-    // Optional: You can add any additional logic here
-    // For now, we'll just let the editor handle the content
+  const handleEditorChange = (content: string) => {
+    setFormContent(content);
   };
 
   const getProfileRoute = () => {

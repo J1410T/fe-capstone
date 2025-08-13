@@ -189,7 +189,6 @@ export const FormEditor: React.FC<FormEditorProps> = ({
               disabled={readOnly}
               formStyles={formStyles}
               readOnly={readOnly}
-              formId={form.id}
               preset="form"
             />
           </div>
