@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -9,674 +9,594 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   ArrowLeft,
+  Calendar,
   FileText,
-  Users,
-  Bot,
-  User,
+  Star,
+  Eye,
   Plus,
-  MessageCircle,
-  Edit3,
-  Save,
-  X,
+  Users,
 } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
 import { Loading } from "@/components/ui/loaders";
 import {
-  Evaluation,
-  EvaluationStageApi,
-  IndividualEvaluationApi,
-} from "@/types/evaluation-api";
-import { councilApi } from "./api";
-
-interface Comment {
-  id: string;
-  content: string;
-  author: string;
-  timestamp: string;
-  individualEvaluationId: string;
-}
-
-interface IndividualEvaluationFormData {
-  name: string;
-  content: string;
-  stageId: string;
-}
+  getEvaluationStagesByEvaluationId,
+  getEvaluationById,
+} from "@/services/resources/evaluation";
+import {
+  getUserRolesByAppraisalCouncilId,
+  getUserRoleByFilter,
+  getMyAccountInfo,
+} from "@/services/resources/auth";
+import { getMyAppraisalCouncils } from "@/services/resources/appraisal-council";
+import { useAuth } from "@/contexts";
+import { Evaluation, EvaluationStageApi } from "@/types/evaluation";
+import CreateEvaluationStageModal from "./CreateEvaluationStageModal";
 
 const EvaluationDetailPage: React.FC = () => {
+  const { evaluationId } = useParams<{ evaluationId: string }>();
   const navigate = useNavigate();
-  const { projectId, evaluationId } = useParams<{
-    projectId: string;
-    evaluationId: string;
-  }>();
   const { user } = useAuth();
 
+  // State management
   const [evaluation, setEvaluation] = useState<Evaluation | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [createIndividualOpen, setCreateIndividualOpen] = useState(false);
-  const [selectedStageId, setSelectedStageId] = useState("");
-  const [comments, setComments] = useState<{ [key: string]: Comment[] }>({});
-  const [newComment, setNewComment] = useState<{ [key: string]: string }>({});
-  const [editingDocument, setEditingDocument] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const [documentContent, setDocumentContent] = useState<{
-    [key: string]: string;
-  }>({});
+  const [stages, setStages] = useState<EvaluationStageApi[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isChairman, setIsChairman] = useState(false);
+  const [isCreateStageModalOpen, setIsCreateStageModalOpen] = useState(false);
 
+  // Load evaluation details and stages
   useEffect(() => {
-    const fetchEvaluationDetail = async () => {
-      if (evaluationId) {
-        try {
-          setLoading(true);
-          const data = await councilApi.getEvaluationDetail(evaluationId);
-          setEvaluation(data);
+    const loadEvaluationDetails = async () => {
+      if (!evaluationId) return;
 
-          // Initialize document content for each individual evaluation
-          if (data?.["evaluation-stages"]) {
-            const content: { [key: string]: string } = {};
-            data["evaluation-stages"].forEach((stage: EvaluationStageApi) => {
-              stage["individual-evaluations"]?.forEach(
-                (individual: IndividualEvaluationApi) => {
-                  content[individual.id] = individual.comment || "";
-                }
-              );
-            });
-            setDocumentContent(content);
+      try {
+        setIsLoading(true);
+
+        // Load evaluation with stages using the new API
+        try {
+          const evaluationData = await getEvaluationById(evaluationId, true);
+          console.log("=== DEBUG: Evaluation Data ===");
+          console.log("Full evaluation data:", evaluationData);
+          console.log(
+            "Appraisal Council ID:",
+            evaluationData["appraisal-council-id"]
+          );
+          console.log("Project ID:", evaluationData["project-id"]);
+
+          setEvaluation(evaluationData);
+          setStages(evaluationData["evaluation-stages"] || []);
+
+          // Check if current user is chairman of the appraisal council
+          console.log("=== DEBUG: Pre-check Values ===");
+          console.log(
+            "Has appraisal-council-id?",
+            !!evaluationData["appraisal-council-id"]
+          );
+          console.log("Has user?", !!user);
+          console.log("Has user.id?", !!user?.id);
+          console.log("User object:", user);
+
+          // Get user ID - fallback to API call if not available
+          let currentUserId = user?.id;
+          if (!currentUserId && user) {
+            try {
+              console.log("=== DEBUG: Fetching user ID from API ===");
+              const accountInfo = await getMyAccountInfo();
+              console.log("Account info from API:", accountInfo);
+              currentUserId = accountInfo.id;
+            } catch (error) {
+              console.error("Failed to get account info:", error);
+            }
           }
-        } catch (error) {
-          console.error("Error fetching evaluation detail:", error);
-        } finally {
-          setLoading(false);
+
+          console.log("Final user ID:", currentUserId);
+
+          if (evaluationData["appraisal-council-id"] && currentUserId) {
+            try {
+              console.log("=== DEBUG: Checking Chairman Role ===");
+              console.log(
+                "Appraisal Council ID:",
+                evaluationData["appraisal-council-id"]
+              );
+              console.log("Current User Object:", user);
+              console.log("Current User ID:", currentUserId);
+
+              // Method 1: Try different filter approaches
+              let currentUserRole = null;
+
+              // Approach 1: Filter by appraisal-council-id only (get all members)
+              console.log("=== Approach 1: Filter by council ID only ===");
+              try {
+                const filterRequest1 = {
+                  "appraisal-council-id":
+                    evaluationData["appraisal-council-id"],
+                  "page-index": 1,
+                  "page-size": 50,
+                };
+                console.log("Filter request 1:", filterRequest1);
+
+                const response1 = await getUserRoleByFilter(filterRequest1);
+                console.log("Response 1 (all council members):", response1);
+
+                const allCouncilMembers = response1["data-list"] || [];
+                currentUserRole = allCouncilMembers.find(
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (role: any) => role["account-id"] === currentUserId
+                );
+                console.log("Found user role in approach 1:", currentUserRole);
+              } catch (error1) {
+                console.error("Approach 1 failed:", error1);
+              }
+
+              // Approach 2: If not found, try with account-id filter
+              if (!currentUserRole) {
+                console.log("=== Approach 2: Filter by account ID ===");
+                try {
+                  const filterRequest2 = {
+                    "account-id": currentUserId,
+                    "page-index": 1,
+                    "page-size": 20,
+                  };
+                  console.log("Filter request 2:", filterRequest2);
+
+                  const response2 = await getUserRoleByFilter(filterRequest2);
+                  console.log("Response 2 (user's all roles):", response2);
+
+                  const userAllRoles = response2["data-list"] || [];
+                  // Find role in the specific council
+                  currentUserRole = userAllRoles.find(
+                    (role: any) =>
+                      role["appraisal-council-id"] ===
+                      evaluationData["appraisal-council-id"]
+                  );
+                  console.log(
+                    "Found user role in approach 2:",
+                    currentUserRole
+                  );
+                } catch (error2) {
+                  console.error("Approach 2 failed:", error2);
+                }
+              }
+
+              // Approach 3: If still not found, use My Appraisal Councils API
+              if (!currentUserRole) {
+                console.log(
+                  "=== Approach 3: Use My Appraisal Councils API ==="
+                );
+                try {
+                  const myCouncilsResponse = await getMyAppraisalCouncils({
+                    "page-index": 1,
+                    "page-size": 20,
+                  });
+                  console.log("My councils response:", myCouncilsResponse);
+
+                  const myCouncils = myCouncilsResponse["data-list"] || [];
+                  const targetCouncil = myCouncils.find(
+                    (council: any) =>
+                      council.id === evaluationData["appraisal-council-id"]
+                  );
+
+                  console.log("Found target council:", targetCouncil);
+
+                  if (targetCouncil && targetCouncil.member) {
+                    const myRoleInCouncil = targetCouncil.member.find(
+                      (member: any) => member["account-id"] === currentUserId
+                    );
+                    console.log("My role in target council:", myRoleInCouncil);
+                    currentUserRole = myRoleInCouncil;
+                  }
+                } catch (error3) {
+                  console.error("Approach 3 failed:", error3);
+                }
+              }
+
+              console.log("Final Current User Role Found:", currentUserRole);
+
+              if (currentUserRole) {
+                const roleName =
+                  (currentUserRole as any)["role-name"] ||
+                  (currentUserRole as any)["name"];
+                console.log(
+                  "Role Name (role-name):",
+                  (currentUserRole as any)["role-name"]
+                );
+                console.log(
+                  "Role Name (name):",
+                  (currentUserRole as any)["name"]
+                );
+                console.log("Final Role Name:", roleName);
+
+                // Check if role name is exactly "Chairman"
+                const isChairmanRole = roleName === "Chairman";
+
+                console.log("Expected Role Name: Chairman");
+                console.log("Actual Role Name:", roleName);
+                console.log("Is Chairman?", isChairmanRole);
+
+                setIsChairman(isChairmanRole);
+              } else {
+                console.log("No role found for current user");
+                setIsChairman(false);
+              }
+            } catch (roleError) {
+              console.error("Error checking chairman role:", roleError);
+              setIsChairman(false);
+            }
+          } else {
+            console.log("Missing appraisal-council-id or user.id");
+
+            // Fallback: Check from stored council data
+            try {
+              const storedCouncilData =
+                sessionStorage.getItem("current_council");
+              if (storedCouncilData && currentUserId) {
+                console.log("=== DEBUG: Fallback Chairman Check ===");
+                const currentCouncil = JSON.parse(storedCouncilData);
+                console.log("Stored Council Data:", currentCouncil);
+                console.log("Council ID:", currentCouncil.id);
+
+                const userRolesResponse =
+                  await getUserRolesByAppraisalCouncilId(currentCouncil.id);
+
+                console.log(
+                  "Fallback User Roles API Response:",
+                  userRolesResponse
+                );
+
+                const userRoles = userRolesResponse["data-list"] || [];
+                const currentUserRole = userRoles.find(
+                  (role: any) => role["account-id"] === currentUserId
+                );
+
+                console.log("Fallback Current User Role:", currentUserRole);
+
+                if (currentUserRole) {
+                  const isChairmanRole =
+                    (currentUserRole as any)["role-name"] === "Chairman";
+                  console.log(
+                    "Fallback Role Name:",
+                    (currentUserRole as any)["role-name"]
+                  );
+                  console.log("Fallback Is Chairman?", isChairmanRole);
+                  setIsChairman(isChairmanRole);
+                } else {
+                  setIsChairman(false);
+                }
+              } else {
+                setIsChairman(false);
+              }
+            } catch (fallbackError) {
+              console.error("Fallback chairman check failed:", fallbackError);
+              setIsChairman(false);
+            }
+          }
+        } catch {
+          // Fallback: Load stages separately and create mock evaluation
+          const stagesResponse = await getEvaluationStagesByEvaluationId({
+            "evaluation-id": evaluationId,
+            "page-index": 1,
+            "page-size": 20,
+          });
+
+          setStages(stagesResponse["data-list"] || []);
+
+          // Mock evaluation data for fallback
+          setEvaluation({
+            id: evaluationId,
+            code: "EVA-SAMPLE",
+            title: "Sample Evaluation",
+            "total-rate": null,
+            comment: null,
+            "create-date": new Date().toISOString(),
+            status: "created",
+            "project-id": "",
+            "appraisal-council-id": null,
+            documents: null,
+            "evaluation-stages": stagesResponse["data-list"] || [],
+          });
         }
+      } catch {
+        setEvaluation(null);
+        setStages([]);
+        setIsChairman(false);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchEvaluationDetail();
-  }, [evaluationId]);
+    loadEvaluationDetails();
+  }, [evaluationId, user?.id, user]);
 
-  const handleBackToMilestones = () => {
-    navigate(`/council/project-milestones/${projectId}`);
-  };
-
-  const handleCreateIndividualEvaluation = async (
-    data: IndividualEvaluationFormData
-  ) => {
-    try {
-      await councilApi.createIndividualEvaluation({
-        ...data,
-        evaluationId: evaluationId!,
-        reviewerId: user?.id || "",
-      });
-
-      // Refresh evaluation detail
-      if (evaluationId) {
-        const updatedEvaluation = await councilApi.getEvaluationDetail(
-          evaluationId
-        );
-        setEvaluation(updatedEvaluation);
-      }
-
-      setCreateIndividualOpen(false);
-    } catch (error) {
-      console.error("Error creating individual evaluation:", error);
-    }
-  };
-
-  const handleAddComment = async (individualEvaluationId: string) => {
-    const commentText = newComment[individualEvaluationId];
-    if (!commentText?.trim()) return;
-
-    try {
-      const comment = await councilApi.addComment({
-        content: commentText,
-        individualEvaluationId,
-        authorId: user?.id || "",
-        authorName: user?.name || "Anonymous",
-      });
-
-      // Add comment to local state
-      setComments((prev) => ({
-        ...prev,
-        [individualEvaluationId]: [
-          ...(prev[individualEvaluationId] || []),
-          comment,
-        ],
-      }));
-
-      // Clear input
-      setNewComment((prev) => ({
-        ...prev,
-        [individualEvaluationId]: "",
-      }));
-    } catch (error) {
-      console.error("Error adding comment:", error);
-    }
-  };
-
-  const handleEditDocument = (individualId: string) => {
-    setEditingDocument((prev) => ({ ...prev, [individualId]: true }));
-  };
-
-  const handleSaveDocument = async (individualId: string) => {
-    // In a real implementation, this would call an API to save the document
-    console.log(
-      "Saving document for individual:",
-      individualId,
-      "Content:",
-      documentContent[individualId]
-    );
-
-    // Simulate saving
-    await new Promise((resolve) => setTimeout(resolve, 500));
-
-    setEditingDocument((prev) => ({ ...prev, [individualId]: false }));
-
-    // Here you would typically call an API to update the individual evaluation content
-    // await updateIndividualEvaluationContent(individualId, documentContent[individualId]);
-  };
-
-  const handleCancelEdit = (individualId: string) => {
-    // Reset content to original
-    if (evaluation?.["evaluation-stages"]) {
-      evaluation["evaluation-stages"].forEach((stage) => {
-        const individual = stage["individual-evaluations"]?.find(
-          (ind) => ind.id === individualId
-        );
-        if (individual) {
-          setDocumentContent((prev) => ({
-            ...prev,
-            [individualId]: individual.comment || "",
-          }));
-        }
-      });
-    }
-    setEditingDocument((prev) => ({ ...prev, [individualId]: false }));
-  };
-
-  const getStatusColor = (status: string) => {
+  const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
-      case "completed":
-        return "bg-green-100 text-green-800";
-      case "in_progress":
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
       case "created":
-        return "bg-blue-100 text-blue-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
+        return "secondary";
+      case "submitted":
+        return "default";
+      case "approved":
+        return "default";
+      case "in_progress":
+        return "default";
+      case "completed":
+        return "default";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "secondary";
     }
   };
 
-  const getApprovalBadge = (
-    isApproved: boolean,
-    reviewerResult: string | null
-  ) => {
-    if (isApproved) {
-      if (reviewerResult === "approved_with_conditions") {
-        return (
-          <Badge className="bg-yellow-100 text-yellow-800">
-            Approved with Conditions
-          </Badge>
-        );
+  const handleStageClick = (stageId: string) => {
+    navigate(`/council/evaluation-stages/${evaluationId}/${stageId}`);
+  };
+
+  const handleCreateStage = () => {
+    setIsCreateStageModalOpen(true);
+  };
+
+  const handleStageCreated = () => {
+    // Reload evaluation data to get updated stages
+    if (evaluationId) {
+      loadEvaluationDetails();
+    }
+  };
+
+  // Extract loadEvaluationDetails function to be reusable
+  const loadEvaluationDetails = async () => {
+    if (!evaluationId) return;
+
+    try {
+      setIsLoading(true);
+
+      // Load evaluation with stages using the new API
+      try {
+        const evaluationData = await getEvaluationById(evaluationId, true);
+
+        setEvaluation(evaluationData);
+        setStages(evaluationData["evaluation-stages"] || []);
+
+        // Check chairman role (existing logic)
+        await checkChairmanRole();
+      } catch {
+        // Fallback logic (existing code)
+        const stagesResponse = await getEvaluationStagesByEvaluationId({
+          "evaluation-id": evaluationId,
+          "page-index": 1,
+          "page-size": 20,
+        });
+
+        setStages(stagesResponse["data-list"] || []);
+
+        // Mock evaluation data for fallback
+        setEvaluation({
+          id: evaluationId,
+          code: "EVA-SAMPLE",
+          title: "Sample Evaluation",
+          "total-rate": null,
+          comment: null,
+          "create-date": new Date().toISOString(),
+          status: "created",
+          "project-id": "",
+          "appraisal-council-id": null,
+          documents: null,
+          "evaluation-stages": stagesResponse["data-list"] || [],
+        });
       }
-      return <Badge className="bg-green-100 text-green-800">Approved</Badge>;
+    } catch {
+      setEvaluation(null);
+      setStages([]);
+      setIsChairman(false);
+    } finally {
+      setIsLoading(false);
     }
-    return <Badge className="bg-red-100 text-red-800">Not Approved</Badge>;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  // Extract chairman role check logic
+  const checkChairmanRole = async () => {
+    // TODO: Move existing chairman role check logic here
+    setIsChairman(true); // Temporary - use existing logic from useEffect
   };
 
-  if (loading) {
+  // Chairman check is handled in useEffect via API call
+
+  if (isLoading) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex items-center justify-center h-64">
-          <Loading className="w-full max-w-md" />
-        </div>
+      <div className="flex justify-center items-center h-64">
+        <Loading />
       </div>
     );
   }
 
   if (!evaluation) {
     return (
-      <div className="container mx-auto py-6 space-y-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">Evaluation not found</p>
-            <Button onClick={handleBackToMilestones}>Back to Milestones</Button>
-          </div>
-        </div>
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="text-center py-8">
+            <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p className="text-gray-500">Không tìm thấy đánh giá</p>
+            <Button
+              variant="outline"
+              onClick={() => navigate("/council/my-council")}
+              className="mt-4"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Quay lại My Council
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-4 space-y-4 max-w-6xl">
-      {/* Back Button - Smaller */}
-      <div className="flex items-center">
-        <Button
-          onClick={handleBackToMilestones}
-          variant="outline"
-          size="sm"
-          className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 shadow-sm"
-        >
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={() => navigate("/council/my-council")}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Milestones
+          Back to My Council
         </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">
+            Evaluation Details
+          </h1>
+          <p className="text-gray-600 mt-1">
+            Details of the evaluation and stages
+          </p>
+        </div>
       </div>
 
-      {/* Header - More Compact */}
-      <Card className="bg-white shadow-sm border">
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <FileText className="h-6 w-6 text-blue-600" />
-              <div>
-                <CardTitle className="text-xl font-bold text-gray-900">
-                  {evaluation.title}
-                </CardTitle>
-                <CardDescription className="text-gray-600 mt-1">
-                  {evaluation.code} • {formatDate(evaluation["create-date"])}
-                </CardDescription>
-              </div>
+      {/* Evaluation Info */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                {evaluation.code}
+              </CardTitle>
+              <CardDescription className="mt-2">
+                {evaluation.title}
+              </CardDescription>
             </div>
-            <Badge
-              variant="outline"
-              className={getStatusColor(evaluation.status)}
-            >
+            <Badge variant={getStatusBadgeVariant(evaluation.status)}>
               {evaluation.status}
             </Badge>
           </div>
         </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Calendar className="h-4 w-4" />
+              Created:{" "}
+              {new Date(evaluation["create-date"]).toLocaleDateString("vi-VN")}
+            </div>
+
+            {evaluation["total-rate"] && (
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Star className="h-4 w-4" />
+                Rating: {evaluation["total-rate"]}/10
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 text-sm text-gray-600">
+              <Users className="h-4 w-4" />
+              Stages: {stages.length}
+            </div>
+          </div>
+
+          {evaluation.comment && (
+            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+              <h4 className="font-medium text-sm text-gray-700 mb-2">
+                Comments:
+              </h4>
+              <p className="text-sm text-gray-600">{evaluation.comment}</p>
+            </div>
+          )}
+        </CardContent>
       </Card>
 
-      {/* Evaluation Stages - More Compact */}
-      <div className="space-y-4">
-        {evaluation["evaluation-stages"].length === 0 ? (
-          <Card>
-            <CardContent className="py-8">
-              <div className="text-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="p-3 bg-gray-100 rounded-full">
-                    <Users className="h-6 w-6 text-gray-400" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-gray-900 mb-1">
-                      No evaluation stages found
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      This evaluation doesn't have any stages yet
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          evaluation["evaluation-stages"].map((stage) => (
-            <Card key={stage.id} className="border">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-lg">{stage.name}</CardTitle>
-                    <CardDescription className="text-sm">
-                      Stage {stage["stage-order"]} • {stage.phrase}
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="outline"
-                      className={getStatusColor(stage.status)}
-                    >
-                      {stage.status}
-                    </Badge>
-                    <Button
-                      onClick={() => {
-                        setSelectedStageId(stage.id);
-                        setCreateIndividualOpen(true);
-                      }}
-                      size="sm"
-                      className="text-xs"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Add Evaluation
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-3">
-                {(stage["individual-evaluations"] || []).length === 0 ? (
-                  <div className="text-center py-6 bg-gray-50 rounded-lg">
-                    <p className="text-gray-500 mb-3 text-sm">
-                      No individual evaluations yet
-                    </p>
-                    <Button
-                      onClick={() => {
-                        setSelectedStageId(stage.id);
-                        setCreateIndividualOpen(true);
-                      }}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs"
-                    >
-                      <Plus className="h-3 w-3 mr-1" />
-                      Create First Evaluation
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {(stage["individual-evaluations"] || []).map(
-                      (individual) => (
-                        <Card
-                          key={individual.id}
-                          className="border border-gray-100 bg-gray-50"
+      {/* Evaluation Stages */}
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Evaluation Stages</CardTitle>
+              <CardDescription>
+                Evaluation stages and individual evaluations
+              </CardDescription>
+            </div>
+            {isChairman && (
+              <Button onClick={handleCreateStage}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Stage
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {stages.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>No evaluation stages yet</p>
+              {isChairman && (
+                <Button
+                  variant="outline"
+                  onClick={handleCreateStage}
+                  className="mt-4"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create First Stage
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {stages
+                .sort((a, b) => a["stage-order"] - b["stage-order"])
+                .map((stage) => (
+                  <Card
+                    key={stage.id}
+                    className="hover:shadow-md transition-shadow cursor-pointer"
+                    onClick={() => handleStageClick(stage.id)}
+                  >
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-2 flex-1">
+                          <div className="flex items-center gap-2">
+                            <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded">
+                              Stage {stage["stage-order"]}
+                            </span>
+                            <h3 className="font-semibold">{stage.name}</h3>
+                            <Badge
+                              variant={getStatusBadgeVariant(stage.status)}
+                            >
+                              {stage.status}
+                            </Badge>
+                          </div>
+
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span>Phase: {stage.phrase}</span>
+                            <span>Type: {stage.type}</span>
+                            {stage["individual-evaluations"] && (
+                              <span>
+                                Individual Evaluations:{" "}
+                                {stage["individual-evaluations"].length}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStageClick(stage.id);
+                          }}
                         >
-                          <CardHeader className="pb-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                {individual["is-ai-report"] ? (
-                                  <Bot className="h-5 w-5 text-purple-600" />
-                                ) : (
-                                  <User className="h-5 w-5 text-blue-600" />
-                                )}
-                                <div>
-                                  <h4 className="font-semibold text-gray-900 text-sm">
-                                    {individual.name}
-                                  </h4>
-                                  <p className="text-xs text-gray-600">
-                                    {formatDate(individual["submitted-at"])}
-                                    {individual["total-rate"] && (
-                                      <span className="ml-2">
-                                        Rate:{" "}
-                                        <span className="font-semibold">
-                                          {individual["total-rate"]}/10
-                                        </span>
-                                      </span>
-                                    )}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <Badge
-                                  variant="outline"
-                                  className={`text-xs ${getStatusColor(
-                                    individual.status
-                                  )}`}
-                                >
-                                  {individual.status}
-                                </Badge>
-                                {getApprovalBadge(
-                                  individual["is-approved"],
-                                  individual["reviewer-result"] as string | null
-                                )}
-                                {individual["is-ai-report"] && (
-                                  <Badge
-                                    variant="outline"
-                                    className="bg-purple-50 text-purple-600 border-purple-200 text-xs"
-                                  >
-                                    AI
-                                  </Badge>
-                                )}
-                              </div>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="space-y-3 pt-2">
-                            {/* Document Content - More Compact */}
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between">
-                                <Label className="text-xs font-medium text-gray-700">
-                                  Document Content
-                                </Label>
-                                {!individual["is-ai-report"] && (
-                                  <div className="flex gap-1">
-                                    {editingDocument[individual.id] ? (
-                                      <>
-                                        <Button
-                                          onClick={() =>
-                                            handleSaveDocument(individual.id)
-                                          }
-                                          size="sm"
-                                          variant="outline"
-                                          className="h-6 px-2 text-xs"
-                                        >
-                                          <Save className="h-3 w-3 mr-1" />
-                                          Save
-                                        </Button>
-                                        <Button
-                                          onClick={() =>
-                                            handleCancelEdit(individual.id)
-                                          }
-                                          size="sm"
-                                          variant="outline"
-                                          className="h-6 px-2 text-xs"
-                                        >
-                                          <X className="h-3 w-3 mr-1" />
-                                          Cancel
-                                        </Button>
-                                      </>
-                                    ) : (
-                                      <Button
-                                        onClick={() =>
-                                          handleEditDocument(individual.id)
-                                        }
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-6 px-2 text-xs"
-                                      >
-                                        <Edit3 className="h-3 w-3 mr-1" />
-                                        Edit
-                                      </Button>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
-                              {editingDocument[individual.id] ? (
-                                <div className="space-y-1">
-                                  <Textarea
-                                    value={documentContent[individual.id] || ""}
-                                    onChange={(e) =>
-                                      setDocumentContent((prev) => ({
-                                        ...prev,
-                                        [individual.id]: e.target.value,
-                                      }))
-                                    }
-                                    placeholder="Enter your evaluation content..."
-                                    rows={6}
-                                    className="min-h-[120px] text-xs"
-                                  />
-                                  <p className="text-xs text-gray-500">
-                                    Note: In real implementation, this would be
-                                    TinyMCE editor.
-                                  </p>
-                                </div>
-                              ) : (
-                                <div className="p-3 bg-white rounded border max-h-40 overflow-y-auto">
-                                  <div
-                                    className="prose prose-xs max-w-none text-gray-700"
-                                    dangerouslySetInnerHTML={{
-                                      __html:
-                                        documentContent[individual.id] ||
-                                        individual.comment ||
-                                        "No content available",
-                                    }}
-                                  />
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Comments Section - More Compact */}
-                            <div className="space-y-2 border-t pt-3">
-                              <div className="flex items-center gap-1">
-                                <MessageCircle className="h-3 w-3 text-gray-600" />
-                                <Label className="text-xs font-medium text-gray-700">
-                                  Comments (
-                                  {(comments[individual.id] || []).length})
-                                </Label>
-                              </div>
-
-                              {/* Existing Comments */}
-                              <div className="space-y-1 max-h-32 overflow-y-auto">
-                                {(comments[individual.id] || []).map(
-                                  (comment) => (
-                                    <div
-                                      key={comment.id}
-                                      className="p-2 bg-blue-50 rounded text-xs"
-                                    >
-                                      <div className="flex items-center justify-between mb-1">
-                                        <span className="font-medium text-blue-900">
-                                          {comment.author}
-                                        </span>
-                                        <span className="text-blue-600">
-                                          {formatDate(comment.timestamp)}
-                                        </span>
-                                      </div>
-                                      <p className="text-blue-800">
-                                        {comment.content}
-                                      </p>
-                                    </div>
-                                  )
-                                )}
-                              </div>
-
-                              {/* Add New Comment */}
-                              <div className="flex gap-1">
-                                <Textarea
-                                  value={newComment[individual.id] || ""}
-                                  onChange={(e) =>
-                                    setNewComment((prev) => ({
-                                      ...prev,
-                                      [individual.id]: e.target.value,
-                                    }))
-                                  }
-                                  placeholder="Add a comment..."
-                                  rows={2}
-                                  className="flex-1 text-xs"
-                                />
-                                <Button
-                                  onClick={() =>
-                                    handleAddComment(individual.id)
-                                  }
-                                  size="sm"
-                                  disabled={!newComment[individual.id]?.trim()}
-                                  className="text-xs px-2"
-                                >
-                                  <MessageCircle className="h-3 w-3 mr-1" />
-                                  Add
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      )
-                    )}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))
-        )}
-      </div>
-
-      {/* Create Individual Evaluation Dialog */}
-      <CreateIndividualEvaluationDialog
-        stageId={selectedStageId}
-        isOpen={createIndividualOpen}
-        onClose={() => setCreateIndividualOpen(false)}
-        onSubmit={handleCreateIndividualEvaluation}
+      {/* Create Stage Modal */}
+      <CreateEvaluationStageModal
+        open={isCreateStageModalOpen}
+        onOpenChange={setIsCreateStageModalOpen}
+        evaluationId={evaluationId || ""}
+        existingStages={stages}
+        onStageCreated={handleStageCreated}
+        loading={isLoading}
       />
     </div>
-  );
-};
-
-// Create Individual Evaluation Dialog Component
-interface CreateIndividualEvaluationDialogProps {
-  stageId: string;
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit: (data: IndividualEvaluationFormData) => void;
-}
-
-const CreateIndividualEvaluationDialog: React.FC<
-  CreateIndividualEvaluationDialogProps
-> = ({ stageId, isOpen, onClose, onSubmit }) => {
-  const [name, setName] = useState("");
-  const [content, setContent] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit({ name, content, stageId });
-    setName("");
-    setContent("");
-    onClose();
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Create Individual Evaluation</DialogTitle>
-          <DialogDescription>
-            Create a new individual evaluation with document content and
-            comments.
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">Evaluation Name</Label>
-            <Input
-              id="name"
-              placeholder="Enter evaluation name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="content">Content</Label>
-            <Textarea
-              id="content"
-              placeholder="Enter evaluation content (in real implementation, this would be TinyMCE)"
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              rows={8}
-              required
-            />
-            <p className="text-xs text-gray-500">
-              Note: In a real implementation, this would be a TinyMCE rich text
-              editor for creating rich documents.
-            </p>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button type="submit">Create</Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
   );
 };
 

@@ -33,11 +33,19 @@ interface ProposalSelectionDialogProps {
   proposals: Proposal[];
   onSelectProposal: (proposalId: string) => void;
   topicTitle: string;
+  isLoading?: boolean;
 }
 
 export const ProposalSelectionDialog: React.FC<
   ProposalSelectionDialogProps
-> = ({ isOpen, onClose, proposals, onSelectProposal, topicTitle }) => {
+> = ({
+  isOpen,
+  onClose,
+  proposals,
+  onSelectProposal,
+  topicTitle,
+  isLoading = false,
+}) => {
   const [selectedProposalId, setSelectedProposalId] = useState<string>("");
   const [viewMode, setViewMode] = useState<"select" | "details">("select");
 
@@ -99,9 +107,16 @@ export const ProposalSelectionDialog: React.FC<
               <Select
                 value={selectedProposalId}
                 onValueChange={setSelectedProposalId}
+                disabled={isLoading}
               >
                 <SelectTrigger className="w-full h-12 bg-white border-gray-200">
-                  <SelectValue placeholder="Select a proposal to review..." />
+                  <SelectValue
+                    placeholder={
+                      isLoading
+                        ? "Đang xử lý..."
+                        : "Select a proposal to review..."
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
                   {proposals.map((proposal) => (
@@ -361,13 +376,18 @@ export const ProposalSelectionDialog: React.FC<
         <DialogFooter className="gap-3">
           {viewMode === "select" ? (
             <>
-              <Button variant="outline" onClick={handleCancel}>
+              <Button
+                variant="outline"
+                onClick={handleCancel}
+                disabled={isLoading}
+              >
                 Cancel
               </Button>
               {selectedProposalId && (
                 <Button
                   variant="outline"
                   onClick={handleViewDetails}
+                  disabled={isLoading}
                   className="border-blue-200 text-blue-700 hover:bg-blue-50"
                 >
                   View Details
@@ -375,24 +395,29 @@ export const ProposalSelectionDialog: React.FC<
               )}
               <Button
                 onClick={handleConfirmSelection}
-                disabled={!selectedProposalId}
+                disabled={!selectedProposalId || isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Select Proposal
+                {isLoading ? "Đang xử lý..." : "Select Proposal"}
               </Button>
             </>
           ) : (
             <>
-              <Button variant="outline" onClick={handleBackToSelection}>
+              <Button
+                variant="outline"
+                onClick={handleBackToSelection}
+                disabled={isLoading}
+              >
                 Back to Selection
               </Button>
               <Button
                 onClick={handleConfirmSelection}
+                disabled={isLoading}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
-                Confirm Selection
+                {isLoading ? "Đang xử lý..." : "Confirm Selection"}
               </Button>
             </>
           )}

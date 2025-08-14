@@ -1,5 +1,10 @@
 import { useRef, forwardRef, useImperativeHandle } from "react";
 import { Editor } from "@tinymce/tinymce-react";
+import {
+  uploadImageToAzure,
+  getImageUrlFromAzure,
+  deleteImageFromAzure,
+} from "@/services/resources/azure-image";
 import type { Editor as TinyMCEEditor } from "tinymce";
 
 export interface TinyMCERef {
@@ -34,6 +39,7 @@ const PRESETS = {
   basic: {
     plugins: [
       "advlist",
+      "advlist",
       "autolink",
       "lists",
       "link",
@@ -51,24 +57,46 @@ const PRESETS = {
       "wordcount",
       "quickbars",
       "autosave",
-      "imagetools",
     ],
     toolbar:
-      "undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | help",
+      "undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | signature | preview code fullscreen | help",
     menubar: false,
     styles: `
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        font-size: 14px;
+        font-family: "Times New Roman", Times, serif;
+        font-size: 16px;
+        line-height: 1.8;
+        color: #000;
+        padding: 30px;
+        background: #fff;
+        max-width: none;
+        word-wrap: break-word;
+      }
+      p {
+        margin: 1em 0;
+        line-height: 1.8;
+        text-align: justify;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: "Times New Roman", Times, serif;
+        font-weight: bold;
+        margin: 1.5em 0 1em 0;
+        line-height: 1.4;
+      }
+      ul, ol {
+        margin: 1em 0;
+        padding-left: 2em;
+      }
+      li {
+        margin: 0.5em 0;
         line-height: 1.6;
-        color: #333;
-        padding: 20px;
       }
     `,
   },
 
   document: {
     plugins: [
+      "advlist",
       "advlist",
       "autolink",
       "lists",
@@ -88,33 +116,92 @@ const PRESETS = {
       "pagebreak",
       "quickbars",
       "autosave",
+      "pagebreak",
+      "quickbars",
+      "autosave",
     ],
     toolbar:
       "undo redo | formatselect | bold italic underline | forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | pagebreak | preview code fullscreen",
     menubar: false,
     styles: `
       body {
-        font-family: 'Times New Roman', serif;
-        padding: 24px;
-        color: #222;
+        font-family: "Times New Roman", Times, serif;
+        padding: 30px;
+        color: #000;
         background: #fff;
-        font-size: 14px;
-        line-height: 1.6;
+        font-size: 16px;
+        line-height: 1.8;
+        max-width: none;
+        word-wrap: break-word;
+      }
+      p {
+        margin: 1em 0;
+        line-height: 1.8;
+        text-align: justify;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: "Times New Roman", Times, serif;
+        font-weight: bold;
+        margin: 1.5em 0 1em 0;
+        line-height: 1.4;
+        text-align: center;
       }
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-top: 1em;
+        margin: 1.5em 0;
+        font-size: 16px;
       }
       th, td {
-        border: 1px solid #ccc;
-        padding: 8px;
+        border: 1px solid #000;
+        padding: 12px 8px;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 1.4;
+      }
+      th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+      }
+      ul, ol {
+        margin: 1em 0;
+        padding-left: 2em;
+      }
+      li {
+        margin: 0.5em 0;
+        line-height: 1.6;
+      }
+      /* Signature boxes alignment */
+      .signature-container {
+        display: flex;
+        margin-top: 3em;
+        page-break-inside: avoid;
+      }
+      .signature-container.single {
+        justify-content: flex-end;
+      }
+      .signature-container.double {
+        justify-content: space-between;
+      }
+      .signature-container.triple {
+        justify-content: space-between;
+      }
+      .signature-box {
+        border: 1px solid #000;
+        width: 200px;
+        height: 120px;
+        text-align: center;
+        padding: 15px;
+        margin: 0 10px;
+        font-size: 14px;
+        line-height: 1.4;
       }
     `,
   },
 
   form: {
     plugins: [
+      "advlist",
       "advlist",
       "autolink",
       "lists",
@@ -134,7 +221,6 @@ const PRESETS = {
       "paste",
       "quickbars",
       "autosave",
-      "imagetools",
     ],
     toolbar:
       "undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | help",
@@ -144,32 +230,83 @@ const PRESETS = {
         width: 100% !important;
         background: #fff !important;
         margin: 0 auto !important;
-        font-family: Arial, Helvetica, sans-serif;
-        font-size: 14px;
-        line-height: 1.6;
-        color: #333;
-        padding: 20px;
+        font-family: "Times New Roman", Times, serif;
+        font-size: 16px;
+        line-height: 1.8;
+        color: #000;
+        padding: 30px;
         box-sizing: border-box !important;
+        max-width: none;
+        word-wrap: break-word;
+      }
+      p {
+        margin: 1em 0;
+        line-height: 1.8;
+        text-align: justify;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: "Times New Roman", Times, serif;
+        font-weight: bold;
+        margin: 1.5em 0 1em 0;
+        line-height: 1.4;
+        text-align: center;
       }
       table {
         border-collapse: collapse;
         width: 100%;
-        margin: 1em 0;
+        margin: 1.5em 0;
+        font-size: 16px;
       }
       table td, table th {
-        border: 1px solid #ddd;
-        padding: 8px;
-        text-align: left;
+        border: 1px solid #000;
+        padding: 12px 8px;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 1.4;
       }
       table th {
-        background-color: #f2f2f2;
+        background-color: #f8f9fa;
         font-weight: bold;
+      }
+      ul, ol {
+        margin: 1em 0;
+        padding-left: 2em;
+      }
+      li {
+        margin: 0.5em 0;
+        line-height: 1.6;
+      }
+      /* Signature boxes alignment */
+      .signature-container {
+        display: flex;
+        margin-top: 3em;
+        page-break-inside: avoid;
+      }
+      .signature-container.single {
+        justify-content: flex-end;
+      }
+      .signature-container.double {
+        justify-content: space-between;
+      }
+      .signature-container.triple {
+        justify-content: space-between;
+      }
+      .signature-box {
+        border: 1px solid #000;
+        width: 200px;
+        height: 120px;
+        text-align: center;
+        padding: 15px;
+        margin: 0 10px;
+        font-size: 14px;
+        line-height: 1.4;
       }
     `,
   },
 
   "scientific-cv": {
     plugins: [
+      "advlist",
       "advlist",
       "autolink",
       "lists",
@@ -189,6 +326,9 @@ const PRESETS = {
       "pagebreak",
       "quickbars",
       "autosave",
+      "pagebreak",
+      "quickbars",
+      "autosave",
     ],
     toolbar:
       "undo redo | formatselect | bold italic underline | forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | pagebreak | preview code fullscreen",
@@ -196,10 +336,25 @@ const PRESETS = {
     styles: `
       body {
         font-family: "Times New Roman", Times, serif;
-        font-size: 14px;
+        font-size: 16px;
+        line-height: 1.8;
+        color: #000;
+        padding: 30px;
+        background: #fff;
+        max-width: none;
+        word-wrap: break-word;
+      }
+      p {
+        margin: 1em 0;
+        line-height: 1.8;
+        text-align: justify;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: "Times New Roman", Times, serif;
+        font-weight: bold;
+        margin: 1.5em 0 1em 0;
         line-height: 1.4;
-        color: #333;
-        padding: 20px;
+        text-align: center;
       }
       .image-frame {
         width: 150px;
@@ -209,7 +364,7 @@ const PRESETS = {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        margin: 10px 0;
+        margin: 15px auto;
       }
       .image-frame img {
         max-width: 100%;
@@ -219,9 +374,54 @@ const PRESETS = {
       table {
         width: 100%;
         border-collapse: collapse;
+        margin: 1.5em 0;
+        font-size: 16px;
       }
       table, th, td {
-        border: 1px solid #ccc;
+        border: 1px solid #000;
+      }
+      th, td {
+        padding: 12px 8px;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 1.4;
+      }
+      th {
+        background-color: #f8f9fa;
+        font-weight: bold;
+      }
+      ul, ol {
+        margin: 1em 0;
+        padding-left: 2em;
+      }
+      li {
+        margin: 0.5em 0;
+        line-height: 1.6;
+      }
+      /* Signature boxes alignment */
+      .signature-container {
+        display: flex;
+        margin-top: 3em;
+        page-break-inside: avoid;
+      }
+      .signature-container.single {
+        justify-content: flex-end;
+      }
+      .signature-container.double {
+        justify-content: space-between;
+      }
+      .signature-container.triple {
+        justify-content: space-between;
+      }
+      .signature-box {
+        border: 1px solid #000;
+        width: 200px;
+        height: 120px;
+        text-align: center;
+        padding: 15px;
+        margin: 0 10px;
+        font-size: 14px;
+        line-height: 1.4;
       }
     `,
   },
@@ -232,7 +432,7 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
     {
       value,
       onChange,
-      height = 400,
+      height = 500,
       disabled = false,
       readOnly = false,
       apiKey,
@@ -254,6 +454,34 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
 
     const presetConfig = PRESETS[preset];
 
+    // Helper function để extract blob name từ Azure URL
+    const extractBlobNameFromUrl = (url: string): string | null => {
+      try {
+        // Azure URL format: https://storage00image.blob.core.windows.net/srpm-public/68e5dc06-ed9a-48d5-bfbb-e455451ded67.jpg
+        const match = url.match(/\/srpm-public\/(.+)$/);
+        return match ? match[1] : null;
+      } catch (error) {
+        console.error("Error extracting blob name from URL:", error);
+        return null;
+      }
+    };
+
+    // Function để xóa ảnh từ Azure khi user xóa trong editor
+    const handleImageDelete = async (imageUrl: string) => {
+      const blobName = extractBlobNameFromUrl(imageUrl);
+      if (blobName) {
+        try {
+          await deleteImageFromAzure(blobName);
+          console.log(`Image deleted from Azure: ${blobName}`);
+        } catch (error) {
+          console.error(
+            `Failed to delete image from Azure: ${blobName}`,
+            error
+          );
+        }
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       getContent: () => editorRef.current?.getContent() ?? "",
       setContent: (content: string) => editorRef.current?.setContent(content),
@@ -264,9 +492,71 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
     };
 
     const setupEditor = (editor: TinyMCEEditor) => {
+      // Add signature button
+      editor.ui.registry.addButton("signature", {
+        text: "Signature",
+        onAction: () => {
+          const signatureHtml = `
+            <div class="signature-container single">
+              <div class="signature-box">
+                <p><strong>Signature</strong></p>
+                <p>Name:</p>
+                <p>Date:</p>
+              </div>
+            </div>
+          `;
+          editor.insertContent(signatureHtml);
+        },
+      });
+
+      // Theo dõi khi ảnh bị xóa khỏi editor
+      let previousImages: string[] = [];
+
+      // Theo dõi thay đổi content để phát hiện ảnh bị xóa
+      editor.on("NodeChange SetContent", () => {
+        const currentImages = editor
+          .getBody()
+          .querySelectorAll('img[src*="storage00image.blob.core.windows.net"]');
+        const currentImageUrls = Array.from(currentImages).map(
+          (img) => (img as HTMLImageElement).src
+        );
+
+        // Tìm các ảnh đã bị xóa
+        const deletedImages = previousImages.filter(
+          (url) => !currentImageUrls.includes(url)
+        );
+
+        // Xóa các ảnh đã bị remove khỏi Azure
+        deletedImages.forEach((imageUrl) => {
+          handleImageDelete(imageUrl);
+        });
+
+        // Cập nhật danh sách ảnh hiện tại
+        previousImages = currentImageUrls;
+      });
+
       // Enhanced drag and drop functionality
       editor.on("init", () => {
         const editorBody = editor.getBody();
+
+        // Lưu danh sách ảnh ban đầu khi editor được khởi tạo
+        const images = editorBody.querySelectorAll(
+          'img[src*="storage00image.blob.core.windows.net"]'
+        );
+        previousImages = Array.from(images).map(
+          (img) => (img as HTMLImageElement).src
+        );
+
+        // Set default font for new content
+        editorBody.style.fontFamily = '"Times New Roman", Times, serif';
+
+        // Apply default styling to existing content
+        const paragraphs = editorBody.querySelectorAll("p");
+        paragraphs.forEach((p) => {
+          if (!p.style.fontFamily) {
+            p.style.fontFamily = '"Times New Roman", Times, serif';
+          }
+        });
 
         // Add drag over styling
         editorBody.addEventListener("dragover", (e) => {
@@ -315,6 +605,34 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
         });
       });
 
+      // Auto-apply font formatting to new content
+      editor.on("NodeChange", () => {
+        const selection = editor.selection;
+        const node = selection.getNode();
+
+        // Apply default font to new paragraphs
+        if (node.tagName === "P") {
+          const p = node as HTMLParagraphElement;
+          if (!p.style.fontFamily) {
+            p.style.fontFamily = '"Times New Roman", Times, serif';
+          }
+        }
+      });
+
+      // Ensure new content gets proper font formatting
+      editor.on("keydown", (e) => {
+        if (e.key === "Enter") {
+          setTimeout(() => {
+            const selection = editor.selection;
+            const node = selection.getNode();
+            if (node.tagName === "P") {
+              const p = node as HTMLParagraphElement;
+              p.style.fontFamily = '"Times New Roman", Times, serif';
+            }
+          }, 10);
+        }
+      });
+
       // Scientific CV specific setup
       if (preset === "scientific-cv") {
         editor.on("NodeChange", (e) => {
@@ -354,10 +672,28 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
           img.style.outline = "";
         }
       });
+
+      // Add custom image resize handles
+      editor.on("ObjectSelected", (e) => {
+        if (e.target.tagName === "IMG") {
+          const img = e.target as HTMLImageElement;
+          // Add resize handles or custom styling if needed
+          img.style.outline = "2px solid #007cba";
+        }
+      });
+
+      editor.on("ObjectDeselected", (e) => {
+        if (e.target.tagName === "IMG") {
+          const img = e.target as HTMLImageElement;
+          img.style.outline = "";
+        }
+      });
     };
 
     return (
-      <div className={`border rounded-lg overflow-hidden ${className}`}>
+      <div
+        className={`border border-gray-200 rounded-lg overflow-hidden shadow-sm ${className}`}
+      >
         <Editor
           apiKey={editorApiKey || "no-api-key"}
           onInit={(_, editor) => (editorRef.current = editor)}
@@ -392,6 +728,13 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
               "bold italic | quicklink h2 h3 blockquote",
             quickbars_insert_toolbar: "quickimage quicktable",
 
+            // Default content formatting
+            forced_root_block: "p",
+            forced_root_block_attrs: {
+              style:
+                'font-family: "Times New Roman", Times, serif; font-size: 16px; line-height: 1.8;',
+            },
+
             // Auto-save functionality
             autosave_ask_before_unload: false,
             autosave_interval: "30s",
@@ -404,8 +747,14 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
             file_picker_types: "image",
 
             // File picker callback for image uploads
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            file_picker_callback: (callback: any, _value: any, meta: any) => {
+            file_picker_callback: async (
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              callback: any,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              _value: any,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              meta: any
+            ) => {
               if (meta.filetype === "image") {
                 const input = document.createElement("input");
                 input.setAttribute("type", "file");
@@ -415,7 +764,7 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
                 );
                 input.setAttribute("multiple", "false");
 
-                input.onchange = function () {
+                input.onchange = async function () {
                   const file = (this as HTMLInputElement).files?.[0];
                   if (file) {
                     // Validate file size (max 5MB)
@@ -441,18 +790,26 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
                       return;
                     }
 
-                    const reader = new FileReader();
-                    reader.onload = function () {
-                      // Return the base64 image with metadata
-                      callback(reader.result, {
+                    try {
+                      // Upload ảnh lên Azure
+                      const uploadResponse = await uploadImageToAzure(file);
+                      console.log("Upload response:", uploadResponse);
+
+                      // Lấy URL đầy đủ của ảnh
+                      const imageUrl = await getImageUrlFromAzure(
+                        uploadResponse.url
+                      );
+                      console.log("Image URL:", imageUrl);
+
+                      // Trả về URL ảnh cho TinyMCE
+                      callback(imageUrl, {
                         alt: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for alt text
                         title: file.name,
                       });
-                    };
-                    reader.onerror = function () {
-                      alert("Error reading file. Please try again.");
-                    };
-                    reader.readAsDataURL(file);
+                    } catch (error) {
+                      console.error("Error uploading image:", error);
+                      alert("Error uploading image. Please try again.");
+                    }
                   }
                 };
 
@@ -461,11 +818,13 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
             },
 
             // Enhanced paste and drag-drop support
-            paste_data_images: true,
-            paste_as_text: false,
-            automatic_uploads: true,
 
-            // Drag and drop support
+            // Image upload settings
+            images_upload_url: "", // Sử dụng custom handler thay vì URL
+            images_reuse_filename: true,
+            images_file_types: "jpg,jpeg,png,gif,webp",
+
+            // Drag and drop support - upload lên Azure
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             images_upload_handler: (blobInfo: any) => {
               return new Promise((resolve, reject) => {
@@ -477,22 +836,36 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
                   return;
                 }
 
-                // Convert blob to base64
-                const reader = new FileReader();
-                reader.onload = () => {
-                  resolve(reader.result as string);
-                };
-                reader.onerror = () => {
-                  reject("Error processing image. Please try again.");
-                };
-                reader.readAsDataURL(blobInfo.blob());
+                // Tạo File object từ blob
+                const file = new File(
+                  [blobInfo.blob()],
+                  blobInfo.filename() || "image.png",
+                  {
+                    type: blobInfo.blob().type,
+                  }
+                );
+
+                // Upload ảnh lên Azure (async operation)
+                uploadImageToAzure(file)
+                  .then((uploadResponse) => {
+                    console.log("Drag & drop upload response:", uploadResponse);
+                    // Lấy URL đầy đủ của ảnh
+                    return getImageUrlFromAzure(uploadResponse.url);
+                  })
+                  .then((imageUrl) => {
+                    console.log("Drag & drop image URL:", imageUrl);
+                    // Trả về URL ảnh cho TinyMCE
+                    resolve(imageUrl);
+                  })
+                  .catch((error) => {
+                    console.error(
+                      "Error uploading image via drag & drop:",
+                      error
+                    );
+                    reject("Error uploading image. Please try again.");
+                  });
               });
             },
-
-            // Image upload settings
-            images_upload_url: "", // Disable server upload, use base64
-            images_reuse_filename: true,
-            images_file_types: "jpg,jpeg,png,gif,webp",
 
             setup: setupEditor,
           }}

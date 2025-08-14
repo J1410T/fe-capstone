@@ -75,6 +75,7 @@ export interface IndividualEvaluationApi {
   "reviewer-name": string | null;
   "reviewer-email": string | null;
   documents: DocumentInEvaluation[] | null;
+  "reviewer-avatar": string | null;
   "projects-similarity-result": unknown | null;
 }
 
@@ -116,6 +117,9 @@ export type IndividualEvaluation = {
   status: string;
   evaluationStageId: string;
   reviewerId: string;
+  reviewerName?: string | null; // Reviewer name
+  reviewerEmail?: string | null; // Reviewer email
+  reviewerAvatar?: string | null; // Reviewer avatar
   projectId: string;
   milestoneId: string;
   evaluator?: string; // Evaluator name for display
@@ -174,6 +178,7 @@ export interface CreateIndividualEvaluationRequest {
   "is-ai-report": boolean;
   status: string;
   "evaluation-stage-id": string;
+  "reviewer-id": string;
 }
 
 export interface CreateIndividualEvaluationResponse {
