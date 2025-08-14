@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProposalSelectionDialog } from "./components";
+import { useUpdateProject } from "@/hooks/queries/project";
+import { toast } from "sonner";
 import {
   ArrowLeft,
   Users,
@@ -31,6 +33,9 @@ export const TopicDetailPage: React.FC = () => {
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(
     null
   );
+
+  // Add mutation hook for updating projects
+  const updateProjectMutation = useUpdateProject();
 
   // Use real data instead of mock data
   const topic = project;
@@ -70,9 +75,68 @@ export const TopicDetailPage: React.FC = () => {
     setIsProposalDialogOpen(false);
   };
 
-  const handleSelectProposal = (proposalId: string) => {
-    setSelectedProposalId(proposalId);
-    console.log("Selected proposal:", proposalId);
+  const handleSelectProposal = async (proposalId: string) => {
+    try {
+      // Find the selected proposal
+      const selectedProposal = topicProposals.find((p) => p.id === proposalId);
+      if (!selectedProposal) {
+        toast.error("Không tìm thấy proposal được chọn");
+        return;
+      }
+
+      // Update the selected proposal to "approved" status
+      await updateProjectMutation.mutateAsync({
+        projectId: proposalId,
+        data: {
+          "english-title": selectedProposal["english-title"],
+          "vietnamese-title": selectedProposal["vietnamese-title"],
+          abbreviations: selectedProposal.abbreviations,
+          duration: selectedProposal.duration,
+          "start-date": selectedProposal["start-date"],
+          "end-date": selectedProposal["end-date"],
+          description: selectedProposal.description,
+          "requirement-note": selectedProposal["requirement-note"],
+          "maximum-member": selectedProposal["maximum-member"],
+          language: selectedProposal.language,
+          category: selectedProposal.category,
+          type: selectedProposal.type,
+          genre: selectedProposal.genre,
+        },
+        status: "approved",
+      });
+
+      // Update other proposals to "rejected" status
+      const otherProposals = topicProposals.filter((p) => p.id !== proposalId);
+      for (const proposal of otherProposals) {
+        await updateProjectMutation.mutateAsync({
+          projectId: proposal.id,
+          data: {
+            "english-title": proposal["english-title"],
+            "vietnamese-title": proposal["vietnamese-title"],
+            abbreviations: proposal.abbreviations,
+            duration: proposal.duration,
+            "start-date": proposal["start-date"],
+            "end-date": proposal["end-date"],
+            description: proposal.description,
+            "requirement-note": proposal["requirement-note"],
+            "maximum-member": proposal["maximum-member"],
+            language: proposal.language,
+            category: proposal.category,
+            type: proposal.type,
+            genre: proposal.genre,
+          },
+          status: "rejected",
+        });
+      }
+
+      setSelectedProposalId(proposalId);
+      toast.success(
+        `Đã chọn proposal "${selectedProposal["english-title"]}" và cập nhật trạng thái các proposal khác`
+      );
+    } catch (error) {
+      console.error("Error updating proposal status:", error);
+      toast.error("Có lỗi xảy ra khi cập nhật trạng thái proposal");
+    }
   };
 
   return (
@@ -522,6 +586,7 @@ export const TopicDetailPage: React.FC = () => {
         proposals={topicProposals}
         onSelectProposal={handleSelectProposal}
         topicTitle={topic?.["english-title"] || ""}
+        isLoading={updateProjectMutation.isPending}
       />
     </div>
   );

@@ -9,3 +9,4 @@ export * from "./api";
 export * from "./query-client";
 
 // Resources
+export * from "./resources/azure-image";

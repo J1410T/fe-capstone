@@ -1,5 +1,10 @@
 import { useRef, forwardRef, useImperativeHandle } from "react";
 import { Editor } from "@tinymce/tinymce-react";
+import {
+  uploadImageToAzure,
+  getImageUrlFromAzure,
+  deleteImageFromAzure,
+} from "@/services/resources/azure-image";
 import type { Editor as TinyMCEEditor } from "tinymce";
 
 export interface TinyMCERef {
@@ -449,6 +454,34 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
 
     const presetConfig = PRESETS[preset];
 
+    // Helper function để extract blob name từ Azure URL
+    const extractBlobNameFromUrl = (url: string): string | null => {
+      try {
+        // Azure URL format: https://storage00image.blob.core.windows.net/srpm-public/68e5dc06-ed9a-48d5-bfbb-e455451ded67.jpg
+        const match = url.match(/\/srpm-public\/(.+)$/);
+        return match ? match[1] : null;
+      } catch (error) {
+        console.error("Error extracting blob name from URL:", error);
+        return null;
+      }
+    };
+
+    // Function để xóa ảnh từ Azure khi user xóa trong editor
+    const handleImageDelete = async (imageUrl: string) => {
+      const blobName = extractBlobNameFromUrl(imageUrl);
+      if (blobName) {
+        try {
+          await deleteImageFromAzure(blobName);
+          console.log(`Image deleted from Azure: ${blobName}`);
+        } catch (error) {
+          console.error(
+            `Failed to delete image from Azure: ${blobName}`,
+            error
+          );
+        }
+      }
+    };
+
     useImperativeHandle(ref, () => ({
       getContent: () => editorRef.current?.getContent() ?? "",
       setContent: (content: string) => editorRef.current?.setContent(content),
@@ -476,9 +509,43 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
         },
       });
 
+      // Theo dõi khi ảnh bị xóa khỏi editor
+      let previousImages: string[] = [];
+
+      // Theo dõi thay đổi content để phát hiện ảnh bị xóa
+      editor.on("NodeChange SetContent", () => {
+        const currentImages = editor
+          .getBody()
+          .querySelectorAll('img[src*="storage00image.blob.core.windows.net"]');
+        const currentImageUrls = Array.from(currentImages).map(
+          (img) => (img as HTMLImageElement).src
+        );
+
+        // Tìm các ảnh đã bị xóa
+        const deletedImages = previousImages.filter(
+          (url) => !currentImageUrls.includes(url)
+        );
+
+        // Xóa các ảnh đã bị remove khỏi Azure
+        deletedImages.forEach((imageUrl) => {
+          handleImageDelete(imageUrl);
+        });
+
+        // Cập nhật danh sách ảnh hiện tại
+        previousImages = currentImageUrls;
+      });
+
       // Enhanced drag and drop functionality
       editor.on("init", () => {
         const editorBody = editor.getBody();
+
+        // Lưu danh sách ảnh ban đầu khi editor được khởi tạo
+        const images = editorBody.querySelectorAll(
+          'img[src*="storage00image.blob.core.windows.net"]'
+        );
+        previousImages = Array.from(images).map(
+          (img) => (img as HTMLImageElement).src
+        );
 
         // Set default font for new content
         editorBody.style.fontFamily = '"Times New Roman", Times, serif';
@@ -680,10 +747,14 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
             file_picker_types: "image",
 
             // File picker callback for image uploads
-
-            // File picker callback for image uploads
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            file_picker_callback: (callback: any, _value: any, meta: any) => {
+            file_picker_callback: async (
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              callback: any,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              _value: any,
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              meta: any
+            ) => {
               if (meta.filetype === "image") {
                 const input = document.createElement("input");
                 input.setAttribute("type", "file");
@@ -692,13 +763,8 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
                   "image/jpeg,image/jpg,image/png,image/gif,image/webp"
                 );
                 input.setAttribute("multiple", "false");
-                input.setAttribute(
-                  "accept",
-                  "image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                );
-                input.setAttribute("multiple", "false");
 
-                input.onchange = function () {
+                input.onchange = async function () {
                   const file = (this as HTMLInputElement).files?.[0];
                   if (file) {
                     // Validate file size (max 5MB)
@@ -724,40 +790,26 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
                       return;
                     }
 
-                    // Validate file size (max 5MB)
-                    if (file.size > 5 * 1024 * 1024) {
-                      alert(
-                        "File size too large. Please choose an image smaller than 5MB."
-                      );
-                      return;
-                    }
-                    if (!allowedTypes.includes(file.type)) {
-                      alert(
-                        "Invalid file type. Please choose a JPEG, PNG, GIF, or WebP image."
-                      );
-                      return;
-                    }
+                    try {
+                      // Upload ảnh lên Azure
+                      const uploadResponse = await uploadImageToAzure(file);
+                      console.log("Upload response:", uploadResponse);
 
-                    const reader = new FileReader();
-                    reader.onload = function () {
-                      // Return the base64 image with metadata
-                      callback(reader.result, {
+                      // Lấy URL đầy đủ của ảnh
+                      const imageUrl = await getImageUrlFromAzure(
+                        uploadResponse.url
+                      );
+                      console.log("Image URL:", imageUrl);
+
+                      // Trả về URL ảnh cho TinyMCE
+                      callback(imageUrl, {
                         alt: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for alt text
                         title: file.name,
                       });
-                    };
-                    reader.onerror = function () {
-                      alert("Error reading file. Please try again.");
-                      // Return the base64 image with metadata
-                      callback(reader.result, {
-                        alt: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for alt text
-                        title: file.name,
-                      });
-                    };
-                    reader.onerror = function () {
-                      alert("Error reading file. Please try again.");
-                    };
-                    reader.readAsDataURL(file);
+                    } catch (error) {
+                      console.error("Error uploading image:", error);
+                      alert("Error uploading image. Please try again.");
+                    }
                   }
                 };
 
@@ -768,11 +820,11 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
             // Enhanced paste and drag-drop support
 
             // Image upload settings
-            images_upload_url: "", // Disable server upload, use base64
+            images_upload_url: "", // Sử dụng custom handler thay vì URL
             images_reuse_filename: true,
             images_file_types: "jpg,jpeg,png,gif,webp",
 
-            // Drag and drop support
+            // Drag and drop support - upload lên Azure
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             images_upload_handler: (blobInfo: any) => {
               return new Promise((resolve, reject) => {
@@ -784,15 +836,34 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
                   return;
                 }
 
-                // Convert blob to base64
-                const reader = new FileReader();
-                reader.onload = () => {
-                  resolve(reader.result as string);
-                };
-                reader.onerror = () => {
-                  reject("Error processing image. Please try again.");
-                };
-                reader.readAsDataURL(blobInfo.blob());
+                // Tạo File object từ blob
+                const file = new File(
+                  [blobInfo.blob()],
+                  blobInfo.filename() || "image.png",
+                  {
+                    type: blobInfo.blob().type,
+                  }
+                );
+
+                // Upload ảnh lên Azure (async operation)
+                uploadImageToAzure(file)
+                  .then((uploadResponse) => {
+                    console.log("Drag & drop upload response:", uploadResponse);
+                    // Lấy URL đầy đủ của ảnh
+                    return getImageUrlFromAzure(uploadResponse.url);
+                  })
+                  .then((imageUrl) => {
+                    console.log("Drag & drop image URL:", imageUrl);
+                    // Trả về URL ảnh cho TinyMCE
+                    resolve(imageUrl);
+                  })
+                  .catch((error) => {
+                    console.error(
+                      "Error uploading image via drag & drop:",
+                      error
+                    );
+                    reject("Error uploading image. Please try again.");
+                  });
               });
             },
 
