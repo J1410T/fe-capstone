@@ -397,10 +397,10 @@ export const TopicDetailPage: React.FC = () => {
                               </p>
                             )} */}
                             <div className="flex items-center gap-4 text-sm text-gray-500">
-                              <span className="font-medium text-gray-900">
+                              {/* <span className="font-medium text-gray-900">
                                 {proposal.creator?.["full-name"] ||
                                   "Unknown Creator"}
-                              </span>
+                              </span> */}
                               {proposal.creator?.email && (
                                 <span className="text-gray-500">
                                   {proposal.creator.email}
