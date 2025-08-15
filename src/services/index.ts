@@ -10,3 +10,4 @@ export * from "./query-client";
 
 // Resources
 export * from "./resources/azure-image";
+export * from "./resources/document";

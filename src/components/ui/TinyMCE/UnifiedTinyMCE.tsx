@@ -186,16 +186,6 @@ const PRESETS = {
       .signature-container.triple {
         justify-content: space-between;
       }
-      .signature-box {
-        border: 1px solid #000;
-        width: 200px;
-        height: 120px;
-        text-align: center;
-        padding: 15px;
-        margin: 0 10px;
-        font-size: 14px;
-        line-height: 1.4;
-      }
     `,
   },
 

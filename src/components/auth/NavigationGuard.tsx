@@ -148,9 +148,9 @@ const NavigationGuard: React.FC = () => {
         isAccessingAuthorizedRoute ||
         isAccessingHomeRoute
       ) {
-        console.log(
-          "NavigationGuard: Skipping checks - first navigation, page reload, authorized route access, or home route"
-        );
+        // console.log(
+        //   "NavigationGuard: Skipping checks - first navigation, page reload, authorized route access, or home route"
+        // ); bật này lên
         return;
       }
 

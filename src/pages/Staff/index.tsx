@@ -27,3 +27,9 @@ export { default as StaffMeetings } from "./components/StaffMeetings";
 export { default as FieldsManagement } from "./components/FieldsManagement";
 export { default as AppraisalCouncilsManagement } from "./components/AppraisalCouncilsManagement";
 export { default as MajorsManagement } from "./components/MajorsManagement";
+
+// Request Management
+// export { default as RequestManagement } from "./components/RequestManagement";
+
+// Document Management
+export { default as DocumentManagement } from "./components/DocumentManagement";
