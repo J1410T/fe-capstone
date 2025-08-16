@@ -51,6 +51,33 @@ export const ProposalSelectionDialog: React.FC<
 
   const selectedProposal = proposals.find((p) => p.id === selectedProposalId);
 
+  // Helper function to get PI name from members (same as TopicDetailPage)
+  const getPIName = (proposal: Proposal) => {
+    // Look for Principal Investigator role in members first
+    if (proposal.members && proposal.members.length > 0) {
+      const pi = proposal.members.find(
+        (member) =>
+          member.name === "Principal Investigator" || member.name === "PI"
+      );
+      if (pi && pi["full-name"]) {
+        return pi["full-name"];
+      }
+
+      // If no PI role, try any member with full-name as fallback
+      const anyMember = proposal.members.find((m) => m["full-name"]);
+      if (anyMember) {
+        return anyMember["full-name"];
+      }
+    }
+
+    // Fallback to creator if no PI found
+    if (proposal.creator?.["full-name"]) {
+      return proposal.creator["full-name"];
+    }
+
+    return "Unknown";
+  };
+
   const handleConfirmSelection = () => {
     if (selectedProposalId) {
       onSelectProposal(selectedProposalId);
@@ -128,7 +155,7 @@ export const ProposalSelectionDialog: React.FC<
                       <div className="flex items-center gap-3 w-full">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
                           <span className="text-xs font-medium text-blue-700">
-                            {(proposal.creator?.["full-name"] || "U").charAt(0)}
+                            {getPIName(proposal)?.charAt(0) || "U"}
                           </span>
                         </div>
                         <div className="flex-1 text-left">
@@ -136,7 +163,7 @@ export const ProposalSelectionDialog: React.FC<
                             {proposal["english-title"]}
                           </p>
                           <p className="text-xs text-gray-500">
-                            by {proposal.creator?.["full-name"] || "Unknown"} •{" "}
+                            by {getPIName(proposal)} •{" "}
                             {/* {proposal.creator?.["group-name"] ||
                               "No Institution"} */}
                           </p>
