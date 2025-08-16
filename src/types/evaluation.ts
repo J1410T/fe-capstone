@@ -1,3 +1,5 @@
+import { DocumentInEvaluation } from "./document";
+
 export interface CreateFirstEvaluationRequest {
   projectId: string;
 }
@@ -72,8 +74,8 @@ export interface IndividualEvaluationApi {
   "reviewer-id": string | null;
   "reviewer-name": string | null;
   "reviewer-email": string | null;
+  documents: DocumentInEvaluation[] | null;
   "reviewer-avatar": string | null;
-  documents: unknown[] | null;
   "projects-similarity-result": unknown | null;
 }
 

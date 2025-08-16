@@ -102,10 +102,13 @@ export const getIndividualEvaluationById = async (
   request: GetIndividualEvaluationByIdRequest
 ): Promise<IndividualEvaluationApi> => {
   try {
+    const accessToken = getAccessToken();
+
     const response = await axiosClient.get<IndividualEvaluationApi>(
       `/individual-evaluation/${request.id}`,
       {
         headers: {
+          Authorization: `Bearer ${accessToken}`,
           "Content-Type": "application/json",
         },
       }

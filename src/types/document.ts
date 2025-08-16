@@ -154,3 +154,21 @@ export interface CreateDocumentByIndividualEvaluationRequest {
 export interface CreateDocumentByIndividualEvaluationResponse {
   id: string;
 }
+
+export interface DocumentInEvaluation {
+  id: string;
+  name: string;
+  type: string;
+  "is-template": boolean;
+  "content-html": string;
+  "updated-at": string;
+  "upload-at": string;
+  status: string;
+  "editor-id": string | null;
+  "uploader-id": string;
+  "project-id": string | null;
+  "evaluation-id": string | null;
+  "individual-evaluation-id": string;
+  "transaction-id": string | null;
+  signatures: unknown | null;
+}
