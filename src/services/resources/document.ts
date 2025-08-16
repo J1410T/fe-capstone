@@ -150,6 +150,16 @@ export const getDocumentByProjectIdWithUserRole = async (
   }
 };
 
+export const getDocumentById = async (documentId: string) => {
+  const accessToken = getAccessToken();
+
+  return await axiosClient.get<DocumentForm>(`/document/${documentId}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+};
+
 export const createDocumentByIndividualEvaluation = async (
   request: CreateDocumentByIndividualEvaluationRequest
 ): Promise<CreateDocumentByIndividualEvaluationResponse> => {

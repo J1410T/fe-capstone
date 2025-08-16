@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProposalSelectionDialog } from "./components";
 import { useUpdateProject } from "@/hooks/queries/project";
+import { createNotification } from "@/services/resources/notification";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -128,7 +129,21 @@ export const TopicDetailPage: React.FC = () => {
           status: "rejected",
         });
       }
+      // Create notifications for Staff to handle the approved proposal
+      try {
+        await createNotification({
+          title: `Proposal Approved: ${selectedProposal["english-title"]}`,
+          type: "project",
+          status: "pending",
+          "objec-notification-id": proposalId,
+          "list-account-id": [], // Staff will see this as a request
+        });
 
+        console.log("Notification created for approved proposal");
+      } catch (notificationError) {
+        console.error("Failed to create notification:", notificationError);
+        // Don't fail the entire operation if notification creation fails
+      }
       setSelectedProposalId(proposalId);
       toast.success(
         `Đã chọn proposal "${selectedProposal["english-title"]}" và cập nhật trạng thái các proposal khác`

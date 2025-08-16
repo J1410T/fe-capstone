@@ -97,9 +97,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Page visibility handler
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        console.log("User left the page");
+        // console.log("User left the page");
+        console.log();
       } else {
-        console.log("User returned to page");
+        // console.log("User returned to page");
+        console.log();
         updateActivity();
       }
     };

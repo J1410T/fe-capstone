@@ -30,6 +30,7 @@ import {
   MajorsManagement,
   // StaffMilestoneManagement,
   StaffMeetings,
+  DocumentManagement,
 } from "@/pages/Staff";
 
 // General Pages
@@ -69,6 +70,7 @@ import GeneralComingSoon from "@/pages/ComingSoon";
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
 import PIRegisterProject from "@/pages/PrincipalInvestigator/RegisterProject";
 import PIMeetings from "@/pages/PrincipalInvestigator/Meetings";
+// import ContractNotifications from "@/pages/PrincipalInvestigator/ContractNotifications";
 import Meetings from "@/pages/Council/Meetings";
 import ProjectApproval from "@/pages/Council/ProjectApproval";
 import CreateEvaluation from "@/pages/Council/ProjectApproval/CreateEvaluation";
@@ -205,6 +207,10 @@ export const routes: RouteObject[] = [
           {
             path: "notifications",
             element: <ViewAllNotifications />,
+          },
+          {
+            path: "documents",
+            element: <DocumentManagement />,
           },
           {
             path: "*",
@@ -612,6 +618,10 @@ export const routes: RouteObject[] = [
             path: "meetings",
             element: <PIMeetings />,
           },
+          // {
+          //   path: "contract-notifications",
+          //   element: <ContractNotifications />,
+          // },
 
           {
             path: "meeting/:id",

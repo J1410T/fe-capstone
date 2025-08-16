@@ -35,6 +35,7 @@ import {
   FileText,
   // Download,
   Eye,
+  Edit,
   FolderOpen,
   Upload,
   Loader2,
@@ -45,6 +46,8 @@ import { DocumentWithUserRole } from "@/types/document";
 import { formatDateTime } from "@/utils";
 import { getStatusColor } from "../shared/utils";
 import { TinyMCEViewer } from "@/components/ui/TinyMCE";
+import { FORM_TYPES, FormStatus } from "@/pages/FormRegister/constants";
+import { UserRole } from "@/contexts/auth-types";
 import {
   useScientificCVByEmail,
   useCreateDocument,
@@ -54,6 +57,8 @@ import {
 import { useMyAccountInfo } from "@/hooks/queries/useAuth";
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts";
+import { useNavigate } from "react-router-dom";
 
 interface DocumentTabProps {
   projectId?: string;
@@ -80,6 +85,10 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   // Get email from auth response cookie
   const authResponse = getAuthResponse<{ email: string }>();
   const userEmail = authResponse?.email || "";
+
+  // Auth and navigation
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch user's Scientific CV by email
   const { data: scientificCV, isLoading: isCVLoading } = useScientificCVByEmail(
@@ -124,6 +133,60 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   const handleViewDocument = (document: DocumentWithUserRole) => {
     setSelectedDocument(document);
     setShowViewDialog(true);
+  };
+
+  // Check if user can edit a document (specifically BM5 contracts)
+  const canEditDocument = (document: DocumentWithUserRole): boolean => {
+    if (!user || document.type !== "BM5") return false;
+
+    const formType = FORM_TYPES[document.type];
+    if (!formType) return false;
+
+    // Map document status to form status
+    let formStatus: FormStatus;
+    switch (document.status) {
+      case "draft":
+        formStatus = FormStatus.DRAFT;
+        break;
+      case "waiting-for-pi":
+        formStatus = FormStatus.WAITING_FOR_PI;
+        break;
+      case "waiting-for-staff":
+        formStatus = FormStatus.WAITING_FOR_STAFF;
+        break;
+      case "finalized":
+        formStatus = FormStatus.FINALIZED;
+        break;
+      default:
+        formStatus = FormStatus.DRAFT;
+    }
+
+    // Determine last updater role based on account-id and user info
+    // This is a simplified logic - you might need more sophisticated role detection
+    let lastUpdatedBy: UserRole = UserRole.STAFF; // Default to staff
+
+    // If document has account-id, try to determine the role
+    // This is a basic implementation - you might need to enhance this based on your user role system
+    if (document["account-id"]) {
+      // For now, assume if it's not the current user, it was updated by the other role
+      if (document["account-id"] !== user.id) {
+        lastUpdatedBy =
+          user.role === UserRole.STAFF
+            ? UserRole.PRINCIPAL_INVESTIGATOR
+            : UserRole.STAFF;
+      } else {
+        lastUpdatedBy = user.role;
+      }
+    }
+
+    return formType.workflow.canEdit(formStatus, user.role, lastUpdatedBy);
+  };
+
+  const handleEditDocument = (document: DocumentWithUserRole) => {
+    if (document.type === "BM5") {
+      // Navigate to form edit page for BM5 contracts
+      navigate(`/forms/edit/${document.id}`);
+    }
   };
 
   // const handleDownloadDocument = (document: DocumentWithUserRole) => {
@@ -288,6 +351,17 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
                           <Eye className="w-3 h-3 mr-1" />
                           <span className="hidden sm:inline">View</span>
                         </Button>
+                        {canEditDocument(document) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditDocument(document)}
+                            className="bg-blue-50 hover:bg-blue-100 border-blue-200"
+                          >
+                            <Edit className="w-3 h-3 mr-1" />
+                            <span className="hidden sm:inline">Edit</span>
+                          </Button>
+                        )}
                         {/* <Button
                           variant="outline"
                           size="sm"
