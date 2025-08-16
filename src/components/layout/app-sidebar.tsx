@@ -11,6 +11,7 @@ import {
   LogOut,
   User,
   Calendar,
+  ClipboardList,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -51,6 +52,16 @@ const data = {
         {
           title: "Document Forms",
           url: "/staff/forms",
+          icon: FileText,
+        },
+        {
+          title: "Request Management",
+          url: "/staff/requests",
+          icon: ClipboardList,
+        },
+        {
+          title: "Document Management",
+          url: "/staff/documents",
           icon: FileText,
         },
       ],
