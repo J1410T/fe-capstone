@@ -129,7 +129,6 @@ export const TopicDetailPage: React.FC = () => {
           status: "rejected",
         });
       }
-
       // Create notifications for Staff to handle the approved proposal
       try {
         await createNotification({
@@ -145,7 +144,6 @@ export const TopicDetailPage: React.FC = () => {
         console.error("Failed to create notification:", notificationError);
         // Don't fail the entire operation if notification creation fails
       }
-
       setSelectedProposalId(proposalId);
       toast.success(
         `Đã chọn proposal "${selectedProposal["english-title"]}" và cập nhật trạng thái các proposal khác`
