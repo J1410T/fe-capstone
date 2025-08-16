@@ -3,9 +3,10 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProposalSelectionDialog } from "./components";
-import { useUpdateProject } from "@/hooks/queries/project";
+import { approveProject } from "@/services/resources/project";
 import { createNotification } from "@/services/resources/notification";
 import { toast } from "sonner";
+import { useMutation } from "@tanstack/react-query";
 import {
   ArrowLeft,
   Users,
@@ -35,16 +36,48 @@ export const TopicDetailPage: React.FC = () => {
     null
   );
 
-  // Add mutation hook for updating projects
-  const updateProjectMutation = useUpdateProject();
+  // Add mutation hook for approving projects
+  const approveProjectMutation = useMutation({
+    mutationFn: approveProject,
+  });
 
   // Use real data instead of mock data
   const topic = project;
-  const topicProposals = proposals || [];
+  // Filter only submitted proposals
+  const topicProposals = (proposals || []).filter(
+    (p) => p.status === "submitted"
+  );
 
   const selectedProposal = selectedProposalId
     ? topicProposals.find((p) => p.id === selectedProposalId)
     : null;
+
+  // Helper function to get PI name from members
+  const getPIName = (proposal: Proposal) => {
+    // Look for Principal Investigator role in members first
+    if (proposal.members && proposal.members.length > 0) {
+      const pi = proposal.members.find(
+        (member) =>
+          member.name === "Principal Investigator" || member.name === "PI"
+      );
+      if (pi && pi["full-name"]) {
+        return pi["full-name"];
+      }
+
+      // If no PI role, try any member with full-name as fallback
+      const anyMember = proposal.members.find((m) => m["full-name"]);
+      if (anyMember) {
+        return anyMember["full-name"];
+      }
+    }
+
+    // Fallback to creator if no PI found
+    if (proposal.creator?.["full-name"]) {
+      return proposal.creator["full-name"];
+    }
+
+    return "Unknown Creator";
+  };
 
   if (!topic) {
     return (
@@ -85,50 +118,13 @@ export const TopicDetailPage: React.FC = () => {
         return;
       }
 
-      // Update the selected proposal to "approved" status
-      await updateProjectMutation.mutateAsync({
-        projectId: proposalId,
-        data: {
-          "english-title": selectedProposal["english-title"],
-          "vietnamese-title": selectedProposal["vietnamese-title"],
-          abbreviations: selectedProposal.abbreviations,
-          duration: selectedProposal.duration,
-          "start-date": selectedProposal["start-date"],
-          "end-date": selectedProposal["end-date"],
-          description: selectedProposal.description,
-          "requirement-note": selectedProposal["requirement-note"],
-          "maximum-member": selectedProposal["maximum-member"],
-          language: selectedProposal.language,
-          category: selectedProposal.category,
-          type: selectedProposal.type,
-          genre: selectedProposal.genre,
-        },
-        status: "approved",
-      });
-
-      // Update other proposals to "rejected" status
-      const otherProposals = topicProposals.filter((p) => p.id !== proposalId);
-      for (const proposal of otherProposals) {
-        await updateProjectMutation.mutateAsync({
-          projectId: proposal.id,
-          data: {
-            "english-title": proposal["english-title"],
-            "vietnamese-title": proposal["vietnamese-title"],
-            abbreviations: proposal.abbreviations,
-            duration: proposal.duration,
-            "start-date": proposal["start-date"],
-            "end-date": proposal["end-date"],
-            description: proposal.description,
-            "requirement-note": proposal["requirement-note"],
-            "maximum-member": proposal["maximum-member"],
-            language: proposal.language,
-            category: proposal.category,
-            type: proposal.type,
-            genre: proposal.genre,
-          },
-          status: "rejected",
-        });
+      // Only submitted proposals can be approved
+      if (selectedProposal.status !== "submitted") {
+        toast.error("Chỉ có thể approve proposals có status 'submitted'");
+        return;
       }
+      // Approve the selected proposal using the new API
+      await approveProjectMutation.mutateAsync(proposalId);
       // Create notifications for Staff to handle the approved proposal
       try {
         await createNotification({
@@ -146,11 +142,11 @@ export const TopicDetailPage: React.FC = () => {
       }
       setSelectedProposalId(proposalId);
       toast.success(
-        `Đã chọn proposal "${selectedProposal["english-title"]}" và cập nhật trạng thái các proposal khác`
+        `Đã approve proposal "${selectedProposal["english-title"]}"`
       );
     } catch (error) {
-      console.error("Error updating proposal status:", error);
-      toast.error("Có lỗi xảy ra khi cập nhật trạng thái proposal");
+      console.error("Error approving proposal:", error);
+      toast.error("Có lỗi xảy ra khi approve proposal");
     }
   };
 
@@ -348,13 +344,11 @@ export const TopicDetailPage: React.FC = () => {
                     Principal Investigator Proposals
                   </h3>
                   <p className="text-xs text-gray-500">
-                    {topicProposals.length} proposal
-                    {topicProposals.length !== 1 ? "s" : ""} submitted for
-                    review
+                    {topicProposals.length} submitted proposal
+                    {topicProposals.length !== 1 ? "s" : ""} for review
                     {selectedProposal && (
                       <span className="ml-2 text-emerald-600 font-medium">
-                        • {selectedProposal.creator?.["full-name"] || "Unknown"}{" "}
-                        selected
+                        • {getPIName(selectedProposal)} selected
                       </span>
                     )}
                   </p>
@@ -382,11 +376,11 @@ export const TopicDetailPage: React.FC = () => {
                   </div>
                   <div>
                     <p className="text-xl font-medium text-gray-900 mb-2">
-                      No proposals yet
+                      No submitted proposals yet
                     </p>
                     <p className="text-gray-500">
-                      Waiting for Principal Investigators to submit their
-                      proposals
+                      Only submitted proposals can be approved. Waiting for
+                      Principal Investigators to submit their proposals.
                     </p>
                   </div>
                 </div>
@@ -420,9 +414,7 @@ export const TopicDetailPage: React.FC = () => {
                                   : "text-emerald-700"
                               }`}
                             >
-                              {(proposal.creator?.["full-name"] || "U").charAt(
-                                0
-                              )}
+                              {getPIName(proposal)?.charAt(0) || "U"}
                             </span>
                           </div>
                           <div className="flex-1">
@@ -476,15 +468,36 @@ export const TopicDetailPage: React.FC = () => {
                               </p>
                             )} */}
                             <div className="flex items-center gap-4 text-sm text-gray-500">
-                              {/* <span className="font-medium text-gray-900">
-                                {proposal.creator?.["full-name"] ||
-                                  "Unknown Creator"}
-                              </span> */}
-                              {proposal.creator?.email && (
-                                <span className="text-gray-500">
-                                  {proposal.creator.email}
-                                </span>
-                              )}
+                              <span className="font-medium text-gray-900">
+                                {getPIName(proposal)}
+                              </span>
+                              {(() => {
+                                // Get PI email first, then fallback to creator
+                                let email = null;
+
+                                if (proposal.members) {
+                                  const pi = proposal.members.find(
+                                    (member) =>
+                                      member.name ===
+                                        "Principal Investigator" ||
+                                      member.name === "PI"
+                                  );
+                                  email = pi?.email;
+                                }
+
+                                // Fallback to creator email if no PI email
+                                if (!email) {
+                                  email = proposal.creator?.email;
+                                }
+
+                                return (
+                                  email && (
+                                    <span className="text-gray-500">
+                                      {email}
+                                    </span>
+                                  )
+                                );
+                              })()}
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 <span>
@@ -601,7 +614,7 @@ export const TopicDetailPage: React.FC = () => {
         proposals={topicProposals}
         onSelectProposal={handleSelectProposal}
         topicTitle={topic?.["english-title"] || ""}
-        isLoading={updateProjectMutation.isPending}
+        isLoading={approveProjectMutation.isPending}
       />
     </div>
   );

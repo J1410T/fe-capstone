@@ -268,7 +268,7 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
     if (!documentsWithUserRole?.["data-list"]) return {};
     const cvDocs: Record<string, DocumentWithUserRole> = {};
     documentsWithUserRole["data-list"].forEach((doc) => {
-      if (doc.type === "ScienceCV" && doc["account-id"]) {
+      if (doc.type === "BM2" && doc["account-id"]) {
         cvDocs[doc["account-id"]] = doc;
       }
     });

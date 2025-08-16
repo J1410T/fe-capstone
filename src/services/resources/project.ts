@@ -424,3 +424,24 @@ export const getProjectById = async (
     throw error;
   }
 };
+
+export const approveProject = async (
+  proposalProjectId: string
+): Promise<void> => {
+  try {
+    const accessToken = getAccessToken();
+    await axiosClient.post(
+      `/project/${proposalProjectId}/approve`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+  } catch (error) {
+    console.error("approveProject error:", error);
+    throw error;
+  }
+};
