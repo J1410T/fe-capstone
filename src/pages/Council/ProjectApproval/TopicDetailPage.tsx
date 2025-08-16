@@ -123,10 +123,8 @@ export const TopicDetailPage: React.FC = () => {
         toast.error("Chỉ có thể approve proposals có status 'submitted'");
         return;
       }
-
       // Approve the selected proposal using the new API
       await approveProjectMutation.mutateAsync(proposalId);
-
       // Create notifications for Staff to handle the approved proposal
       try {
         await createNotification({
@@ -142,7 +140,6 @@ export const TopicDetailPage: React.FC = () => {
         console.error("Failed to create notification:", notificationError);
         // Don't fail the entire operation if notification creation fails
       }
-
       setSelectedProposalId(proposalId);
       toast.success(
         `Đã approve proposal "${selectedProposal["english-title"]}"`
