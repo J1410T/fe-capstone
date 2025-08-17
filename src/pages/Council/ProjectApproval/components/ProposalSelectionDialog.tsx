@@ -103,7 +103,7 @@ export const ProposalSelectionDialog: React.FC<
 
   return (
     <Dialog open={isOpen} onOpenChange={handleCancel}>
-      <DialogContent className="max-w-4xl max-h-[90vh]">
+      <DialogContent className="w-full max-w-[95vw] sm:max-w-2xl lg:max-w-4xl max-h-[95vh] overflow-hidden p-4 sm:p-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 rounded-lg">
@@ -119,7 +119,7 @@ export const ProposalSelectionDialog: React.FC<
         </DialogHeader>
 
         {viewMode === "select" ? (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6 overflow-y-auto max-h-[calc(95vh-200px)]">
             {/* Proposal Selection */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
@@ -177,17 +177,17 @@ export const ProposalSelectionDialog: React.FC<
 
             {/* Selected Proposal Preview */}
             {selectedProposal && (
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-                <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-200">
+                <div className="flex flex-col sm:flex-row items-start gap-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-lg font-bold text-blue-700">
                       {(selectedProposal.creator?.["full-name"] || "U").charAt(
                         0
                       )}
                     </span>
                   </div>
-                  <div className="flex-1">
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-base sm:text-lg font-semibold text-gray-900 mb-2 break-words">
                       {selectedProposal["english-title"]}
                     </h4>
                     <div className="flex flex-wrap gap-2 mb-3">
@@ -204,32 +204,32 @@ export const ProposalSelectionDialog: React.FC<
                         {selectedProposal.status}
                       </Badge>
                     </div>
-                    <p className="text-gray-700 text-sm leading-relaxed mb-4 line-clamp-3">
+                    <p className="text-gray-700 text-sm leading-relaxed mb-4 line-clamp-3 break-words">
                       {selectedProposal.description}
                     </p>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-600">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 text-sm">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-600 truncate">
                           {selectedProposal.creator?.["full-name"] || "Unknown"}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Building className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-600">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Building className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-600 truncate">
                           {/* {selectedProposal.creator?.["group-name"] ||
                             "No Institution"} */}
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <GraduationCap className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-600">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <GraduationCap className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-600 truncate">
                           {selectedProposal.duration} months duration
                         </span>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-gray-500" />
-                        <span className="text-gray-600">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Calendar className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                        <span className="text-gray-600 truncate">
                           Applied{" "}
                           {new Date(
                             selectedProposal["created-at"]
@@ -245,20 +245,20 @@ export const ProposalSelectionDialog: React.FC<
         ) : (
           // Detailed View
           selectedProposal && (
-            <ScrollArea className="max-h-[60vh] pr-4">
-              <div className="space-y-6">
+            <ScrollArea className="max-h-[calc(95vh-250px)] pr-2 sm:pr-4">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Proposal Header */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-200">
-                  <div className="flex items-start gap-4">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-xl font-bold text-blue-700">
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 sm:p-6 border border-blue-200">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                      <span className="text-lg sm:text-xl font-bold text-blue-700">
                         {(
                           selectedProposal.creator?.["full-name"] || "U"
                         ).charAt(0)}
                       </span>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-lg sm:text-2xl font-bold text-gray-900 mb-2 break-words">
                         {selectedProposal["english-title"]}
                       </h3>
                       <div className="flex flex-wrap gap-2 mb-4">
@@ -277,17 +277,17 @@ export const ProposalSelectionDialog: React.FC<
                 </div>
 
                 {/* Principal Investigator Info */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <User className="h-5 w-5 text-blue-600" />
                     Principal Investigator
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-gray-500">
                         Name
                       </label>
-                      <p className="text-gray-900">
+                      <p className="text-gray-900 break-words">
                         {selectedProposal.creator?.["full-name"] || "Unknown"}
                       </p>
                     </div>
@@ -295,7 +295,7 @@ export const ProposalSelectionDialog: React.FC<
                       <label className="text-sm font-medium text-gray-500">
                         Email
                       </label>
-                      <p className="text-gray-900">
+                      <p className="text-gray-900 break-all">
                         {selectedProposal.creator?.email || "Not provided"}
                       </p>
                     </div>
@@ -336,12 +336,12 @@ export const ProposalSelectionDialog: React.FC<
                 </div>
 
                 {/* Proposal Summary */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <FileText className="h-5 w-5 text-blue-600" />
                     Proposal Summary
                   </h4>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-gray-700 leading-relaxed break-words">
                     {selectedProposal.description || "No description provided"}
                   </p>
                   {selectedProposal["requirement-note"] && (
@@ -349,7 +349,7 @@ export const ProposalSelectionDialog: React.FC<
                       <h5 className="font-semibold text-blue-900 mb-2">
                         Requirements
                       </h5>
-                      <p className="text-blue-800 text-sm leading-relaxed">
+                      <p className="text-blue-800 text-sm leading-relaxed break-words">
                         {selectedProposal["requirement-note"]}
                       </p>
                     </div>
@@ -357,12 +357,12 @@ export const ProposalSelectionDialog: React.FC<
                 </div>
 
                 {/* Project Details */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
                   <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
                     <GraduationCap className="h-5 w-5 text-blue-600" />
                     Project Details
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-sm font-medium text-gray-500">
                         Category
@@ -400,7 +400,7 @@ export const ProposalSelectionDialog: React.FC<
           )
         )}
 
-        <DialogFooter className="gap-3">
+        <DialogFooter className="gap-2 sm:gap-3 flex-col sm:flex-row">
           {viewMode === "select" ? (
             <>
               <Button

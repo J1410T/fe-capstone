@@ -328,7 +328,7 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
                                   <p className="text-sm text-gray-600">
                                     Rate:{" "}
                                     <span className="font-semibold">
-                                      {evaluation["total-rate"]}/10
+                                      {evaluation["total-rate"]}/100
                                     </span>
                                   </p>
                                 )}

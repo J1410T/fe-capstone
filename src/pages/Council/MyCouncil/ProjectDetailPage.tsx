@@ -226,7 +226,7 @@ const ProjectDetailPage: React.FC = () => {
                           {evaluation["total-rate"] && (
                             <span className="flex items-center gap-1">
                               <Star className="h-4 w-4" />
-                              {evaluation["total-rate"]}/10
+                              {evaluation["total-rate"]}/100
                             </span>
                           )}
                           {evaluation["evaluation-stages"] && (

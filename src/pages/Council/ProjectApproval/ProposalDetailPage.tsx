@@ -642,7 +642,7 @@ export const ProposalDetailPage: React.FC = () => {
                               {evaluation["total-rate"] && (
                                 <div className="text-right">
                                   <p className="text-xs font-medium text-gray-900">
-                                    Rate: {evaluation["total-rate"]}/10
+                                    Rate: {evaluation["total-rate"]}/100
                                   </p>
                                 </div>
                               )}

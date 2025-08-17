@@ -25,7 +25,7 @@ import {
   useCreateDocument,
 } from "@/hooks/queries/document";
 import { useStaffProjectFilter } from "@/hooks/queries/project";
-import { sendDocumentToPI } from "@/services/resources/notification";
+// import { sendDocumentToPI } from "@/services/resources/notification";
 import { toast } from "sonner";
 
 interface Project {
@@ -53,7 +53,7 @@ const DocumentManagement: React.FC = () => {
     refetch: refetchTemplate,
   } = useDocumentsByFilter("BM5", true, 1, 10, false);
 
-  // Get projects for contract creation (try all projects first for debugging)
+  // Get projects for contract creation (only approved projects)
   const {
     data: projectsData,
     isLoading: isProjectsLoading,
@@ -63,7 +63,7 @@ const DocumentManagement: React.FC = () => {
     {
       "page-index": 1,
       "page-size": 50,
-      statuses: [], // Get all projects to see what statuses exist
+      statuses: ["approved"], // Only get approved projects
       genres: [],
       "sort-by": "createdate",
       desc: true,
@@ -146,7 +146,7 @@ const DocumentManagement: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const documentResponse = await createDocument.mutateAsync({
+      await createDocument.mutateAsync({
         name: `Tài liệu BM5 - ${selectedProject["vietnamese-title"]}`,
         type: "BM5",
         status: "draft",
@@ -156,26 +156,9 @@ const DocumentManagement: React.FC = () => {
       });
 
       // Get document ID from response (API returns document ID as string)
-      const documentId = documentResponse.data;
+      // const documentId = documentResponse.data;
 
       toast.success("Document saved successfully!");
-
-      // Send notification to PI after successful save
-      try {
-        await sendDocumentToPI(documentId, selectedProject.id);
-        toast.success("Đã gửi thông báo cho PI!");
-      } catch (notificationError) {
-        console.error("Failed to send notification to PI:", notificationError);
-        const errorMessage =
-          notificationError instanceof Error
-            ? notificationError.message
-            : "Lỗi không xác định";
-
-        toast.warning(
-          `Lưu tài liệu thành công nhưng không thể gửi thông báo cho PI: ${errorMessage}`,
-          { duration: 8000 }
-        );
-      }
 
       // Reset form
       setIsDocumentDialogOpen(false);

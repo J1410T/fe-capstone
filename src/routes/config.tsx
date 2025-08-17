@@ -56,9 +56,6 @@ import ProjectHistory from "@/pages/HostInstitution/ProjectHistory";
 // Principal Investigator Pages
 
 // Council Pages
-import PendingEvaluations from "@/pages/Council/Evaluations";
-import EvaluationDetail from "@/pages/Council/Evaluations/EvaluationDetail";
-import EvaluationForm from "@/pages/Council/Evaluations/EvaluationForm";
 import MeetingMinutes from "@/pages/Council/Meetings/MeetingMinutes";
 
 // Admin Pages - simplified to use general coming soon
@@ -438,18 +435,6 @@ export const routes: RouteObject[] = [
           {
             path: "ai-evaluation/:evaluationId",
             element: <AIEvaluationDetailPage />,
-          },
-          {
-            path: "evaluations",
-            element: <PendingEvaluations />,
-          },
-          {
-            path: "evaluation/:id",
-            element: <EvaluationDetail />,
-          },
-          {
-            path: "evaluation/:id/form",
-            element: <EvaluationForm />,
           },
           {
             path: "meetings",

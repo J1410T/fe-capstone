@@ -187,8 +187,8 @@ const CreateIndividualEvaluationPage: React.FC = () => {
         toast.error("Name cannot be empty");
         return;
       }
-      if (rate < 0 || rate > 10) {
-        toast.error("Rating must be between 0 and 10");
+      if (rate < 0 || rate > 100) {
+        toast.error("Rating must be between 0 and 100");
         return;
       }
 
@@ -351,7 +351,7 @@ const CreateIndividualEvaluationPage: React.FC = () => {
                   <SelectContent>
                     {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
                       <SelectItem key={num} value={num.toString()}>
-                        {num}/10
+                        {num}/100
                       </SelectItem>
                     ))}
                   </SelectContent>

@@ -62,11 +62,16 @@ function ProjectDetail() {
     const baseTabs = ["overview"];
     const project = projectResponse?.data["project-detail"];
     const isProposal = project?.genre === "proposal";
+    const isMember = projectResponse?.data["is-member"];
+    const projectStatus = project?.status;
 
-    if (isProposal) {
-      // For Proposal projects: show Overview, Team, Document
+    // Show all tabs if project is approved or inprogress
+    if (projectStatus === "approved" || projectStatus === "inprogress") {
+      baseTabs.push("team", "milestones", "documents", "budget", "evaluation");
+    } else if (isProposal) {
+      // For Proposal projects: show Overview, Team, Document, Evaluation
       baseTabs.push("team", "documents", "evaluation");
-    } else if (projectResponse?.data["is-member"]) {
+    } else if (isMember) {
       // For other projects: show all tabs if member
       baseTabs.push("team", "milestones", "documents", "budget", "evaluation");
     }
@@ -103,6 +108,25 @@ function ProjectDetail() {
 
   const project = projectResponse.data["project-detail"];
   const roleInProject = projectResponse.data["role-in-project"];
+
+  // Block PI access to draft projects
+  if (
+    user?.role === UserRole.PRINCIPAL_INVESTIGATOR &&
+    project?.status === "draft"
+  ) {
+    return (
+      <div className="flex flex-col items-center justify-center h-64">
+        <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
+        <p className="text-muted-foreground mb-4">
+          You cannot access the project in draft status.
+        </p>
+        <Button onClick={() => navigate("/pi/projects")}>
+          <ArrowLeft className="h-4 w-4" />
+          Back to My Projects
+        </Button>
+      </div>
+    );
+  }
 
   const projectData = {
     id: project.id,

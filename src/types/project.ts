@@ -232,7 +232,13 @@ export interface CreateProjectRequest {
 export interface StaffProjectFilterRequest {
   title?: string;
   genres: ("propose" | "normal")[];
-  statuses: ("created" | "in_progress" | "completed" | "cancelled")[];
+  statuses: (
+    | "created"
+    | "inprogress"
+    | "completed"
+    | "cancelled"
+    | "approved"
+  )[];
   "page-index": number;
   "page-size": number;
   "sort-by": "createdate" | "englishtitle";
