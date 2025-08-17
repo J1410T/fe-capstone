@@ -102,12 +102,15 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   const { data: myAccountInfo } = useMyAccountInfo();
 
   // Determine document status based on project status
-  const getDocumentStatus = () => {
-    if (projectStatus === "submitted") {
-      return "submitted";
-    }
-    return "draft";
-  };
+  // const getDocumentStatus = () => {
+  //   if (projectStatus === "submitted") {
+  //     return "submitted";
+  //   }
+  //   if (projectStatus === "Approved") {
+  //     return "submitted";
+  //   }
+  //   return "draft";
+  // };
 
   // Fetch documents by project ID with pagination and user role data
   const {
@@ -117,7 +120,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   } = useDocumentByProjectIdWithUserRole(
     {
       "is-template": false,
-      status: getDocumentStatus(),
+      // status: getDocumentStatus(),
       "page-index": currentPage,
       "page-size": pageSize,
       "project-id": projectId || "",
@@ -224,7 +227,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
           "is-template": scientificCV.data["is-template"],
           "content-html": scientificCV.data["content-html"],
           "project-id": projectId,
-          status: getDocumentStatus(),
+          status: "daft",
         });
 
         toast.success("Scientific CV updated successfully!");
@@ -236,7 +239,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
           "is-template": scientificCV.data["is-template"],
           "content-html": scientificCV.data["content-html"],
           "project-id": projectId,
-          status: getDocumentStatus(),
+          status: "daft",
         });
 
         toast.success("Scientific CV uploaded successfully!");
@@ -263,7 +266,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
               View and manage all project-related documents
             </CardDescription>
           </div>
-          {isProposal && projectStatus !== "submitted" && (
+          {isProposal && projectStatus == "draft" && (
             <Button
               onClick={handleUploadScientificCV}
               disabled={isUploading || isCVLoading || !scientificCV?.data}
