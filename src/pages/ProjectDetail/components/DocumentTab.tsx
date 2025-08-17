@@ -227,7 +227,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
           "is-template": scientificCV.data["is-template"],
           "content-html": scientificCV.data["content-html"],
           "project-id": projectId,
-          status: "daft",
+          status: "draft",
         });
 
         toast.success("Scientific CV updated successfully!");
@@ -239,7 +239,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
           "is-template": scientificCV.data["is-template"],
           "content-html": scientificCV.data["content-html"],
           "project-id": projectId,
-          status: "daft",
+          status: "draft",
         });
 
         toast.success("Scientific CV uploaded successfully!");
