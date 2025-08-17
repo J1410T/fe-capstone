@@ -109,7 +109,7 @@ export interface CreateDocumentResponse {
 
 export interface GetDocumentByProjectIdRequest {
   "is-template": boolean;
-  status: string;
+  status?: string;
   "page-index": number;
   "page-size": number;
   "project-id": string;
