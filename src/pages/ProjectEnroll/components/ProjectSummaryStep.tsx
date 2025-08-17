@@ -20,6 +20,11 @@ import { FileText, ArrowRight, File } from "lucide-react";
 import { DocumentForm, DocumentProject } from "@/types/document";
 import { toast } from "sonner";
 import { Loading } from "@/components";
+import {
+  uploadImageToAzure,
+  getImageUrlFromAzure,
+  deleteImageFromAzure,
+} from "@/services/resources/azure-image";
 
 type EditorInstance = TinyMCEEditor | null;
 
@@ -158,6 +163,9 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
     onContentChange(content);
   };
 
+  // Shared set to track uploaded images for deletion
+  const uploadedImagesRef = useRef(new Set<string>());
+
   const handleNext = () => {
     const currentContent = editorRef.current?.getContent() || "";
     onContentChange(currentContent);
@@ -265,17 +273,215 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                   "insertdatetime media table help wordcount",
                 ],
                 toolbar:
-                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | insertSignature",
+                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image uploadImage | preview code fullscreen | insertSignature",
                 setup: (editor) => {
-                  editor.ui.registry.addButton("insertSignature", {
-                    text: "Insert Signature",
+                  // Use shared ref to track uploaded images for deletion
+                  const uploadedImages = uploadedImagesRef.current;
+
+                  // Custom Upload Image button
+                  editor.ui.registry.addButton("uploadImage", {
+                    text: "Upload Image",
                     icon: "image",
                     onAction: () => {
-                      const signatureUrl = "https://example.com/signature.png"; // URL ảnh chữ ký
-                      editor.insertContent(
-                        `<img src="${signatureUrl}" alt="Signature" style="width:150px;height:auto;" />`
-                      );
+                      const input = document.createElement("input");
+                      input.type = "file";
+                      input.accept = "image/*";
+                      input.style.display = "none";
+
+                      input.onchange = async (e) => {
+                        const target = e.target as HTMLInputElement;
+                        const file = target.files?.[0];
+                        if (!file) return;
+
+                        // Validate file size (5MB max)
+                        if (file.size > 5 * 1024 * 1024) {
+                          toast.error(
+                            "File size too large. Please choose an image smaller than 5MB."
+                          );
+                          return;
+                        }
+
+                        try {
+                          toast.info("Uploading image...");
+
+                          // Upload to Azure
+                          const uploadResponse = await uploadImageToAzure(file);
+                          console.log("Upload response:", uploadResponse);
+
+                          // Get full image URL
+                          const imageUrl = await getImageUrlFromAzure(
+                            uploadResponse.url
+                          );
+                          console.log("Image URL:", imageUrl);
+
+                          // Track this image for potential deletion
+                          uploadedImages.add(imageUrl);
+
+                          // Insert image into editor
+                          editor.insertContent(
+                            `<img src="${imageUrl}" alt="${file.name}" style="max-width:100%;height:auto;" />`
+                          );
+
+                          toast.success("Image uploaded successfully!");
+                        } catch (error) {
+                          console.error("Error uploading image:", error);
+                          toast.error(
+                            "Error uploading image. Please try again."
+                          );
+                        }
+                      };
+
+                      input.click();
                     },
+                  });
+
+                  // Function to extract image filename from Azure URL
+                  const extractImageFilename = (
+                    imageUrl: string
+                  ): string | null => {
+                    try {
+                      // Azure blob URL format: https://{account}.blob.core.windows.net/{container}/{filename}
+                      const url = new URL(imageUrl);
+                      const pathParts = url.pathname.split("/");
+                      return pathParts[pathParts.length - 1]; // Get the filename
+                    } catch (error) {
+                      console.error(
+                        "Error extracting filename from URL:",
+                        error
+                      );
+                      return null;
+                    }
+                  };
+
+                  // Function to delete image from Azure
+                  const deleteImageFromEditor = async (imageUrl: string) => {
+                    try {
+                      const filename = extractImageFilename(imageUrl);
+                      if (filename) {
+                        await deleteImageFromAzure(filename);
+                        uploadedImages.delete(imageUrl);
+                        console.log("Image deleted from Azure:", filename);
+                        toast.success("Image deleted successfully!");
+                      }
+                    } catch (error) {
+                      console.error("Error deleting image from Azure:", error);
+                      toast.error("Error deleting image from storage.");
+                    }
+                  };
+
+                  // Listen for content changes to detect deleted images
+                  let previousImages = new Set<string>();
+
+                  editor.on("NodeChange", () => {
+                    // Get all current images in the editor
+                    const currentImages = new Set<string>();
+                    const imgElements = editor
+                      .getBody()
+                      .querySelectorAll("img");
+
+                    imgElements.forEach((img) => {
+                      const src = img.getAttribute("src");
+                      if (src && uploadedImages.has(src)) {
+                        currentImages.add(src);
+                      }
+                    });
+
+                    // Find deleted images (were in previous but not in current)
+                    previousImages.forEach((imageUrl) => {
+                      if (!currentImages.has(imageUrl)) {
+                        console.log("Image deleted from editor:", imageUrl);
+                        deleteImageFromEditor(imageUrl);
+                      }
+                    });
+
+                    // Update previous images for next comparison
+                    previousImages = new Set(currentImages);
+                  });
+
+                  // Also listen for keydown events (Delete, Backspace)
+                  editor.on("keydown", (e) => {
+                    if (e.key === "Delete" || e.key === "Backspace") {
+                      // Small delay to let the deletion happen first
+                      setTimeout(() => {
+                        const currentImages = new Set<string>();
+                        const imgElements = editor
+                          .getBody()
+                          .querySelectorAll("img");
+
+                        imgElements.forEach((img) => {
+                          const src = img.getAttribute("src");
+                          if (src && uploadedImages.has(src)) {
+                            currentImages.add(src);
+                          }
+                        });
+
+                        // Find deleted images
+                        previousImages.forEach((imageUrl) => {
+                          if (!currentImages.has(imageUrl)) {
+                            console.log(
+                              "Image deleted via keyboard:",
+                              imageUrl
+                            );
+                            deleteImageFromEditor(imageUrl);
+                          }
+                        });
+
+                        previousImages = new Set(currentImages);
+                      }, 100);
+                    }
+                  });
+                },
+                // Drag and drop image upload support
+                images_upload_url: "", // Use custom handler instead of URL
+                images_reuse_filename: true,
+                images_file_types: "jpg,jpeg,png,gif,webp",
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                images_upload_handler: (blobInfo: any) => {
+                  return new Promise((resolve, reject) => {
+                    // Validate file size
+                    if (blobInfo.blob().size > 5 * 1024 * 1024) {
+                      reject(
+                        "File size too large. Please choose an image smaller than 5MB."
+                      );
+                      return;
+                    }
+
+                    // Create File object from blob
+                    const blob = blobInfo.blob();
+                    const fileName = blobInfo.filename() || "image.png";
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                    const file = new (window as any).File([blob], fileName, {
+                      type: blob.type,
+                    });
+
+                    // Upload image to Azure
+                    uploadImageToAzure(file)
+                      .then((uploadResponse) => {
+                        console.log(
+                          "Drag & drop upload response:",
+                          uploadResponse
+                        );
+                        // Get full image URL
+                        return getImageUrlFromAzure(uploadResponse.url);
+                      })
+                      .then((imageUrl) => {
+                        console.log("Drag & drop image URL:", imageUrl);
+
+                        // Track this image for potential deletion
+                        uploadedImagesRef.current.add(imageUrl);
+
+                        // Return image URL to TinyMCE
+                        resolve(imageUrl);
+                        toast.success("Image uploaded successfully!");
+                      })
+                      .catch((error) => {
+                        console.error(
+                          "Error uploading image via drag & drop:",
+                          error
+                        );
+                        reject("Error uploading image. Please try again.");
+                        toast.error("Error uploading image. Please try again.");
+                      });
                   });
                 },
                 content_style: formStyles,

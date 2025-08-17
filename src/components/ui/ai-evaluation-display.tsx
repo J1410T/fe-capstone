@@ -149,7 +149,7 @@ export const AIEvaluationDisplay: React.FC<AIEvaluationDisplayProps> = ({
               </div>
               <div className="text-2xl font-bold text-emerald-700">
                 {score}
-                <span className="text-lg text-gray-500">/10</span>
+                <span className="text-lg text-gray-500">/100</span>
               </div>
             </div>
           )}

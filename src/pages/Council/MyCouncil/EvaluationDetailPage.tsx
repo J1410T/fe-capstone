@@ -475,7 +475,7 @@ const EvaluationDetailPage: React.FC = () => {
             {evaluation["total-rate"] && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Star className="h-4 w-4" />
-                Rating: {evaluation["total-rate"]}/10
+                Rating: {evaluation["total-rate"]}/100
               </div>
             )}
 

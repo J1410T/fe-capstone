@@ -454,8 +454,8 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
   };
 
   const getScoreColor = (score: number) => {
-    if (score >= 8) return "bg-green-50 text-green-700 border-green-200";
-    if (score >= 6) return "bg-yellow-50 text-yellow-700 border-yellow-200";
+    if (score >= 80) return "bg-green-50 text-green-700 border-green-200";
+    if (score >= 60) return "bg-yellow-50 text-yellow-700 border-yellow-200";
     return "bg-red-50 text-red-700 border-red-200";
   };
 
@@ -594,15 +594,15 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
                 {evaluation["total-rate"] !== null ? (
                   <div className="flex items-center gap-2">
                     <span className="text-lg font-bold text-gray-900">
-                      {evaluation["total-rate"]}/10
+                      {evaluation["total-rate"]}/100
                     </span>
                     <Badge
                       variant="outline"
                       className={getScoreColor(evaluation["total-rate"])}
                     >
-                      {evaluation["total-rate"] >= 8
+                      {evaluation["total-rate"] >= 80
                         ? "Excellent"
-                        : evaluation["total-rate"] >= 6
+                        : evaluation["total-rate"] >= 60
                         ? "Good"
                         : "Needs Improvement"}
                     </Badge>
@@ -707,10 +707,11 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
               </div>
 
               <div className="p-4">
-                <div className="bg-white rounded-xl border border-gray-100 p-4">
-                  <p className="text-gray-700 leading-relaxed">
-                    {evaluation.comment}
-                  </p>
+                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                  <TinyMCEViewerComponent
+                    content={evaluation.comment}
+                    height={400}
+                  />
                 </div>
               </div>
             </div>

@@ -21,7 +21,7 @@ import { canEditSpecificEvaluation } from "@/utils/evaluationPermissions";
 export interface EvaluationCriteria {
   id: string;
   name: string;
-  score: number; // 0-10
+  score: number; // 0-100
   maxScore: number;
   weight: number; // percentage
   comments?: string;

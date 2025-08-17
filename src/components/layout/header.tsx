@@ -84,7 +84,6 @@ const menuItemsByRole = {
       path: "/council/project-approval",
       icon: CheckCircle,
     },
-    { name: "Evaluations", path: "/council/evaluations", icon: FileText },
     { name: "Meetings", path: "/council/meetings", icon: Calendar },
   ],
   [UserRole.STAFF]: [

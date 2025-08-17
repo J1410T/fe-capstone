@@ -336,7 +336,7 @@ const EvaluationStageDetailPage: React.FC = () => {
                                 {(evaluation as any).rate && (
                                   <span className="flex items-center gap-1">
                                     <Star className="h-4 w-4" />
-                                    {(evaluation as any).rate}/10
+                                    {(evaluation as any).rate}/100
                                   </span>
                                 )}
                                 <span>
