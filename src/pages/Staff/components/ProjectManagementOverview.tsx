@@ -151,7 +151,7 @@ const ProjectManagementOverview: React.FC = () => {
           : [
               statusFilter as
                 | "created"
-                | "in_progress"
+                | "inprogress"
                 | "completed"
                 | "cancelled",
             ],
