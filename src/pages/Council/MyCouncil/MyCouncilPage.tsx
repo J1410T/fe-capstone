@@ -28,6 +28,7 @@ import { Loading } from "@/components/ui/loaders";
 import { getMyAppraisalCouncils } from "@/services/resources/appraisal-council";
 import { getProjectsByCouncilId } from "@/services/resources/project";
 import { AppraisalCouncil } from "@/types/appraisal-council";
+import { ProjectWithProposals } from "@/types/project";
 // import { ProjectWithProposals } from "@/types/project";
 
 const MyCouncilPage: React.FC = () => {
@@ -36,7 +37,8 @@ const MyCouncilPage: React.FC = () => {
   // State management
   const [councils, setCouncils] = useState<AppraisalCouncil[]>([]);
   const [selectedCouncilId, setSelectedCouncilId] = useState<string>("");
-  const [projects, setProjects] = useState<Record<string, unknown>[]>([]);
+
+  const [projects, setProjects] = useState<ProjectWithProposals[]>([]);
   const [isLoadingCouncils, setIsLoadingCouncils] = useState(true);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
 
@@ -77,7 +79,11 @@ const MyCouncilPage: React.FC = () => {
         setIsLoadingProjects(true);
         console.log("Loading projects for council:", selectedCouncilId);
 
-        const projectsData = await getProjectsByCouncilId(selectedCouncilId);
+        const projectsData = await getProjectsByCouncilId(selectedCouncilId, [
+          "inprogress",
+          "completed",
+          "canceled",
+        ]);
 
         console.log("Projects data received:", projectsData);
         setProjects(projectsData || []);
