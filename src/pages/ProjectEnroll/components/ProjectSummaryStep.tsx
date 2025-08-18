@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, ArrowRight, File } from "lucide-react";
+import { FileText, ArrowRight, File, AlertCircle } from "lucide-react";
 import { DocumentForm, DocumentProject } from "@/types/document";
 import { toast } from "sonner";
 import { Loading } from "@/components";
@@ -224,6 +224,40 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
 
   return (
     <div>
+      {/* Requirements */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+        <div className="flex items-start space-x-2">
+          <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
+          <div className="text-sm text-blue-800">
+            <p className="font-medium mb-1">Requirements:</p>
+            <ul className="list-disc list-inside space-y-1">
+              <li>
+                To upload your photo, use the <strong>Upload Image</strong>{" "}
+                button from the toolbar or drag & drop images directly into the
+                editor.
+              </li>
+              <li>
+                To download your Document, go to <strong>File → Print</strong>,
+                then choose <strong>"Save"</strong> in the print dialog.
+              </li>
+              <li>
+                <strong>Milestones</strong> must be displayed in{" "}
+                <strong>Bold</strong>, while <strong>Tasks</strong> must be
+                displayed in <strong>Regular</strong> font in "Tóm tắt kế hoạch
+                và lộ trình triển khai nghiên cứu".
+              </li>
+              <li>
+                The <strong>Time</strong> must be in the format{" "}
+                <strong>(start, end): dd/mm/yyyy, dd/mm/yyyy</strong>
+              </li>
+              <li>
+                Do not change the order of the sections, and do not remove the
+                suggested notes (in parentheses)
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
       <Card className="border-0 shadow-lg bg-white pt-0 p-0">
         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
           <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2 pt-5">
@@ -271,9 +305,10 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                   "advlist autolink lists link image charmap preview anchor",
                   "searchreplace visualblocks code fullscreen",
                   "insertdatetime media table help wordcount",
+                  "textcolor colorpicker hr pagebreak spellchecker",
                 ],
                 toolbar:
-                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image uploadImage | preview code fullscreen | insertSignature",
+                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table tabledelete | tableprops tablerowprops tablecellprops | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | link image uploadImage | preview code fullscreen | insertSignature | forecolor backcolor | fontsize | hr pagebreak | searchreplace | spellchecker",
                 setup: (editor) => {
                   // Use shared ref to track uploaded images for deletion
                   const uploadedImages = uploadedImagesRef.current;

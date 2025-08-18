@@ -61,6 +61,7 @@ import {
   useUpdateDocument,
 } from "@/hooks/queries/document";
 import { useMyAccountInfo } from "@/hooks/queries/useAuth";
+import { useUpdateProject } from "@/hooks/queries/project";
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts";
@@ -112,6 +113,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   // API hooks
   const createDocument = useCreateDocument();
   const updateDocument = useUpdateDocument();
+  const updateProject = useUpdateProject();
   const { data: myAccountInfo } = useMyAccountInfo();
 
   // Determine document status based on project status
@@ -202,6 +204,10 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   };
 
   const handleEditDocument = (document: DocumentWithUserRole) => {
+    if (!user || user.role !== UserRole.PRINCIPAL_INVESTIGATOR) {
+      toast.error("Only Principal Investigators can Edit documents");
+      return;
+    }
     console.log("handleEditDocument called with:", document);
     setEditingDocument(document);
     setEditingContent(document["content-html"] || "");
@@ -322,17 +328,52 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
     setIsEditLoading(true);
 
     try {
+      // Determine if this is a Contract document being completed
+      const isContractDocument = editingDocument.name
+        ?.toLowerCase()
+        .includes("contract");
+      const isBeingCompleted = editingDocument.status !== "completed"; // Will be completed after save
+
       await updateDocument.mutateAsync({
         id: editingDocument.id,
         name: editingDocument.name,
         type: editingDocument.type,
-        status: editingDocument.status,
+        status: "completed", // Set document status to completed
         "is-template": false,
         "content-html": content,
         "project-id": editingDocument["project-id"],
       });
 
-      toast.success("Document updated successfully!");
+      // If this is a Contract document being completed, update project status to inprogress
+      if (isContractDocument && isBeingCompleted && projectId) {
+        try {
+          // Create minimal UpdateProjectRequest with required fields
+          await updateProject.mutateAsync({
+            projectId: projectId,
+            data: {
+              "english-title": "", // Will be filled by backend
+              "vietnamese-title": "", // Will be filled by backend
+              "maximum-member": 1, // Will be filled by backend
+              language: "Vietnamese", // Will be filled by backend
+              category: "basic", // Will be filled by backend
+              type: "basic", // Will be filled by backend
+              genre: "normal", // Will be filled by backend
+            },
+            status: "inprogress",
+          });
+          toast.success(
+            "Document completed and project status updated to In Progress!"
+          );
+        } catch (projectError) {
+          console.error("Failed to update project status:", projectError);
+          toast.success(
+            "Document completed successfully, but failed to update project status"
+          );
+        }
+      } else {
+        toast.success("Document updated successfully!");
+      }
+
       setShowEditDialog(false);
       setEditingDocument(null);
       setEditingContent("");
@@ -667,7 +708,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
         }}
       >
         <DialogContent
-          className="max-w-6xl max-h-[90vh] overflow-hidden z-[9999]"
+          className="max-w-6xl max-h-[95vh] overflow-hidden z-[9999]"
           style={{ zIndex: 9999, position: "fixed" }}
         >
           <DialogHeader>

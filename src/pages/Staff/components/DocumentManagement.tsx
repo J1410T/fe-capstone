@@ -36,9 +36,14 @@ import {
   useDocumentByProjectIdWithUserRole,
   useUpdateDocument,
 } from "@/hooks/queries/document";
-import { useStaffProjectFilter } from "@/hooks/queries/project";
+import {
+  useProject,
+  useStaffProjectFilter,
+  useUpdateProject,
+} from "@/hooks/queries/project";
 import { DocumentWithUserRole } from "@/types/document";
 import { toast } from "sonner";
+import { useParams } from "react-router-dom";
 
 interface Project {
   id: string;
@@ -90,6 +95,30 @@ const DocumentManagement: React.FC = () => {
 
   const createDocument = useCreateDocument();
   const updateDocument = useUpdateDocument();
+  const updateProject = useUpdateProject();
+  const { projectId } = useParams<{ projectId: string }>();
+  const { data: projectResponse } = useProject(projectId || "");
+  const project = projectResponse?.data?.["project-detail"];
+  const projectUpdateData = {
+    "english-title": project?.["english-title"] || "",
+    "vietnamese-title": project?.["vietnamese-title"] || "",
+    abbreviations: project?.abbreviations || "",
+    duration: project?.duration || 12,
+    "start-date":
+      project?.["start-date"] || new Date().toISOString().split("T")[0],
+    "end-date":
+      project?.["end-date"] ||
+      new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+    description: project?.description || "",
+    "requirement-note": project?.["requirement-note"] || "",
+    "maximum-member": project?.["maximum-member"] || 1,
+    language: project?.language || "Vietnamese",
+    category: project?.category || "Research",
+    type: project?.type || "Basic",
+    genre: project?.genre || "Academic",
+  };
 
   // Get documents for selected project
   const {
@@ -287,7 +316,28 @@ const DocumentManagement: React.FC = () => {
         "project-id": editingDocument["project-id"],
       });
 
-      toast.success("Document completed successfully!");
+      // Always update project status to "inprogress" when closing any document
+      if (selectedProject && editingDocument["project-id"]) {
+        try {
+          await updateProject.mutateAsync({
+            projectId: editingDocument["project-id"],
+            data: {
+              ...projectUpdateData,
+              status: "inprogress", // Always set to inprogress when closing document
+            },
+          });
+          toast.success(
+            "Document completed and project status updated to In Progress!"
+          );
+        } catch (projectError) {
+          console.error("Failed to update project status:", projectError);
+          toast.success(
+            "Document completed successfully, but failed to update project status"
+          );
+        }
+      } else {
+        toast.success("Document completed successfully!");
+      }
 
       // Reset form
       setIsDocumentDialogOpen(false);

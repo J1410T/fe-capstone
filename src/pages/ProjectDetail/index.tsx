@@ -11,6 +11,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { OverviewTab, ProjectHeader, TeamTab } from "./components";
 import BudgetTab from "./components/BudgetTab";
 import DocumentTab from "./components/DocumentTab";
+import ResultTab from "./components/ResultTab";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import MilestoneTab from "./components/MilestoneTab";
 import { ArrowLeft } from "lucide-react";
@@ -67,13 +68,27 @@ function ProjectDetail() {
 
     // Show all tabs if project is approved or inprogress
     if (projectStatus === "inprogress") {
-      baseTabs.push("team", "milestones", "documents", "budget", "evaluation");
+      baseTabs.push(
+        "team",
+        "milestones",
+        "documents",
+        "budget",
+        "results",
+        "evaluation"
+      );
     } else if (isProposal) {
       // For Proposal projects: show Overview, Team, Document, Evaluation
       baseTabs.push("team", "documents", "evaluation");
     } else if (isMember) {
       // For other projects: show all tabs if member
-      baseTabs.push("team", "milestones", "documents", "budget", "evaluation");
+      baseTabs.push(
+        "team",
+        "milestones",
+        "documents",
+        "budget",
+        "results",
+        "evaluation"
+      );
     }
     return baseTabs;
   };
@@ -275,6 +290,12 @@ function ProjectDetail() {
         {visibleTabs.includes("budget") && (
           <TabsContent value="budget" className="space-y-4">
             <BudgetTab transactions={project.transactions || []} />
+          </TabsContent>
+        )}
+
+        {visibleTabs.includes("results") && (
+          <TabsContent value="results" className="space-y-4">
+            <ResultTab projectId={project.id} category={project.category} />
           </TabsContent>
         )}
 

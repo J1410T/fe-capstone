@@ -52,11 +52,11 @@ export const ResponsiveTinyMCEViewer: React.FC<
             resize: false,
             content_style: `
               body { 
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+                font-family: "Times New Roman", Times, serif; 
                 font-size: 14px; 
-                line-height: 1.6; 
-                margin: 16px; 
-                color: #374151;
+                line-height: 1.4; 
+                margin: 20px; 
+                color: #333;
                 max-width: 100%;
                 overflow-wrap: break-word;
                 word-wrap: break-word;
@@ -104,8 +104,10 @@ export const ResponsiveTinyMCEViewer: React.FC<
                 border-collapse: collapse;
                 margin: 1em 0;
               }
+              table, th, td {
+                border: 1px solid #ccc;
+              }
               th, td {
-                border: 1px solid #e5e7eb;
                 padding: 0.5em;
                 text-align: left;
               }
@@ -131,11 +133,11 @@ export const ResponsiveTinyMCEViewer: React.FC<
               resize: false,
               content_style: `
                 body { 
-                  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+                  font-family: "Times New Roman", Times, serif; 
                   font-size: 14px; 
-                  line-height: 1.6; 
-                  margin: 16px; 
-                  color: #374151;
+                  line-height: 1.4; 
+                  margin: 20px; 
+                  color: #333;
                   max-width: 100%;
                   overflow-wrap: break-word;
                   word-wrap: break-word;
@@ -183,8 +185,10 @@ export const ResponsiveTinyMCEViewer: React.FC<
                   border-collapse: collapse;
                   margin: 1em 0;
                 }
+                table, th, td {
+                  border: 1px solid #ccc;
+                }
                 th, td {
-                  border: 1px solid #e5e7eb;
                   padding: 0.5em;
                   text-align: left;
                 }

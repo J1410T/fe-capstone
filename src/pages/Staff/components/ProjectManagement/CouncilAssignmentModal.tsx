@@ -61,7 +61,7 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
     useAppraisalCouncilsList({
       "key-word": searchTerm,
       "page-index": 1,
-      "page-size": 100,
+      "page-size": 500, // Increased to show more councils
       status: "created",
     });
 
@@ -86,27 +86,34 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="w-[95vw] max-w-[95vw] h-[90vh] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl w-full max-h-[85vh]">
         <DialogHeader>
-          <DialogTitle className="flex items-center space-x-2">
+          <DialogTitle className="flex items-center space-x-2 text-lg">
             <Users className="w-5 h-5" />
-            <span>Assign Council to Project</span>
+            <span>Assign Council</span>
           </DialogTitle>
-          <DialogDescription>
-            Select an appropriate council to evaluate and oversee the project: "
-            {project["english-title"]}"
+          <DialogDescription className="text-sm text-gray-600 line-clamp-2">
+            Select a council for:{" "}
+            <span className="font-medium">"{project["english-title"]}"</span>
           </DialogDescription>
         </DialogHeader>
 
         {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Search councils by name or code..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10"
-          />
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search councils..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          {!isLoadingCouncils && councils.length > 0 && (
+            <div className="text-xs text-gray-500 px-1">
+              Found {councils.length} council{councils.length !== 1 ? "s" : ""}
+            </div>
+          )}
         </div>
 
         <ScrollArea className="max-h-[50vh] pr-4">
@@ -119,13 +126,13 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
               <div className="text-gray-500">No councils found</div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {councils.map((council) => (
                 <div
                   key={council.id}
-                  className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                  className={`border rounded-lg p-3 cursor-pointer transition-all ${
                     selectedCouncil?.id === council.id
-                      ? "border-blue-500 bg-blue-50"
+                      ? "border-blue-500 bg-blue-50 ring-1 ring-blue-200"
                       : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
                   } ${
                     council.currentProjects >= council.maxProjects
@@ -138,28 +145,25 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
                     }
                   }}
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="text-base font-semibold text-gray-900 truncate">
                           {council.name}
                         </h3>
-                        {/* <Badge variant="outline" className="text-xs">
-                          {council.description}
-                        </Badge> */}
                         {council.currentProjects >= council.maxProjects && (
-                          <Badge variant="destructive">
+                          <Badge variant="destructive" className="text-xs">
                             <AlertCircle className="w-3 h-3 mr-1" />
-                            Full Capacity
+                            Full
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600 mb-3">
+                      <p className="text-sm text-gray-600 truncate">
                         {council.description}
                       </p>
                     </div>
                     {selectedCouncil?.id === council.id && (
-                      <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                      <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 ml-2" />
                     )}
                   </div>
 
@@ -257,16 +261,16 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
           )}
         </ScrollArea>
 
-        <DialogFooter>
+        <DialogFooter className="pt-2 border-t mt-2">
           <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
           <Button
             onClick={handleAssign}
             disabled={!selectedCouncil || isAssigning}
-            className="min-w-[120px]"
+            className="min-w-[100px]"
           >
-            {isAssigning ? "Assigning..." : "Assign Council"}
+            {isAssigning ? "Assigning..." : "Assign"}
           </Button>
         </DialogFooter>
       </DialogContent>
