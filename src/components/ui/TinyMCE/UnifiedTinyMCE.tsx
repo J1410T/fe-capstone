@@ -287,7 +287,7 @@ const PRESETS = {
         justify-content: space-between;
       }
       .signature-box {
-        border: 1px solid #000;
+
         width: 200px;
         height: 120px;
         text-align: center;
@@ -412,7 +412,7 @@ const PRESETS = {
         justify-content: space-between;
       }
       .signature-box {
-        border: 1px solid #000;
+
         width: 200px;
         height: 120px;
         text-align: center;
@@ -510,9 +510,11 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
 
       // Theo dõi khi ảnh bị xóa khỏi editor
       let previousImages: string[] = [];
+      let isInitialized = false;
 
-      // Theo dõi thay đổi content để phát hiện ảnh bị xóa
-      editor.on("NodeChange SetContent", () => {
+      // TEMPORARILY DISABLED FOR DEBUGGING - Theo dõi thay đổi content để phát hiện ảnh bị xóa
+      // Chỉ theo dõi sau khi editor đã được khởi tạo hoàn toàn
+      editor.on("NodeChange", () => {
         const currentImages = editor
           .getBody()
           .querySelectorAll('img[src*="storage00image.blob.core.windows.net"]');
@@ -520,18 +522,74 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
           (img) => (img as HTMLImageElement).src
         );
 
-        // Tìm các ảnh đã bị xóa
-        const deletedImages = previousImages.filter(
-          (url) => !currentImageUrls.includes(url)
-        );
-
-        // Xóa các ảnh đã bị remove khỏi Azure
-        deletedImages.forEach((imageUrl) => {
-          handleImageDelete(imageUrl);
+        console.log("🔍 NodeChange Debug:", {
+          isInitialized,
+          previousCount: previousImages.length,
+          currentCount: currentImageUrls.length,
+          previousImages: [...previousImages],
+          currentImages: [...currentImageUrls],
         });
 
+        // Auto-delete logic - Enable when needed
+        if (isInitialized) {
+          // Chỉ xóa ảnh khi số lượng ảnh hiện tại ít hơn trước đó
+          // và ảnh thực sự bị remove (không phải do thêm ảnh mới)
+          if (currentImageUrls.length < previousImages.length) {
+            const deletedImages = previousImages.filter(
+              (url) => !currentImageUrls.includes(url)
+            );
+
+            // Xóa các ảnh đã bị remove khỏi Azure
+            deletedImages.forEach((imageUrl) => {
+              console.log("Deleting removed image:", imageUrl);
+              handleImageDelete(imageUrl);
+            });
+          }
+        }
+
         // Cập nhật danh sách ảnh hiện tại
-        previousImages = currentImageUrls;
+        previousImages = [...currentImageUrls];
+      });
+
+      // DEBUG: Theo dõi tất cả commands
+      editor.on("ExecCommand", (e) => {
+        console.log("🎯 ExecCommand:", e.command, e);
+
+        if (e.command === "mceInsertContent" || e.command === "mceImage") {
+          console.log("📸 Image command detected:", e.command);
+          // Delay một chút để đảm bảo ảnh đã được thêm vào DOM
+          setTimeout(() => {
+            const currentImages = editor
+              .getBody()
+              .querySelectorAll(
+                'img[src*="storage00image.blob.core.windows.net"]'
+              );
+            const currentImageUrls = Array.from(currentImages).map(
+              (img) => (img as HTMLImageElement).src
+            );
+            previousImages = [...currentImageUrls];
+            console.log(
+              "✅ Updated previousImages after image insert:",
+              previousImages
+            );
+          }, 500);
+        }
+      });
+
+      // DEBUG: Theo dõi content changes
+      editor.on("SetContent", (e) => {
+        console.log("📝 SetContent event:", e);
+      });
+
+      // DEBUG: Theo dõi khi content thay đổi
+      editor.on("input", () => {
+        const currentImages = editor
+          .getBody()
+          .querySelectorAll('img[src*="storage00image.blob.core.windows.net"]');
+        console.log(
+          "⌨️ Input event - Current images count:",
+          currentImages.length
+        );
       });
 
       // Enhanced drag and drop functionality
@@ -545,6 +603,11 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
         previousImages = Array.from(images).map(
           (img) => (img as HTMLImageElement).src
         );
+
+        // Đánh dấu editor đã được khởi tạo hoàn toàn
+        setTimeout(() => {
+          isInitialized = true;
+        }, 1000); // Delay 1 giây để đảm bảo editor đã stable
 
         // Set default font for new content
         editorBody.style.fontFamily = '"Times New Roman", Times, serif';
@@ -753,6 +816,60 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
             autosave_ask_before_unload: false,
             autosave_interval: "30s",
             autosave_restore_when_empty: false,
+
+            // Z-index configuration to ensure dialogs appear above other modals
+            base_url: undefined,
+            suffix: ".min",
+            // Ensure TinyMCE dialogs have higher z-index than parent modals
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            init_instance_callback: (_editor: TinyMCEEditor) => {
+              // Set z-index for TinyMCE dialogs to be above parent modal
+              const style = document.createElement("style");
+              style.textContent = `
+                .tox-dialog-wrap {
+                  z-index: 99999 !important;
+                  position: fixed !important;
+                }
+                .tox-dialog {
+                  z-index: 99999 !important;
+                  position: relative !important;
+                }
+                .tox-dialog__backdrop {
+                  z-index: 99998 !important;
+                  position: fixed !important;
+                }
+                .tox-tinymce-aux {
+                  z-index: 99999 !important;
+                  position: fixed !important;
+                }
+                .tox-dialog__header {
+                  pointer-events: auto !important;
+                }
+                .tox-dialog__body {
+                  pointer-events: auto !important;
+                }
+                .tox-dialog__footer {
+                  pointer-events: auto !important;
+                }
+                .tox-button {
+                  pointer-events: auto !important;
+                }
+                .tox-textfield {
+                  pointer-events: auto !important;
+                }
+                .tox-selectfield {
+                  pointer-events: auto !important;
+                }
+                /* Ensure TinyMCE dialogs are not affected by parent modal event handling */
+                .tox-dialog-wrap * {
+                  pointer-events: auto !important;
+                }
+                .tox-dialog-wrap {
+                  isolation: isolate;
+                }
+              `;
+              document.head.appendChild(style);
+            },
 
             // Enhanced image upload capabilities
             image_description: false,

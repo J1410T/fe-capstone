@@ -87,6 +87,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   const [showUploadConfirmDialog, setShowUploadConfirmDialog] =
     React.useState(false);
   const [isEditLoading, setIsEditLoading] = React.useState(false);
+  const [editingContent, setEditingContent] = React.useState<string>("");
 
   // Editor ref for edit dialog
   const editEditorRef = React.useRef<ScientificCVEditorRef>(null);
@@ -154,6 +155,9 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   const canEditDocument = (document: DocumentWithUserRole): boolean => {
     if (!user || document.type !== "BM5") return false;
 
+    // Cannot edit completed documents
+    if (document.status === "completed") return false;
+
     const formType = FORM_TYPES[document.type];
     if (!formType) return false;
 
@@ -200,7 +204,13 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   const handleEditDocument = (document: DocumentWithUserRole) => {
     console.log("handleEditDocument called with:", document);
     setEditingDocument(document);
+    setEditingContent(document["content-html"] || "");
     setShowEditDialog(true);
+  };
+
+  const handleEditorChange = (content: string) => {
+    console.log("📝 Editor content changed:", content.length, "characters");
+    setEditingContent(content);
   };
 
   // const handleDownloadDocument = (document: DocumentWithUserRole) => {
@@ -300,11 +310,14 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
       return;
     }
 
-    const content = editEditorRef.current?.getContent() ?? "";
-    if (!content.trim()) {
+    // Use state content instead of ref
+    const content = editingContent.trim();
+    if (!content) {
       toast.error("Please add content to the document");
       return;
     }
+
+    console.log("💾 Saving document with content length:", content.length);
 
     setIsEditLoading(true);
 
@@ -322,6 +335,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
       toast.success("Document updated successfully!");
       setShowEditDialog(false);
       setEditingDocument(null);
+      setEditingContent("");
       await refetch(); // Refresh the document list
     } catch (error) {
       console.error("Failed to update document:", error);
@@ -636,10 +650,25 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
       </Dialog>
 
       {/* Edit Document Dialog */}
-      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+      <Dialog
+        open={showEditDialog}
+        onOpenChange={(open) => {
+          // Only close if user explicitly wants to close, not when clicking on TinyMCE dialogs
+          if (!open) {
+            // Check if there are any TinyMCE dialogs open
+            const tinyMCEDialogs =
+              document.querySelectorAll(".tox-dialog-wrap");
+            if (tinyMCEDialogs.length === 0) {
+              setShowEditDialog(false);
+            }
+          } else {
+            setShowEditDialog(true);
+          }
+        }}
+      >
         <DialogContent
-          className="max-w-6xl max-h-[90vh] overflow-hidden z-[100]"
-          style={{ zIndex: 100, position: "fixed" }}
+          className="max-w-6xl max-h-[90vh] overflow-hidden z-[9999]"
+          style={{ zIndex: 9999, position: "fixed" }}
         >
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
@@ -679,10 +708,11 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
               <div className="h-[500px] overflow-hidden relative z-[150]">
                 <ScientificCVEditor
                   ref={editEditorRef}
-                  value={editingDocument?.["content-html"] || ""}
-                  onChange={() => {}} // Content is managed by ref
+                  value={editingContent}
+                  onChange={handleEditorChange}
                   height={500}
                   preset="document"
+                  readOnly={editingDocument?.status === "completed"}
                 />
               </div>
             </div>
@@ -694,29 +724,40 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
                 onClick={() => {
                   setShowEditDialog(false);
                   setEditingDocument(null);
+                  setEditingContent("");
                 }}
                 disabled={isEditLoading}
               >
                 Cancel
               </Button>
 
-              <Button
-                onClick={handleSaveEditDocument}
-                disabled={isEditLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                {isEditLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save Changes
-                  </>
-                )}
-              </Button>
+              {/* Show different buttons based on document status */}
+              {editingDocument?.status === "completed" ? (
+                /* Completed document - View only */
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  <Eye className="h-4 w-4" />
+                  <span>Document is completed and read-only</span>
+                </div>
+              ) : (
+                /* Save button for non-completed documents */
+                <Button
+                  onClick={handleSaveEditDocument}
+                  disabled={isEditLoading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  {isEditLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-4 w-4 mr-2" />
+                      Save Changes
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         </DialogContent>

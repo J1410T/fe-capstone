@@ -28,6 +28,7 @@ import {
 import {
   ScientificCVEditor,
   ScientificCVEditorRef,
+  TinyMCEViewer,
 } from "@/components/ui/TinyMCE";
 import {
   useDocumentsByFilter,
@@ -115,6 +116,9 @@ const DocumentManagement: React.FC = () => {
   );
   const inProgressDocuments = projectDocuments.filter(
     (doc) => doc.status === "inprogress"
+  );
+  const completedDocuments = projectDocuments.filter(
+    (doc) => doc.status === "completed"
   );
 
   useEffect(() => {
@@ -211,7 +215,12 @@ const DocumentManagement: React.FC = () => {
   };
 
   const handleUpdateDocument = async () => {
-    const content = editorRef.current?.getContent() ?? "";
+    // For completed documents, use existing content since they're view-only
+    const content =
+      editingDocument?.status === "completed"
+        ? editingDocument["content-html"]
+        : editorRef.current?.getContent() ?? "";
+
     if (!content.trim()) {
       toast.error("Please add content to the document");
       return;
@@ -262,22 +271,23 @@ const DocumentManagement: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Update document status to completed and close editing
+      // Save current content and update status to completed
+      const content =
+        editingDocument?.status === "completed"
+          ? editingDocument["content-html"]
+          : editorRef.current?.getContent() ?? editingDocument["content-html"];
+
       await updateDocument.mutateAsync({
         id: editingDocument.id,
         name: editingDocument.name,
         type: editingDocument.type,
         status: "completed", // Change status to completed
         "is-template": false,
-        "content-html":
-          editorRef.current?.getContent() ?? editingDocument["content-html"],
+        "content-html": content,
         "project-id": editingDocument["project-id"],
       });
 
-      // TODO: Call API to convert document to milestone/task
-      await handleDocumentToMilestone(editingDocument);
-
-      toast.success("Document completed and converted to project milestones!");
+      toast.success("Document completed successfully!");
 
       // Reset form
       setIsDocumentDialogOpen(false);
@@ -292,38 +302,6 @@ const DocumentManagement: React.FC = () => {
       toast.error("Error closing document");
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleDocumentToMilestone = async (document: DocumentWithUserRole) => {
-    // TODO: Implement API call to convert document to milestone
-    // This will parse the document content and create milestones/tasks
-    try {
-      const response = await fetch("/api/project/document", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          "section-title": document.name,
-          description: "Generated from document",
-          objective: "Document objective",
-          "cost-estimate": "0",
-          "time-estimate": "0",
-          "project-id": document["project-id"],
-          "document-content": document["content-html"],
-          "creator-id": document["account-id"] || "",
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to convert document to milestone");
-      }
-
-      console.log("Document converted to milestone successfully");
-    } catch (error) {
-      console.error("Failed to convert document to milestone:", error);
-      // Don't throw error here to avoid blocking the close operation
     }
   };
 
@@ -618,9 +596,54 @@ const DocumentManagement: React.FC = () => {
                   </div>
                 )}
 
+                {/* Completed Documents */}
+                {completedDocuments.length > 0 && (
+                  <div>
+                    <h3 className="text-md font-semibold text-gray-800 mb-3">
+                      Completed Documents ({completedDocuments.length})
+                    </h3>
+                    <div className="grid gap-3">
+                      {completedDocuments.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between p-4 border border-green-200 bg-green-50 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-green-600" />
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {doc.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Type: {doc.type} • Completed:{" "}
+                                {new Date(
+                                  doc["updated-at"] || doc["upload-at"]
+                                ).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(doc.status)}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditDocument(doc)}
+                              className="bg-green-100 hover:bg-green-200"
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* No Documents */}
                 {pendingDocuments.length === 0 &&
-                  inProgressDocuments.length === 0 && (
+                  inProgressDocuments.length === 0 &&
+                  completedDocuments.length === 0 && (
                     <div className="text-center py-8">
                       <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <p className="text-lg font-medium text-gray-900 mb-2">
@@ -642,7 +665,17 @@ const DocumentManagement: React.FC = () => {
         open={isDocumentDialogOpen}
         onOpenChange={(open) => {
           console.log("Dialog onOpenChange:", open);
-          setIsDocumentDialogOpen(open);
+          // Only close if user explicitly wants to close, not when clicking on TinyMCE dialogs
+          if (!open) {
+            // Check if there are any TinyMCE dialogs open
+            const tinyMCEDialogs =
+              document.querySelectorAll(".tox-dialog-wrap");
+            if (tinyMCEDialogs.length === 0) {
+              setIsDocumentDialogOpen(false);
+            }
+          } else {
+            setIsDocumentDialogOpen(true);
+          }
         }}
       >
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
@@ -673,13 +706,23 @@ const DocumentManagement: React.FC = () => {
                 </div>
               ) : (
                 <div className="h-[500px] overflow-hidden">
-                  <ScientificCVEditor
-                    ref={editorRef}
-                    value={documentContent}
-                    onChange={handleEditorChange}
-                    height={500}
-                    preset="document"
-                  />
+                  {/* Use TinyMCEViewer for completed documents (view-only), ScientificCVEditor for editable documents */}
+                  {editingDocument?.status === "completed" ? (
+                    <TinyMCEViewer
+                      content={documentContent}
+                      height={500}
+                      useTinyMCE={true}
+                      className="w-full h-full"
+                    />
+                  ) : (
+                    <ScientificCVEditor
+                      ref={editorRef}
+                      value={documentContent}
+                      onChange={handleEditorChange}
+                      height={500}
+                      preset="document"
+                    />
+                  )}
                 </div>
               )}
             </div>
@@ -702,44 +745,55 @@ const DocumentManagement: React.FC = () => {
               <div className="flex gap-2">
                 {isEditMode ? (
                   <>
-                    {/* Edit mode buttons */}
-                    <Button
-                      onClick={handleUpdateDocument}
-                      disabled={isLoading}
-                      className="bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      {isLoading ? (
-                        <>
-                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="h-4 w-4 mr-2" />
-                          Save
-                        </>
-                      )}
-                    </Button>
+                    {/* Show different buttons based on document status */}
+                    {editingDocument?.status === "completed" ? (
+                      /* Completed document - View only */
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Eye className="h-4 w-4" />
+                        <span>Document is completed and read-only</span>
+                      </div>
+                    ) : (
+                      <>
+                        {/* Edit mode buttons for pending/inprogress documents */}
+                        <Button
+                          onClick={handleUpdateDocument}
+                          disabled={isLoading}
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          {isLoading ? (
+                            <>
+                              <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                              Saving...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-4 w-4 mr-2" />
+                              Save
+                            </>
+                          )}
+                        </Button>
 
-                    {/* Only show Close button for inprogress documents */}
-                    {editingDocument?.status === "inprogress" && (
-                      <Button
-                        onClick={handleCloseDocument}
-                        disabled={isLoading}
-                        className="bg-green-600 hover:bg-green-700 text-white"
-                      >
-                        {isLoading ? (
-                          <>
-                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                            Closing...
-                          </>
-                        ) : (
-                          <>
-                            <X className="h-4 w-4 mr-2" />
-                            Close & Complete
-                          </>
+                        {/* Only show Close button for inprogress documents */}
+                        {editingDocument?.status === "inprogress" && (
+                          <Button
+                            onClick={handleCloseDocument}
+                            disabled={isLoading}
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                          >
+                            {isLoading ? (
+                              <>
+                                <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                                Closing...
+                              </>
+                            ) : (
+                              <>
+                                <X className="h-4 w-4 mr-2" />
+                                Close & Complete
+                              </>
+                            )}
+                          </Button>
                         )}
-                      </Button>
+                      </>
                     )}
                   </>
                 ) : (
