@@ -29,6 +29,7 @@ interface UnifiedTinyMCEProps {
   toolbar?: string | false;
   menubar?: boolean | string;
   plugins?: string[];
+  customSetup?: (editor: TinyMCEEditor) => void;
 
   // Legacy props for backward compatibility
   formStyles?: string;
@@ -439,6 +440,7 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
       toolbar,
       menubar,
       plugins,
+      customSetup,
       // Legacy props
       formStyles = "",
       placeholder = "",
@@ -695,6 +697,11 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
           img.style.outline = "";
         }
       });
+
+      // Call custom setup if provided
+      if (customSetup) {
+        customSetup(editor);
+      }
     };
 
     return (

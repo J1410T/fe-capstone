@@ -41,11 +41,17 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  CheckSquare,
+  Save,
 } from "lucide-react";
 import { DocumentWithUserRole } from "@/types/document";
 import { formatDateTime } from "@/utils";
 import { getStatusColor } from "../shared/utils";
-import { TinyMCEViewer } from "@/components/ui/TinyMCE";
+import {
+  TinyMCEViewer,
+  ScientificCVEditor,
+  ScientificCVEditorRef,
+} from "@/components/ui/TinyMCE";
 import { FORM_TYPES, FormStatus } from "@/pages/FormRegister/constants";
 import { UserRole } from "@/contexts/auth-types";
 import {
@@ -58,7 +64,7 @@ import { useMyAccountInfo } from "@/hooks/queries/useAuth";
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; // Removed - not needed
 
 interface DocumentTabProps {
   projectId?: string;
@@ -74,9 +80,16 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   const [selectedDocument, setSelectedDocument] =
     React.useState<DocumentWithUserRole | null>(null);
   const [showViewDialog, setShowViewDialog] = React.useState(false);
+  const [showEditDialog, setShowEditDialog] = React.useState(false);
+  const [editingDocument, setEditingDocument] =
+    React.useState<DocumentWithUserRole | null>(null);
   const [isUploading, setIsUploading] = React.useState(false);
   const [showUploadConfirmDialog, setShowUploadConfirmDialog] =
     React.useState(false);
+  const [isEditLoading, setIsEditLoading] = React.useState(false);
+
+  // Editor ref for edit dialog
+  const editEditorRef = React.useRef<ScientificCVEditorRef>(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,9 +99,8 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   const authResponse = getAuthResponse<{ email: string }>();
   const userEmail = authResponse?.email || "";
 
-  // Auth and navigation
+  // Auth
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   // Fetch user's Scientific CV by email
   const { data: scientificCV, isLoading: isCVLoading } = useScientificCVByEmail(
@@ -186,10 +198,9 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
   };
 
   const handleEditDocument = (document: DocumentWithUserRole) => {
-    if (document.type === "BM5") {
-      // Navigate to form edit page for BM5 contracts
-      navigate(`/forms/edit/${document.id}`);
-    }
+    console.log("handleEditDocument called with:", document);
+    setEditingDocument(document);
+    setShowEditDialog(true);
   };
 
   // const handleDownloadDocument = (document: DocumentWithUserRole) => {
@@ -250,6 +261,73 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
       toast.error("Failed to upload Scientific CV");
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleSignDocument = async (document: DocumentWithUserRole) => {
+    if (!user || user.role !== UserRole.PRINCIPAL_INVESTIGATOR) {
+      toast.error("Only Principal Investigators can sign documents");
+      return;
+    }
+
+    if (document.status !== "pending") {
+      toast.error("Only pending documents can be signed");
+      return;
+    }
+
+    try {
+      await updateDocument.mutateAsync({
+        id: document.id,
+        name: document.name,
+        type: document.type,
+        status: "inprogress", // Change status to inprogress after PI signs
+        "is-template": false,
+        "content-html": document["content-html"],
+        "project-id": document["project-id"],
+      });
+
+      toast.success("Document signed successfully!");
+      await refetch(); // Refresh the document list
+    } catch (error) {
+      console.error("Failed to sign document:", error);
+      toast.error("Failed to sign document");
+    }
+  };
+
+  const handleSaveEditDocument = async () => {
+    if (!editingDocument) {
+      toast.error("No document selected for editing");
+      return;
+    }
+
+    const content = editEditorRef.current?.getContent() ?? "";
+    if (!content.trim()) {
+      toast.error("Please add content to the document");
+      return;
+    }
+
+    setIsEditLoading(true);
+
+    try {
+      await updateDocument.mutateAsync({
+        id: editingDocument.id,
+        name: editingDocument.name,
+        type: editingDocument.type,
+        status: editingDocument.status,
+        "is-template": false,
+        "content-html": content,
+        "project-id": editingDocument["project-id"],
+      });
+
+      toast.success("Document updated successfully!");
+      setShowEditDialog(false);
+      setEditingDocument(null);
+      await refetch(); // Refresh the document list
+    } catch (error) {
+      console.error("Failed to update document:", error);
+      toast.error("Failed to update document");
+    } finally {
+      setIsEditLoading(false);
     }
   };
 
@@ -365,6 +443,20 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
                             <span className="hidden sm:inline">Edit</span>
                           </Button>
                         )}
+                        {/* Sign button for PI on pending documents */}
+                        {user?.role === UserRole.PRINCIPAL_INVESTIGATOR &&
+                          document.status === "pending" &&
+                          document.type === "BM5" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSignDocument(document)}
+                              className="bg-green-50 hover:bg-green-100 border-green-200"
+                            >
+                              <CheckSquare className="w-3 h-3 mr-1" />
+                              <span className="hidden sm:inline">Sign</span>
+                            </Button>
+                          )}
                         {/* <Button
                           variant="outline"
                           size="sm"
@@ -540,6 +632,93 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Document Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent
+          className="max-w-6xl max-h-[90vh] overflow-hidden z-[100]"
+          style={{ zIndex: 100, position: "fixed" }}
+        >
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3">
+              <Edit className="h-5 w-5 text-blue-600" />
+              Edit Document - {editingDocument?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Make changes to the document content. Changes will be saved when
+              you click Save.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-4 overflow-hidden">
+            {/* Document Info */}
+            {editingDocument && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                <div className="flex items-center gap-4 text-sm">
+                  <span>
+                    <strong>Type:</strong> {editingDocument.type}
+                  </span>
+                  <span>
+                    <strong>Status:</strong> {editingDocument.status}
+                  </span>
+                  <span>
+                    <strong>Last Updated:</strong>{" "}
+                    {formatDateTime(
+                      editingDocument["updated-at"] ||
+                        editingDocument["upload-at"]
+                    )}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Editor */}
+            <div className="flex-1 overflow-hidden">
+              <div className="h-[500px] overflow-hidden relative z-[150]">
+                <ScientificCVEditor
+                  ref={editEditorRef}
+                  value={editingDocument?.["content-html"] || ""}
+                  onChange={() => {}} // Content is managed by ref
+                  height={500}
+                  preset="document"
+                />
+              </div>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex justify-between items-center pt-4 border-t">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowEditDialog(false);
+                  setEditingDocument(null);
+                }}
+                disabled={isEditLoading}
+              >
+                Cancel
+              </Button>
+
+              <Button
+                onClick={handleSaveEditDocument}
+                disabled={isEditLoading}
+                className="bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                {isEditLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </Card>

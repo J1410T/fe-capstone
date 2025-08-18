@@ -15,7 +15,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FileText, Plus, RefreshCw, AlertCircle, Save } from "lucide-react";
+import {
+  FileText,
+  Plus,
+  RefreshCw,
+  AlertCircle,
+  Save,
+  Edit,
+  Eye,
+  X,
+} from "lucide-react";
 import {
   ScientificCVEditor,
   ScientificCVEditorRef,
@@ -23,8 +32,11 @@ import {
 import {
   useDocumentsByFilter,
   useCreateDocument,
+  useDocumentByProjectIdWithUserRole,
+  useUpdateDocument,
 } from "@/hooks/queries/document";
 import { useStaffProjectFilter } from "@/hooks/queries/project";
+import { DocumentWithUserRole } from "@/types/document";
 import { toast } from "sonner";
 
 interface Project {
@@ -41,6 +53,9 @@ const DocumentManagement: React.FC = () => {
   const [isDocumentDialogOpen, setIsDocumentDialogOpen] = useState(false);
   const [documentContent, setDocumentContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [editingDocument, setEditingDocument] =
+    useState<DocumentWithUserRole | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   const editorRef = useRef<ScientificCVEditorRef>(null);
 
@@ -73,9 +88,34 @@ const DocumentManagement: React.FC = () => {
   );
 
   const createDocument = useCreateDocument();
+  const updateDocument = useUpdateDocument();
+
+  // Get documents for selected project
+  const {
+    data: projectDocumentsResponse,
+    isLoading: isProjectDocumentsLoading,
+    refetch: refetchProjectDocuments,
+  } = useDocumentByProjectIdWithUserRole(
+    {
+      "is-template": false,
+      "page-index": 1,
+      "page-size": 50,
+      "project-id": selectedProjectId || "",
+    },
+    !!selectedProjectId
+  );
 
   const projects = projectsData?.["data-list"] || [];
   const contractTemplates = templateData?.data?.["data-list"] || [];
+  const projectDocuments = projectDocumentsResponse?.["data-list"] || [];
+
+  // Filter documents by status for staff workflow
+  const pendingDocuments = projectDocuments.filter(
+    (doc) => doc.status === "pending"
+  );
+  const inProgressDocuments = projectDocuments.filter(
+    (doc) => doc.status === "inprogress"
+  );
 
   useEffect(() => {
     if (projectsError) {
@@ -132,7 +172,7 @@ const DocumentManagement: React.FC = () => {
       await createDocument.mutateAsync({
         name: `Contract`,
         type: "BM5",
-        status: "draft",
+        status: "pending", // Staff creates with pending status
         "is-template": false,
         "content-html": content,
         "project-id": selectedProject.id,
@@ -148,6 +188,13 @@ const DocumentManagement: React.FC = () => {
       setSelectedProject(null);
       setSelectedProjectId("");
       setDocumentContent("");
+      setEditingDocument(null);
+      setIsEditMode(false);
+
+      // Refetch project documents to show updated list
+      if (selectedProjectId) {
+        refetchProjectDocuments();
+      }
     } catch (error) {
       console.error("Failed to save document:", error);
       toast.error("Error saving document");
@@ -156,9 +203,142 @@ const DocumentManagement: React.FC = () => {
     }
   };
 
+  const handleEditDocument = (document: DocumentWithUserRole) => {
+    setEditingDocument(document);
+    setDocumentContent(document["content-html"] || "");
+    setIsEditMode(true);
+    setIsDocumentDialogOpen(true);
+  };
+
+  const handleUpdateDocument = async () => {
+    const content = editorRef.current?.getContent() ?? "";
+    if (!content.trim()) {
+      toast.error("Please add content to the document");
+      return;
+    }
+
+    if (!editingDocument) {
+      toast.error("No document selected for editing");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      await updateDocument.mutateAsync({
+        id: editingDocument.id,
+        name: editingDocument.name,
+        type: editingDocument.type,
+        status: editingDocument.status, // Keep current status
+        "is-template": false,
+        "content-html": content,
+        "project-id": editingDocument["project-id"],
+      });
+
+      toast.success("Document updated successfully!");
+
+      // Reset form
+      setIsDocumentDialogOpen(false);
+      setEditingDocument(null);
+      setIsEditMode(false);
+      setDocumentContent("");
+
+      // Refetch project documents
+      refetchProjectDocuments();
+    } catch (error) {
+      console.error("Failed to update document:", error);
+      toast.error("Error updating document");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCloseDocument = async () => {
+    if (!editingDocument) {
+      toast.error("No document selected");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Update document status to completed and close editing
+      await updateDocument.mutateAsync({
+        id: editingDocument.id,
+        name: editingDocument.name,
+        type: editingDocument.type,
+        status: "completed", // Change status to completed
+        "is-template": false,
+        "content-html":
+          editorRef.current?.getContent() ?? editingDocument["content-html"],
+        "project-id": editingDocument["project-id"],
+      });
+
+      // TODO: Call API to convert document to milestone/task
+      await handleDocumentToMilestone(editingDocument);
+
+      toast.success("Document completed and converted to project milestones!");
+
+      // Reset form
+      setIsDocumentDialogOpen(false);
+      setEditingDocument(null);
+      setIsEditMode(false);
+      setDocumentContent("");
+
+      // Refetch project documents
+      refetchProjectDocuments();
+    } catch (error) {
+      console.error("Failed to close document:", error);
+      toast.error("Error closing document");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDocumentToMilestone = async (document: DocumentWithUserRole) => {
+    // TODO: Implement API call to convert document to milestone
+    // This will parse the document content and create milestones/tasks
+    try {
+      const response = await fetch("/api/project/document", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          "section-title": document.name,
+          description: "Generated from document",
+          objective: "Document objective",
+          "cost-estimate": "0",
+          "time-estimate": "0",
+          "project-id": document["project-id"],
+          "document-content": document["content-html"],
+          "creator-id": document["account-id"] || "",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to convert document to milestone");
+      }
+
+      console.log("Document converted to milestone successfully");
+    } catch (error) {
+      console.error("Failed to convert document to milestone:", error);
+      // Don't throw error here to avoid blocking the close operation
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "in-progress":
+      case "pending":
+        return (
+          <Badge
+            variant="outline"
+            className="bg-yellow-50 text-yellow-700 border-yellow-200"
+          >
+            Pending
+          </Badge>
+        );
+      case "inprogress":
         return (
           <Badge
             variant="outline"
@@ -244,7 +424,7 @@ const DocumentManagement: React.FC = () => {
                       <SelectItem key={project.id} value={project.id}>
                         <div className="flex items-center justify-between w-full">
                           <span className="font-medium">
-                            [{project.code}] {project["vietnamese-title"]}
+                            [{project.code}] {project["english-title"]}
                           </span>
                           {getStatusBadge(project.status)}
                         </div>
@@ -332,30 +512,159 @@ const DocumentManagement: React.FC = () => {
         </CardContent>
       </Card>
 
+      {/* Project Documents Management */}
+      {selectedProject && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg font-bold">
+              Project Documents - {selectedProject["vietnamese-title"]}
+            </CardTitle>
+            <p className="text-sm text-gray-600">
+              Manage pending and in-progress documents
+            </p>
+          </CardHeader>
+          <CardContent>
+            {isProjectDocumentsLoading ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent"></div>
+                <p className="ml-2 text-gray-600">Loading documents...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Pending Documents */}
+                {pendingDocuments.length > 0 && (
+                  <div>
+                    <h3 className="text-md font-semibold text-gray-800 mb-3">
+                      Pending Documents ({pendingDocuments.length})
+                    </h3>
+                    <div className="grid gap-3">
+                      {pendingDocuments.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between p-4 border border-yellow-200 bg-yellow-50 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-yellow-600" />
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {doc.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Type: {doc.type} • Created:{" "}
+                                {new Date(
+                                  doc["upload-at"]
+                                ).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(doc.status)}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditDocument(doc)}
+                            >
+                              <Eye className="h-4 w-4 mr-1" />
+                              View
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* In Progress Documents */}
+                {inProgressDocuments.length > 0 && (
+                  <div>
+                    <h3 className="text-md font-semibold text-gray-800 mb-3">
+                      In Progress Documents ({inProgressDocuments.length})
+                    </h3>
+                    <div className="grid gap-3">
+                      {inProgressDocuments.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between p-4 border border-blue-200 bg-blue-50 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-blue-600" />
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                {doc.name}
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                Type: {doc.type} • Signed by PI • Updated:{" "}
+                                {new Date(
+                                  doc["updated-at"] || doc["upload-at"]
+                                ).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {getStatusBadge(doc.status)}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEditDocument(doc)}
+                              className="bg-blue-100 hover:bg-blue-200"
+                            >
+                              <Edit className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* No Documents */}
+                {pendingDocuments.length === 0 &&
+                  inProgressDocuments.length === 0 && (
+                    <div className="text-center py-8">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <p className="text-lg font-medium text-gray-900 mb-2">
+                        No documents found
+                      </p>
+                      <p className="text-gray-600">
+                        Create a contract for this project to get started.
+                      </p>
+                    </div>
+                  )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Document Creation Dialog */}
       <Dialog
         open={isDocumentDialogOpen}
-        onOpenChange={setIsDocumentDialogOpen}
+        onOpenChange={(open) => {
+          console.log("Dialog onOpenChange:", open);
+          setIsDocumentDialogOpen(open);
+        }}
       >
         <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-purple-600" />
-              Create Contract
+              {isEditMode ? "Edit Document" : "Create Contract"}
             </DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-4 overflow-hidden">
             {/* Editor */}
             <div className="flex-1 overflow-hidden">
-              {isTemplateLoading ? (
+              {/* Show loading only for create mode when template is loading */}
+              {!isEditMode && isTemplateLoading ? (
                 <div className="flex items-center justify-center h-[500px] bg-white rounded-xl shadow-inner">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-600 border-t-transparent mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading template...</p>
                   </div>
                 </div>
-              ) : templateError ? (
+              ) : !isEditMode && templateError ? (
                 <div className="text-center text-red-500 p-6 bg-white rounded-xl shadow">
                   <div className="mb-4">
                     ⚠️ Template error: {(templateError as Error).message}
@@ -379,29 +688,81 @@ const DocumentManagement: React.FC = () => {
             <div className="flex justify-between items-center pt-4 border-t">
               <Button
                 variant="outline"
-                onClick={() => setIsDocumentDialogOpen(false)}
+                onClick={() => {
+                  setIsDocumentDialogOpen(false);
+                  setEditingDocument(null);
+                  setIsEditMode(false);
+                  setDocumentContent("");
+                }}
                 disabled={isLoading}
               >
                 Cancel
               </Button>
 
-              <Button
-                onClick={handleSaveDocument}
-                disabled={isLoading}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
-              >
-                {isLoading ? (
+              <div className="flex gap-2">
+                {isEditMode ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Saving...
+                    {/* Edit mode buttons */}
+                    <Button
+                      onClick={handleUpdateDocument}
+                      disabled={isLoading}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      {isLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save
+                        </>
+                      )}
+                    </Button>
+
+                    {/* Only show Close button for inprogress documents */}
+                    {editingDocument?.status === "inprogress" && (
+                      <Button
+                        onClick={handleCloseDocument}
+                        disabled={isLoading}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {isLoading ? (
+                          <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                            Closing...
+                          </>
+                        ) : (
+                          <>
+                            <X className="h-4 w-4 mr-2" />
+                            Close & Complete
+                          </>
+                        )}
+                      </Button>
+                    )}
                   </>
                 ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Save
-                  </>
+                  /* Create mode button */
+                  <Button
+                    onClick={handleSaveDocument}
+                    disabled={isLoading}
+                    className="bg-purple-600 hover:bg-purple-700 text-white"
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Create Contract
+                      </>
+                    )}
+                  </Button>
                 )}
-              </Button>
+              </div>
             </div>
           </div>
         </DialogContent>
