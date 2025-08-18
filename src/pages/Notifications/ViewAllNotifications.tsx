@@ -33,45 +33,48 @@ import { toast } from "sonner";
 import {
   useNotificationList,
   useMarkNotification,
+  useSendNotification,
 } from "@/hooks/queries/notification";
 import {
   useUpdateUserRoleStatus,
   // useUserRoleByAccountAndProject,
 } from "@/hooks/queries/useAuth";
-import { useProject } from "@/hooks/queries/project";
+// import { useProject } from "@/hooks/queries/project";
+import { getUserRoleByFilter } from "@/services/resources/auth";
+import { NotificationRequest } from "@/types/notification";
 
 // Component to display project name for project notifications
-const ProjectNotificationTitle: React.FC<{
-  notification: {
-    id: string;
-    title: string;
-    type: string;
-    "type-object-id": string | null;
-  };
-}> = ({ notification }) => {
-  const { data: project } = useProject(notification["type-object-id"] || "");
+// const ProjectNotificationTitle: React.FC<{
+//   notification: {
+//     id: string;
+//     title: string;
+//     type: string;
+//     "type-object-id": string | null;
+//   };
+// }> = ({ notification }) => {
+//   const { data: project } = useProject(notification["type-object-id"] || "");
 
-  if (notification.type === "project" && project) {
-    return (
-      <div>
-        <h4 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-          {notification.title}
-        </h4>
-        <p className="text-sm text-blue-600 font-medium">
-          Project:{" "}
-          {project.data?.["project-detail"]?.["english-title"] ||
-            "Unknown Project"}
-        </p>
-      </div>
-    );
-  }
+//   if (notification.type === "project" && project) {
+//     return (
+//       <div>
+//         <h4 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+//           {notification.title}
+//         </h4>
+//         <p className="text-sm text-blue-600 font-medium">
+//           Project:{" "}
+//           {project.data?.["project-detail"]?.["english-title"] ||
+//             "Unknown Project"}
+//         </p>
+//       </div>
+//     );
+//   }
 
-  return (
-    <h4 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-      {notification.title}
-    </h4>
-  );
-};
+//   return (
+//     <h4 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
+//       {notification.title}
+//     </h4>
+//   );
+// };
 
 const ViewAllNotifications: React.FC = () => {
   const navigate = useNavigate();
@@ -107,6 +110,7 @@ const ViewAllNotifications: React.FC = () => {
   // Hook for updating user role status and marking notifications
   const updateUserRoleStatusMutation = useUpdateUserRoleStatus();
   const markNotificationMutation = useMarkNotification();
+  const sendNotificationMutation = useSendNotification();
 
   const handleBack = () => navigate(-1);
 
@@ -191,8 +195,6 @@ const ViewAllNotifications: React.FC = () => {
     setProcessingNotifications((prev) => new Set(prev).add(notificationId));
 
     try {
-      // Get user roles using the updated hook that returns all roles
-      const { getUserRoleByFilter } = await import("@/services/resources/auth");
       const userRoleResponse = await getUserRoleByFilter({
         "account-id": accountId,
         "project-id": typeObjectId,
@@ -216,6 +218,16 @@ const ViewAllNotifications: React.FC = () => {
             },
           });
         }
+
+        const notificationRequest: NotificationRequest = {
+          title: `Please submit your Science CV in Project Detail `,
+          type: "project",
+          status: "create",
+          "objec-notification-id": typeObjectId,
+          "list-account-id": [accountId],
+        };
+
+        await sendNotificationMutation.mutateAsync(notificationRequest);
 
         toast.success(`${userRoles.length} user role(s) approved successfully`);
 
@@ -251,8 +263,6 @@ const ViewAllNotifications: React.FC = () => {
     setProcessingNotifications((prev) => new Set(prev).add(notificationId));
 
     try {
-      // Get user roles using the updated approach that handles multiple roles
-      const { getUserRoleByFilter } = await import("@/services/resources/auth");
       const userRoleResponse = await getUserRoleByFilter({
         "account-id": accountId,
         "project-id": typeObjectId,
@@ -353,7 +363,7 @@ const ViewAllNotifications: React.FC = () => {
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <ProjectNotificationTitle notification={n} />
+                      <h4>{n.title}</h4>
                       <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
                         <Clock className="w-3 h-3" />
                         <span>
@@ -400,7 +410,7 @@ const ViewAllNotifications: React.FC = () => {
                   </div>
 
                   {n.status === "pending" && n.type === "project" && (
-                    <div className="flex gap-3 mt-4 pt-3 border-t border-gray-100">
+                    <div className="flex gap-3 mt-2 pt-2 border-t border-gray-100">
                       <Button
                         size="sm"
                         disabled={isProcessing || n["is-read"]}

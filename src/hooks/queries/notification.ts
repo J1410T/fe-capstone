@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   createNotification,
-  sendNotificationToUsers,
+  // sendNotificationToUsers,
   getNotificationList,
   markNotification,
 } from "@/services/resources/notification";
 import {
   NotificationRequest,
-  SendNotificationRequest,
+  // SendNotificationRequest,
   NotificationListRequest,
   MarkNotificationRequest,
 } from "@/types/notification";
@@ -27,15 +27,15 @@ export function useCreateNotification() {
 /**
  * Hook to send notification to users
  */
-export function useSendNotification() {
-  return useMutation({
-    mutationFn: (request: SendNotificationRequest) =>
-      sendNotificationToUsers(request),
-    onError: (error) => {
-      console.error("Failed to send notification:", error);
-    },
-  });
-}
+// export function useSendNotification() {
+//   return useMutation({
+//     mutationFn: (request: SendNotificationRequest) =>
+//       sendNotificationToUsers(request),
+//     onError: (error) => {
+//       console.error("Failed to send notification:", error);
+//     },
+//   });
+// }
 
 /**
  * Hook to get notification list for current user
@@ -136,28 +136,49 @@ export function useMarkNotification() {
 //   });
 // }
 
-export function useInviteMember() {
+// export function useInviteMember() {
+//   const createNotificationMutation = useCreateNotification();
+
+//   return useMutation({
+//     mutationFn: async ({
+//       projectId,
+//       accountId,
+//     }: {
+//       projectId: string;
+//       accountId: string;
+//     }) => {
+//       // Create notification with account ID directly in the request
+//       const notificationRequest: NotificationRequest = {
+//         title: "Invite Enroll to project",
+//         type: "project",
+//         status: "pending",
+//         "objec-notification-id": projectId,
+//         "list-account-id": [accountId], // Send to specific account
+//       };
+
+//       const notificationResponse = await createNotificationMutation.mutateAsync(
+//         notificationRequest
+//       );
+
+//       return {
+//         notificationId: notificationResponse.id,
+//         success: true,
+//       };
+//     },
+//     onError: (error) => {
+//       console.error("Failed to invite member:", error);
+//     },
+//   });
+// }
+
+// Hook chung để gửi notification
+export function useSendNotification() {
   const createNotificationMutation = useCreateNotification();
 
   return useMutation({
-    mutationFn: async ({
-      projectId,
-      accountId,
-    }: {
-      projectId: string;
-      accountId: string;
-    }) => {
-      // Create notification with account ID directly in the request
-      const notificationRequest: NotificationRequest = {
-        title: "Invite Enroll to project",
-        type: "project",
-        status: "pending",
-        "objec-notification-id": projectId,
-        "list-account-id": [accountId], // Send to specific account
-      };
-
+    mutationFn: async (request: NotificationRequest) => {
       const notificationResponse = await createNotificationMutation.mutateAsync(
-        notificationRequest
+        request
       );
 
       return {
@@ -166,7 +187,7 @@ export function useInviteMember() {
       };
     },
     onError: (error) => {
-      console.error("Failed to invite member:", error);
+      console.error("Failed to send notification:", error);
     },
   });
 }

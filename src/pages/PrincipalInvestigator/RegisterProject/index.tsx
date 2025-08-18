@@ -141,6 +141,7 @@ const RegisterProject: React.FC = () => {
             onNext={handleNextStep}
             onPrevious={handlePrevStep}
             mode="detailed"
+            projectName={formData.englishTitle}
           />
         )}
 

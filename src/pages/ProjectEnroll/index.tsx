@@ -184,6 +184,7 @@ const ProjectEnroll: React.FC = () => {
 
         {currentStep === 2 && (
           <InviteMembersStep
+            projectName={project["project-detail"]["english-title"]}
             collaborators={collaborators}
             onCollaboratorsChange={setCollaborators}
             groupMembers={groupMembers}

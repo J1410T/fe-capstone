@@ -3,6 +3,7 @@ import { Transaction } from "./transaction";
 import { DocumentProject } from "./document";
 import { IndividualEvaluation, Milestone } from "./task";
 import { Evaluation } from "./evaluation";
+import { ProjectMajorItem } from "./major";
 
 // Filter types
 export type StatusFilter = "all" | "created" | "done";
@@ -418,7 +419,7 @@ export interface Proposal {
   milestones: Milestone[] | null;
   evaluations: Evaluation[] | null;
   "project-similarity": unknown | null;
-  majors: ProjectMajor[];
+  majors: ProjectMajorItem[] | null;
   "project-tags": ProjectTag[] | null;
   documents: DocumentProject[] | null;
   transactions: Transaction[] | null;
@@ -449,6 +450,13 @@ export interface ProjectWithProposals {
   status: string;
   "creator-id": string;
   proposals: Proposal[];
+}
+
+export interface RolePrincipalInvestigatorInfo extends Proposal {
+  "pi-account-id"?: string;
+  "pi-full-name"?: string;
+  "pi-avatar-url"?: string;
+  "pi-email"?: string;
 }
 
 export interface TopicsListProps {

@@ -9,7 +9,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { ProjectWithProposals, TopicsListProps } from "@/types/project";
-import { useProjectsByAppraisalCouncil } from "@/hooks/queries/project";
+import { useProjectsByAppraisalCouncilWithPI } from "@/hooks/queries/project";
 
 export const TopicsList: React.FC<TopicsListProps> = ({ selectedCouncil }) => {
   const navigate = useNavigate();
@@ -18,7 +18,7 @@ export const TopicsList: React.FC<TopicsListProps> = ({ selectedCouncil }) => {
     data: projects = [],
     isLoading,
     error,
-  } = useProjectsByAppraisalCouncil(selectedCouncil);
+  } = useProjectsByAppraisalCouncilWithPI(selectedCouncil, ["created"]);
 
   const handleTopicClick = (project: ProjectWithProposals) => {
     navigate(`/council/project-approval/topic/${project.id}`, {

@@ -362,6 +362,27 @@ export const getUserRoleById = async (
   }
 };
 
+export const getUserRoleByProjectIdAndRoleId = async (
+  projectId: string,
+  roleId: string
+) => {
+  const accessToken = getAccessToken();
+  const request = {
+    "project-id": projectId,
+    "role-id": roleId,
+  };
+  return await axiosClient.post<UserRoleResponse>(
+    "/user-role/filter",
+    request,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json-patch+json",
+      },
+    }
+  );
+};
+
 export const deleteUserRole = async (userRoleId: string): Promise<void> => {
   try {
     const accessToken = getAccessToken();

@@ -12,6 +12,7 @@ import {
   getProjectByHostInstitution,
   getStaffProjectFilter,
   getProjectsByCouncilId,
+  getProjectsByCouncilIdWithPI,
 } from "@/services/resources/project";
 import {
   CreateProjectMajorRequest,
@@ -164,10 +165,26 @@ export function useStaffProjectFilter(
   });
 }
 
-export function useProjectsByAppraisalCouncil(councilId: string) {
+export function useProjectsByAppraisalCouncil(
+  councilId: string,
+  statuses: string[] = []
+) {
   return useQuery({
-    queryKey: ["projects-by-appraisal-council", councilId],
-    queryFn: () => getProjectsByCouncilId(councilId),
+    queryKey: ["projects-by-appraisal-council", councilId, statuses],
+    queryFn: () => getProjectsByCouncilId(councilId, statuses),
+    enabled: !!councilId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+  });
+}
+
+export function useProjectsByAppraisalCouncilWithPI(
+  councilId: string,
+  statuses: string[] = []
+) {
+  return useQuery({
+    queryKey: ["projects-by-appraisal-council-with-pi", councilId, statuses],
+    queryFn: () => getProjectsByCouncilIdWithPI(councilId, statuses),
     enabled: !!councilId,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes

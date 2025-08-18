@@ -202,7 +202,7 @@ export const AIEvaluationDetailPage: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-4 p-4 bg-orange-50 rounded-xl">
-              {aiEvaluation["is-approved"] ? (
+              {aiEvaluation["reviewer-result"] ? (
                 <CheckCircle className="h-8 w-8 text-green-600" />
               ) : (
                 <XCircle className="h-8 w-8 text-orange-600" />
@@ -212,7 +212,7 @@ export const AIEvaluationDetailPage: React.FC = () => {
                   Approval Status
                 </span>
                 <p className="text-lg font-semibold text-gray-900">
-                  {aiEvaluation["is-approved"] ? "Approved" : "Pending"}
+                  {aiEvaluation["reviewer-result"] ? "Approved" : "Rejected"}
                 </p>
               </div>
             </div>

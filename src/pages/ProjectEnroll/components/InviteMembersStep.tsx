@@ -47,8 +47,8 @@ import {
   useUserRolesByProjectId,
 } from "@/hooks/queries/useAuth";
 import { GroupMember, UserRole } from "@/types/auth";
-import { UserRoleStatus } from "@/types/notification";
-import { useInviteMember } from "@/hooks/queries/notification";
+import { NotificationRequest, UserRoleStatus } from "@/types/notification";
+// import { useInviteMember } from "@/hooks/queries/notification";
 import {
   useScientificCVByEmail,
   useCreateDocument,
@@ -59,6 +59,7 @@ import {
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { getUserRoleByFilter } from "@/services/resources/auth";
 import { toast } from "sonner";
+import { useSendNotification } from "@/hooks/queries/notification";
 
 interface InviteMembersStepProps {
   collaborators: SimpleInvitedUser[];
@@ -69,6 +70,7 @@ interface InviteMembersStepProps {
   onNext: () => void;
   onPrevious: () => void;
   mode?: "detailed" | "simple";
+  projectName: string;
 }
 
 interface CVStatus {
@@ -84,6 +86,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   onNext,
   onPrevious,
   mode = "detailed",
+  projectName,
 }) => {
   const { projectId } = useParams<{ projectId: string }>();
   const [searchValue, setSearchValue] = useState("");
@@ -121,7 +124,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   );
 
   // Invitation hooks
-  const inviteMemberMutation = useInviteMember();
+  const inviteMemberMutation = useSendNotification();
   const createUserRoleMutation = useCreateUserRole();
   const deleteUserRoleMutation = useDeleteUserRole();
 
@@ -853,10 +856,16 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
     try {
       // For new invitations or members without existing UserRole
       // Step 1: Send notification
-      const notificationResult = await inviteMemberMutation.mutateAsync({
-        projectId,
-        accountId: memberId,
-      });
+      const notificationRequest: NotificationRequest = {
+        title: `Invite Enroll to project: ${projectName}`,
+        type: "project",
+        status: "pending",
+        "objec-notification-id": projectId,
+        "list-account-id": [memberId],
+      };
+      const notificationResult = await inviteMemberMutation.mutateAsync(
+        notificationRequest
+      );
 
       if (notificationResult.success) {
         // Step 2: Create UserRole for the selected role
