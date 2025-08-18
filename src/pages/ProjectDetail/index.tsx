@@ -66,7 +66,7 @@ function ProjectDetail() {
     const projectStatus = project?.status;
 
     // Show all tabs if project is approved or inprogress
-    if (projectStatus === "approved" || projectStatus === "inprogress") {
+    if (projectStatus === "inprogress") {
       baseTabs.push("team", "milestones", "documents", "budget", "evaluation");
     } else if (isProposal) {
       // For Proposal projects: show Overview, Team, Document, Evaluation

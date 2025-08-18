@@ -109,6 +109,12 @@ export function formatAIContentForTinyMCE(content: string): string {
 
   let formatted = content;
 
+  // Handle project titles in quotes
+  formatted = formatted.replace(/"([^"]+)"/g, '<strong>"$1"</strong>');
+
+  // Handle scoring patterns (X/Y format)
+  formatted = formatted.replace(/(\d+\/\d+)/g, "<strong>$1</strong>");
+
   // Handle headers (no inline styles, let CSS handle it)
   formatted = formatted.replace(/### (.*?)(?=\n|$)/g, "<h3>$1</h3>");
   formatted = formatted.replace(/## (.*?)(?=\n|$)/g, "<h2>$1</h2>");
@@ -130,6 +136,33 @@ export function formatAIContentForTinyMCE(content: string): string {
   formatted = formatted.replace(/(<li[^>]*>.*?<\/li>\s*)+/gs, (match) => {
     return `<ul>${match}</ul>`;
   });
+
+  // Split long sentences at logical points for better readability
+  formatted = formatted.replace(/(\w+:)\s+/g, "$1<br/>");
+
+  // Add line breaks after colons followed by scores
+  formatted = formatted.replace(
+    /(score\s+\d+\/\d+[^.]*\.)\s+/g,
+    "$1<br/><br/>"
+  );
+
+  // Add line breaks after "However," and similar transition words
+  formatted = formatted.replace(
+    /(However,|Therefore,|Additionally,|Furthermore,|Moreover,|Nevertheless,|Consequently,)\s+/g,
+    "<br/><br/>$1 "
+  );
+
+  // Add line breaks before "The" when it starts a new evaluation point
+  formatted = formatted.replace(
+    /\.\s+(The\s+\w+\s+(?:score|receive|is|remains))/g,
+    ".<br/><br/>$1"
+  );
+
+  // Add line breaks before "Lastly," and "Overall,"
+  formatted = formatted.replace(
+    /(Lastly,|Overall,|Finally,)\s+/g,
+    "<br/><br/>$1 "
+  );
 
   // Handle paragraphs (double line breaks)
   const paragraphs = formatted.split(/\n\s*\n/);
@@ -160,11 +193,8 @@ export function formatAIContentForTinyMCE(content: string): string {
   formatted = formatted.replace(/(<\/h[1-6]>)\s*(<p)/g, "$1\n$2");
   formatted = formatted.replace(/(<\/ul>)\s*(<p)/g, "$1\n$2");
 
-  // Handle quoted text with special styling
-  formatted = formatted.replace(
-    /"([^"]+)"/g,
-    '<span class="quote">"$1"</span>'
-  );
+  // Clean up multiple consecutive <br/> tags
+  formatted = formatted.replace(/(<br\/>\s*){3,}/g, "<br/><br/>");
 
   return formatted;
 }
