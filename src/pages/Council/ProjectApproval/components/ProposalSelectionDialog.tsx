@@ -25,12 +25,12 @@ import {
   GraduationCap,
   CheckCircle,
 } from "lucide-react";
-import { Proposal } from "@/types/project";
+import { RolePrincipalInvestigatorInfo } from "@/types/project";
 
 interface ProposalSelectionDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  proposals: Proposal[];
+  proposals: RolePrincipalInvestigatorInfo[];
   onSelectProposal: (proposalId: string) => void;
   topicTitle: string;
   isLoading?: boolean;
@@ -52,31 +52,31 @@ export const ProposalSelectionDialog: React.FC<
   const selectedProposal = proposals.find((p) => p.id === selectedProposalId);
 
   // Helper function to get PI name from members (same as TopicDetailPage)
-  const getPIName = (proposal: Proposal) => {
-    // Look for Principal Investigator role in members first
-    if (proposal.members && proposal.members.length > 0) {
-      const pi = proposal.members.find(
-        (member) =>
-          member.name === "Principal Investigator" || member.name === "PI"
-      );
-      if (pi && pi["full-name"]) {
-        return pi["full-name"];
-      }
+  // const getPIName = (proposal: RolePrincipalInvestigatorInfo) => {
+  //   // Look for Principal Investigator role in members first
+  //   if (proposal.members && proposal.members.length > 0) {
+  //     const pi = proposal.members.find(
+  //       (member) =>
+  //         member.name === "Principal Investigator" || member.name === "PI"
+  //     );
+  //     if (pi && pi["full-name"]) {
+  //       return pi["full-name"];
+  //     }
 
-      // If no PI role, try any member with full-name as fallback
-      const anyMember = proposal.members.find((m) => m["full-name"]);
-      if (anyMember) {
-        return anyMember["full-name"];
-      }
-    }
+  //     // If no PI role, try any member with full-name as fallback
+  //     const anyMember = proposal.members.find((m) => m["full-name"]);
+  //     if (anyMember) {
+  //       return anyMember["full-name"];
+  //     }
+  //   }
 
-    // Fallback to creator if no PI found
-    if (proposal.creator?.["full-name"]) {
-      return proposal.creator["full-name"];
-    }
+  //   // Fallback to creator if no PI found
+  //   if (proposal.creator?.["full-name"]) {
+  //     return proposal.creator["full-name"];
+  //   }
 
-    return "Unknown";
-  };
+  //   return "Unknown";
+  // };
 
   const handleConfirmSelection = () => {
     if (selectedProposalId) {
@@ -154,16 +154,21 @@ export const ProposalSelectionDialog: React.FC<
                     >
                       <div className="flex items-center gap-3 w-full">
                         <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-medium text-blue-700">
+                          {/* <span className="text-xs font-medium text-blue-700">
                             {getPIName(proposal)?.charAt(0) || "U"}
-                          </span>
+                          </span> */}
+                          <img
+                            src={proposal["pi-avatar-url"]}
+                            alt={proposal["pi-full-name"]}
+                            className="w-full h-full object-cover rounded-full"
+                          />
                         </div>
                         <div className="flex-1 text-left">
                           <p className="font-medium text-gray-900 truncate">
                             {proposal["english-title"]}
                           </p>
                           <p className="text-xs text-gray-500">
-                            by {getPIName(proposal)} •{" "}
+                            by {proposal["pi-full-name"]}
                             {/* {proposal.creator?.["group-name"] ||
                               "No Institution"} */}
                           </p>
@@ -211,14 +216,13 @@ export const ProposalSelectionDialog: React.FC<
                       <div className="flex items-center gap-2 min-w-0">
                         <User className="h-4 w-4 text-gray-500 flex-shrink-0" />
                         <span className="text-gray-600 truncate">
-                          {selectedProposal.creator?.["full-name"] || "Unknown"}
+                          {selectedProposal["pi-full-name"]}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 min-w-0">
                         <Building className="h-4 w-4 text-gray-500 flex-shrink-0" />
                         <span className="text-gray-600 truncate">
-                          {/* {selectedProposal.creator?.["group-name"] ||
-                            "No Institution"} */}
+                          {selectedProposal["pi-email"]}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 min-w-0">
@@ -288,7 +292,7 @@ export const ProposalSelectionDialog: React.FC<
                         Name
                       </label>
                       <p className="text-gray-900 break-words">
-                        {selectedProposal.creator?.["full-name"] || "Unknown"}
+                        {selectedProposal["pi-full-name"]}
                       </p>
                     </div>
                     <div>
@@ -296,24 +300,7 @@ export const ProposalSelectionDialog: React.FC<
                         Email
                       </label>
                       <p className="text-gray-900 break-all">
-                        {selectedProposal.creator?.email || "Not provided"}
-                      </p>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">
-                        Institution
-                      </label>
-                      {/* <p className="text-gray-900">
-                        {selectedProposal.creator?.["group-name"] ||
-                          "No Institution"}
-                      </p> */}
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-gray-500">
-                        Member ID
-                      </label>
-                      <p className="text-gray-900">
-                        {selectedProposal.creator?.code || "Not provided"}
+                        {selectedProposal["pi-email"]}
                       </p>
                     </div>
                     <div>

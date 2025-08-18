@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProposalSelectionDialog } from "./components";
 import { approveProject } from "@/services/resources/project";
-import { createNotification } from "@/services/resources/notification";
+// import { createNotification } from "@/services/resources/notification";
 import { toast } from "sonner";
 import { useMutation } from "@tanstack/react-query";
 import {
@@ -17,7 +17,12 @@ import {
   FileText,
   CheckSquare,
 } from "lucide-react";
-import { ProjectWithProposals, Proposal } from "@/types/project";
+import {
+  ProjectWithProposals,
+  RolePrincipalInvestigatorInfo,
+} from "@/types/project";
+import { NotificationRequest } from "@/types/notification";
+import { useSendNotification } from "@/hooks/queries/notification";
 
 export const TopicDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,13 +33,14 @@ export const TopicDetailPage: React.FC = () => {
   const { project, proposals } =
     (location.state as {
       project: ProjectWithProposals;
-      proposals: Proposal[];
+      proposals: RolePrincipalInvestigatorInfo[];
     }) || {};
 
   const [isProposalDialogOpen, setIsProposalDialogOpen] = useState(false);
   const [selectedProposalId, setSelectedProposalId] = useState<string | null>(
     null
   );
+  const sendNotificationMutation = useSendNotification();
 
   // Add mutation hook for approving projects
   const approveProjectMutation = useMutation({
@@ -48,36 +54,8 @@ export const TopicDetailPage: React.FC = () => {
     (p) => p.status === "submitted"
   );
 
-  const selectedProposal = selectedProposalId
-    ? topicProposals.find((p) => p.id === selectedProposalId)
-    : null;
-
   // Helper function to get PI name from members
-  const getPIName = (proposal: Proposal) => {
-    // Look for Principal Investigator role in members first
-    if (proposal.members && proposal.members.length > 0) {
-      const pi = proposal.members.find(
-        (member) =>
-          member.name === "Principal Investigator" || member.name === "PI"
-      );
-      if (pi && pi["full-name"]) {
-        return pi["full-name"];
-      }
-
-      // If no PI role, try any member with full-name as fallback
-      const anyMember = proposal.members.find((m) => m["full-name"]);
-      if (anyMember) {
-        return anyMember["full-name"];
-      }
-    }
-
-    // Fallback to creator if no PI found
-    if (proposal.creator?.["full-name"]) {
-      return proposal.creator["full-name"];
-    }
-
-    return "Unknown Creator";
-  };
+  // const getPIName = proposals.
 
   if (!topic) {
     return (
@@ -126,20 +104,18 @@ export const TopicDetailPage: React.FC = () => {
       // Approve the selected proposal using the new API
       await approveProjectMutation.mutateAsync(proposalId);
       // Create notifications for Staff to handle the approved proposal
-      try {
-        await createNotification({
-          title: `Proposal Approved: ${selectedProposal["english-title"]}`,
-          type: "project",
-          status: "pending",
-          "objec-notification-id": proposalId,
-          "list-account-id": [], // Staff will see this as a request
-        });
+      const notificationRequest: NotificationRequest = {
+        title: `Proposal Approved: ${selectedProposal["english-title"]}`,
+        type: "project",
+        status: "create",
+        "objec-notification-id": selectedProposal.id,
+        "list-account-id": selectedProposal["pi-account-id"]
+          ? [selectedProposal["pi-account-id"]]
+          : [],
+      };
 
-        console.log("Notification created for approved proposal");
-      } catch (notificationError) {
-        console.error("Failed to create notification:", notificationError);
-        // Don't fail the entire operation if notification creation fails
-      }
+      await sendNotificationMutation.mutateAsync(notificationRequest);
+
       setSelectedProposalId(proposalId);
       toast.success(
         `Đã approve proposal "${selectedProposal["english-title"]}"`
@@ -346,11 +322,11 @@ export const TopicDetailPage: React.FC = () => {
                   <p className="text-xs text-gray-500">
                     {topicProposals.length} submitted proposal
                     {topicProposals.length !== 1 ? "s" : ""} for review
-                    {selectedProposal && (
+                    {/* {selectedProposal && (
                       <span className="ml-2 text-emerald-600 font-medium">
                         • {getPIName(selectedProposal)} selected
                       </span>
-                    )}
+                    )} */}
                   </p>
                 </div>
               </div>
@@ -414,7 +390,7 @@ export const TopicDetailPage: React.FC = () => {
                                   : "text-emerald-700"
                               }`}
                             >
-                              {getPIName(proposal)?.charAt(0) || "U"}
+                              U
                             </span>
                           </div>
                           <div className="flex-1">
@@ -469,35 +445,13 @@ export const TopicDetailPage: React.FC = () => {
                             )} */}
                             <div className="flex items-center gap-4 text-sm text-gray-500">
                               <span className="font-medium text-gray-900">
-                                {getPIName(proposal)}
+                                {proposal["pi-full-name"]}
                               </span>
-                              {(() => {
-                                // Get PI email first, then fallback to creator
-                                let email = null;
-
-                                if (proposal.members) {
-                                  const pi = proposal.members.find(
-                                    (member) =>
-                                      member.name ===
-                                        "Principal Investigator" ||
-                                      member.name === "PI"
-                                  );
-                                  email = pi?.email;
-                                }
-
-                                // Fallback to creator email if no PI email
-                                if (!email) {
-                                  email = proposal.creator?.email;
-                                }
-
-                                return (
-                                  email && (
-                                    <span className="text-gray-500">
-                                      {email}
-                                    </span>
-                                  )
-                                );
-                              })()}
+                              {/* {proposal["pi-email"] && (
+                                <span className="text-gray-500">
+                                  {proposal["pi-email"]}
+                                </span>
+                              )} */}
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 <span>
