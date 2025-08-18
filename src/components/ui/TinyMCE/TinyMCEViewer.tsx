@@ -59,9 +59,44 @@ export const TinyMCEViewerComponent: React.FC<TinyMCEViewerProps> = ({
         style={{
           height: height ? `${height}px` : "100%",
           minHeight: height || "100%",
+          fontFamily: '"Times New Roman", Times, serif',
+          fontSize: "14px",
+          lineHeight: "1.4",
+          color: "#333",
         }}
-        dangerouslySetInnerHTML={{ __html: content }}
-      />
+      >
+        <style>
+          {`
+            .image-frame {
+              width: 150px;
+              height: 180px;
+              border: 2px dashed #999;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              overflow: hidden;
+              margin: 10px 0;
+            }
+            .image-frame img {
+              max-width: 100%;
+              max-height: 100%;
+              object-fit: cover;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 1em;
+            }
+            table, th, td {
+              border: 1px solid #ccc;
+            }
+            th, td {
+              padding: 8px;
+            }
+          `}
+        </style>
+        <div dangerouslySetInnerHTML={{ __html: content }} />
+      </div>
     );
   }
 
@@ -91,15 +126,32 @@ export const TinyMCEViewerComponent: React.FC<TinyMCEViewerProps> = ({
               color: #222;
               background: #fff;
               font-size: 14px;
-              line-height: 1.6;
+              line-height: 1.4;
+            }
+            .image-frame {
+              width: 150px;
+              height: 180px;
+              border: 2px dashed #999;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              overflow: hidden;
+              margin: 10px 0;
+            }
+            .image-frame img {
+              max-width: 100%;
+              max-height: 100%;
+              object-fit: cover;
             }
             table {
               width: 100%;
               border-collapse: collapse;
               margin-top: 1em;
             }
-            th, td {
+            table, th, td {
               border: 1px solid #ccc;
+            }
+            th, td {
               padding: 8px;
             }
           `,

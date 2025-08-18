@@ -1,9 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ScientificCVEditor,
-  ScientificCVEditorRef,
-} from "@/components/ui/TinyMCE";
+import { Editor } from "@tinymce/tinymce-react";
 import {
   useCreateDocument,
   useDocumentsByFilter,
@@ -13,14 +10,28 @@ import { ArrowLeft, Save, FileText, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts";
 import { UserRole } from "@/contexts/auth-types";
+import {
+  uploadImageToAzure,
+  getImageUrlFromAzure,
+  deleteImageFromAzure,
+} from "@/services/resources/azure-image";
+
+type EditorInstance = {
+  getContent: () => string;
+  setContent: (content: string) => void;
+} | null;
 
 const CreateScientificCV: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const editorRef = useRef<ScientificCVEditorRef>(null);
+  const editorRef = useRef<EditorInstance>(null);
   const [formContent, setFormContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const handleBack = () => navigate(-1);
+
+  // Shared set to track uploaded images for deletion
+  const uploadedImagesRef = useRef(new Set<string>());
 
   const {
     data: templateData,
@@ -49,9 +60,9 @@ const CreateScientificCV: React.FC = () => {
         <div class="image-frame" contenteditable="false">
           <div contenteditable="true">
             <img
-            src="https://via.placeholder.com/113x151"
+            src="https://via.placeholder.com/150"
             class="frame-image"
-            style="max-width: 100%; max-height: 100%; object-fit: contain;"
+            style="max-width: 100%; max-height: 100%; object-fit: cover;"
             />
          </div>
        </div>
@@ -61,8 +72,9 @@ const CreateScientificCV: React.FC = () => {
     }
   }, [templateData, isTemplateLoading]);
 
-  const handleEditorChange = (content: string) => {
-    setFormContent(content);
+  const handleEditorChange = () => {
+    // Optional: You can add any additional logic here
+    // For now, we'll just let the editor handle the content
   };
 
   const getProfileRoute = () => {
@@ -95,9 +107,9 @@ const CreateScientificCV: React.FC = () => {
           <div class="image-frame" contenteditable="false">
             <div contenteditable="true">
               <img
-                src="https://via.placeholder.com/113x151"
+                src="https://via.placeholder.com/150"
                 class="frame-image"
-                style="max-width: 100%; max-height: 100%; object-fit: contain;"
+                style="max-width: 100%; max-height: 100%; object-fit: cover;"
               />
             </div>
           </div>
@@ -168,6 +180,38 @@ const CreateScientificCV: React.FC = () => {
     );
   };
 
+  const formStyles = `
+  body {
+    font-family: "Times New Roman", Times, serif;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #333;
+    padding: 20px;
+  }
+  .image-frame {
+    width: 150px;
+    height: 180px;
+    border: 2px dashed #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    margin: 10px 0;
+  }
+  .image-frame img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: cover;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  table, th, td {
+    border: 1px solid #ccc;
+  }
+`;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 px-6 py-4">
       {/* Header */}
@@ -203,10 +247,14 @@ const CreateScientificCV: React.FC = () => {
             <ul className="list-disc list-inside space-y-1">
               <li>
                 To upload your profile photo, click on the image frame at the
-                top-right, then use the <strong>Insert → Image</strong> option
-                from the toolbar.
+                top-right, then use the <strong>Upload Image</strong> button
+                from the toolbar or drag & drop images directly into the editor.
               </li>
-
+              <li>
+                <strong>Direct file upload is now supported!</strong> You can
+                upload images directly from your computer. Images are
+                automatically uploaded to secure cloud storage.
+              </li>
               <li>
                 To download your CV, go to <strong>File → Print</strong>, then
                 choose <strong>"Save"</strong> in the print dialog.
@@ -250,12 +298,260 @@ const CreateScientificCV: React.FC = () => {
             </Button>
           </div>
         ) : (
-          <ScientificCVEditor
-            ref={editorRef}
-            value={formContent}
-            onChange={handleEditorChange}
-            height={800}
-            preset="scientific-cv"
+          <Editor
+            apiKey={apiKey}
+            onInit={(_, editor) => (editorRef.current = editor)}
+            initialValue={formContent}
+            onEditorChange={handleEditorChange}
+            init={{
+              height: 800,
+              menubar: true,
+              plugins: [
+                "advlist",
+                "autolink",
+                "lists",
+                "link",
+                "image",
+                "charmap",
+                "preview",
+                "anchor",
+                "searchreplace",
+                "visualblocks",
+                "code",
+                "fullscreen",
+                "insertdatetime",
+                "media",
+                "table",
+                "help",
+                "wordcount",
+              ],
+              toolbar:
+                "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image uploadImage | preview code fullscreen",
+              content_style: formStyles,
+
+              setup: (editor) => {
+                // Use shared ref to track uploaded images for deletion
+                const uploadedImages = uploadedImagesRef.current;
+
+                // Custom Upload Image button
+                editor.ui.registry.addButton("uploadImage", {
+                  text: "Upload Image",
+                  icon: "image",
+                  onAction: () => {
+                    const input = document.createElement("input");
+                    input.type = "file";
+                    input.accept = "image/*";
+                    input.style.display = "none";
+
+                    input.onchange = async (e) => {
+                      const target = e.target as HTMLInputElement;
+                      const file = target.files?.[0];
+                      if (!file) return;
+
+                      // Validate file size (5MB max)
+                      if (file.size > 5 * 1024 * 1024) {
+                        toast.error(
+                          "File size too large. Please choose an image smaller than 5MB."
+                        );
+                        return;
+                      }
+
+                      try {
+                        toast.info("Uploading image...");
+
+                        // Upload to Azure
+                        const uploadResponse = await uploadImageToAzure(file);
+                        console.log("Upload response:", uploadResponse);
+
+                        // Get full image URL
+                        const imageUrl = await getImageUrlFromAzure(
+                          uploadResponse.url
+                        );
+                        console.log("Image URL:", imageUrl);
+
+                        // Track this image for potential deletion
+                        uploadedImages.add(imageUrl);
+
+                        // Insert image into editor
+                        editor.insertContent(
+                          `<img src="${imageUrl}" alt="${file.name}" style="max-width:100%;height:auto;" />`
+                        );
+
+                        toast.success("Image uploaded successfully!");
+                      } catch (error) {
+                        console.error("Error uploading image:", error);
+                        toast.error("Error uploading image. Please try again.");
+                      }
+                    };
+
+                    input.click();
+                  },
+                });
+
+                // Function to extract image filename from Azure URL
+                const extractImageFilename = (
+                  imageUrl: string
+                ): string | null => {
+                  try {
+                    // Azure blob URL format: https://{account}.blob.core.windows.net/{container}/{filename}
+                    const url = new URL(imageUrl);
+                    const pathParts = url.pathname.split("/");
+                    return pathParts[pathParts.length - 1]; // Get the filename
+                  } catch (error) {
+                    console.error("Error extracting filename from URL:", error);
+                    return null;
+                  }
+                };
+
+                // Function to delete image from Azure
+                const deleteImageFromEditor = async (imageUrl: string) => {
+                  try {
+                    const filename = extractImageFilename(imageUrl);
+                    if (filename) {
+                      await deleteImageFromAzure(filename);
+                      uploadedImages.delete(imageUrl);
+                      console.log("Image deleted from Azure:", filename);
+                      toast.success("Image deleted successfully!");
+                    }
+                  } catch (error) {
+                    console.error("Error deleting image from Azure:", error);
+                    toast.error("Error deleting image from storage.");
+                  }
+                };
+
+                // Listen for content changes to detect deleted images
+                let previousImages = new Set<string>();
+
+                editor.on("NodeChange", (e) => {
+                  // Get all current images in the editor
+                  const currentImages = new Set<string>();
+                  const imgElements = editor.getBody().querySelectorAll("img");
+
+                  imgElements.forEach((img) => {
+                    const src = img.getAttribute("src");
+                    if (src && uploadedImages.has(src)) {
+                      currentImages.add(src);
+                    }
+                  });
+
+                  // Find deleted images (were in previous but not in current)
+                  previousImages.forEach((imageUrl) => {
+                    if (!currentImages.has(imageUrl)) {
+                      console.log("Image deleted from editor:", imageUrl);
+                      deleteImageFromEditor(imageUrl);
+                    }
+                  });
+
+                  // Update previous images for next comparison
+                  previousImages = new Set(currentImages);
+
+                  // Khi chèn hình xong, resize nếu không phải ảnh khung
+                  const imgs =
+                    e.element?.tagName === "IMG"
+                      ? [e.element as HTMLImageElement]
+                      : Array.from(editor.getBody().querySelectorAll("img"));
+
+                  imgs.forEach((img) => {
+                    const isFrameImg = img.classList.contains("frame-image");
+                    const alreadySized =
+                      img.style.width === "113px" &&
+                      img.style.height === "151px";
+
+                    if (!alreadySized && !isFrameImg) {
+                      img.setAttribute("width", "113");
+                      img.setAttribute("height", "151");
+                      img.style.width = "113px";
+                      img.style.height = "151px";
+                      img.style.objectFit = "cover";
+                    }
+                  });
+                });
+
+                // Also listen for keydown events (Delete, Backspace)
+                editor.on("keydown", (e) => {
+                  if (e.key === "Delete" || e.key === "Backspace") {
+                    // Small delay to let the deletion happen first
+                    setTimeout(() => {
+                      const currentImages = new Set<string>();
+                      const imgElements = editor
+                        .getBody()
+                        .querySelectorAll("img");
+
+                      imgElements.forEach((img) => {
+                        const src = img.getAttribute("src");
+                        if (src && uploadedImages.has(src)) {
+                          currentImages.add(src);
+                        }
+                      });
+
+                      // Find deleted images
+                      previousImages.forEach((imageUrl) => {
+                        if (!currentImages.has(imageUrl)) {
+                          console.log("Image deleted via keyboard:", imageUrl);
+                          deleteImageFromEditor(imageUrl);
+                        }
+                      });
+
+                      previousImages = new Set(currentImages);
+                    }, 100);
+                  }
+                });
+              },
+
+              // Drag and drop image upload support
+              images_upload_url: "", // Use custom handler instead of URL
+              images_reuse_filename: true,
+              images_file_types: "jpg,jpeg,png,gif,webp",
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              images_upload_handler: (blobInfo: any) => {
+                return new Promise((resolve, reject) => {
+                  // Validate file size
+                  if (blobInfo.blob().size > 5 * 1024 * 1024) {
+                    reject(
+                      "File size too large. Please choose an image smaller than 5MB."
+                    );
+                    return;
+                  }
+
+                  // Create File object from blob
+                  const blob = blobInfo.blob();
+                  const fileName = blobInfo.filename() || "image.png";
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  const file = new (window as any).File([blob], fileName, {
+                    type: blob.type,
+                  });
+
+                  // Upload image to Azure
+                  uploadImageToAzure(file)
+                    .then((uploadResponse) => {
+                      console.log(
+                        "Drag & drop upload response:",
+                        uploadResponse
+                      );
+                      // Get full image URL
+                      return getImageUrlFromAzure(uploadResponse.url);
+                    })
+                    .then((imageUrl) => {
+                      console.log("Drag & drop image URL:", imageUrl);
+
+                      // Track this image for potential deletion
+                      uploadedImagesRef.current.add(imageUrl);
+
+                      // Return image URL to TinyMCE
+                      resolve(imageUrl);
+                      toast.success("Image uploaded successfully!");
+                    })
+                    .catch((error) => {
+                      console.error(
+                        "Error uploading image via drag & drop:",
+                        error
+                      );
+                      reject("Error uploading image. Please try again.");
+                      toast.error("Error uploading image. Please try again.");
+                    });
+                });
+              },
+            }}
           />
         )}
       </div>

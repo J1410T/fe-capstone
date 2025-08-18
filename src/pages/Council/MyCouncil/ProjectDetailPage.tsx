@@ -15,6 +15,10 @@ import {
   FileText,
   Star,
   ChevronRight,
+  Users,
+  Tag,
+  Clock,
+  Briefcase,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { getEvaluationsByProjectId } from "@/services/resources/evaluation";
@@ -28,6 +32,7 @@ const ProjectDetailPage: React.FC = () => {
   // State management
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [isLoadingEvaluations, setIsLoadingEvaluations] = useState(true);
+  const [projectData, setProjectData] = useState<any>(null);
 
   // Load evaluations for this project
   useEffect(() => {
@@ -47,14 +52,17 @@ const ProjectDetailPage: React.FC = () => {
 
         if (storedProjectData) {
           try {
-            const projectData = JSON.parse(storedProjectData);
-            console.log("✅ Found stored project data:", projectData);
+            const parsedProjectData = JSON.parse(storedProjectData);
+            console.log("✅ Found stored project data:", parsedProjectData);
+
+            // Set project data for display
+            setProjectData(parsedProjectData);
 
             if (
-              projectData.proposals &&
-              projectData.proposals[0]?.evaluations?.[0]
+              parsedProjectData.proposals &&
+              parsedProjectData.proposals[0]?.evaluations?.[0]
             ) {
-              const evaluation = projectData.proposals[0].evaluations[0];
+              const evaluation = parsedProjectData.proposals[0].evaluations[0];
               console.log(
                 "✅ Using evaluation from stored project data:",
                 evaluation
@@ -169,11 +177,113 @@ const ProjectDetailPage: React.FC = () => {
           Back to My Council
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            Project Evaluation
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Project Details</h1>
+          <p className="text-gray-600 mt-1">
+            Project information and evaluation details
+          </p>
         </div>
       </div>
+
+      {/* Project Information */}
+      {projectData && (
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-blue-600" />
+                  {projectData.code}
+                </CardTitle>
+                <CardDescription className="mt-2 max-w-4xl">
+                  <div className="space-y-1">
+                    <p className="font-medium text-blue-600">
+                      {projectData["english-title"]}
+                    </p>
+                    {projectData["vietnamese-title"] && (
+                      <p className="text-gray-600">
+                        {projectData["vietnamese-title"]}
+                      </p>
+                    )}
+                  </div>
+                </CardDescription>
+              </div>
+              <Badge
+                variant="outline"
+                className="bg-blue-50 text-blue-700 border-blue-200"
+              >
+                {projectData.status}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Calendar className="h-4 w-4" />
+                <div>
+                  <p className="font-medium">Created</p>
+                  <p>
+                    {new Date(projectData["created-at"]).toLocaleDateString(
+                      "vi-VN"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Tag className="h-4 w-4" />
+                <div>
+                  <p className="font-medium">Category</p>
+                  <p>
+                    {projectData.category === "application/implementation"
+                      ? "Application"
+                      : projectData.category}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <FileText className="h-4 w-4" />
+                <div>
+                  <p className="font-medium">Type</p>
+                  <p>{projectData.type}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Clock className="h-4 w-4" />
+                <div>
+                  <p className="font-medium">Duration</p>
+                  <p>{projectData.duration} months</p>
+                </div>
+              </div>
+            </div>
+
+            {projectData.description && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Project Description:
+                </h4>
+                <p className="text-sm text-gray-600 leading-relaxed">
+                  {projectData.description}
+                </p>
+              </div>
+            )}
+
+            {projectData["requirement-note"] && (
+              <div className="mt-3 p-4 bg-blue-50 rounded-lg">
+                <h4 className="font-medium text-sm text-blue-700 mb-2 flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Requirements:
+                </h4>
+                <p className="text-sm text-blue-600 leading-relaxed">
+                  {projectData["requirement-note"]}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Evaluations */}
       <Card>

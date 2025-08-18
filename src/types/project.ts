@@ -347,6 +347,7 @@ export interface UpdateProjectRequest {
   category: string;
   type: string;
   genre: string;
+  status?: string;
 }
 
 export interface ProjectTag {

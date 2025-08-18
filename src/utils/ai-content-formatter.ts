@@ -140,10 +140,10 @@ export function formatAIContentForTinyMCE(content: string): string {
   // Split long sentences at logical points for better readability
   formatted = formatted.replace(/(\w+:)\s+/g, "$1<br/>");
 
-  // Add line breaks after colons followed by scores
+  // Make score values bold, but don't insert line breaks
   formatted = formatted.replace(
-    /(score\s+\d+\/\d+[^.]*\.)\s+/g,
-    "$1<br/><br/>"
+    /(score:\s*)(\d+\/\d+)/gi,
+    (_, prefix, value) => `${prefix}<strong>${value}</strong>`
   );
 
   // Add line breaks after "However," and similar transition words

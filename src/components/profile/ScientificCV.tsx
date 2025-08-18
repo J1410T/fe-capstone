@@ -269,7 +269,7 @@ export const ScientificCV: React.FC<ScientificCVProps> = ({ className }) => {
                   )}
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>Delete Scientific CV</DialogTitle>
                   <DialogDescription>

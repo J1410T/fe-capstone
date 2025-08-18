@@ -326,26 +326,28 @@ const ProjectManagementOverview: React.FC = () => {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="min-w-0">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">
             Project Management
           </h1>
-          <p className="text-lg text-gray-600 mt-2">
+          <p className="text-base sm:text-lg text-gray-600 mt-2 break-words">
             Manage projects, proposals, evaluations, and PI requests
           </p>
         </div>
-        <div className="flex items-center space-x-3">
-          <Button variant="outline" size="default">
+        <div className="flex items-center space-x-3 flex-shrink-0">
+          <Button variant="outline" size="default" className="w-full sm:w-auto">
             <Settings className="w-4 h-4 mr-2" />
-            Settings
+            <span className="hidden xs:inline">Settings</span>
+            <span className="xs:hidden">Config</span>
           </Button>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
+      <div className="flex flex-col gap-4">
+        {/* Search bar - full width on mobile */}
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
             placeholder="Search projects..."
@@ -354,40 +356,49 @@ const ProjectManagementOverview: React.FC = () => {
             className="pl-10"
           />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <Filter className="w-4 h-4 mr-2" />
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="created">Created</SelectItem>
-            <SelectItem value="in_progress">In Progress</SelectItem>
-            <SelectItem value="done">Completed</SelectItem>
-            <SelectItem value="cancelled">Cancelled</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={sortBy}
-          onValueChange={(value: "createdate" | "englishtitle") =>
-            setSortBy(value)
-          }
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="createdate">Created Date</SelectItem>
-            <SelectItem value="englishtitle">English Title</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button
-          variant="outline"
-          onClick={() => setSortDesc(!sortDesc)}
-          className="px-3"
-        >
-          {sortDesc ? "↓" : "↑"}
-        </Button>
+
+        {/* Filters row */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <Filter className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="created">Created</SelectItem>
+              <SelectItem value="in_progress">In Progress</SelectItem>
+              <SelectItem value="done">Completed</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={sortBy}
+            onValueChange={(value: "createdate" | "englishtitle") =>
+              setSortBy(value)
+            }
+          >
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdate">Created Date</SelectItem>
+              <SelectItem value="englishtitle">English Title</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Button
+            variant="outline"
+            onClick={() => setSortDesc(!sortDesc)}
+            className="px-3 w-full sm:w-auto"
+          >
+            <span className="sm:hidden">
+              Sort {sortDesc ? "Descending" : "Ascending"}
+            </span>
+            <span className="hidden sm:inline">{sortDesc ? "↓" : "↑"}</span>
+          </Button>
+        </div>
       </div>
 
       {/* Main Content Tabs */}
@@ -429,7 +440,7 @@ const ProjectManagementOverview: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
                 {projects.map((project) => (
                   <SimpleProjectCard
                     key={project.id}
@@ -441,31 +452,35 @@ const ProjectManagementOverview: React.FC = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6">
-                  <div className="text-sm text-gray-500">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-6 gap-4">
+                  <div className="text-sm text-gray-500 text-center sm:text-left">
                     Showing {(currentPage - 1) * pageSize + 1} to{" "}
                     {Math.min(currentPage * pageSize, totalCount)} of{" "}
                     {totalCount} projects
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center justify-center space-x-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setCurrentPage(currentPage - 1)}
                       disabled={currentPage === 1}
+                      className="px-3"
                     >
-                      Previous
+                      <span className="hidden xs:inline">Previous</span>
+                      <span className="xs:hidden">Prev</span>
                     </Button>
-                    <span className="text-sm text-gray-500">
-                      Page {currentPage} of {totalPages}
+                    <span className="text-sm text-gray-500 px-2">
+                      {currentPage}/{totalPages}
                     </span>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setCurrentPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
+                      className="px-3"
                     >
-                      Next
+                      <span className="hidden xs:inline">Next</span>
+                      <span className="xs:hidden">Next</span>
                     </Button>
                   </div>
                 </div>
@@ -490,33 +505,37 @@ const ProjectManagementOverview: React.FC = () => {
               enhancedPIRequests.map((request) => (
                 <div
                   key={request.id}
-                  className="border border-gray-200 rounded-lg p-6 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
+                  className="border border-gray-200 rounded-lg p-4 sm:p-6 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
                   onClick={() => navigateToPage("request", request)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-gray-900">
+                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-lg font-semibold text-gray-900 break-words">
                             {request.requestType
                               .replace(/_/g, " ")
                               .replace(/\b\w/g, (l: string) => l.toUpperCase())}
                           </h4>
-                          <p className="text-base text-gray-600">
+                          <p className="text-base text-gray-600 break-words">
                             Project:{" "}
                             {request.projectRegistrationDetails?.projectTitle ||
                               "Unknown Project"}
                           </p>
                         </div>
-                        <StatusBadge status={request.status} size="md" />
+                        <div className="flex-shrink-0">
+                          <StatusBadge status={request.status} size="md" />
+                        </div>
                       </div>
-                      <p className="text-base text-gray-700 mb-3">
+                      <p className="text-base text-gray-700 mb-3 break-words">
                         {request.description}
                       </p>
-                      <div className="flex items-center space-x-4 text-sm text-gray-500">
-                        <span>Submitted: {request.submittedAt}</span>
-                        <span>•</span>
-                        <span>ID: {request.id}</span>
+                      <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-4 text-sm text-gray-500">
+                        <span className="break-words">
+                          Submitted: {request.submittedAt}
+                        </span>
+                        <span className="hidden xs:inline">•</span>
+                        <span className="break-words">ID: {request.id}</span>
                       </div>
                     </div>
                   </div>

@@ -19,6 +19,9 @@ import {
   Users,
   Edit,
   User,
+  Briefcase,
+  Tag,
+  Clock,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { AIEvaluationDisplay } from "@/components/ui/ai-evaluation-display";
@@ -26,6 +29,7 @@ import {
   getIndividualEvaluationsByStageId,
   getEvaluationStageById,
   getAllEvaluationStages,
+  getEvaluationById,
 } from "@/services/resources/evaluation";
 import { useAuth } from "@/contexts";
 import {
@@ -48,6 +52,7 @@ const EvaluationStageDetailPage: React.FC = () => {
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadTimestamp, setLoadTimestamp] = useState<number>(Date.now());
+  const [projectData, setProjectData] = useState<any>(null);
 
   // Load stage details and individual evaluations
   useEffect(() => {
@@ -67,6 +72,40 @@ const EvaluationStageDetailPage: React.FC = () => {
           const stageData = await getEvaluationStageById(stageId, true);
           setStage(stageData);
           setIndividualEvaluations(stageData["individual-evaluations"] || []);
+
+          // Load project data if evaluation-id is available
+          if (evaluationId) {
+            try {
+              const evaluationData = await getEvaluationById(
+                evaluationId,
+                false
+              );
+              if (evaluationData["project-id"]) {
+                const projectDataKey = `project_${evaluationData["project-id"]}`;
+                const storedProjectData =
+                  localStorage.getItem(projectDataKey) ||
+                  sessionStorage.getItem(projectDataKey);
+
+                if (storedProjectData) {
+                  try {
+                    const parsedProjectData = JSON.parse(storedProjectData);
+                    console.log(
+                      "✅ Found project data for stage:",
+                      parsedProjectData
+                    );
+                    setProjectData(parsedProjectData);
+                  } catch (parseError) {
+                    console.error("Error parsing project data:", parseError);
+                  }
+                }
+              }
+            } catch (evalError) {
+              console.error(
+                "Error loading evaluation for project data:",
+                evalError
+              );
+            }
+          }
         } catch {
           // Method 2: Use list API and filter
           try {
@@ -215,10 +254,87 @@ const EvaluationStageDetailPage: React.FC = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Evaluation Stage</h1>
           <p className="text-gray-600 mt-1">
-            Stage details and individual evaluations
+            Project information, stage details and individual evaluations
           </p>
         </div>
       </div>
+
+      {/* Project Information */}
+      {projectData && (
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-start">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Briefcase className="h-5 w-5 text-blue-600" />
+                  Project: {projectData.code}
+                </CardTitle>
+                <CardDescription className="mt-2 max-w-4xl">
+                  <div className="space-y-1">
+                    <p className="font-medium text-blue-600">
+                      {projectData["english-title"]}
+                    </p>
+                    {projectData["vietnamese-title"] && (
+                      <p className="text-gray-600">
+                        {projectData["vietnamese-title"]}
+                      </p>
+                    )}
+                  </div>
+                </CardDescription>
+              </div>
+              <Badge
+                variant="outline"
+                className="bg-blue-50 text-blue-700 border-blue-200"
+              >
+                {projectData.status}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Calendar className="h-4 w-4" />
+                <div>
+                  <p className="font-medium">Created</p>
+                  <p>
+                    {new Date(projectData["created-at"]).toLocaleDateString(
+                      "vi-VN"
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Tag className="h-4 w-4" />
+                <div>
+                  <p className="font-medium">Category</p>
+                  <p>
+                    {projectData.category === "application/implementation"
+                      ? "Application"
+                      : projectData.category}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <FileText className="h-4 w-4" />
+                <div>
+                  <p className="font-medium">Type</p>
+                  <p>{projectData.type}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Clock className="h-4 w-4" />
+                <div>
+                  <p className="font-medium">Duration</p>
+                  <p>{projectData.duration} months</p>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Stage Info */}
       <Card>
