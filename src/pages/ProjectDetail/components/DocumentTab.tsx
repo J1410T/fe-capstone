@@ -509,7 +509,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
         open={showUploadConfirmDialog}
         onOpenChange={setShowUploadConfirmDialog}
       >
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Upload Scientific CV</DialogTitle>
             <DialogDescription>

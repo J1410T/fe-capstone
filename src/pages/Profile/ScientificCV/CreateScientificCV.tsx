@@ -49,9 +49,9 @@ const CreateScientificCV: React.FC = () => {
         <div class="image-frame" contenteditable="false">
           <div contenteditable="true">
             <img
-            src="https://via.placeholder.com/150"
+            src="https://via.placeholder.com/113x151"
             class="frame-image"
-            style="max-width: 100%; max-height: 100%; object-fit: cover;"
+            style="max-width: 100%; max-height: 100%; object-fit: contain;"
             />
          </div>
        </div>
@@ -95,9 +95,9 @@ const CreateScientificCV: React.FC = () => {
           <div class="image-frame" contenteditable="false">
             <div contenteditable="true">
               <img
-                src="https://via.placeholder.com/150"
+                src="https://via.placeholder.com/113x151"
                 class="frame-image"
-                style="max-width: 100%; max-height: 100%; object-fit: cover;"
+                style="max-width: 100%; max-height: 100%; object-fit: contain;"
               />
             </div>
           </div>
@@ -206,12 +206,7 @@ const CreateScientificCV: React.FC = () => {
                 top-right, then use the <strong>Insert → Image</strong> option
                 from the toolbar.
               </li>
-              <li>
-                <strong>Only image URLs are supported.</strong> You must upload
-                your image to a public image hosting service (e.g., Imgur,
-                Google Drive with public sharing) and paste the image URL into
-                the dialog.
-              </li>
+
               <li>
                 To download your CV, go to <strong>File → Print</strong>, then
                 choose <strong>"Save"</strong> in the print dialog.

@@ -75,16 +75,14 @@ const IndividualEvaluationViewPage: React.FC = () => {
         <Card>
           <CardContent className="text-center py-8">
             <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-            <p className="text-gray-500">
-              Không tìm thấy individual evaluation
-            </p>
+            <p className="text-gray-500">Cannot find individual evaluation</p>
             <Button
               variant="outline"
               onClick={handleBackToStage}
               className="mt-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Quay lại Stage
+              Back to Stage
             </Button>
           </CardContent>
         </Card>
@@ -104,8 +102,30 @@ const IndividualEvaluationViewPage: React.FC = () => {
         </Button>
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-gray-900">
-            Individual Evaluation
+            {individualEvaluation.name || "Individual Evaluation"}
           </h1>
+          <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600">Score:</span>
+              <span className="text-lg font-bold text-blue-600">
+                {(individualEvaluation as any)["total-rate"] || 0}/100
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium text-gray-600">Status:</span>
+              <span
+                className={`text-sm font-medium px-2 py-1 rounded-full ${
+                  individualEvaluation.status === "completed"
+                    ? "bg-green-100 text-green-800"
+                    : individualEvaluation.status === "in-progress"
+                    ? "bg-blue-100 text-blue-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {individualEvaluation.status || "Unknown"}
+              </span>
+            </div>
+          </div>
         </div>
         {!isAIGenerated && (
           <Button onClick={handleEdit}>
@@ -129,7 +149,7 @@ const IndividualEvaluationViewPage: React.FC = () => {
         <Card>
           <CardHeader>
             <CardTitle>Evaluation Content</CardTitle>
-            <CardDescription>Nội dung chi tiết của đánh giá</CardDescription>
+            <CardDescription>Detailed evaluation content</CardDescription>
           </CardHeader>
           <CardContent>
             {(individualEvaluation as any).content ? (
@@ -145,38 +165,120 @@ const IndividualEvaluationViewPage: React.FC = () => {
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                <p>Chưa có nội dung đánh giá</p>
+                <p>No evaluation content</p>
               </div>
             )}
           </CardContent>
         </Card>
       )}
 
-      {/* Additional Information */}
+      {/* Evaluation Details */}
       <Card>
         <CardHeader>
-          <CardTitle>Additional Information</CardTitle>
+          <CardTitle>Evaluation Details</CardTitle>
+          <CardDescription>Summary and additional information</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 className="font-medium text-sm text-gray-700 mb-2">
-                Evaluation Stage ID:
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Evaluation Name */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-700">
+                Evaluation Name:
               </h4>
+              <p className="text-sm text-gray-900 font-medium">
+                {individualEvaluation.name || "Unnamed Evaluation"}
+              </p>
+            </div>
+
+            {/* Score */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-700">
+                Total Score:
+              </h4>
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold text-blue-600">
+                  {(individualEvaluation as any)["total-rate"] || 0}
+                </span>
+                <span className="text-sm text-gray-500">/100</span>
+              </div>
+            </div>
+
+            {/* Status */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-700">Status:</h4>
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  individualEvaluation.status === "completed"
+                    ? "bg-green-100 text-green-800"
+                    : individualEvaluation.status === "in-progress"
+                    ? "bg-blue-100 text-blue-800"
+                    : individualEvaluation.status === "pending"
+                    ? "bg-yellow-100 text-yellow-800"
+                    : "bg-gray-100 text-gray-800"
+                }`}
+              >
+                {individualEvaluation.status || "Unknown"}
+              </span>
+            </div>
+
+            {/* Reviewer Result */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-700">
+                Reviewer Result:
+              </h4>
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  (individualEvaluation as any)["reviewer-result"]
+                    ? "bg-green-100 text-green-800"
+                    : "bg-red-100 text-red-800"
+                }`}
+              >
+                {(individualEvaluation as any)["reviewer-result"]
+                  ? "Approved"
+                  : "Not Approved"}
+              </span>
+            </div>
+
+            {/* AI Report */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-700">
+                Report Type:
+              </h4>
+              <span
+                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  isAIGenerated
+                    ? "bg-purple-100 text-purple-800"
+                    : "bg-blue-100 text-blue-800"
+                }`}
+              >
+                {isAIGenerated ? "AI Generated" : "Manual Review"}
+              </span>
+            </div>
+
+            {/* Evaluation Stage ID */}
+            <div className="space-y-2">
+              <h4 className="font-medium text-sm text-gray-700">Stage ID:</h4>
               <p className="text-sm text-gray-600 font-mono">
                 {individualEvaluation["evaluation-stage-id"]}
               </p>
             </div>
-
-            <div>
-              <h4 className="font-medium text-sm text-gray-700 mb-2">
-                Evaluation ID:
-              </h4>
-              <p className="text-sm text-gray-600 font-mono">
-                {individualEvaluation.id}
-              </p>
-            </div>
           </div>
+
+          {/* Submitted At */}
+          {(individualEvaluation as any)["submitted-at"] && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <div className="space-y-2">
+                <h4 className="font-medium text-sm text-gray-700">
+                  Submitted At:
+                </h4>
+                <p className="text-sm text-gray-600">
+                  {new Date(
+                    (individualEvaluation as any)["submitted-at"]
+                  ).toLocaleString()}
+                </p>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

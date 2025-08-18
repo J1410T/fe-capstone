@@ -25,7 +25,6 @@ import {
   useCreateDocument,
 } from "@/hooks/queries/document";
 import { useStaffProjectFilter } from "@/hooks/queries/project";
-// import { sendDocumentToPI } from "@/services/resources/notification";
 import { toast } from "sonner";
 
 interface Project {
@@ -96,34 +95,18 @@ const DocumentManagement: React.FC = () => {
   };
   const handleCreateDocument = () => {
     if (!selectedProject) {
-      toast.error("Vui lòng chọn dự án trước");
+      toast.error("Please select a project");
       return;
     }
 
     // Load template content
     if (contractTemplates.length > 0) {
       const template = contractTemplates[0];
-      const projectInfo = `
-        <div style="border: 1px solid #ccc; padding: 15px; margin-bottom: 20px; background: #f9f9f9;">
-          <h3 style="margin: 0 0 10px 0; color: #333;">Thông tin Dự án</h3>
-          <p><strong>Mã dự án:</strong> ${selectedProject.code}</p>
-          <p><strong>Tên tiếng Việt:</strong> ${
-            selectedProject["vietnamese-title"]
-          }</p>
-          <p><strong>Tên tiếng Anh:</strong> ${
-            selectedProject["english-title"]
-          }</p>
-          <p><strong>Trạng thái:</strong> ${selectedProject.status}</p>
-          <p><strong>Ngày tạo:</strong> ${new Date().toLocaleDateString(
-            "vi-VN"
-          )}</p>
-        </div>
-      `;
 
-      setDocumentContent(projectInfo + (template["content-html"] || ""));
+      setDocumentContent(template["content-html"] || "");
       setIsDocumentDialogOpen(true);
     } else {
-      toast.error("Không tìm thấy template BM5. Vui lòng tạo template trước.");
+      toast.error("Cannot find BM5 template. Please create a template first.");
     }
   };
 
@@ -147,7 +130,7 @@ const DocumentManagement: React.FC = () => {
 
     try {
       await createDocument.mutateAsync({
-        name: `Tài liệu BM5 - ${selectedProject["vietnamese-title"]}`,
+        name: `Contract`,
         type: "BM5",
         status: "draft",
         "is-template": false,
@@ -203,7 +186,7 @@ const DocumentManagement: React.FC = () => {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600">Đang tải dự án...</p>
+          <p className="text-gray-600">Loading projects...</p>
         </div>
       </div>
     );
@@ -221,10 +204,10 @@ const DocumentManagement: React.FC = () => {
               </div>
               <div>
                 <CardTitle className="text-xl font-bold">
-                  Quản lý Tài liệu
+                  Contract Management
                 </CardTitle>
                 <p className="text-sm text-gray-600 mt-1">
-                  Tạo và quản lý tài liệu BM5
+                  Create and manage contracts
                 </p>
               </div>
             </div>
@@ -234,7 +217,7 @@ const DocumentManagement: React.FC = () => {
               size="sm"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
-              Làm mới
+              Refresh
             </Button>
           </div>{" "}
         </CardHeader>
@@ -247,14 +230,14 @@ const DocumentManagement: React.FC = () => {
             <div className="flex items-center gap-4">
               <div className="flex-1">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Chọn dự án:
+                  Select a project:
                 </label>
                 <Select
                   value={selectedProjectId}
                   onValueChange={handleProjectSelect}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Chọn một dự án..." />
+                    <SelectValue placeholder="Select a project..." />
                   </SelectTrigger>
                   <SelectContent>
                     {projects.map((project: Project) => (
@@ -277,7 +260,7 @@ const DocumentManagement: React.FC = () => {
                 className="bg-purple-600 hover:bg-purple-700 text-white"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Tạo Tài liệu
+                Create Contract
               </Button>
             </div>
 
@@ -286,20 +269,20 @@ const DocumentManagement: React.FC = () => {
                 <div className="flex items-start space-x-2">
                   <AlertCircle className="w-5 h-5 text-purple-600 mt-0.5" />
                   <div className="text-sm text-purple-800">
-                    <p className="font-medium mb-1">Dự án đã chọn:</p>
+                    <p className="font-medium mb-1">Project:</p>
                     <div className="grid grid-cols-2 gap-2">
                       <p>
-                        <strong>Mã:</strong> {selectedProject.code}
+                        <strong>Code:</strong> {selectedProject.code}
                       </p>
                       <p>
-                        <strong>Trạng thái:</strong> {selectedProject.status}
+                        <strong>Status:</strong> {selectedProject.status}
                       </p>
                       <p>
-                        <strong>Tên tiếng Việt:</strong>{" "}
+                        <strong>Vietnamese Title:</strong>{" "}
                         {selectedProject["vietnamese-title"]}
                       </p>
                       <p>
-                        <strong>Tên tiếng Anh:</strong>{" "}
+                        <strong>English Title:</strong>{" "}
                         {selectedProject["english-title"]}
                       </p>
                     </div>
@@ -312,9 +295,9 @@ const DocumentManagement: React.FC = () => {
               <div className="text-center py-8">
                 <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-lg font-medium text-gray-900 mb-2">
-                  Không có dự án
+                  No project found
                 </p>
-                <p className="text-gray-600">Không tìm thấy dự án nào.</p>
+                <p className="text-gray-600">Cannot find any project.</p>
                 <div className="mt-4 text-xs text-gray-500">
                   Debug: Projects data loaded = {projectsData ? "Yes" : "No"},
                   Count = {projects.length}
@@ -332,17 +315,16 @@ const DocumentManagement: React.FC = () => {
               <div className="text-center py-8">
                 <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
                 <p className="text-lg font-medium text-gray-900 mb-2">
-                  Lỗi khi tải dự án
+                  Error loading projects
                 </p>
                 <p className="text-gray-600 mb-4">
-                  {(projectsError as Error).message ||
-                    "Không thể tải danh sách dự án"}
+                  {(projectsError as Error).message || "Cannot load projects"}
                 </p>
                 <button
                   onClick={() => refetchProjects()}
                   className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700"
                 >
-                  Thử lại
+                  Retry
                 </button>
               </div>
             )}
@@ -359,7 +341,7 @@ const DocumentManagement: React.FC = () => {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-purple-600" />
-              Tạo Tài liệu BM5
+              Create Contract
             </DialogTitle>
           </DialogHeader>
 
@@ -370,17 +352,15 @@ const DocumentManagement: React.FC = () => {
                 <div className="flex items-center justify-center h-[500px] bg-white rounded-xl shadow-inner">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-600 border-t-transparent mx-auto mb-4"></div>
-                    <p className="text-gray-600">Đang tải template...</p>
+                    <p className="text-gray-600">Loading template...</p>
                   </div>
                 </div>
               ) : templateError ? (
                 <div className="text-center text-red-500 p-6 bg-white rounded-xl shadow">
                   <div className="mb-4">
-                    ⚠️ Lỗi template: {(templateError as Error).message}
+                    ⚠️ Template error: {(templateError as Error).message}
                   </div>
-                  <p>
-                    Vui lòng tạo template BM5 trước hoặc liên hệ quản trị viên.
-                  </p>
+                  <p>Please create a template before creating a contract.</p>
                 </div>
               ) : (
                 <div className="h-[500px] overflow-hidden">
@@ -402,7 +382,7 @@ const DocumentManagement: React.FC = () => {
                 onClick={() => setIsDocumentDialogOpen(false)}
                 disabled={isLoading}
               >
-                Hủy
+                Cancel
               </Button>
 
               <Button
@@ -413,12 +393,12 @@ const DocumentManagement: React.FC = () => {
                 {isLoading ? (
                   <>
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent mr-2"></div>
-                    Đang lưu...
+                    Saving...
                   </>
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    Lưu Tài liệu
+                    Save
                   </>
                 )}
               </Button>

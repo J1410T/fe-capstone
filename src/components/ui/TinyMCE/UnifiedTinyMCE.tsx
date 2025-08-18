@@ -144,7 +144,6 @@ const PRESETS = {
         font-weight: bold;
         margin: 1.5em 0 1em 0;
         line-height: 1.4;
-        text-align: center;
       }
       table {
         width: 100%;
@@ -155,13 +154,16 @@ const PRESETS = {
       th, td {
         border: 1px solid #000;
         padding: 12px 8px;
-        text-align: center;
         vertical-align: middle;
         line-height: 1.4;
       }
       th {
         background-color: #f8f9fa;
         font-weight: bold;
+        text-align: center;
+      }
+      td {
+        text-align: left;
       }
       ul, ol {
         margin: 1em 0;
@@ -239,7 +241,6 @@ const PRESETS = {
         font-weight: bold;
         margin: 1.5em 0 1em 0;
         line-height: 1.4;
-        text-align: center;
       }
       table {
         border-collapse: collapse;
@@ -250,13 +251,16 @@ const PRESETS = {
       table td, table th {
         border: 1px solid #000;
         padding: 12px 8px;
-        text-align: center;
         vertical-align: middle;
         line-height: 1.4;
       }
       table th {
         background-color: #f8f9fa;
         font-weight: bold;
+        text-align: center;
+      }
+      table td {
+        text-align: left;
       }
       ul, ol {
         margin: 1em 0;
@@ -344,7 +348,6 @@ const PRESETS = {
         font-weight: bold;
         margin: 1.5em 0 1em 0;
         line-height: 1.4;
-        text-align: center;
       }
       .image-frame {
         width: 150px;
@@ -359,7 +362,7 @@ const PRESETS = {
       .image-frame img {
         max-width: 100%;
         max-height: 100%;
-        object-fit: cover;
+        object-fit: contain;
       }
       table {
         width: 100%;
@@ -379,6 +382,10 @@ const PRESETS = {
       th {
         background-color: #f8f9fa;
         font-weight: bold;
+        text-align: center;
+      }
+      td {
+        text-align: left;
       }
       ul, ol {
         margin: 1em 0;
@@ -625,26 +632,36 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
 
       // Scientific CV specific setup
       if (preset === "scientific-cv") {
-        editor.on("NodeChange", (e) => {
-          const imgs =
-            e.element?.tagName === "IMG"
-              ? [e.element as HTMLImageElement]
-              : Array.from(editor.getBody().querySelectorAll("img"));
+        // Function to handle frame images
+        const handleFrameImages = () => {
+          const imgs = Array.from(editor.getBody().querySelectorAll("img"));
 
           imgs.forEach((img) => {
+            const isInFrame = img.closest(".image-frame");
             const isFrameImg = img.classList.contains("frame-image");
             const alreadySized =
               img.style.width === "113px" && img.style.height === "151px";
 
-            if (!alreadySized && !isFrameImg) {
+            // Nếu ảnh nằm trong .image-frame thì tự động add class frame-image
+            if (isInFrame && !isFrameImg) {
+              img.classList.add("frame-image");
+            }
+
+            // Áp dụng kích thước 3x4 cho tất cả ảnh trong frame
+            if ((isFrameImg || isInFrame) && !alreadySized) {
               img.setAttribute("width", "113");
               img.setAttribute("height", "151");
               img.style.width = "113px";
               img.style.height = "151px";
-              img.style.objectFit = "cover";
+              img.style.objectFit = "contain";
             }
           });
-        });
+        };
+
+        // Handle on various events
+        editor.on("NodeChange", handleFrameImages);
+        editor.on("SetContent", handleFrameImages);
+        editor.on("input", handleFrameImages);
       }
 
       // Add custom image resize handles

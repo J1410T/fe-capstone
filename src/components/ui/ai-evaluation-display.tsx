@@ -79,7 +79,7 @@ export const AIEvaluationDisplay: React.FC<AIEvaluationDisplayProps> = ({
               <p className="text-sm text-gray-600 mb-2">
                 AI Assessment Score:{" "}
                 <span className="font-semibold text-emerald-700">
-                  {score}/10
+                  {score}/100
                 </span>
               </p>
             )}

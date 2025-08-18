@@ -10,13 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+// Select components removed - using Input for rating instead
 import { ArrowLeft, Save, FileText } from "lucide-react";
 import {
   ScientificCVEditor,
@@ -122,10 +116,46 @@ const CreateIndividualEvaluationPage: React.FC = () => {
   }, [templateData, isTemplateLoading, isEditMode]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    // Special handling for rating field
+    if (field === "rate") {
+      // Allow empty string for clearing the field
+      if (value === "") {
+        setFormData((prev) => ({
+          ...prev,
+          [field]: value,
+        }));
+        return;
+      }
+
+      // Parse and validate numeric input
+      const numValue = parseInt(value);
+      if (isNaN(numValue)) {
+        toast.error("Rating must be a valid number");
+        return;
+      }
+
+      if (numValue < 0) {
+        toast.error("Rating cannot be less than 0");
+        return;
+      }
+
+      if (numValue > 100) {
+        toast.error("Rating cannot exceed 100");
+        return;
+      }
+
+      // Update with validated value
+      setFormData((prev) => ({
+        ...prev,
+        [field]: numValue.toString(),
+      }));
+    } else {
+      // Normal handling for other fields
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -163,6 +193,12 @@ const CreateIndividualEvaluationPage: React.FC = () => {
       // Prepare API request data according to the required format
       const rate = formData.rate ? parseInt(formData.rate) : 0;
 
+      // Additional validation for rating
+      if (formData.rate && (rate < 0 || rate > 100)) {
+        toast.error("Rating must be between 0 and 100");
+        return;
+      }
+
       // Base data for both create and update
       const baseData = {
         name: formData.name.trim(),
@@ -187,6 +223,7 @@ const CreateIndividualEvaluationPage: React.FC = () => {
         toast.error("Name cannot be empty");
         return;
       }
+      // This validation is now handled above, but keep as backup
       if (rate < 0 || rate > 100) {
         toast.error("Rating must be between 0 and 100");
         return;
@@ -340,22 +377,16 @@ const CreateIndividualEvaluationPage: React.FC = () => {
             {/* Rating */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="rate">Rating (1-10)</Label>
-                <Select
+                <Label htmlFor="rate">Rating (0-100)</Label>
+                <Input
+                  id="rate"
+                  type="number"
+                  min="0"
+                  max="100"
                   value={formData.rate}
-                  onValueChange={(value) => handleInputChange("rate", value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select rating..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
-                      <SelectItem key={num} value={num.toString()}>
-                        {num}/100
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  onChange={(e) => handleInputChange("rate", e.target.value)}
+                  placeholder="Enter rating (0-100)..."
+                />
               </div>
             </div>
           </CardContent>
