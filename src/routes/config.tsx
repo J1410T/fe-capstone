@@ -65,7 +65,7 @@ import GeneralComingSoon from "@/pages/ComingSoon";
 
 // Principal Investigator Pages
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
-import PIRegisterProject from "@/pages/PrincipalInvestigator/RegisterProject";
+// import PIRegisterProject from "@/pages/PrincipalInvestigator/RegisterProject";
 import PIMeetings from "@/pages/PrincipalInvestigator/Meetings";
 // import ContractNotifications from "@/pages/PrincipalInvestigator/ContractNotifications";
 import Meetings from "@/pages/Council/Meetings";
@@ -548,10 +548,10 @@ export const routes: RouteObject[] = [
             path: "project-enroll-form",
             element: <ProjectRegistration />,
           },
-          {
-            path: "register-project",
-            element: <PIRegisterProject />,
-          },
+          // {
+          //   path: "register-project",
+          //   element: <PIRegisterProject />,
+          // },
           {
             path: "profile",
             element: <Profile />,
