@@ -19,6 +19,10 @@ import {
   Tag,
   Clock,
   Briefcase,
+  Target,
+  CheckCircle,
+  AlertCircle,
+  XCircle,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { getEvaluationsByProjectId } from "@/services/resources/evaluation";
@@ -168,6 +172,43 @@ const ProjectDetailPage: React.FC = () => {
     navigate("/council/my-council");
   };
 
+  const getMilestoneStatusIcon = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return <CheckCircle className="h-4 w-4 text-green-500" />;
+      case "inprogress":
+        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
+      case "pending":
+        return <Clock className="h-4 w-4 text-gray-500" />;
+      case "cancelled":
+        return <XCircle className="h-4 w-4 text-red-500" />;
+      default:
+        return <Target className="h-4 w-4 text-gray-400" />;
+    }
+  };
+
+  const getMilestoneStatusBadge = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return "default";
+      case "inprogress":
+        return "secondary";
+      case "pending":
+        return "outline";
+      case "cancelled":
+        return "destructive";
+      default:
+        return "secondary";
+    }
+  };
+
+  const handleMilestoneClick = (milestone: any) => {
+    // Navigate to milestone detail page or show modal
+    console.log("Clicked milestone:", milestone);
+    // You can implement navigation to milestone detail here
+    // navigate(`/project/${projectId}/milestone/${milestone.id}`);
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
@@ -216,7 +257,7 @@ const ProjectDetailPage: React.FC = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Calendar className="h-4 w-4" />
                 <div>
@@ -232,20 +273,20 @@ const ProjectDetailPage: React.FC = () => {
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Tag className="h-4 w-4" />
                 <div>
-                  <p className="font-medium">Category</p>
-                  <p>
-                    {projectData.category === "application/implementation"
-                      ? "Application"
-                      : projectData.category}
-                  </p>
+                  <p className="font-medium">Type</p>
+                  <p>{projectData.type}</p>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 text-sm text-gray-600">
-                <FileText className="h-4 w-4" />
+                <Briefcase className="h-4 w-4" />
                 <div>
-                  <p className="font-medium">Type</p>
-                  <p>{projectData.type}</p>
+                  <p className="font-medium">Category</p>
+                  <p>
+                    {projectData.category === "application/implementation"
+                      ? "Basic - School Level"
+                      : projectData.category || "Basic - School Level"}
+                  </p>
                 </div>
               </div>
 
@@ -254,6 +295,22 @@ const ProjectDetailPage: React.FC = () => {
                 <div>
                   <p className="font-medium">Duration</p>
                   <p>{projectData.duration} months</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <FileText className="h-4 w-4" />
+                <div>
+                  <p className="font-medium">Language</p>
+                  <p>{projectData.language || "English"}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Star className="h-4 w-4" />
+                <div>
+                  <p className="font-medium">Milestones</p>
+                  <p>{projectData.milestones?.length || "0"} milestones</p>
                 </div>
               </div>
             </div>
@@ -352,6 +409,94 @@ const ProjectDetailPage: React.FC = () => {
                   </CardContent>
                 </Card>
               ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Milestones */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="h-5 w-5" />
+            Milestones{" "}
+            {projectData?.milestones
+              ? `(${projectData.milestones.length})`
+              : `(0)`}
+          </CardTitle>
+          <CardDescription>
+            Project milestones and their current status
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {projectData?.milestones && projectData.milestones.length > 0 ? (
+            <div className="grid gap-4">
+              {projectData.milestones.map((milestone: any, index: number) => (
+                <Card
+                  key={milestone.id || index}
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => handleMilestoneClick(milestone)}
+                >
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2 flex-1">
+                        <div className="flex items-center gap-2">
+                          {getMilestoneStatusIcon(milestone.status)}
+                          <h3 className="font-semibold">
+                            {milestone.title || milestone.name}
+                          </h3>
+                          <Badge
+                            variant={getMilestoneStatusBadge(milestone.status)}
+                          >
+                            {milestone.status || "Pending"}
+                          </Badge>
+                        </div>
+
+                        {milestone.description && (
+                          <p className="text-gray-600 text-sm">
+                            {milestone.description}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          {milestone["start-date"] && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              Start:{" "}
+                              {new Date(
+                                milestone["start-date"]
+                              ).toLocaleDateString("vi-VN")}
+                            </span>
+                          )}
+                          {milestone["end-date"] && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="h-4 w-4" />
+                              End:{" "}
+                              {new Date(
+                                milestone["end-date"]
+                              ).toLocaleDateString("vi-VN")}
+                            </span>
+                          )}
+                          {milestone.duration && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="h-4 w-4" />
+                              {milestone.duration} days
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <ChevronRight className="h-5 w-5 text-gray-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8 text-gray-500">
+              <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+              <p>This project has no milestones</p>
+              <p className="text-sm text-gray-400 mt-1">0 milestones</p>
             </div>
           )}
         </CardContent>

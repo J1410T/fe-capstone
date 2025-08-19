@@ -11,7 +11,8 @@ import {
   LogOut,
   User,
   Calendar,
-  ClipboardList,
+  BellDot,
+  Settings,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -27,7 +28,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,19 +51,24 @@ const data = {
           icon: LayoutDashboard,
         },
         {
+          title: "Notifications",
+          url: "/staff/notifications",
+          icon: BellDot,
+        },
+        {
           title: "Document Forms",
           url: "/staff/forms",
           icon: FileText,
         },
         {
-          title: "Request Management",
-          url: "/staff/requests",
-          icon: ClipboardList,
-        },
-        {
           title: "Document Management",
           url: "/staff/documents",
           icon: FileText,
+        },
+        {
+          title: "Config System",
+          url: "/staff/config-system",
+          icon: Settings,
         },
       ],
     },
@@ -129,6 +135,21 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, logout } = useAuth();
   const { data: authData } = useAuthResponse();
 
+  // Get current user role
+  const currentRole = authData?.["selected-role"] || user?.role;
+
+  // Filter menu items based on role
+  const getFilteredNavItems = (items: (typeof data.navMain)[0]["items"]) => {
+    return items.filter((item) => {
+      // Only Admin can see Config System and User Access
+      if (item.title === "Config System" || item.title === "User Access") {
+        return currentRole === UserRole.ADMIN;
+      }
+      // All other items are visible to both Staff and Admin
+      return true;
+    });
+  };
+
   const displayUser = {
     name: authData?.["full-name"] || user?.name || "Staff",
     email: authData?.email || user?.email || "user@example.com",
@@ -160,25 +181,32 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        {data.navMain.map((group) => (
-          <SidebarGroup key={group.title}>
-            <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <Link to={item.url}>
-                        <item.icon className="h-4 w-4" />
-                        {item.title}
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+        {data.navMain.map((group) => {
+          const filteredItems = getFilteredNavItems(group.items);
+
+          // Don't render group if no items are visible
+          if (filteredItems.length === 0) return null;
+
+          return (
+            <SidebarGroup key={group.title}>
+              <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {filteredItems.map((item) => (
+                    <SidebarMenuItem key={item.title}>
+                      <SidebarMenuButton asChild>
+                        <Link to={item.url}>
+                          <item.icon className="h-4 w-4" />
+                          {item.title}
+                        </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
 
       {/* Footer with User Info and Logout */}

@@ -1,4 +1,5 @@
 import AuthGuard from "@/components/auth/AuthGuard";
+import AdminGuard from "@/components/auth/AdminGuard";
 import AuthLayout from "@/layouts/AuthLayout";
 import StaffLayout from "@/layouts/StaffLayout";
 import { Unauthorized } from "./Unauthorized";
@@ -31,6 +32,7 @@ import {
   // StaffMilestoneManagement,
   StaffMeetings,
   DocumentManagement,
+  ConfigSystemManagement,
 } from "@/pages/Staff";
 
 // General Pages
@@ -65,7 +67,7 @@ import GeneralComingSoon from "@/pages/ComingSoon";
 
 // Principal Investigator Pages
 import ProjectRegistration from "@/pages/PrincipalInvestigator/ProjectRegistration";
-import PIRegisterProject from "@/pages/PrincipalInvestigator/RegisterProject";
+// import PIRegisterProject from "@/pages/PrincipalInvestigator/RegisterProject";
 import PIMeetings from "@/pages/PrincipalInvestigator/Meetings";
 // import ContractNotifications from "@/pages/PrincipalInvestigator/ContractNotifications";
 import Meetings from "@/pages/Council/Meetings";
@@ -76,11 +78,6 @@ import { ProposalDetailPage } from "@/pages/Council/ProjectApproval/ProposalDeta
 import { CreateEvaluationPage } from "@/pages/Council/ProjectApproval/CreateEvaluationPage";
 import { IndividualEvaluationDetailPage } from "@/pages/Council/ProjectApproval/IndividualEvaluationDetailPage";
 import { AIEvaluationDetailPage } from "@/pages/Council/ProjectApproval/AIEvaluationDetailPage";
-// import FormRegister from "@/pages/FormRegister";
-import FormsOverview from "@/pages/FormRegister/FormsOverview";
-import FormCreate from "@/pages/FormRegister/FormCreate";
-import FormView from "@/pages/FormRegister/FormView";
-import FormEdit from "@/pages/FormRegister/FormEdit";
 import MyProject from "@/pages/PrincipalInvestigator";
 import MyCouncil from "@/pages/Council/MyCouncil";
 import MyCouncilEvaluationDetailPage from "@/pages/Council/MyCouncil/EvaluationDetailPage";
@@ -131,7 +128,7 @@ export const routes: RouteObject[] = [
       {
         path: "staff",
         element: (
-          <AuthGuard requiredRoles={[UserRole.STAFF]}>
+          <AuthGuard requiredRoles={[UserRole.STAFF, UserRole.ADMIN]}>
             <StaffLayout />
           </AuthGuard>
         ),
@@ -171,7 +168,11 @@ export const routes: RouteObject[] = [
           },
           {
             path: "users",
-            element: <UserAccessControl />,
+            element: (
+              <AdminGuard>
+                <UserAccessControl />
+              </AdminGuard>
+            ),
           },
           {
             path: "meetings",
@@ -209,6 +210,14 @@ export const routes: RouteObject[] = [
           {
             path: "documents",
             element: <DocumentManagement />,
+          },
+          {
+            path: "config-system",
+            element: (
+              <AdminGuard>
+                <ConfigSystemManagement />
+              </AdminGuard>
+            ),
           },
           {
             path: "*",
@@ -295,28 +304,6 @@ export const routes: RouteObject[] = [
             path: "my-projects",
             element: <MyProject />,
           },
-          {
-            path: "forms",
-            children: [
-              {
-                index: true,
-                element: <FormsOverview />,
-              },
-              {
-                path: "create",
-                element: <FormCreate />,
-              },
-              {
-                path: ":formId/view",
-                element: <FormView />,
-              },
-              {
-                path: ":formId/edit",
-                element: <FormEdit />,
-              },
-            ],
-          },
-          // Add more RESEARCHER routes here
         ],
       },
       // Dashboard routes for all users
@@ -372,27 +359,6 @@ export const routes: RouteObject[] = [
           {
             path: "notifications",
             element: <ViewAllNotifications />,
-          },
-          {
-            path: "forms",
-            children: [
-              {
-                index: true,
-                element: <FormsOverview />,
-              },
-              {
-                path: "create",
-                element: <FormCreate />,
-              },
-              {
-                path: ":formId/view",
-                element: <FormView />,
-              },
-              {
-                path: ":formId/edit",
-                element: <FormEdit />,
-              },
-            ],
           },
           {
             path: "project/*",
@@ -596,10 +562,10 @@ export const routes: RouteObject[] = [
             path: "project-enroll-form",
             element: <ProjectRegistration />,
           },
-          {
-            path: "register-project",
-            element: <PIRegisterProject />,
-          },
+          // {
+          //   path: "register-project",
+          //   element: <PIRegisterProject />,
+          // },
           {
             path: "profile",
             element: <Profile />,
@@ -620,27 +586,6 @@ export const routes: RouteObject[] = [
           {
             path: "meeting/:id",
             element: <MeetingMinutes />,
-          },
-          {
-            path: "forms",
-            children: [
-              {
-                index: true,
-                element: <FormsOverview />,
-              },
-              {
-                path: "create",
-                element: <FormCreate />,
-              },
-              {
-                path: ":formId/view",
-                element: <FormView />,
-              },
-              {
-                path: ":formId/edit",
-                element: <FormEdit />,
-              },
-            ],
           },
           {
             path: "my-projects",

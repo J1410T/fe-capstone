@@ -49,7 +49,13 @@ import {
   useNotificationList,
 } from "@/hooks/queries/notification";
 
-const menuItemsByRole = {
+type MenuItem = {
+  name: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
+
+const menuItemsByRole: Record<UserRole, MenuItem[]> = {
   [UserRole.RESEARCHER]: [
     { name: "Home", path: "/home", icon: Home },
     { name: "Projects", path: "/researcher/projects", icon: FolderOpen },
@@ -71,10 +77,8 @@ const menuItemsByRole = {
     { name: "Home", path: "/home", icon: Home },
     { name: "Projects", path: "/pi/projects", icon: FolderOpen },
     { name: "My Projects", path: "/pi/my-projects", icon: Briefcase },
-    { name: "Register Project", path: "/pi/register-project", icon: FileText },
+    // { name: "Register Project", path: "/pi/register-project", icon: FileText },
     { name: "Meetings", path: "/pi/meetings", icon: Calendar },
-    { name: "Forms", path: "/pi/forms", icon: FileText },
-    // { name: "Progress", path: "/pi/progress-reports", icon: FileText },
   ],
   [UserRole.APPRAISAL_COUNCIL]: [
     { name: "Home", path: "/home", icon: Home },
@@ -87,6 +91,12 @@ const menuItemsByRole = {
     { name: "Meetings", path: "/council/meetings", icon: Calendar },
   ],
   [UserRole.STAFF]: [
+    { name: "Home", path: "/home", icon: Home },
+    { name: "Dashboard", path: "/staff/dashboard", icon: LayoutDashboard },
+    { name: "Projects", path: "/staff/projects", icon: FolderOpen },
+    { name: "Tasks", path: "/staff/tasks", icon: ClipboardList },
+  ],
+  [UserRole.ADMIN]: [
     { name: "Home", path: "/home", icon: Home },
     { name: "Dashboard", path: "/staff/dashboard", icon: LayoutDashboard },
     { name: "Projects", path: "/staff/projects", icon: FolderOpen },
@@ -121,7 +131,7 @@ function Header() {
 
   // Get menu items based on current selected role (from auth-response or user context)
   const currentRole = (authData?.["selected-role"] as UserRole) || user?.role;
-  const menuItems = currentRole
+  const menuItems = (currentRole && currentRole in menuItemsByRole)
     ? menuItemsByRole[currentRole]
     : menuItemsByRole[UserRole.RESEARCHER];
 

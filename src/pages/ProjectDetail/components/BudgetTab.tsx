@@ -6,8 +6,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -16,61 +33,117 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  DollarSign,
-  CheckCircle,
-  TrendingUp,
-  PieChart,
-  Wallet,
-} from "lucide-react";
+import { Wallet, Plus, Loader2 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { formatDate } from "@/utils";
 import { getStatusColor, formatVND } from "../shared/utils";
 import { Transaction } from "@/types/transaction";
+import { UserRole } from "@/contexts/auth-types";
+import { useAuth } from "@/contexts";
+import { toast } from "sonner";
 
 interface BudgetTabProps {
   transactions: Transaction[];
 }
 
+// Transaction request form interface
+interface TransactionRequest {
+  name: string;
+  type: string;
+  amount: string;
+}
+
+// Transaction types available for request
+const TRANSACTION_TYPES = [
+  { value: "project", label: "Project" },
+  { value: "evaluationstage", label: "Evaluation Stage" },
+];
+
 const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
   const [isLoading] = useState(false);
+  const [showRequestDialog, setShowRequestDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [requestForm, setRequestForm] = useState<TransactionRequest>({
+    name: "",
+    type: "",
+    amount: "",
+  });
 
-  const getStatusStats = () => {
-    if (!transactions || transactions.length === 0)
-      return { approved: 0, pending: 0, rejected: 0 };
+  // Auth hook to check user role
+  const { user } = useAuth();
 
-    return {
-      approved: transactions.filter(
-        (t) => t.status.toLowerCase() === "approved"
-      ).length,
-      pending: transactions.filter((t) => t.status.toLowerCase() === "pending")
-        .length,
-      rejected: transactions.filter(
-        (t) => t.status.toLowerCase() === "rejected"
-      ).length,
-    };
+  const handleRequestTransaction = () => {
+    setShowRequestDialog(true);
   };
 
-  const getTotalAmount = () => {
-    if (!transactions || transactions.length === 0) return 0;
-    return transactions.reduce(
-      (total, transaction) => total + transaction.amount,
-      0
-    );
+  const handleCloseDialog = () => {
+    setShowRequestDialog(false);
+    setRequestForm({
+      name: "",
+      type: "",
+      amount: "",
+    });
   };
 
-  const getApprovedAmount = () => {
-    if (!transactions || transactions.length === 0) return 0;
-    return transactions
-      .filter((t) => t.status.toLowerCase() === "approved")
-      .reduce((total, transaction) => total + transaction.amount, 0);
+  const handleInputChange = (
+    field: keyof TransactionRequest,
+    value: string
+  ) => {
+    if (field === "amount") {
+      // Remove non-numeric characters except decimal point
+      const numericValue = value.replace(/[^0-9]/g, "");
+      setRequestForm((prev) => ({
+        ...prev,
+        [field]: numericValue,
+      }));
+    } else {
+      setRequestForm((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
   };
 
-  const stats = getStatusStats();
-  const totalAmount = getTotalAmount();
-  const approvedAmount = getApprovedAmount();
-  const utilization =
-    totalAmount > 0 ? Math.round((approvedAmount / totalAmount) * 100) : 0;
+  const handleSubmitRequest = async () => {
+    // Validation
+    if (!requestForm.name.trim()) {
+      toast.error("Please enter a request name");
+      return;
+    }
+
+    if (!requestForm.type) {
+      toast.error("Please select a transaction type");
+      return;
+    }
+
+    if (!requestForm.amount.trim() || isNaN(Number(requestForm.amount))) {
+      toast.error("Please enter a valid amount");
+      return;
+    }
+
+    if (Number(requestForm.amount) <= 0) {
+      toast.error("Amount must be greater than 0");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // TODO: Implement API call to submit transaction request
+      // await submitTransactionRequest(requestForm);
+
+      // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      toast.success("Transaction request submitted successfully!");
+      handleCloseDialog();
+    } catch (error) {
+      console.error("Failed to submit transaction request:", error);
+      toast.error("Failed to submit transaction request");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -92,59 +165,20 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
               Project budget allocation and expense tracking
             </CardDescription>
           </div>
+          {user?.role === UserRole.PRINCIPAL_INVESTIGATOR && (
+            <Button
+              onClick={handleRequestTransaction}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Request Transaction
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent className="space-y-4 sm:space-y-6 pt-0">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="flex items-center space-x-3 p-4 bg-green-50 rounded-lg border border-green-100">
-            <DollarSign className="w-6 h-6 text-green-600" />
-            <div>
-              <p className="text-xl font-semibold text-gray-900">
-                {formatVND(totalAmount)}
-              </p>
-              <p className="text-sm text-gray-600 font-medium">Total Amount</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3 p-4 bg-blue-50 rounded-lg border border-blue-100">
-            <TrendingUp className="w-6 h-6 text-blue-600" />
-            <div>
-              <p className="text-xl font-bold text-gray-900">
-                {formatVND(approvedAmount)}
-              </p>
-              <p className="text-sm text-gray-600 font-medium">
-                Approved ({utilization}%)
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3 p-4 bg-purple-50 rounded-lg border border-purple-100">
-            <PieChart className="w-6 h-6 text-purple-600" />
-            <div>
-              <p className="text-xl font-bold text-gray-900">
-                {formatVND(totalAmount - approvedAmount)}
-              </p>
-              <p className="text-sm text-gray-600 font-medium">Pending</p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-3 p-4 bg-emerald-50 rounded-lg border border-emerald-100">
-            <CheckCircle className="w-6 h-6 text-emerald-600" />
-            <div>
-              <p className="text-xl font-bold text-gray-900">
-                {stats.approved}
-              </p>
-              <p className="text-sm text-gray-600 font-medium">
-                Approved Transactions
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <Separator className="my-4 sm:my-6" />
-
         {/* Transactions Table Section */}
         <div>
-          <h3 className="text-sm sm:text-base font-medium text-gray-700 mb-3 sm:mb-4">
-            Transactions
-          </h3>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -223,6 +257,111 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
           </div>
         </div>
       </CardContent>
+
+      {/* Request Transaction Dialog */}
+      <Dialog open={showRequestDialog} onOpenChange={handleCloseDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-blue-600" />
+              Request Transaction
+            </DialogTitle>
+            <DialogDescription>
+              Submit a new transaction request for this project. Please provide
+              the details below.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="request-name" className="text-sm font-medium">
+                Request Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="request-name"
+                value={requestForm.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                placeholder="Enter request name"
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="transaction-type" className="text-sm font-medium">
+                Transaction Type <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                onValueChange={(value) => handleInputChange("type", value)}
+                value={requestForm.type}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Select transaction type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TRANSACTION_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="amount" className="text-sm font-medium">
+                Amount (VND) <span className="text-red-500">*</span>
+              </Label>
+              <div className="relative mt-1">
+                <Input
+                  id="amount"
+                  type="text"
+                  value={requestForm.amount}
+                  onChange={(e) => handleInputChange("amount", e.target.value)}
+                  placeholder="Enter amount"
+                  className="pr-12"
+                />
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <span className="text-gray-500 text-sm">VND</span>
+                </div>
+              </div>
+              {requestForm.amount && (
+                <p className="text-xs text-gray-500 mt-1">
+                  Amount: {formatVND(Number(requestForm.amount) || 0)}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCloseDialog}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmitRequest}
+              disabled={
+                isSubmitting ||
+                !requestForm.name.trim() ||
+                !requestForm.type ||
+                !requestForm.amount.trim()
+              }
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Request"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

@@ -71,6 +71,11 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
 
   const projectResult = projectResultResponse?.data;
 
+  // Debug logging
+  console.log("ResultTab - projectResultResponse:", projectResultResponse);
+  console.log("ResultTab - projectResult:", projectResult);
+  console.log("ResultTab - projectId:", projectId);
+
   // Form states
   const [resultName, setResultName] = useState("");
   const [resultUrl, setResultUrl] = useState("");
@@ -86,8 +91,13 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const isBasicCategory = category?.toLowerCase() === "basic";
-  const isApplicationCategory = category?.toLowerCase() === "application";
+  const categoryLower = category?.toLowerCase() || "";
+  const isBasicCategory = categoryLower === "basic";
+  const isApplicationCategory =
+    categoryLower === "application" ||
+    categoryLower === "implementation" ||
+    categoryLower.includes("application") ||
+    categoryLower.includes("implementation");
 
   // Data is automatically loaded via useProjectResult hook
 
@@ -532,7 +542,6 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
                       <ul className="list-disc list-inside space-y-1 text-xs">
                         <li>Only ZIP files are allowed</li>
                         <li>Maximum file size: 30MB</li>
-                        <li>File will be uploaded to Azure storage</li>
                       </ul>
                     </div>
                   </div>

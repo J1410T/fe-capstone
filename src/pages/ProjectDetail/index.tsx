@@ -66,15 +66,21 @@ function ProjectDetail() {
     const isMember = projectResponse?.data["is-member"];
     const projectStatus = project?.status;
 
+    // Debug logging
+    console.log("ProjectDetail - project:", project);
+    console.log("ProjectDetail - isProposal:", isProposal);
+    console.log("ProjectDetail - isMember:", isMember);
+    console.log("ProjectDetail - projectStatus:", projectStatus);
+
     // Show all tabs if project is approved or inprogress
     if (projectStatus === "inprogress") {
       baseTabs.push(
         "team",
         "milestones",
+        "evaluation",
         "documents",
         "budget",
-        "results",
-        "evaluation"
+        "results"
       );
     } else if (isProposal) {
       // For Proposal projects: show Overview, Team, Document, Evaluation
@@ -84,16 +90,21 @@ function ProjectDetail() {
       baseTabs.push(
         "team",
         "milestones",
+        "evaluation",
         "documents",
         "budget",
-        "results",
-        "evaluation"
+        "results"
       );
+    } else {
+      // For non-members: show basic tabs including results for viewing
+      // baseTabs.push("team", "documents");
     }
     return baseTabs;
   };
 
   const visibleTabs = getVisibleTabs();
+  console.log("ProjectDetail - visibleTabs:", visibleTabs);
+
   const isMember = projectResponse?.data["is-member"] || false;
   const shouldShowEnrollButton = Boolean(
     user &&
@@ -217,25 +228,22 @@ function ProjectDetail() {
       />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList
-          className={
-            visibleTabs.length <= 4
-              ? "flex justify-center gap-1 w-full"
-              : "grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1"
-          }
-        >
-          {visibleTabs.map((tab) => (
-            <TabsTrigger key={tab} value={tab} className="text-xs sm:text-sm">
-              {tab === "overview" ? (
-                <>
-                  <span className="hidden sm:inline">Overview</span>
-                  <span className="sm:hidden">Info</span>
-                </>
-              ) : (
-                tab.charAt(0).toUpperCase() + tab.slice(1)
-              )}
-            </TabsTrigger>
-          ))}
+        <TabsList className="flex flex-wrap justify-center gap-1 w-full">
+          {visibleTabs.map((tab) => {
+            console.log("Rendering tab:", tab);
+            return (
+              <TabsTrigger key={tab} value={tab} className="text-xs sm:text-sm">
+                {tab === "overview" ? (
+                  <>
+                    <span className="hidden sm:inline">Overview</span>
+                    <span className="sm:hidden">Info</span>
+                  </>
+                ) : (
+                  tab.charAt(0).toUpperCase() + tab.slice(1)
+                )}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
