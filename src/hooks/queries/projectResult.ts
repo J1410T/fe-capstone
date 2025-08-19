@@ -30,8 +30,12 @@ export const useCreateProjectResult = () => {
 
   return useMutation({
     mutationFn: createProjectResult,
-    onSuccess: () => {
-      // Invalidate and refetch project result queries
+    onSuccess: (_, variables) => {
+      // Invalidate specific project result query
+      queryClient.invalidateQueries({
+        queryKey: ["project-result", variables["project-id"]],
+      });
+      // Also invalidate general project result queries
       queryClient.invalidateQueries({ queryKey: ["project-result"] });
       toast.success("Project result created successfully!");
     },
@@ -48,12 +52,11 @@ export const useUpdateProjectResult = () => {
   return useMutation({
     mutationFn: updateProjectResult,
     onSuccess: (data) => {
-      // Update the specific project result in cache
-      queryClient.setQueryData(
-        ["project-result", data.data["project-id"]],
-        data
-      );
-      // Also invalidate to ensure fresh data
+      // Invalidate specific project result query
+      queryClient.invalidateQueries({
+        queryKey: ["project-result", data.data["project-id"]],
+      });
+      // Also invalidate general project result queries
       queryClient.invalidateQueries({ queryKey: ["project-result"] });
       toast.success("Project result updated successfully!");
     },
