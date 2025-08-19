@@ -112,6 +112,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
   const { data: searchResults = [], isLoading: isSearching } =
     useSearchAccounts({
       input: searchValue.trim().length > 0 ? searchValue.trim() : "",
+      roleUser: "Researcher",
     });
   const { data: allRoles = [], isLoading: isLoadingRoles } = useAllRoles();
   const { data: myAccountInfo } = useMyAccountInfo();

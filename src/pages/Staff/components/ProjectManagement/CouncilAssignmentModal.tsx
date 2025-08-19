@@ -21,7 +21,7 @@ import {
   // GraduationCap,
   Search,
 } from "lucide-react";
-import { Council, LegacyProject } from "./detailViewTypes";
+import { Council, LegacyProject } from "../../../../types/detailViewTypes";
 import { useAppraisalCouncilsList } from "@/hooks/queries/appraisal-council";
 import { AppraisalCouncil } from "@/types/appraisal-council";
 
