@@ -3,13 +3,9 @@ import { FormTinyMCE } from "@/components/ui/TinyMCE";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Save, X, FileText, Clock, User, Calendar } from "lucide-react";
-import {
-  FormMetadata,
-  FormStatus,
-  FORM_TYPES,
-} from "@/pages/FormRegister/constants";
+import { Save, X, FileText, User, Calendar } from "lucide-react";
 import { getStatusColor } from "@/utils/status";
+import { FormMetadata, FormStatus, FORM_TYPES } from "@/types/form";
 
 interface FormEditorProps {
   form: FormMetadata;
@@ -88,12 +84,6 @@ export const FormEditor: React.FC<FormEditorProps> = ({
       case FormStatus.DRAFT:
         return <FileText className="w-4 h-4" />;
       case FormStatus.SUBMITTED:
-        return <FileText className="w-4 h-4" />;
-      case FormStatus.WAITING_FOR_PI:
-        return <Clock className="w-4 h-4" />;
-      case FormStatus.WAITING_FOR_STAFF:
-        return <Clock className="w-4 h-4" />;
-      case FormStatus.FINALIZED:
         return <FileText className="w-4 h-4" />;
       case FormStatus.VIEW_ONLY:
         return <FileText className="w-4 h-4" />;

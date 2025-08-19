@@ -182,7 +182,7 @@ const MyCouncilPage: React.FC = () => {
               onValueChange={setSelectedCouncilId}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Chọn hội đồng nghiệm thu..." />
+                <SelectValue placeholder="Choose a appraisal council" />
               </SelectTrigger>
               <SelectContent>
                 {councils.map((council) => (
@@ -190,9 +190,6 @@ const MyCouncilPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <span className="font-medium">{council.code}</span>
                       <span className="text-gray-600">- {council.name}</span>
-                      <Badge variant={getStatusBadgeVariant(council.status)}>
-                        {council.status}
-                      </Badge>
                     </div>
                   </SelectItem>
                 ))}
@@ -228,7 +225,7 @@ const MyCouncilPage: React.FC = () => {
                 ) : projects.length === 0 ? (
                   <div className="text-center py-8 text-gray-500">
                     <Briefcase className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                    <p>Không có dự án nào được phân công cho hội đồng này</p>
+                    <p>No project assigned to this council</p>
                   </div>
                 ) : (
                   <div className="grid gap-4">
@@ -248,6 +245,7 @@ const MyCouncilPage: React.FC = () => {
                                   {(project as any).code}
                                 </h3>
                                 <Badge
+                                  className="bg-purple-100 text-purple-700 border-purple-200"
                                   variant={getStatusBadgeVariant(
                                     (project as any).status
                                   )}
@@ -301,7 +299,7 @@ const MyCouncilPage: React.FC = () => {
           <CardContent className="text-center py-8">
             <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p className="text-gray-500">
-              Vui lòng chọn một hội đồng nghiệm thu để xem thông tin
+              Choose a appraisal council to view projects
             </p>
           </CardContent>
         </Card>
@@ -313,7 +311,7 @@ const MyCouncilPage: React.FC = () => {
           <CardContent className="text-center py-8">
             <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
             <p className="text-gray-500">
-              Bạn chưa được phân công vào hội đồng nghiệm thu nào
+              You are not assigned to any appraisal council
             </p>
           </CardContent>
         </Card>

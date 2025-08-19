@@ -166,70 +166,74 @@ const StaffMeetings: React.FC = () => {
     council: "all",
   });
 
-  // Table columns definition
+  // Table columns definition - Optimized for responsive design
   const columns = useMemo<ColumnDef<StaffMeeting>[]>(
     () => [
       {
         accessorKey: "title",
-        header: "Meeting",
+        header: "Meeting Details",
         cell: ({ row }) => (
-          <div>
-            <div className="font-medium">{row.getValue("title")}</div>
-            <div className="text-sm text-muted-foreground">
+          <div className="min-w-0 max-w-[280px]">
+            <div
+              className="font-medium text-sm truncate"
+              title={row.getValue("title")}
+            >
+              {row.getValue("title")}
+            </div>
+            <div
+              className="text-xs text-muted-foreground truncate"
+              title={row.original.projectName}
+            >
               {row.original.projectName}
             </div>
+            <div className="text-xs text-muted-foreground mt-1">
+              {row.original.milestone}
+            </div>
           </div>
-        ),
-      },
-      {
-        accessorKey: "milestone",
-        header: "Milestone",
-        cell: ({ row }) => (
-          <div className="text-sm">{row.getValue("milestone")}</div>
-        ),
-      },
-      {
-        accessorKey: "council",
-        header: "Council",
-        cell: ({ row }) => (
-          <div className="text-sm">{row.getValue("council")}</div>
         ),
       },
       {
         accessorKey: "date",
-        header: "Date & Time",
+        header: "Schedule",
         cell: ({ row }) => (
-          <div>
+          <div className="min-w-0">
             <div className="text-sm font-medium">
               {formatDate(row.getValue("date"))}
             </div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               {row.original.time}
             </div>
+            <div className="text-xs text-blue-600 mt-1">
+              {row.original.council}
+            </div>
           </div>
-        ),
-      },
-      {
-        accessorKey: "type",
-        header: "Type",
-        cell: ({ row }) => (
-          <StatusBadge status={row.getValue("type")} variant="type" size="sm" />
         ),
       },
       {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => (
-          <StatusBadge status={row.getValue("status")} size="sm" />
+          <div className="space-y-1">
+            <StatusBadge status={row.getValue("status")} size="sm" />
+            <div className="text-xs">
+              <StatusBadge
+                status={row.original.type}
+                variant="type"
+                size="sm"
+              />
+            </div>
+          </div>
         ),
       },
       {
         accessorKey: "attendees",
-        header: "Attendees",
+        header: "Info",
         cell: ({ row }) => (
-          <div className="flex items-center">
-            <Users className="w-4 h-4 mr-1 text-muted-foreground" />
-            <span className="text-sm">{row.getValue("attendees")}</span>
+          <div className="text-center">
+            <div className="flex items-center justify-center">
+              <Users className="w-3 h-3 mr-1 text-muted-foreground" />
+              <span className="text-sm">{row.getValue("attendees")}</span>
+            </div>
           </div>
         ),
       },
@@ -238,24 +242,25 @@ const StaffMeetings: React.FC = () => {
         header: "Actions",
         cell: ({ row }) => {
           const meeting = row.original;
-          const actions = [
-            createCommonActions.view(() => handleView(meeting)),
-            createCommonActions.edit(() => handleEdit(meeting)),
-          ];
+          const actions = [];
 
           // Add join meeting action for upcoming meetings
           if (meeting.status === "Upcoming") {
-            actions.unshift({
-              label: "Join Meeting",
+            actions.push({
+              label: "Join",
               icon: Video,
               onClick: () => handleJoinMeeting(meeting),
               variant: "default" as const,
             });
           }
 
-          actions.push(createCommonActions.delete(() => handleDelete(meeting)));
+          actions.push(
+            createCommonActions.view(() => handleView(meeting)),
+            createCommonActions.edit(() => handleEdit(meeting)),
+            createCommonActions.delete(() => handleDelete(meeting))
+          );
 
-          return <ActionButtons actions={actions} />;
+          return <ActionButtons actions={actions} size="sm" />;
         },
       },
     ],
@@ -360,15 +365,20 @@ const StaffMeetings: React.FC = () => {
         description="Manage and schedule staff meetings for project reviews"
         badge={{ text: `${meetings.length} meetings`, variant: "secondary" }}
         actions={
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Dialog
               open={isBulkCreateDialogOpen}
               onOpenChange={setIsBulkCreateDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button variant="outline">
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  Bulk Create
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full sm:w-auto"
+                >
+                  <CalendarIcon className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Bulk Create</span>
+                  <span className="sm:hidden">Bulk</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh] overflow-y-auto">
@@ -394,9 +404,10 @@ const StaffMeetings: React.FC = () => {
               onOpenChange={setIsCreateDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Meeting
+                <Button size="sm" className="w-full sm:w-auto">
+                  <Plus className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Create Meeting</span>
+                  <span className="sm:hidden">Create</span>
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -421,65 +432,73 @@ const StaffMeetings: React.FC = () => {
         }
       />
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Summary Cards - Compact Design */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <CalendarIcon className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <CalendarIcon className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground truncate">
                   Upcoming
                 </p>
-                <p className="text-2xl font-bold">{stats.upcoming}</p>
+                <p className="text-xl font-bold">{stats.upcoming}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Clock className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-green-100 rounded-lg">
+                <Clock className="h-5 w-5 text-green-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground truncate">
                   Completed
                 </p>
-                <p className="text-2xl font-bold">{stats.completed}</p>
+                <p className="text-xl font-bold">{stats.completed}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Building className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Meetings
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-purple-100 rounded-lg">
+                <Building className="h-5 w-5 text-purple-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground truncate">
+                  Total
                 </p>
-                <p className="text-2xl font-bold">{stats.total}</p>
+                <p className="text-xl font-bold">{stats.total}</p>
               </div>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-orange-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Total Attendees
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-3">
+              <div className="p-2 bg-orange-100 rounded-lg">
+                <Users className="h-5 w-5 text-orange-600" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-medium text-muted-foreground truncate">
+                  Attendees
                 </p>
-                <p className="text-2xl font-bold">{stats.totalAttendees}</p>
+                <p className="text-xl font-bold">{stats.totalAttendees}</p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* Filters - Compact Layout */}
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="p-4">
           <FilterBar
             filters={filterConfig}
             values={filterValues}
@@ -489,17 +508,20 @@ const StaffMeetings: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Meetings Table */}
-      <DataTable
-        data={filteredMeetings}
-        columns={columns}
-        searchable={true}
-        searchPlaceholder="Search meetings..."
-        searchFields={["title", "projectName", "milestone"]}
-        globalFilter={globalFilter}
-        onGlobalFilterChange={setGlobalFilter}
-        emptyMessage="No meetings found. Get started by creating your first meeting."
-      />
+      {/* Meetings Table - Responsive */}
+      <div className="overflow-hidden">
+        <DataTable
+          data={filteredMeetings}
+          columns={columns}
+          searchable={true}
+          searchPlaceholder="Search meetings..."
+          searchFields={["title", "projectName", "milestone"]}
+          globalFilter={globalFilter}
+          onGlobalFilterChange={setGlobalFilter}
+          emptyMessage="No meetings found. Get started by creating your first meeting."
+          className="min-w-0"
+        />
+      </div>
     </div>
   );
 };

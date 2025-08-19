@@ -11,7 +11,7 @@ import {
   LogOut,
   User,
   Calendar,
-  ClipboardList,
+  BellDot,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -50,14 +50,14 @@ const data = {
           icon: LayoutDashboard,
         },
         {
+          title: "Notifications",
+          url: "/staff/notifications",
+          icon: BellDot,
+        },
+        {
           title: "Document Forms",
           url: "/staff/forms",
           icon: FileText,
-        },
-        {
-          title: "Request Management",
-          url: "/staff/requests",
-          icon: ClipboardList,
         },
         {
           title: "Document Management",

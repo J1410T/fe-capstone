@@ -1,4 +1,5 @@
 import { axiosClient, getAccessToken } from "../api";
+import { getImageUrlFromAzure } from "./azure-image";
 
 // Types
 export interface ResultPublish {
@@ -124,7 +125,7 @@ export const uploadFileToAzure = async (
     formData.append("file", file);
 
     // Step 1: Upload file to Azure and get blob name
-    const uploadResponse = await axiosClient.post<{ blobName: string }>(
+    const uploadResponse = await axiosClient.post<{ url: string }>(
       "/azure-image-service/upload",
       formData,
       {
@@ -135,23 +136,16 @@ export const uploadFileToAzure = async (
       }
     );
 
-    const blobName = uploadResponse.data.blobName;
+    const blobName = uploadResponse.data.url; // API trả về url field chứa blobName
     if (!blobName) {
       throw new Error("Failed to get blob name from upload response");
     }
 
     // Step 2: Get the public URL for the uploaded file
-    const urlResponse = await axiosClient.get<string>(
-      `/azure-image-service/get-url?blobName=${encodeURIComponent(blobName)}`,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      }
-    );
+    const fileUrl = await getImageUrlFromAzure(blobName);
 
     return {
-      url: urlResponse.data,
+      url: fileUrl,
       success: true,
     };
   } catch (error) {

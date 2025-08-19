@@ -1,256 +1,256 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { DocumentTinyMCE } from "@/components/ui/TinyMCE";
-import {
-  useDocumentsByFilter,
-  useCreateDocument,
-  useUpdateDocument,
-  useDocumentByProjectIdWithUserRole,
-} from "@/hooks/queries/document";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { FileText, ArrowRight, File } from "lucide-react";
-import { DocumentForm } from "@/types/document";
-import { toast } from "sonner";
-import { Loading } from "@/components";
+// import React, { useEffect, useState, useCallback } from "react";
+// import { DocumentTinyMCE } from "@/components/ui/TinyMCE";
+// import {
+//   useDocumentsByFilter,
+//   useCreateDocument,
+//   useUpdateDocument,
+//   useDocumentByProjectIdWithUserRole,
+// } from "@/hooks/queries/document";
+// import {
+//   Card,
+//   CardContent,
+//   CardDescription,
+//   CardHeader,
+//   CardTitle,
+// } from "@/components/ui/card";
+// import { Button } from "@/components/ui/button";
+// import { FileText, ArrowRight, File } from "lucide-react";
+// import { DocumentForm } from "@/types/document";
+// import { toast } from "sonner";
+// import { Loading } from "@/components";
 
-interface ProjectSummaryStepWrapperProps {
-  projectId: string;
-  onContentChange: (content: string) => void;
-  onNext: () => void;
-  onDocumentCreated?: () => void;
-}
+// interface ProjectSummaryStepWrapperProps {
+//   projectId: string;
+//   onContentChange: (content: string) => void;
+//   onNext: () => void;
+//   onDocumentCreated?: () => void;
+// }
 
-export const ProjectSummaryStepWrapper: React.FC<
-  ProjectSummaryStepWrapperProps
-> = ({ projectId, onContentChange, onNext, onDocumentCreated }) => {
-  const [formContent, setFormContent] = useState<string>("");
-  const [editorContent, setEditorContent] = useState<string>("");
-  const [isCreatingDocument, setIsCreatingDocument] = useState(false);
-  const [documentCreated, setDocumentCreated] = useState(false);
+// export const ProjectSummaryStepWrapper: React.FC<
+//   ProjectSummaryStepWrapperProps
+// > = ({ projectId, onContentChange, onNext, onDocumentCreated }) => {
+//   const [formContent, setFormContent] = useState<string>("");
+//   const [editorContent, setEditorContent] = useState<string>("");
+//   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
+//   const [documentCreated, setDocumentCreated] = useState(false);
 
-  // Use useDocumentByProjectIdWithUserRole to find BM1 document
-  const { data: documentsWithUserRole, isLoading: isLoadingDocuments } =
-    useDocumentByProjectIdWithUserRole(
-      {
-        "is-template": false,
-        status: "draft",
-        "page-index": 1,
-        "page-size": 100,
-        "project-id": projectId || "",
-      },
-      !!projectId
-    );
+//   // Use useDocumentByProjectIdWithUserRole to find BM1 document
+//   const { data: documentsWithUserRole, isLoading: isLoadingDocuments } =
+//     useDocumentByProjectIdWithUserRole(
+//       {
+//         "is-template": false,
+//         status: "draft",
+//         "page-index": 1,
+//         "page-size": 100,
+//         "project-id": projectId || "",
+//       },
+//       !!projectId
+//     );
 
-  // Find BM1 document from the API response
-  const bm1Document = documentsWithUserRole?.["data-list"]?.find(
-    (doc) => doc.type === "BM1"
-  );
+//   // Find BM1 document from the API response
+//   const bm1Document = documentsWithUserRole?.["data-list"]?.find(
+//     (doc) => doc.type === "BM1"
+//   );
 
-  // Only fetch template when we've confirmed there's no BM1 document
-  const shouldFetchTemplate =
-    !isLoadingDocuments &&
-    !bm1Document &&
-    !documentCreated &&
-    !isCreatingDocument;
+//   // Only fetch template when we've confirmed there's no BM1 document
+//   const shouldFetchTemplate =
+//     !isLoadingDocuments &&
+//     !bm1Document &&
+//     !documentCreated &&
+//     !isCreatingDocument;
 
-  // Only fetch template when needed
-  const { data: templateData, isLoading: isLoadingTemplate } =
-    useDocumentsByFilter("BM1", true, 1, 1, shouldFetchTemplate);
+//   // Only fetch template when needed
+//   const { data: templateData, isLoading: isLoadingTemplate } =
+//     useDocumentsByFilter("BM1", true, 1, 1, shouldFetchTemplate);
 
-  const createDocumentMutation = useCreateDocument();
-  const updateDocumentMutation = useUpdateDocument();
+//   const createDocumentMutation = useCreateDocument();
+//   const updateDocumentMutation = useUpdateDocument();
 
-  const createDocumentFromTemplate = useCallback(async () => {
-    if (
-      isLoadingDocuments ||
-      bm1Document ||
-      !templateData?.data?.["data-list"]?.length ||
-      isCreatingDocument ||
-      documentCreated ||
-      !projectId
-    ) {
-      return;
-    }
+//   const createDocumentFromTemplate = useCallback(async () => {
+//     if (
+//       isLoadingDocuments ||
+//       bm1Document ||
+//       !templateData?.data?.["data-list"]?.length ||
+//       isCreatingDocument ||
+//       documentCreated ||
+//       !projectId
+//     ) {
+//       return;
+//     }
 
-    console.log("Creating BM1 document from template...");
-    setIsCreatingDocument(true);
-    const templateDoc: DocumentForm = templateData.data["data-list"][0];
-    const templateContent = templateDoc["content-html"].replace(/\\"/g, '"');
+//     console.log("Creating BM1 document from template...");
+//     setIsCreatingDocument(true);
+//     const templateDoc: DocumentForm = templateData.data["data-list"][0];
+//     const templateContent = templateDoc["content-html"].replace(/\\"/g, '"');
 
-    try {
-      const newDocument = await createDocumentMutation.mutateAsync({
-        name: "Registration form",
-        type: "BM1",
-        "is-template": false,
-        "content-html": templateContent,
-        "project-id": projectId,
-        status: "draft",
-      });
+//     try {
+//       const newDocument = await createDocumentMutation.mutateAsync({
+//         name: "Registration form",
+//         type: "BM1",
+//         "is-template": false,
+//         "content-html": templateContent,
+//         "project-id": projectId,
+//         status: "draft",
+//       });
 
-      console.log("BM1 document created successfully:", newDocument);
-      setDocumentCreated(true);
-      onDocumentCreated?.();
-      setFormContent(templateContent);
-      setEditorContent(templateContent);
-      setEditorContent(templateContent);
-    } catch (error) {
-      console.error("Failed to create document:", error);
-      setFormContent(templateContent);
-      setEditorContent(templateContent);
-      setEditorContent(templateContent);
-      toast.error("Failed to create document, using template content directly");
-    } finally {
-      setIsCreatingDocument(false);
-    }
-  }, [
-    isLoadingDocuments,
-    bm1Document,
-    templateData,
-    isCreatingDocument,
-    documentCreated,
-    projectId,
-    createDocumentMutation,
-    onDocumentCreated,
-  ]);
+//       console.log("BM1 document created successfully:", newDocument);
+//       setDocumentCreated(true);
+//       onDocumentCreated?.();
+//       setFormContent(templateContent);
+//       setEditorContent(templateContent);
+//       setEditorContent(templateContent);
+//     } catch (error) {
+//       console.error("Failed to create document:", error);
+//       setFormContent(templateContent);
+//       setEditorContent(templateContent);
+//       setEditorContent(templateContent);
+//       toast.error("Failed to create document, using template content directly");
+//     } finally {
+//       setIsCreatingDocument(false);
+//     }
+//   }, [
+//     isLoadingDocuments,
+//     bm1Document,
+//     templateData,
+//     isCreatingDocument,
+//     documentCreated,
+//     projectId,
+//     createDocumentMutation,
+//     onDocumentCreated,
+//   ]);
 
-  useEffect(() => {
-    if (isLoadingDocuments) {
-      console.log("Still loading documents...");
-      return;
-    }
+//   useEffect(() => {
+//     if (isLoadingDocuments) {
+//       console.log("Still loading documents...");
+//       return;
+//     }
 
-    if (bm1Document) {
-      const unescapedHtml = bm1Document["content-html"].replace(/\\"/g, '"');
-      setFormContent(unescapedHtml);
-      setEditorContent(unescapedHtml);
-      setEditorContent(unescapedHtml);
-      console.log("Using existing BM1 document:", bm1Document.id);
-    } else if (!documentCreated && !isCreatingDocument) {
-      console.log("No BM1 document found, attempting to create from template");
-      createDocumentFromTemplate();
-    }
-  }, [
-    isLoadingDocuments,
-    bm1Document,
-    createDocumentFromTemplate,
-    documentCreated,
-    isCreatingDocument,
-  ]);
+//     if (bm1Document) {
+//       const unescapedHtml = bm1Document["content-html"].replace(/\\"/g, '"');
+//       setFormContent(unescapedHtml);
+//       setEditorContent(unescapedHtml);
+//       setEditorContent(unescapedHtml);
+//       console.log("Using existing BM1 document:", bm1Document.id);
+//     } else if (!documentCreated && !isCreatingDocument) {
+//       console.log("No BM1 document found, attempting to create from template");
+//       createDocumentFromTemplate();
+//     }
+//   }, [
+//     isLoadingDocuments,
+//     bm1Document,
+//     createDocumentFromTemplate,
+//     documentCreated,
+//     isCreatingDocument,
+//   ]);
 
-  const handleEditorChange = (content: string) => {
-    setEditorContent(content);
-    setFormContent(content); // Sync formContent with editorContent
-    onContentChange(content);
-  };
+//   const handleEditorChange = (content: string) => {
+//     setEditorContent(content);
+//     setFormContent(content); // Sync formContent with editorContent
+//     onContentChange(content);
+//   };
 
-  const handleNext = () => {
-    onContentChange(editorContent);
-    onContentChange(editorContent);
-    onNext();
-  };
+//   const handleNext = () => {
+//     onContentChange(editorContent);
+//     onContentChange(editorContent);
+//     onNext();
+//   };
 
-  const handleSave = async () => {
-    if (!bm1Document || !projectId) {
-      toast.error("Document not found or project ID missing");
-      return;
-    }
+//   const handleSave = async () => {
+//     if (!bm1Document || !projectId) {
+//       toast.error("Document not found or project ID missing");
+//       return;
+//     }
 
-    onContentChange(editorContent);
-    onContentChange(editorContent);
+//     onContentChange(editorContent);
+//     onContentChange(editorContent);
 
-    try {
-      await updateDocumentMutation.mutateAsync({
-        id: bm1Document.id,
-        name: bm1Document.name,
-        type: bm1Document.type,
-        "is-template": false,
-        "content-html": editorContent,
-        status: "draft",
-        "project-id": projectId,
-      });
+//     try {
+//       await updateDocumentMutation.mutateAsync({
+//         id: bm1Document.id,
+//         name: bm1Document.name,
+//         type: bm1Document.type,
+//         "is-template": false,
+//         "content-html": editorContent,
+//         status: "draft",
+//         "project-id": projectId,
+//       });
 
-      toast.success("Document saved successfully!");
-    } catch (error) {
-      console.error("Failed to save document:", error);
-      toast.error("Failed to save document. Please try again.");
-    }
-  };
+//       toast.success("Document saved successfully!");
+//     } catch (error) {
+//       console.error("Failed to save document:", error);
+//       toast.error("Failed to save document. Please try again.");
+//     }
+//   };
 
-  const isLoading =
-    isLoadingDocuments ||
-    isLoadingTemplate ||
-    isCreatingDocument ||
-    createDocumentMutation.isPending;
+//   const isLoading =
+//     isLoadingDocuments ||
+//     isLoadingTemplate ||
+//     isCreatingDocument ||
+//     createDocumentMutation.isPending;
 
-  return (
-    <div>
-      <Card className="border-0 shadow-lg bg-white pt-0 p-0">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
-          <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2 pt-5">
-            <FileText className="w-5 h-5 text-blue-600" />
-            Project Summary Document
-          </CardTitle>
-          <CardDescription>
-            Create and edit project summary documents using templates.
-          </CardDescription>
-          <div className="mt-3 p-3 rounded-md border border-blue-300 bg-blue-50 text-sm text-blue-800">
-            💡 <strong>Signing instruction:</strong> If you want to sign, please
-            upload your signature image and place it exactly where you want the
-            signature to appear in the document.
-          </div>
-        </CardHeader>
+//   return (
+//     <div>
+//       <Card className="border-0 shadow-lg bg-white pt-0 p-0">
+//         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
+//           <CardTitle className="text-xl font-bold text-gray-800 flex items-center gap-2 pt-5">
+//             <FileText className="w-5 h-5 text-blue-600" />
+//             Project Summary Document
+//           </CardTitle>
+//           <CardDescription>
+//             Create and edit project summary documents using templates.
+//           </CardDescription>
+//           <div className="mt-3 p-3 rounded-md border border-blue-300 bg-blue-50 text-sm text-blue-800">
+//             💡 <strong>Signing instruction:</strong> If you want to sign, please
+//             upload your signature image and place it exactly where you want the
+//             signature to appear in the document.
+//           </div>
+//         </CardHeader>
 
-        <CardContent className="p-0 mt-0 pt-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-[800px]">
-              <div className="text-center">
-                <Loading className="w-full max-w-md" />
-                <p className="text-gray-600">
-                  {isCreatingDocument
-                    ? "Creating document..."
-                    : "Loading BM1 template..."}
-                </p>
-              </div>
-            </div>
-          ) : createDocumentMutation.isError ? (
-            <div className="text-center text-red-500 p-6">
-              ⚠️ Error creating document:{" "}
-              {createDocumentMutation.error?.message}
-            </div>
-          ) : (
-            <DocumentTinyMCE
-              value={formContent}
-              onChange={handleEditorChange}
-              height={800}
-              preset="document"
-            />
-          )}
-        </CardContent>
-      </Card>
+//         <CardContent className="p-0 mt-0 pt-0">
+//           {isLoading ? (
+//             <div className="flex items-center justify-center h-[800px]">
+//               <div className="text-center">
+//                 <Loading className="w-full max-w-md" />
+//                 <p className="text-gray-600">
+//                   {isCreatingDocument
+//                     ? "Creating document..."
+//                     : "Loading BM1 template..."}
+//                 </p>
+//               </div>
+//             </div>
+//           ) : createDocumentMutation.isError ? (
+//             <div className="text-center text-red-500 p-6">
+//               ⚠️ Error creating document:{" "}
+//               {createDocumentMutation.error?.message}
+//             </div>
+//           ) : (
+//             <DocumentTinyMCE
+//               value={formContent}
+//               onChange={handleEditorChange}
+//               height={800}
+//               preset="document"
+//             />
+//           )}
+//         </CardContent>
+//       </Card>
 
-      <div className="flex justify-end pt-4">
-        <Button
-          variant="outline"
-          onClick={handleSave}
-          size="lg"
-          className="px-8 mr-4"
-          disabled={
-            isLoading || updateDocumentMutation.isPending || !bm1Document
-          }
-        >
-          <File className="w-4 h-4 mr-2" />
-          {updateDocumentMutation.isPending ? "Saving..." : "Save"}
-        </Button>
-        <Button onClick={handleNext} size="lg" disabled={isLoading}>
-          Next Step <ArrowRight className="w-4 h-4 ml-2" />
-        </Button>
-      </div>
-    </div>
-  );
-};
+//       <div className="flex justify-end pt-4">
+//         <Button
+//           variant="outline"
+//           onClick={handleSave}
+//           size="lg"
+//           className="px-8 mr-4"
+//           disabled={
+//             isLoading || updateDocumentMutation.isPending || !bm1Document
+//           }
+//         >
+//           <File className="w-4 h-4 mr-2" />
+//           {updateDocumentMutation.isPending ? "Saving..." : "Save"}
+//         </Button>
+//         <Button onClick={handleNext} size="lg" disabled={isLoading}>
+//           Next Step <ArrowRight className="w-4 h-4 ml-2" />
+//         </Button>
+//       </div>
+//     </div>
+//   );
+// };
