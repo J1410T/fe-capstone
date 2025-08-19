@@ -33,3 +33,6 @@ export { default as MajorsManagement } from "./components/MajorsManagement";
 
 // Document Management
 export { default as DocumentManagement } from "./components/DocumentManagement";
+
+// Config System Management
+export { default as ConfigSystemManagement } from "./components/ConfigSystemManagement";

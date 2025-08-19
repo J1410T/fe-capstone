@@ -1,4 +1,5 @@
 import AuthGuard from "@/components/auth/AuthGuard";
+import AdminGuard from "@/components/auth/AdminGuard";
 import AuthLayout from "@/layouts/AuthLayout";
 import StaffLayout from "@/layouts/StaffLayout";
 import { Unauthorized } from "./Unauthorized";
@@ -31,6 +32,7 @@ import {
   // StaffMilestoneManagement,
   StaffMeetings,
   DocumentManagement,
+  ConfigSystemManagement,
 } from "@/pages/Staff";
 
 // General Pages
@@ -126,7 +128,7 @@ export const routes: RouteObject[] = [
       {
         path: "staff",
         element: (
-          <AuthGuard requiredRoles={[UserRole.STAFF]}>
+          <AuthGuard requiredRoles={[UserRole.STAFF, UserRole.ADMIN]}>
             <StaffLayout />
           </AuthGuard>
         ),
@@ -166,7 +168,11 @@ export const routes: RouteObject[] = [
           },
           {
             path: "users",
-            element: <UserAccessControl />,
+            element: (
+              <AdminGuard>
+                <UserAccessControl />
+              </AdminGuard>
+            ),
           },
           {
             path: "meetings",
@@ -204,6 +210,14 @@ export const routes: RouteObject[] = [
           {
             path: "documents",
             element: <DocumentManagement />,
+          },
+          {
+            path: "config-system",
+            element: (
+              <AdminGuard>
+                <ConfigSystemManagement />
+              </AdminGuard>
+            ),
           },
           {
             path: "*",

@@ -74,11 +74,31 @@ export function StaffLoginForm({
     setIsLoading(true);
 
     try {
-      const res = await axiosClient.post<AuthResponse>("/auth/login", {
-        email,
-        password,
-        "selected-role": "Staff",
-      });
+      // First try with Admin role
+      let res;
+      let loginSuccessful = false;
+
+      try {
+        res = await axiosClient.post<AuthResponse>("/auth/login", {
+          email,
+          password,
+          "selected-role": "Admin",
+        });
+        loginSuccessful = true;
+      } catch {
+        // If Admin login fails, try with Staff role
+        console.log("Admin login failed, trying Staff role...");
+        res = await axiosClient.post<AuthResponse>("/auth/login", {
+          email,
+          password,
+          "selected-role": "Staff",
+        });
+        loginSuccessful = true;
+      }
+
+      if (!loginSuccessful || !res) {
+        throw new Error("Login failed");
+      }
 
       if (res.data) {
         // Store auth response in encrypted cookie
