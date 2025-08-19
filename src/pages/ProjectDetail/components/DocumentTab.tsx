@@ -65,7 +65,7 @@ import { useUpdateProject } from "@/hooks/queries/project";
 import { getAuthResponse } from "@/utils/cookie-manager";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts";
-// import { useNavigate } from "react-router-dom"; // Removed - not needed
+import { useNavigate } from "react-router-dom";
 
 interface DocumentTabProps {
   projectId?: string;
@@ -103,6 +103,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
 
   // Auth
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // Fetch user's Scientific CV by email
   const { data: scientificCV, isLoading: isCVLoading } = useScientificCVByEmail(
@@ -386,6 +387,18 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
     }
   };
 
+  const handleCreateDocument = () => {
+    if (!projectId) {
+      toast.error("Project ID is missing");
+      return;
+    }
+
+    // Navigate to create document page with project ID
+    const basePath =
+      user?.role === UserRole.PRINCIPAL_INVESTIGATOR ? "/pi" : "/researcher";
+    navigate(`${basePath}/project/${projectId}/create-document`);
+  };
+
   return (
     <Card className="shadow-sm">
       {/* --- Table header --- */}
@@ -399,16 +412,27 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
               View and manage all project-related documents
             </CardDescription>
           </div>
-          {isProposal && projectStatus == "draft" && (
-            <Button
-              onClick={handleUploadScientificCV}
-              disabled={isUploading || isCVLoading || !scientificCV?.data}
-              className="ml-4"
-            >
-              <Upload className="w-4 h-4 mr-2" />
-              {isUploading ? "Uploading..." : "Upload Science CV"}
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {user?.role === UserRole.PRINCIPAL_INVESTIGATOR && (
+              <Button
+                onClick={handleCreateDocument}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Create Document
+              </Button>
+            )}
+            {isProposal && projectStatus == "draft" && (
+              <Button
+                onClick={handleUploadScientificCV}
+                disabled={isUploading || isCVLoading || !scientificCV?.data}
+                className="ml-4"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {isUploading ? "Uploading..." : "Upload Science CV"}
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 

@@ -10,7 +10,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// Select components removed - using Input for rating instead
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowLeft, Save, FileText } from "lucide-react";
 import {
   ScientificCVEditor,
@@ -25,6 +31,14 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-hooks";
 import { getMyAccountInfo } from "@/services/resources/auth";
+
+// Document types available for individual evaluation
+const EVALUATION_DOCUMENT_TYPES = [
+  { value: "BM4", label: "Individual Evaluation Form (BM4)" },
+  { value: "BM10", label: "Project Evaluation Report (BM10)" },
+  { value: "BM11", label: "Technical Review Form (BM11)" },
+  { value: "BM12", label: "Final Assessment Report (BM12)" },
+];
 
 const CreateIndividualEvaluationPage: React.FC = () => {
   const { evaluationId, stageId, individualId } = useParams<{
@@ -42,6 +56,7 @@ const CreateIndividualEvaluationPage: React.FC = () => {
   // Form state
   const [formData, setFormData] = useState({
     name: "",
+    type: "",
     content: "",
     rate: "",
     comment: "",
@@ -50,12 +65,18 @@ const CreateIndividualEvaluationPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Get BM3 template for individual evaluation
+  // Get template for selected document type
   const {
     data: templateData,
     isLoading: isTemplateLoading,
     refetch: refetchTemplate,
-  } = useDocumentsByFilter("BM3", true, 1, 1, false);
+  } = useDocumentsByFilter(
+    formData.type,
+    true, // is-template
+    1,
+    1,
+    !!formData.type // Only fetch when type is selected
+  );
 
   // Load existing individual evaluation data in edit mode
   useEffect(() => {
@@ -70,6 +91,7 @@ const CreateIndividualEvaluationPage: React.FC = () => {
 
         setFormData({
           name: existingData.name || "",
+          type: "", // Type will need to be selected manually in edit mode
           content: existingData.comment || "",
           rate: existingData["total-rate"]?.toString() || "",
           comment: existingData.comment || "",
@@ -95,25 +117,42 @@ const CreateIndividualEvaluationPage: React.FC = () => {
     loadExistingData();
   }, [isEditMode, individualId]);
 
-  // Fetch template on component mount
-  useEffect(() => {
-    refetchTemplate();
-  }, [refetchTemplate]);
-
   // Load template content when available (only for Create mode)
   useEffect(() => {
     if (
       !isEditMode && // Only load template in create mode
       !isTemplateLoading &&
-      templateData?.data?.["data-list"]?.[0]?.["content-html"]
+      templateData?.data?.["data-list"]?.[0]?.["content-html"] &&
+      formData.type // Only load when type is selected
     ) {
       const templateContent = templateData.data["data-list"][0]["content-html"];
       setFormData((prev) => ({
         ...prev,
         content: templateContent,
       }));
+
+      // Update the editor content with a small delay to ensure editor is ready
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current.setContent(templateContent);
+        }
+      }, 100);
     }
-  }, [templateData, isTemplateLoading, isEditMode]);
+  }, [templateData, isTemplateLoading, isEditMode, formData.type]);
+
+  const handleTypeChange = (value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      type: value,
+      name:
+        EVALUATION_DOCUMENT_TYPES.find((type) => type.value === value)?.label ||
+        "",
+      content: "", // Reset content when changing type
+    }));
+
+    // Refetch template when type changes
+    refetchTemplate();
+  };
 
   const handleInputChange = (field: string, value: string) => {
     // Special handling for rating field
@@ -163,6 +202,11 @@ const CreateIndividualEvaluationPage: React.FC = () => {
 
     if (!formData.name.trim()) {
       toast.error("Please enter evaluation name");
+      return;
+    }
+
+    if (!formData.type) {
+      toast.error("Please select document type");
       return;
     }
 
@@ -362,6 +406,30 @@ const CreateIndividualEvaluationPage: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Document Type */}
+            <div className="space-y-2">
+              <Label htmlFor="type">Document Type *</Label>
+              <Select onValueChange={handleTypeChange} value={formData.type}>
+                <SelectTrigger
+                  className={`${!formData.type ? "border-red-200" : ""}`}
+                >
+                  <SelectValue placeholder="Select document type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EVALUATION_DOCUMENT_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!formData.type && (
+                <p className="text-xs text-red-500 mt-1">
+                  Please select a document type
+                </p>
+              )}
+            </div>
+
             {/* Name */}
             <div className="space-y-2">
               <Label htmlFor="name">Evaluation Name *</Label>
@@ -389,6 +457,31 @@ const CreateIndividualEvaluationPage: React.FC = () => {
                 />
               </div>
             </div>
+
+            {/* Template Status */}
+            {formData.type && (
+              <div className="pt-2 border-t">
+                {isTemplateLoading ? (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-sm text-blue-700">
+                      🔄 Loading template for {formData.type}...
+                    </p>
+                  </div>
+                ) : templateData?.data?.["data-list"]?.length ? (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm text-green-700">
+                      ✓ Template loaded for {formData.type}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-sm text-yellow-700">
+                      ⚠️ No template available for {formData.type}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -402,6 +495,17 @@ const CreateIndividualEvaluationPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
+              {!formData.type && (
+                <div className="mb-4 p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                  <FileText className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                  <p className="text-gray-600 font-medium">
+                    Select Document Type First
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Choose a document type to load the appropriate template
+                  </p>
+                </div>
+              )}
               <ScientificCVEditor
                 ref={editorRef}
                 value={formData.content}
@@ -409,7 +513,12 @@ const CreateIndividualEvaluationPage: React.FC = () => {
                   handleInputChange("content", content)
                 }
                 height={500}
-                placeholder="Enter detailed evaluation content..."
+                placeholder={
+                  formData.type
+                    ? "Enter detailed evaluation content..."
+                    : "Please select document type first..."
+                }
+                readOnly={!formData.type || isTemplateLoading}
               />
             </div>
           </CardContent>
@@ -426,7 +535,10 @@ const CreateIndividualEvaluationPage: React.FC = () => {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              disabled={isSubmitting || !formData.type || !formData.name.trim()}
+            >
               {isSubmitting ? (
                 <>
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />

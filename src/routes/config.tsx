@@ -90,6 +90,7 @@ import MyCouncilIndividualEvaluationViewPage from "@/pages/Council/MyCouncil/Ind
 import MyCouncilProjectDetailPage from "@/pages/Council/MyCouncil/ProjectDetailPage";
 import { ViewAllNotifications } from "@/pages/Notifications";
 import { ScrollRestoration } from "@/components/common/ScrollRestoration";
+import CreateDocument from "@/pages/CreateDocument";
 
 /**
  * Main application routes configuration
@@ -234,6 +235,10 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId",
             element: <ProjectDetail />,
+          },
+          {
+            path: "project/:projectId/create-document",
+            element: <CreateDocument />,
           },
           {
             path: "project/:projectId/enroll",
@@ -516,6 +521,10 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId",
             element: <ProjectDetail />,
+          },
+          {
+            path: "project/:projectId/create-document",
+            element: <CreateDocument />,
           },
           {
             path: "project/:projectId/enroll",
