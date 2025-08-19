@@ -76,11 +76,6 @@ import { ProposalDetailPage } from "@/pages/Council/ProjectApproval/ProposalDeta
 import { CreateEvaluationPage } from "@/pages/Council/ProjectApproval/CreateEvaluationPage";
 import { IndividualEvaluationDetailPage } from "@/pages/Council/ProjectApproval/IndividualEvaluationDetailPage";
 import { AIEvaluationDetailPage } from "@/pages/Council/ProjectApproval/AIEvaluationDetailPage";
-// import FormRegister from "@/pages/FormRegister";
-import FormsOverview from "@/pages/FormRegister/FormsOverview";
-import FormCreate from "@/pages/FormRegister/FormCreate";
-import FormView from "@/pages/FormRegister/FormView";
-import FormEdit from "@/pages/FormRegister/FormEdit";
 import MyProject from "@/pages/PrincipalInvestigator";
 import MyCouncil from "@/pages/Council/MyCouncil";
 import MyCouncilEvaluationDetailPage from "@/pages/Council/MyCouncil/EvaluationDetailPage";
@@ -295,28 +290,6 @@ export const routes: RouteObject[] = [
             path: "my-projects",
             element: <MyProject />,
           },
-          {
-            path: "forms",
-            children: [
-              {
-                index: true,
-                element: <FormsOverview />,
-              },
-              {
-                path: "create",
-                element: <FormCreate />,
-              },
-              {
-                path: ":formId/view",
-                element: <FormView />,
-              },
-              {
-                path: ":formId/edit",
-                element: <FormEdit />,
-              },
-            ],
-          },
-          // Add more RESEARCHER routes here
         ],
       },
       // Dashboard routes for all users
@@ -372,27 +345,6 @@ export const routes: RouteObject[] = [
           {
             path: "notifications",
             element: <ViewAllNotifications />,
-          },
-          {
-            path: "forms",
-            children: [
-              {
-                index: true,
-                element: <FormsOverview />,
-              },
-              {
-                path: "create",
-                element: <FormCreate />,
-              },
-              {
-                path: ":formId/view",
-                element: <FormView />,
-              },
-              {
-                path: ":formId/edit",
-                element: <FormEdit />,
-              },
-            ],
           },
           {
             path: "project/*",
@@ -620,27 +572,6 @@ export const routes: RouteObject[] = [
           {
             path: "meeting/:id",
             element: <MeetingMinutes />,
-          },
-          {
-            path: "forms",
-            children: [
-              {
-                index: true,
-                element: <FormsOverview />,
-              },
-              {
-                path: "create",
-                element: <FormCreate />,
-              },
-              {
-                path: ":formId/view",
-                element: <FormView />,
-              },
-              {
-                path: ":formId/edit",
-                element: <FormEdit />,
-              },
-            ],
           },
           {
             path: "my-projects",

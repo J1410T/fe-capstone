@@ -52,7 +52,6 @@ import {
   ScientificCVEditor,
   ScientificCVEditorRef,
 } from "@/components/ui/TinyMCE";
-import { FORM_TYPES, FormStatus } from "@/pages/FormRegister/constants";
 import { UserRole } from "@/contexts/auth-types";
 import {
   useScientificCVByEmail,
@@ -161,47 +160,11 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
     // Cannot edit completed documents
     if (document.status === "completed") return false;
 
-    const formType = FORM_TYPES[document.type];
-    if (!formType) return false;
+    // Only Principal Investigators can edit BM5 documents
+    if (user.role !== UserRole.PRINCIPAL_INVESTIGATOR) return false;
 
-    // Map document status to form status
-    let formStatus: FormStatus;
-    switch (document.status) {
-      case "draft":
-        formStatus = FormStatus.DRAFT;
-        break;
-      case "waiting-for-pi":
-        formStatus = FormStatus.WAITING_FOR_PI;
-        break;
-      case "waiting-for-staff":
-        formStatus = FormStatus.WAITING_FOR_STAFF;
-        break;
-      case "finalized":
-        formStatus = FormStatus.FINALIZED;
-        break;
-      default:
-        formStatus = FormStatus.DRAFT;
-    }
-
-    // Determine last updater role based on account-id and user info
-    // This is a simplified logic - you might need more sophisticated role detection
-    let lastUpdatedBy: UserRole = UserRole.STAFF; // Default to staff
-
-    // If document has account-id, try to determine the role
-    // This is a basic implementation - you might need to enhance this based on your user role system
-    if (document["account-id"]) {
-      // For now, assume if it's not the current user, it was updated by the other role
-      if (document["account-id"] !== user.id) {
-        lastUpdatedBy =
-          user.role === UserRole.STAFF
-            ? UserRole.PRINCIPAL_INVESTIGATOR
-            : UserRole.STAFF;
-      } else {
-        lastUpdatedBy = user.role;
-      }
-    }
-
-    return formType.workflow.canEdit(formStatus, user.role, lastUpdatedBy);
+    // Allow editing for draft and pending documents
+    return document.status === "draft" || document.status === "pending";
   };
 
   const handleEditDocument = (document: DocumentWithUserRole) => {
