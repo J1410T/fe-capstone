@@ -9,6 +9,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { UserPlus } from "lucide-react";
+import { useCheckUserEnrollment } from "@/hooks/queries/project";
+import { useNavigate } from "react-router-dom";
 
 interface OverviewTabProps {
   projectId: string;
@@ -50,6 +52,15 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
     }
   };
 
+  const { data: checkEnrollment } = useCheckUserEnrollment(projectId);
+  const dataCheckEnrollment = checkEnrollment?.data;
+  const isEnrolled = dataCheckEnrollment?.["is-enrolled"];
+  const navigate = useNavigate();
+
+  const handleProposalClick = () => {
+    navigate(`/pi/project/${dataCheckEnrollment?.["proposal-id"]}`);
+  };
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="pb-4 sm:pb-6">
@@ -66,12 +77,21 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           </div>
           {showEnrollButton && (
             <Button
-              onClick={handleEnrollClick}
+              onClick={isEnrolled ? handleProposalClick : handleEnrollClick}
               className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto text-sm sm:text-base"
             >
-              <UserPlus className="w-4 h-4 mr-2" />
-              <span className="hidden sm:inline">Enroll Project</span>
-              <span className="sm:hidden">Enroll</span>
+              {isEnrolled ? (
+                <>
+                  <span className="hidden sm:inline">Go to Proposal</span>
+                  <span className="sm:hidden">Proposal</span>
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  <span className="hidden sm:inline">Enroll Project</span>
+                  <span className="sm:hidden">Enroll</span>
+                </>
+              )}
             </Button>
           )}
         </div>
@@ -86,7 +106,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           <InfoItem label="Type" value={type} />
           <InfoItem label="Major" value={majorName} />
           <InfoItem label="Field" value={fieldName} />
-          <InfoItem label="Requirement Note" value={requirementNote} />
+          {/* <InfoItem label="Requirement Note" value={requirementNote} /> */}
           <InfoItem label="Language" value={language} />
           <InfoItem label="Maximum Members" value={maximumMember.toString()} />
         </div>
@@ -98,6 +118,16 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
           <span className="font-bold text-gray-700">Description:</span>
           <p className="text-sm text-gray-600 leading-relaxed mt-1">
             {description}
+          </p>
+        </div>
+
+        <Separator />
+
+        {/* --- Description --- */}
+        <div>
+          <span className="font-bold text-gray-700">Requirement Note:</span>
+          <p className="text-sm text-gray-600 leading-relaxed mt-1">
+            {requirementNote}
           </p>
         </div>
 

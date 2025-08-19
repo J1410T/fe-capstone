@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, Calendar, Users, Tag } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
-import { LegacyProject } from "./detailViewTypes";
+import { LegacyProject } from "../../../../types/detailViewTypes";
 
 // Utility function to format date
 const formatDate = (dateString: string): string => {

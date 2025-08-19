@@ -36,7 +36,7 @@ import {
   SelectedPIRequest,
   LegacyProject,
   Council,
-} from "./ProjectManagement/detailViewTypes";
+} from "../../../types/detailViewTypes";
 
 // Interface for outlet context from StaffLayout
 interface StaffLayoutContext {

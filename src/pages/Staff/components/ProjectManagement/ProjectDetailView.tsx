@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { StatusBadge } from "./StatusBadge";
-import { LegacyProject, Council } from "./detailViewTypes";
+import { LegacyProject, Council } from "../../../../types/detailViewTypes";
 import { CouncilAssignmentModal } from "./CouncilAssignmentModal";
 import { formatDate } from "@/utils/date";
 import {
@@ -22,6 +22,7 @@ import {
   useUserRolesByAppraisalCouncil,
   useAssignAppraisalCouncilToProject,
 } from "@/hooks/queries/appraisal-council";
+import { filterMembersForDisplay } from "@/utils/appraisal-council-roles";
 
 interface ProjectDetailViewProps {
   selectedProject: LegacyProject | null;
@@ -74,11 +75,13 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     }
   };
 
+  const filteredMembers = councilMembers?.["data-list"]
+    ? filterMembersForDisplay(councilMembers["data-list"])
+    : [];
+
   // Separate chairman and other members
-  const chairman = councilMembers?.["data-list"]?.find(
-    (member) => member.name === "Chairman"
-  );
-  const otherMembers = councilMembers?.["data-list"]?.filter(
+  const chairman = filteredMembers.find((member) => member.name === "Chairman");
+  const otherMembers = filteredMembers.filter(
     (member) => member.name !== "Chairman"
   );
 
@@ -108,7 +111,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Basic Information */}
-          <div>
+          <div className="md:col-span-1">
             <h3 className="text-lg font-semibold mb-3 flex items-center">
               <FileText className="w-5 h-5 mr-2 text-blue-500" />
               Basic Information
@@ -140,10 +143,42 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 <span className="ml-2">{selectedProject.category}</span>
               </div>
             </div>
+            <h3 className="text-lg font-semibold mb-3 flex items-center mt-8">
+              <User className="w-5 h-5 mr-2 text-purple-500" />
+              Creator
+            </h3>
+            <div className="space-y-3">
+              {selectedProject.creator ? (
+                <div className="flex items-center space-x-3">
+                  <img
+                    src={selectedProject.creator["avatar-url"] || defaultAvatar}
+                    alt={selectedProject.creator["full-name"]}
+                    className="w-10 h-10 rounded-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = defaultAvatar;
+                    }}
+                  />
+                  <div>
+                    <p className="font-medium">
+                      {selectedProject.creator["full-name"]}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {selectedProject.creator.email}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <User className="w-4 h-4 mr-2 text-gray-400" />
+                  <span className="font-medium">Creator ID:</span>
+                  <span className="ml-2">{selectedProject["creator-id"]}</span>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Project Details */}
-          <div>
+          <div className="md:col-span-2">
             <h3 className="text-lg font-semibold mb-3 flex items-center">
               <Users className="w-5 h-5 mr-2 text-green-500" />
               Project Details
@@ -183,7 +218,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           </div>
 
           {/* Creator Information */}
-          <div>
+          {/* <div>
             <h3 className="text-lg font-semibold mb-3 flex items-center">
               <User className="w-5 h-5 mr-2 text-purple-500" />
               Creator
@@ -216,7 +251,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                 </div>
               )}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Additional Information */}

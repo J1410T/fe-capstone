@@ -542,3 +542,41 @@ export const updateUserRole = async (
     throw error;
   }
 };
+
+export const checkIsChaimainInCouncil = async (appraisalCouncilId: string) => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+    const account = await getMyAccountInfo();
+    const accountId = account.id;
+
+    const allRoles = await getAllRoles();
+    const RoleIdChairman = allRoles.find(
+      (role) => role.name === "Chairman"
+    )?.id;
+
+    const request = {
+      "account-id": accountId,
+      "appraisal-council-id": appraisalCouncilId,
+      "role-id": RoleIdChairman,
+    };
+
+    const res = await axiosClient.post<UserRoleResponse>(
+      "/user-role/filter",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getUserRoleByAccountId error:", error);
+    throw error;
+  }
+};

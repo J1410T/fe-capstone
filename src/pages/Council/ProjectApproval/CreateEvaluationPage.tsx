@@ -152,24 +152,24 @@ export const CreateEvaluationPage: React.FC = () => {
     }
   };
 
-  const handleSaveDraft = async () => {
-    setIsLoading(true);
-    try {
-      // Simulate API call for saving draft
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+  // const handleSaveDraft = async () => {
+  //   setIsLoading(true);
+  //   try {
+  //     // Simulate API call for saving draft
+  //     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-      console.log("Saving draft:", {
-        ...evaluationForm,
-        contentHtml: evaluationContent,
-      });
+  //     console.log("Saving draft:", {
+  //       ...evaluationForm,
+  //       contentHtml: evaluationContent,
+  //     });
 
-      // Show success message or stay on page
-    } catch (error) {
-      console.error("Error saving draft:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     // Show success message or stay on page
+  //   } catch (error) {
+  //     console.error("Error saving draft:", error);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
   return (
     <div className="min-h-screen ">
@@ -238,24 +238,31 @@ export const CreateEvaluationPage: React.FC = () => {
                     min="0"
                     max="100"
                     step="1"
-                    value={evaluationForm["total-rate"] || ""}
+                    value={
+                      evaluationForm["total-rate"] !== null &&
+                      evaluationForm["total-rate"] !== undefined
+                        ? evaluationForm["total-rate"]
+                        : 0
+                    }
                     onChange={(e) => {
                       const value = e.target.value;
                       if (value === "") {
-                        handleInputChange("total-rate", null);
+                        handleInputChange("total-rate", 0); // luôn mặc định là 0
                       } else {
-                        const numValue = parseInt(value);
+                        const numValue = parseInt(value, 10);
+
                         if (numValue > 100) {
-                          // Không cho phép nhập số lớn hơn 100
                           toast.error("Score must be between 0 and 100!");
                           return;
                         }
                         if (numValue < 0) {
-                          // Không cho phép nhập số âm
-                          toast.error("Score must be greater than 0!");
+                          toast.error(
+                            "Score must be greater than or equal to 0!"
+                          );
                           return;
                         }
-                        handleInputChange("total-rate", numValue || null);
+
+                        handleInputChange("total-rate", numValue);
                       }
                     }}
                     placeholder="Enter total rate (e.g., 85)"
@@ -312,7 +319,7 @@ export const CreateEvaluationPage: React.FC = () => {
                   )}
                 </Button>
 
-                <Button
+                {/* <Button
                   onClick={handleSaveDraft}
                   disabled={isLoading}
                   variant="outline"
@@ -320,7 +327,7 @@ export const CreateEvaluationPage: React.FC = () => {
                 >
                   <Save className="h-4 w-4 mr-2" />
                   Save as Draft
-                </Button>
+                </Button> */}
               </div>
             </div>
           </div>

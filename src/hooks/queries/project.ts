@@ -13,6 +13,8 @@ import {
   getStaffProjectFilter,
   getProjectsByCouncilId,
   getProjectsByCouncilIdWithPI,
+  checkUserEnrollment,
+  approveProject,
 } from "@/services/resources/project";
 import {
   CreateProjectMajorRequest,
@@ -188,5 +190,30 @@ export function useProjectsByAppraisalCouncilWithPI(
     enabled: !!councilId,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
+  });
+}
+
+export function useCheckUserEnrollment(projectId: string) {
+  return useQuery({
+    queryKey: ["check-user-enrollment-by-projectId", projectId],
+    queryFn: () => checkUserEnrollment(projectId),
+    enabled: !!projectId,
+    refetchOnWindowFocus: true,
+  });
+}
+
+export function useApproveProject() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (projectId: string) => approveProject(projectId),
+    onSuccess: () => {
+      // Invalidate relevant queries after successful enrollment
+      queryClient.invalidateQueries({ queryKey: ["project-list-filter"] });
+      queryClient.invalidateQueries({ queryKey: ["my-projects"] });
+      queryClient.invalidateQueries({
+        queryKey: ["projects-by-appraisal-council-with-pi"],
+      });
+    },
   });
 }
