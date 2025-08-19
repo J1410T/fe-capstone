@@ -65,7 +65,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
 
   // Redirect to role-specific pages if accessing the generic dashboard
   if (location.pathname === "/dashboard") {
-    if (user?.role === UserRole.STAFF) {
+    if (user?.role === UserRole.STAFF || user?.role === UserRole.ADMIN) {
       return <Navigate to="/staff/dashboard" replace />;
     } else if (user?.role === UserRole.HOST_INSTITUTION) {
       return <Navigate to="/host/dashboard" replace />;
@@ -78,7 +78,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
 
   // Redirect to home page if accessing the root path
   if (location.pathname === "/") {
-    if (user?.role === UserRole.STAFF) {
+    if (user?.role === UserRole.STAFF || user?.role === UserRole.ADMIN) {
       return <Navigate to="/staff/dashboard" replace />;
     } else if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
       return <Navigate to="/home" replace />;
@@ -87,13 +87,17 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     }
   }
 
-  // Redirect non-staff users to unauthorized if they try to access staff routes
-  if (user?.role !== UserRole.STAFF && location.pathname.startsWith("/staff")) {
+  // Redirect non-staff/admin users to unauthorized if they try to access staff routes
+  if (
+    user?.role !== UserRole.STAFF &&
+    user?.role !== UserRole.ADMIN &&
+    location.pathname.startsWith("/staff")
+  ) {
     return (
       <Navigate
         to="/unauthorized"
         state={{
-          reason: "Access denied: Staff role required",
+          reason: "Access denied: Staff or Admin role required",
           from: location.pathname,
           userRole: user?.role,
           timestamp: Date.now(),
@@ -103,8 +107,11 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, requiredRoles }) => {
     );
   }
 
-  // Redirect staff users to admin dashboard if they try to access RESEARCHER home
-  if (user?.role === UserRole.STAFF && location.pathname === "/home") {
+  // Redirect staff/admin users to admin dashboard if they try to access RESEARCHER home
+  if (
+    (user?.role === UserRole.STAFF || user?.role === UserRole.ADMIN) &&
+    location.pathname === "/home"
+  ) {
     return <Navigate to="/staff/dashboard" replace />;
   }
 

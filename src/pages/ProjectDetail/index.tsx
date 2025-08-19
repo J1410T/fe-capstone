@@ -97,7 +97,7 @@ function ProjectDetail() {
       );
     } else {
       // For non-members: show basic tabs including results for viewing
-      baseTabs.push("team", "documents");
+      // baseTabs.push("team", "documents");
     }
     return baseTabs;
   };

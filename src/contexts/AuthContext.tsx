@@ -10,9 +10,7 @@ import { getAuthResponse, setAuthResponse } from "@/utils/cookie-manager";
 
 // Re-export for compatibility (but keep them in separate files for fast refresh)
 export type { User } from "./auth-types";
-// eslint-disable-next-line react-refresh/only-export-components
 export { UserRole } from "./auth-types";
-// eslint-disable-next-line react-refresh/only-export-components
 export { useAuth } from "./auth-hooks";
 
 // Auth provider props
@@ -255,8 +253,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         toast.success("Login successful");
 
         // Redirect users based on their role from auth-response
-        if (userRole === UserRole.STAFF) {
-          // Staff users go to staff index page
+        if (userRole === UserRole.STAFF || userRole === UserRole.ADMIN) {
+          // Staff and Admin users go to staff index page
           navigate("/staff");
         } else if (userRole === UserRole.PRINCIPAL_INVESTIGATOR) {
           // Principal Investigators go to home page

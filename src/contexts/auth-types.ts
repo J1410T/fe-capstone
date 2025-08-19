@@ -5,6 +5,7 @@ export enum UserRole {
   HOST_INSTITUTION = "Host Institution",
   PRINCIPAL_INVESTIGATOR = "Principal Investigator",
   STAFF = "Staff",
+  ADMIN = "Admin",
 }
 
 // Define user interface

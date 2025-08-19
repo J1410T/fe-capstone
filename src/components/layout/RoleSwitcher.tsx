@@ -26,7 +26,15 @@ import { toast } from "sonner";
 import { ButtonLoading } from "@/components/ui/loaders";
 
 // Role configurations with icons and routes
-const roleConfig = {
+type RoleConfig = {
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  description: string;
+  defaultRoute: string;
+  color: string;
+};
+
+const roleConfig: Record<UserRole, RoleConfig> = {
   [UserRole.RESEARCHER]: {
     label: "Researcher",
     icon: User,
@@ -59,6 +67,13 @@ const roleConfig = {
     label: "Staff",
     icon: Shield,
     description: "Administrative access",
+    defaultRoute: "/staff/dashboard",
+    color: "bg-red-100 text-red-800",
+  },
+  [UserRole.ADMIN]: {
+    label: "Admin",
+    icon: Shield,
+    description: "Full administrative access",
     defaultRoute: "/staff/dashboard",
     color: "bg-red-100 text-red-800",
   },
