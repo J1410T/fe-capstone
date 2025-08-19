@@ -49,7 +49,13 @@ import {
   useNotificationList,
 } from "@/hooks/queries/notification";
 
-const menuItemsByRole = {
+type MenuItem = {
+  name: string;
+  path: string;
+  icon: React.ComponentType<{ className?: string }>;
+};
+
+const menuItemsByRole: Record<UserRole, MenuItem[]> = {
   [UserRole.RESEARCHER]: [
     { name: "Home", path: "/home", icon: Home },
     { name: "Projects", path: "/researcher/projects", icon: FolderOpen },
@@ -90,6 +96,12 @@ const menuItemsByRole = {
     { name: "Projects", path: "/staff/projects", icon: FolderOpen },
     { name: "Tasks", path: "/staff/tasks", icon: ClipboardList },
   ],
+  [UserRole.ADMIN]: [
+    { name: "Home", path: "/home", icon: Home },
+    { name: "Dashboard", path: "/staff/dashboard", icon: LayoutDashboard },
+    { name: "Projects", path: "/staff/projects", icon: FolderOpen },
+    { name: "Tasks", path: "/staff/tasks", icon: ClipboardList },
+  ],
 };
 
 function Header() {
@@ -119,7 +131,7 @@ function Header() {
 
   // Get menu items based on current selected role (from auth-response or user context)
   const currentRole = (authData?.["selected-role"] as UserRole) || user?.role;
-  const menuItems = currentRole
+  const menuItems = (currentRole && currentRole in menuItemsByRole)
     ? menuItemsByRole[currentRole]
     : menuItemsByRole[UserRole.RESEARCHER];
 

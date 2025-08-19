@@ -128,12 +128,13 @@ export const roleUtils = {
    * Get role display name
    */
   getRoleDisplayName: (role: UserRole): string => {
-    const roleNames = {
+    const roleNames: Record<UserRole, string> = {
       [UserRole.RESEARCHER]: "Researcher",
       [UserRole.PRINCIPAL_INVESTIGATOR]: "Principal Investigator",
       [UserRole.HOST_INSTITUTION]: "Host Institution",
       [UserRole.APPRAISAL_COUNCIL]: "Appraisal Council",
       [UserRole.STAFF]: "Staff",
+      [UserRole.ADMIN]: "Admin",
     };
 
     return roleNames[role] || "Unknown Role";
@@ -143,12 +144,13 @@ export const roleUtils = {
    * Get role color for UI
    */
   getRoleColor: (role: UserRole): string => {
-    const roleColors = {
+    const roleColors: Record<UserRole, string> = {
       [UserRole.RESEARCHER]: "bg-blue-100 text-blue-800",
       [UserRole.PRINCIPAL_INVESTIGATOR]: "bg-green-100 text-green-800",
       [UserRole.HOST_INSTITUTION]: "bg-purple-100 text-purple-800",
       [UserRole.APPRAISAL_COUNCIL]: "bg-orange-100 text-orange-800",
       [UserRole.STAFF]: "bg-red-100 text-red-800",
+      [UserRole.ADMIN]: "bg-red-100 text-red-800",
     };
 
     return roleColors[role] || "bg-gray-100 text-gray-800";
