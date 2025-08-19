@@ -17,6 +17,7 @@ const formatDate = (dateString: string): string => {
       day: "2-digit",
     });
   } catch (error) {
+    console.error("Error formatting date:", error);
     return dateString; // Return original if error
   }
 };

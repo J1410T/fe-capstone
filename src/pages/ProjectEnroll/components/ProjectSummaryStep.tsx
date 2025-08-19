@@ -254,6 +254,18 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                 Do not change the order of the sections, and do not remove the
                 suggested notes (in parentheses)
               </li>
+              <li>
+                <strong>Table shortcuts:</strong> Use{" "}
+                <strong>Ctrl+Shift+R</strong> to add row,
+                <strong>Ctrl+Shift+C</strong> to add column, or use the quick
+                buttons in toolbar. Right-click on table for more options.
+              </li>
+              <li>
+                <strong>Copy-Paste Tables:</strong> You can copy tables from
+                Excel/Word and paste directly. Use the "Copy Table" button to
+                copy entire tables. Tables will maintain their structure when
+                pasted.
+              </li>
             </ul>
           </div>
         </div>
@@ -306,12 +318,57 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                   "searchreplace visualblocks code fullscreen",
                   "insertdatetime media table help wordcount",
                   "textcolor colorpicker hr pagebreak spellchecker",
+                  "contextmenu", // Thêm context menu cho right-click
+                  "paste", // Plugin paste để xử lý copy-paste tốt hơn
+                  "powerpaste", // Plugin powerpaste cho paste từ Word/Excel
                 ],
                 toolbar:
-                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table tabledelete | tableprops tablerowprops tablecellprops | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | link image uploadImage | preview code fullscreen | insertSignature | forecolor backcolor | fontsize | hr pagebreak | searchreplace | spellchecker",
+                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table quickAddRow quickAddCol copyTable | tablerowheader tablecol tablerow tablecell | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | tableprops tablerowprops tablecellprops tabledelete | link image uploadImage | preview code fullscreen | insertSignature | forecolor backcolor | fontsize | hr pagebreak | searchreplace | spellchecker",
                 setup: (editor) => {
                   // Use shared ref to track uploaded images for deletion
                   const uploadedImages = uploadedImagesRef.current;
+
+                  // Custom buttons for quick table operations
+                  editor.ui.registry.addButton("quickAddRow", {
+                    text: "Add Row",
+                    icon: "table-insert-row-after",
+                    tooltip: "Quickly add row below",
+                    onAction: () => {
+                      editor.execCommand("mceTableInsertRowAfter");
+                    },
+                  });
+
+                  editor.ui.registry.addButton("quickAddCol", {
+                    text: "Add Column",
+                    icon: "table-insert-column-after",
+                    tooltip: "Quickly add column to the right",
+                    onAction: () => {
+                      editor.execCommand("mceTableInsertColAfter");
+                    },
+                  });
+
+                  // Button để copy table
+                  editor.ui.registry.addButton("copyTable", {
+                    text: "Copy Table",
+                    icon: "copy",
+                    tooltip: "Copy entire table",
+                    onAction: () => {
+                      const selectedNode = editor.selection.getNode();
+                      const table = editor.dom.getParent(selectedNode, "table");
+
+                      if (table) {
+                        // Select toàn bộ table
+                        editor.selection.select(table);
+
+                        // Copy table
+                        editor.execCommand("copy");
+
+                        toast.success("Table copied to clipboard!");
+                      } else {
+                        toast.error("Please place cursor inside a table first");
+                      }
+                    },
+                  });
 
                   // Custom Upload Image button
                   editor.ui.registry.addButton("uploadImage", {
@@ -433,6 +490,76 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                     previousImages = new Set(currentImages);
                   });
 
+                  // Keyboard shortcuts for table operations
+                  editor.addShortcut("Ctrl+Shift+R", "Add row below", () => {
+                    editor.execCommand("mceTableInsertRowAfter");
+                  });
+
+                  editor.addShortcut(
+                    "Ctrl+Shift+C",
+                    "Add column to right",
+                    () => {
+                      editor.execCommand("mceTableInsertColAfter");
+                    }
+                  );
+
+                  editor.addShortcut(
+                    "Ctrl+Shift+D",
+                    "Delete current row",
+                    () => {
+                      editor.execCommand("mceTableDeleteRow");
+                    }
+                  );
+
+                  // Custom paste handler để xử lý table paste tốt hơn
+                  editor.on("paste", (e: ClipboardEvent) => {
+                    const clipboardData =
+                      e.clipboardData ||
+                      (window as unknown as { clipboardData: DataTransfer })
+                        .clipboardData;
+                    if (!clipboardData) return;
+
+                    const htmlData = clipboardData.getData("text/html");
+                    const textData = clipboardData.getData("text/plain");
+
+                    // Kiểm tra nếu paste data có chứa table
+                    if (htmlData && htmlData.includes("<table")) {
+                      console.log("Pasting table data...");
+                      // Để TinyMCE xử lý paste table tự nhiên
+                      return;
+                    }
+
+                    // Kiểm tra nếu paste từ Excel (tab-separated values)
+                    if (
+                      textData &&
+                      textData.includes("\t") &&
+                      textData.includes("\n")
+                    ) {
+                      e.preventDefault();
+
+                      // Convert tab-separated data thành HTML table
+                      const rows = textData.trim().split("\n");
+                      let tableHtml =
+                        '<table border="1" style="border-collapse: collapse; width: 100%;">';
+
+                      rows.forEach((row: string, index: number) => {
+                        const cells = row.split("\t");
+                        const tag = index === 0 ? "th" : "td"; // First row as header
+                        tableHtml += "<tr>";
+                        cells.forEach((cell: string) => {
+                          tableHtml += `<${tag} style="padding: 5px; border: 1px solid #ccc;">${cell.trim()}</${tag}>`;
+                        });
+                        tableHtml += "</tr>";
+                      });
+
+                      tableHtml += "</table>";
+
+                      // Insert table vào editor
+                      editor.insertContent(tableHtml);
+                      console.log("Converted tab-separated data to table");
+                    }
+                  });
+
                   // Also listen for keydown events (Delete, Backspace)
                   editor.on("keydown", (e) => {
                     if (e.key === "Delete" || e.key === "Backspace") {
@@ -520,6 +647,40 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                   });
                 },
                 content_style: formStyles,
+                // Cấu hình table để có context menu và các tùy chọn nhanh
+                table_default_attributes: {
+                  border: "1",
+                  cellpadding: "5",
+                  cellspacing: "0",
+                  style: "border-collapse: collapse; width: 100%;",
+                },
+                table_default_styles: {
+                  width: "100%",
+                  "border-collapse": "collapse",
+                },
+                table_responsive_width: true,
+                table_grid: true, // Hiển thị grid khi hover
+                table_tab_navigation: true, // Cho phép dùng Tab để di chuyển giữa các cell
+                // Context menu cho table
+                contextmenu: "link image table",
+                table_contextmenu: true,
+                // Cấu hình paste để xử lý table tốt hơn
+                paste_data_images: true,
+                paste_as_text: false,
+                paste_merge_formats: true,
+                paste_auto_cleanup_on_paste: true,
+                paste_remove_styles: false,
+                paste_remove_styles_if_webkit: false,
+                paste_strip_class_attributes: "none",
+                paste_retain_style_properties: "all",
+                // Cấu hình powerpaste cho Excel/Word
+                powerpaste_word_import: "clean",
+                powerpaste_html_import: "clean",
+                powerpaste_allow_local_images: true,
+                // Cấu hình table selection và copy
+                table_clone_elements: "strong em b i u strike sub sup a",
+                table_use_colgroups: true,
+                table_header_type: "sectionCells",
               }}
             />
           )}
