@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useRef } from "react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -8,6 +8,15 @@ import {
   ColumnDef,
   flexRender,
 } from "@tanstack/react-table";
+import {
+  useDocumentsByFilter,
+  useUpdateDocument,
+} from "@/hooks/queries/document";
+import { DocumentForm } from "@/types/document";
+import {
+  ScientificCVEditor,
+  ScientificCVEditorRef,
+} from "@/components/ui/TinyMCE";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -20,8 +29,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -38,131 +45,336 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Plus,
   Edit,
-  Copy,
   Eye,
-  Download,
-  Upload,
   Search,
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
   Calendar,
-  BarChart3,
   FileText,
 } from "lucide-react";
 
-// Mock data for forms
-const formTemplates = [
-  {
-    id: 1,
-    name: "Budget Request Form",
-    description: "Standard form for requesting project budget allocations",
-    category: "Budget",
-    status: "active",
-    lastModified: "2024-01-15",
-    createdDate: "2024-01-01",
-    usageCount: 45,
-    fields: [
-      { label: "Project Title", type: "text", required: true },
-      { label: "Budget Amount", type: "number", required: true },
-      { label: "Justification", type: "textarea", required: true },
-      { label: "Department", type: "select", required: false },
-    ],
-  },
-  {
-    id: 2,
-    name: "Equipment Purchase Form",
-    description: "Form for requesting equipment purchases",
-    category: "Procurement",
-    status: "active",
-    lastModified: "2024-01-12",
-    createdDate: "2024-01-02",
-    usageCount: 23,
-    fields: [
-      { label: "Equipment Name", type: "text", required: true },
-      { label: "Vendor", type: "text", required: true },
-      { label: "Cost", type: "number", required: true },
-      { label: "Specifications", type: "textarea", required: false },
-    ],
-  },
-  {
-    id: 3,
-    name: "Travel Authorization Form",
-    description: "Form for travel expense authorization",
-    category: "Travel",
-    status: "draft",
-    lastModified: "2024-01-10",
-    createdDate: "2024-01-03",
-    usageCount: 12,
-    fields: [
-      { label: "Destination", type: "text", required: true },
-      { label: "Travel Dates", type: "date", required: true },
-      { label: "Purpose", type: "textarea", required: true },
-      { label: "Estimated Cost", type: "number", required: false },
-    ],
-  },
-  {
-    id: 4,
-    name: "Personnel Request Form",
-    description: "Form for requesting additional personnel",
-    category: "HR",
-    status: "active",
-    lastModified: "2024-01-08",
-    createdDate: "2024-01-04",
-    usageCount: 8,
-    fields: [
-      { label: "Position Title", type: "text", required: true },
-      { label: "Department", type: "select", required: true },
-      { label: "Job Description", type: "textarea", required: true },
-      { label: "Salary Range", type: "text", required: false },
-    ],
-  },
-];
+// Interface for processed form data
+interface ProcessedFormTemplate extends DocumentForm {
+  description: string;
+  category: string;
+  lastModified: string;
+  createdDate: string;
+  usageCount: number;
+  content: string;
+}
 
+// Document Forms Management Component
 const DocumentFormsManagement: React.FC = () => {
   const [globalFilter, setGlobalFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [selectedForm, setSelectedForm] = useState<(typeof formTemplates)[0] | null>(null);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditorDialogOpen, setIsEditorDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] =
+    useState<ProcessedFormTemplate | null>(null);
+  const [editorContent, setEditorContent] = useState("");
+  const editorRef = useRef<ScientificCVEditorRef>(null);
+
+  // API mutation for updating templates
+  const updateDocumentMutation = useUpdateDocument();
+  // Multiple API calls for all document types
+  const bm1Query = useDocumentsByFilter(
+    "BM1",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm2Query = useDocumentsByFilter(
+    "BM2",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm3Query = useDocumentsByFilter(
+    "BM3",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm4Query = useDocumentsByFilter(
+    "BM4",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm5Query = useDocumentsByFilter(
+    "BM5",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm6Query = useDocumentsByFilter(
+    "BM6",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm7Query = useDocumentsByFilter(
+    "BM7",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm8Query = useDocumentsByFilter(
+    "BM8",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm9Query = useDocumentsByFilter(
+    "BM9",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm10Query = useDocumentsByFilter(
+    "BM10",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm11Query = useDocumentsByFilter(
+    "BM11",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm12Query = useDocumentsByFilter(
+    "BM12",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+  const bm13Query = useDocumentsByFilter(
+    "BM13",
+    true,
+    1,
+    50,
+    true,
+    statusFilter === "all" ? undefined : statusFilter
+  );
+
+  // Combine all data safely using useMemo
+  const documentsData = useMemo(() => {
+    const allTemplates: DocumentForm[] = [];
+
+    const queries = [
+      bm1Query,
+      bm2Query,
+      bm3Query,
+      bm4Query,
+      bm5Query,
+      bm6Query,
+      bm7Query,
+      bm8Query,
+      bm9Query,
+      bm10Query,
+      bm11Query,
+      bm12Query,
+      bm13Query,
+    ];
+
+    queries.forEach((query) => {
+      if (query.data?.data?.["data-list"]) {
+        allTemplates.push(...query.data.data["data-list"]);
+      }
+    });
+
+    return { data: { "data-list": allTemplates } };
+  }, [
+    bm1Query.data,
+    bm2Query.data,
+    bm3Query.data,
+    bm4Query.data,
+    bm5Query.data,
+    bm6Query.data,
+    bm7Query.data,
+    bm8Query.data,
+    bm9Query.data,
+    bm10Query.data,
+    bm11Query.data,
+    bm12Query.data,
+    bm13Query.data,
+  ]);
+
+  // Loading and error states
+  const isLoading =
+    bm1Query.isLoading ||
+    bm2Query.isLoading ||
+    bm3Query.isLoading ||
+    bm4Query.isLoading ||
+    bm5Query.isLoading ||
+    bm6Query.isLoading ||
+    bm7Query.isLoading ||
+    bm8Query.isLoading ||
+    bm9Query.isLoading ||
+    bm10Query.isLoading ||
+    bm11Query.isLoading ||
+    bm12Query.isLoading ||
+    bm13Query.isLoading;
+  const error =
+    bm1Query.error ||
+    bm2Query.error ||
+    bm3Query.error ||
+    bm4Query.error ||
+    bm5Query.error ||
+    bm6Query.error ||
+    bm7Query.error ||
+    bm8Query.error ||
+    bm9Query.error ||
+    bm10Query.error ||
+    bm11Query.error ||
+    bm12Query.error ||
+    bm13Query.error;
+
+  // Helper function to get category from document type
+  const getCategoryFromType = useCallback((type: string) => {
+    // Simple mapping based on BM types
+    if (type.startsWith("BM")) return "form";
+    return "other";
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
+      case "approved":
         return "bg-green-100 text-green-800";
-      case "draft":
+      case "pending":
         return "bg-yellow-100 text-yellow-800";
-      case "inactive":
-        return "bg-gray-100 text-gray-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      case "created":
+        return "bg-blue-100 text-blue-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
   };
 
-  // Filter forms based on category, status and search
+  // Process API data
+  const formTemplates = useMemo(() => {
+    console.log("API Response:", documentsData);
+    if (!documentsData?.data?.["data-list"]) {
+      console.log("No data-list found in API response");
+      return [];
+    }
+
+    const templates = documentsData.data["data-list"].map(
+      (doc: DocumentForm): ProcessedFormTemplate => ({
+        ...doc, // Spread all DocumentForm properties
+        description: "No description available", // Additional field
+        category: getCategoryFromType(doc.type), // Additional field
+        lastModified: doc["updated-at"] || doc["upload-at"], // Additional field
+        createdDate: doc["upload-at"], // Additional field
+        usageCount: 0, // Additional field
+        content: doc["content-html"], // Additional field
+      })
+    );
+
+    console.log("Processed templates:", templates);
+    return templates;
+  }, [documentsData, getCategoryFromType]);
+
+  // Filter forms based on search and category
   const filteredForms = useMemo(() => {
+    if (!formTemplates.length) return [];
+
     return formTemplates.filter((form) => {
-      const matchesCategory = categoryFilter === "all" || form.category.toLowerCase() === categoryFilter.toLowerCase();
-      const matchesStatus = statusFilter === "all" || form.status === statusFilter;
+      const matchesCategory =
+        categoryFilter === "all" || form.category === categoryFilter;
       const matchesSearch =
         form.name.toLowerCase().includes(globalFilter.toLowerCase()) ||
         form.description.toLowerCase().includes(globalFilter.toLowerCase());
-      return matchesCategory && matchesStatus && matchesSearch;
+      return matchesCategory && matchesSearch;
     });
-  }, [categoryFilter, statusFilter, globalFilter]);
+  }, [formTemplates, globalFilter, categoryFilter]);
 
-  // Handler functions
-  const handleViewDetails = useCallback((form: (typeof formTemplates)[0]) => {
-    setSelectedForm(form);
-    setIsViewDialogOpen(true);
+  // Handler functions - Open TinyMCE dialog
+  const handleViewDetails = useCallback((form: ProcessedFormTemplate) => {
+    setSelectedTemplate(form);
+    setEditorContent(form["content-html"] || "");
+    setIsEditorDialogOpen(true);
+
+    // Set editor content after dialog opens
+    setTimeout(() => {
+      if (editorRef.current) {
+        editorRef.current.setContent(form["content-html"] || "");
+      }
+    }, 100);
   }, []);
 
-  const handleCreateForm = () => {
-    setSelectedForm(null);
-    setIsCreateDialogOpen(true);
+  const handleEditForm = useCallback((form: ProcessedFormTemplate) => {
+    setSelectedTemplate(form);
+    setEditorContent(form["content-html"] || "");
+    setIsEditorDialogOpen(true);
+
+    // Set editor content after dialog opens
+    setTimeout(() => {
+      if (editorRef.current) {
+        editorRef.current.setContent(form["content-html"] || "");
+      }
+    }, 100);
+  }, []);
+
+  const handleSaveTemplate = async () => {
+    if (!selectedTemplate) return;
+
+    const content = editorRef.current?.getContent() || editorContent;
+
+    try {
+      await updateDocumentMutation.mutateAsync({
+        id: selectedTemplate.id,
+        name: selectedTemplate.name,
+        type: selectedTemplate.type,
+        "content-html": content,
+        status: selectedTemplate.status,
+        "is-template": true,
+        "project-id": selectedTemplate["project-id"],
+      });
+
+      setIsEditorDialogOpen(false);
+      setSelectedTemplate(null);
+      setEditorContent("");
+
+      // Refetch data to show updated template
+      // The queries will automatically refetch due to mutation success
+    } catch (error) {
+      console.error("Failed to update template:", error);
+    }
+  };
+
+  const handleCloseEditor = () => {
+    setIsEditorDialogOpen(false);
+    setSelectedTemplate(null);
+    setEditorContent("");
   };
 
   // Table columns definition
@@ -190,15 +402,6 @@ const DocumentFormsManagement: React.FC = () => {
         ),
       },
       {
-        accessorKey: "category",
-        header: "Category",
-        cell: ({ row }) => (
-          <Badge variant="outline">
-            {row.getValue("category")}
-          </Badge>
-        ),
-      },
-      {
         accessorKey: "status",
         header: "Status",
         cell: ({ row }) => {
@@ -210,25 +413,7 @@ const DocumentFormsManagement: React.FC = () => {
           );
         },
       },
-      {
-        accessorKey: "usageCount",
-        header: ({ column }) => (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-            className="h-auto p-0 font-semibold"
-          >
-            Usage
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        ),
-        cell: ({ row }) => (
-          <div className="flex items-center">
-            <BarChart3 className="w-4 h-4 mr-1 text-gray-500" />
-            <span className="font-medium">{row.getValue("usageCount")} times</span>
-          </div>
-        ),
-      },
+
       {
         accessorKey: "lastModified",
         header: "Last Modified",
@@ -255,25 +440,16 @@ const DocumentFormsManagement: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => handleEditForm(row.original)}
             >
               <Edit className="w-4 h-4 mr-1" />
               Edit
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-            >
-              <Copy className="w-4 h-4 mr-1" />
-              Clone
-            </Button>
-            <Button size="sm" variant="outline">
-              <Download className="w-4 h-4" />
             </Button>
           </div>
         ),
       },
     ],
-    [handleViewDetails]
+    [handleViewDetails, handleEditForm]
   );
 
   // Create table instance
@@ -290,7 +466,8 @@ const DocumentFormsManagement: React.FC = () => {
     onGlobalFilterChange: setGlobalFilter,
     globalFilterFn: (row, _columnId, filterValue) => {
       const form = row.original;
-      const searchString = `${form.name} ${form.description} ${form.category}`.toLowerCase();
+      const searchString =
+        `${form.name} ${form.description} ${form.category}`.toLowerCase();
       return searchString.includes(filterValue.toLowerCase());
     },
     initialState: {
@@ -300,136 +477,51 @@ const DocumentFormsManagement: React.FC = () => {
     },
   });
 
-
-
-  const FormDetailDialog = () => (
-    <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
-      <DialogContent className="max-w-2xl">
+  const EditorDialog = () => (
+    <Dialog open={isEditorDialogOpen} onOpenChange={setIsEditorDialogOpen}>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
         <DialogHeader>
-          <DialogTitle>Form Details</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-600" />
+            {selectedTemplate
+              ? `Edit Template: ${selectedTemplate.name}`
+              : "Template Editor"}
+          </DialogTitle>
           <DialogDescription>
-            View detailed information about the form template
+            Edit the template content using the rich text editor below
           </DialogDescription>
         </DialogHeader>
-        {selectedForm && (
-          <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Form Name</Label>
-                <p className="text-sm font-medium">{selectedForm.name}</p>
-              </div>
-              <div>
-                <Label>Category</Label>
-                <Badge variant="outline">{selectedForm.category}</Badge>
-              </div>
-              <div>
-                <Label>Status</Label>
-                <Badge className={getStatusColor(selectedForm.status)}>
-                  {selectedForm.status.charAt(0).toUpperCase() + selectedForm.status.slice(1)}
-                </Badge>
-              </div>
-              <div>
-                <Label>Usage Count</Label>
-                <p className="text-sm">{selectedForm.usageCount} times</p>
-              </div>
-              <div>
-                <Label>Created</Label>
-                <p className="text-sm">{new Date(selectedForm.createdDate).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <Label>Last Modified</Label>
-                <p className="text-sm">{new Date(selectedForm.lastModified).toLocaleDateString()}</p>
-              </div>
-            </div>
 
-            <div>
-              <Label>Description</Label>
-              <p className="text-sm mt-1 p-3 bg-gray-50 rounded-md">
-                {selectedForm.description}
-              </p>
-            </div>
-
-            <div>
-              <Label>Form Fields</Label>
-              <div className="mt-2 space-y-2">
-                {selectedForm.fields.map((field, index) => (
-                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded-md">
-                    <div>
-                      <span className="text-sm font-medium">{field.label}</span>
-                      <span className="text-xs text-muted-foreground ml-2">({field.type})</span>
-                    </div>
-                    {field.required && (
-                      <Badge variant="outline" className="text-xs">Required</Badge>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsViewDialogOpen(false)}>
-            Close
-          </Button>
-          <Button variant="outline">
-            <Copy className="w-4 h-4 mr-2" />
-            Clone Form
-          </Button>
-          <Button>
-            <Edit className="w-4 h-4 mr-2" />
-            Edit Form
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-
-  const CreateFormDialog = () => (
-    <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>Create New Form Template</DialogTitle>
-          <DialogDescription>
-            Create a new document form template that can be used across the platform.
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="form-name">Form Name</Label>
-            <Input id="form-name" placeholder="Enter form name" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="form-description">Description</Label>
-            <Textarea
-              id="form-description"
-              placeholder="Enter form description"
+        <div className="flex-1 min-h-0">
+          <div className="h-[500px] border rounded-md overflow-hidden">
+            <ScientificCVEditor
+              ref={editorRef}
+              value={editorContent}
+              onChange={setEditorContent}
+              height={480}
+              preset="document"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="form-category">Category</Label>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="budget">Budget</SelectItem>
-                <SelectItem value="procurement">Procurement</SelectItem>
-                <SelectItem value="travel">Travel</SelectItem>
-                <SelectItem value="hr">HR</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setIsCreateDialogOpen(false)}
-          >
+
+        <DialogFooter className="flex items-center gap-2">
+          <div className="flex-1 text-sm text-gray-500">
+            {selectedTemplate && (
+              <span>
+                Type: {selectedTemplate.type} | Status:{" "}
+                {selectedTemplate.status}
+              </span>
+            )}
+          </div>
+          <Button variant="outline" onClick={handleCloseEditor}>
             Cancel
           </Button>
-          <Button onClick={() => setIsCreateDialogOpen(false)}>
-            Create Form
+          <Button
+            onClick={handleSaveTemplate}
+            disabled={updateDocumentMutation.isPending}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {updateDocumentMutation.isPending ? "Saving..." : "Save Template"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -447,16 +539,6 @@ const DocumentFormsManagement: React.FC = () => {
           <p className="text-muted-foreground">
             Create and manage Budget Management forms and templates
           </p>
-        </div>
-        <div className="flex space-x-2">
-          <Button variant="outline">
-            <Upload className="w-4 h-4 mr-2" />
-            Import Template
-          </Button>
-          <Button onClick={handleCreateForm}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Form
-          </Button>
         </div>
       </div>
 
@@ -497,9 +579,10 @@ const DocumentFormsManagement: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="created">Created</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="approved">Approved</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -530,7 +613,34 @@ const DocumentFormsManagement: React.FC = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-32 text-center text-gray-500"
+                >
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <p className="text-lg font-medium">Loading forms...</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : error ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-32 text-center text-gray-500"
+                >
+                  <div className="flex flex-col items-center justify-center space-y-2">
+                    <FileText className="w-8 h-8 text-red-400" />
+                    <p className="text-lg font-medium">Error loading forms</p>
+                    <p className="text-sm text-gray-400">
+                      Please try again later
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -559,7 +669,9 @@ const DocumentFormsManagement: React.FC = () => {
                     <FileText className="w-8 h-8 text-gray-400" />
                     <p className="text-lg font-medium">No forms found</p>
                     <p className="text-sm text-gray-400">
-                      {globalFilter ? "Try adjusting your search criteria" : "Get started by adding your first form"}
+                      {globalFilter
+                        ? "Try adjusting your search criteria"
+                        : "Get started by adding your first form"}
                     </p>
                   </div>
                 </TableCell>
@@ -571,9 +683,14 @@ const DocumentFormsManagement: React.FC = () => {
         {/* Clean Pagination */}
         <div className="flex items-center justify-between px-4 py-3 bg-gray-50/30 border-t border-gray-200">
           <div className="text-sm text-gray-600">
-            Showing {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1} to{" "}
+            Showing{" "}
+            {table.getState().pagination.pageIndex *
+              table.getState().pagination.pageSize +
+              1}{" "}
+            to{" "}
             {Math.min(
-              (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+              (table.getState().pagination.pageIndex + 1) *
+                table.getState().pagination.pageSize,
               table.getFilteredRowModel().rows.length
             )}{" "}
             of {table.getFilteredRowModel().rows.length} entries
@@ -591,21 +708,27 @@ const DocumentFormsManagement: React.FC = () => {
             </Button>
 
             <div className="flex items-center space-x-1">
-              {Array.from({ length: table.getPageCount() }, (_, i) => i).map((pageIndex) => (
-                <Button
-                  key={pageIndex}
-                  variant={table.getState().pagination.pageIndex === pageIndex ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => table.setPageIndex(pageIndex)}
-                  className={`h-8 w-8 p-0 ${
-                    table.getState().pagination.pageIndex === pageIndex
-                      ? "bg-rose-600 text-white hover:bg-rose-700"
-                      : "text-gray-700 border-gray-300 hover:bg-gray-100"
-                  }`}
-                >
-                  {pageIndex + 1}
-                </Button>
-              ))}
+              {Array.from({ length: table.getPageCount() }, (_, i) => i).map(
+                (pageIndex) => (
+                  <Button
+                    key={pageIndex}
+                    variant={
+                      table.getState().pagination.pageIndex === pageIndex
+                        ? "default"
+                        : "outline"
+                    }
+                    size="sm"
+                    onClick={() => table.setPageIndex(pageIndex)}
+                    className={`h-8 w-8 p-0 ${
+                      table.getState().pagination.pageIndex === pageIndex
+                        ? "bg-rose-600 text-white hover:bg-rose-700"
+                        : "text-gray-700 border-gray-300 hover:bg-gray-100"
+                    }`}
+                  >
+                    {pageIndex + 1}
+                  </Button>
+                )
+              )}
             </div>
 
             <Button
@@ -621,9 +744,7 @@ const DocumentFormsManagement: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <FormDetailDialog />
-      <CreateFormDialog />
+      <EditorDialog />
     </div>
   );
 };

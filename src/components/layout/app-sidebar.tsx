@@ -61,14 +61,9 @@ const data = {
           icon: FileText,
         },
         {
-          title: "Document Management",
+          title: "Contract Management",
           url: "/staff/documents",
           icon: FileText,
-        },
-        {
-          title: "Config System",
-          url: "/staff/config-system",
-          icon: Settings,
         },
       ],
     },
@@ -125,6 +120,16 @@ const data = {
           title: "Academic Majors",
           url: "/staff/majors",
           icon: Building2,
+        },
+      ],
+    },
+    {
+      title: "System",
+      items: [
+        {
+          title: "Config System",
+          url: "/staff/config-system",
+          icon: Settings,
         },
       ],
     },
