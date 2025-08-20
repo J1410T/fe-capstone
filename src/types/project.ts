@@ -81,7 +81,7 @@ export interface ProjectMajor {
   };
 }
 
-export interface ProjectTag {
+export interface ProjectTagItem {
   name: string;
 }
 
@@ -192,7 +192,7 @@ export interface ProjectDetailResponse {
     milestones?: Milestone[] | null;
     evaluations?: Evaluation[] | null;
     majors?: ProjectMajor[] | null;
-    "project-tags"?: ProjectTag[] | null;
+    "project-tags"?: ProjectTagItem[] | null;
     documents?: DocumentProject[] | null;
     transactions?: Transaction[] | null;
   };
@@ -450,6 +450,7 @@ export interface ProjectWithProposals {
   "updated-at": string | null;
   status: string;
   "creator-id": string;
+  "project-tags": ProjectTagItem[] | null;
   proposals: Proposal[];
 }
 
@@ -462,4 +463,9 @@ export interface RolePrincipalInvestigatorInfo extends Proposal {
 
 export interface TopicsListProps {
   selectedCouncil: string; // Changed from topics: Topic[]
+}
+
+export interface CheckUserEnrollmentResponse {
+  "proposal-id": string;
+  "is-enrolled": boolean;
 }

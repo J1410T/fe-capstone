@@ -16,6 +16,7 @@ import {
   SortOption,
   ProjectItem,
   ProjectWithProposals,
+  CheckUserEnrollmentResponse,
   // RolePrincipalInvestigatorInfo,
 } from "@/types/project";
 import { axiosClient, getAccessToken } from "../api";
@@ -579,21 +580,15 @@ export const getProjectById = async (
   }
 };
 
-export const approveProject = async (
-  proposalProjectId: string
-): Promise<void> => {
+export const approveProject = async (proposalProjectId: string) => {
   try {
     const accessToken = getAccessToken();
-    await axiosClient.post(
-      `/project/${proposalProjectId}/approve`,
-      {},
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    await axiosClient.post<string>(`/project/${proposalProjectId}/approve`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
   } catch (error) {
     console.error("approveProject error:", error);
     throw error;
@@ -609,6 +604,20 @@ export const getProjectTagsByProjectId = async (projectId: string) => {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
+      },
+    }
+  );
+};
+
+export const checkUserEnrollment = async (projectId: string) => {
+  const accessToken = getAccessToken();
+
+  return await axiosClient.get<CheckUserEnrollmentResponse>(
+    `/project/check-enrollment/${projectId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "*/*",
       },
     }
   );

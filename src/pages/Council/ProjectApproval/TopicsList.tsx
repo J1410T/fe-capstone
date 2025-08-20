@@ -74,7 +74,7 @@ export const TopicsList: React.FC<TopicsListProps> = ({ selectedCouncil }) => {
         </div>
       ) : (
         <div className="grid gap-4">
-          {projects.map((project: any) => (
+          {projects.map((project) => (
             <div
               key={project.id}
               onClick={() => handleTopicClick(project)}
@@ -161,25 +161,25 @@ export const TopicsList: React.FC<TopicsListProps> = ({ selectedCouncil }) => {
                       Related Fields
                     </span>
                   </div>
-                  {/* <div className="flex flex-wrap gap-1.5">
-                    {project.majors?.slice(0, 4).map((major, index) => (
+                  <div className="flex flex-wrap gap-1.5">
+                    {project["project-tags"]?.map((tag, index) => (
                       <Badge
                         key={index}
                         variant="outline"
                         className="bg-gray-50 text-gray-700 border-gray-200 text-xs px-2 py-0.5 font-medium"
                       >
-                        {major.name}
+                        {tag.name}
                       </Badge>
                     ))}
-                    {(project.majors?.length || 0) > 4 && (
+                    {(project["project-tags"]?.length || 0) > 4 && (
                       <Badge
                         variant="outline"
                         className="bg-blue-50 text-blue-600 border-blue-200 text-xs px-2 py-0.5 font-medium"
                       >
-                        +{(project.majors?.length || 0) - 4} more
+                        +{(project["project-tags"]?.length || 0) - 4} more
                       </Badge>
                     )}
-                  </div> */}
+                  </div>
                 </div>
               </div>
 

@@ -83,6 +83,7 @@ const MyCouncilPage: React.FC = () => {
           "inprogress",
           "completed",
           "canceled",
+          "approved",
         ]);
 
         console.log("Projects data received:", projectsData);

@@ -535,7 +535,7 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-2" />
-                  Enroll Project
+                  Request Enroll
                 </>
               )}
             </Button>
@@ -572,7 +572,7 @@ export const ReviewSubmitStep: React.FC<ReviewSubmitStepProps> = ({
                     Submitting...
                   </>
                 ) : (
-                  "Confirm Enrollment"
+                  "Confirm Request"
                 )}
               </AlertDialogAction>
             </AlertDialogFooter>

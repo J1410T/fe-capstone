@@ -78,7 +78,7 @@ const MyProject: React.FC = () => {
       case "finished":
         return "text-indigo-700 border-indigo-200 bg-indigo-50";
       case "created":
-      case "planning":
+      case "inprogress":
         return "text-blue-700 border-blue-200 bg-blue-50";
       case "on hold":
       case "suspended":

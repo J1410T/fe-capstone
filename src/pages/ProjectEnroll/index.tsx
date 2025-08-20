@@ -151,7 +151,7 @@ const ProjectEnroll: React.FC = () => {
               <div className="h-6 w-px bg-gray-300" />
               <div>
                 <h1 className="text-lg font-semibold text-gray-900">
-                  Enroll in Project
+                  Request Enroll in Project
                 </h1>
                 <p className="text-sm text-gray-600">
                   {project["project-detail"]["english-title"]}
