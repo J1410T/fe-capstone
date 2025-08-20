@@ -10,8 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Download, Eye, Edit, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { Eye, Edit, Trash2 } from "lucide-react";
 import {
   DataTable,
   StatusBadge,
@@ -423,18 +422,6 @@ const TransactionManagement: React.FC = () => {
           text: `${totalCount} transactions`,
           variant: "secondary",
         }}
-        actions={
-          <div className="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => toast.info("Export functionality coming soon")}
-              className="whitespace-nowrap"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export
-            </Button>
-          </div>
-        }
       />
 
       {/* Search and Filter Bar */}

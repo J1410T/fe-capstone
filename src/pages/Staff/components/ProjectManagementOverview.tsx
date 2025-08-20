@@ -10,20 +10,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, FileText, Filter, Settings } from "lucide-react";
+import { Search, FileText, Filter } from "lucide-react";
 import { useStaffProjectFilter } from "@/hooks/queries/project";
 import { StaffProjectFilterRequest } from "@/types/project";
 
 // Import new modular components
 import { SimpleProjectCard } from "./ProjectManagement/ProjectCard";
-import { StatusBadge } from "./ProjectManagement/StatusBadge";
-import { PIRequestDetailView } from "./ProjectManagement/PIRequestDetailView";
 import { ProjectDetailView } from "./ProjectManagement/ProjectDetailView";
 import { MilestoneDetailView } from "./ProjectManagement/MilestoneDetailView";
 import { EvaluationDetailView } from "./ProjectManagement/EvaluationDetailView";
 import { EvaluationStageDetailView } from "./ProjectManagement/EvaluationStageDetailView";
 import { DocumentDetailView } from "./ProjectManagement/DocumentDetailView";
-import { enhancedPIRequests } from "./ProjectManagement/enhancedMockData";
+
 import {
   BreadcrumbItem,
   createBreadcrumbItem,
@@ -33,7 +31,6 @@ import {
   SelectedEvaluation,
   SelectedEvaluationStage,
   SelectedDocument,
-  SelectedPIRequest,
   LegacyProject,
   Council,
 } from "../../../types/detailViewTypes";
@@ -64,7 +61,6 @@ const ProjectManagementOverview: React.FC = () => {
     | "evaluation-detail"
     | "evaluation-stage-detail"
     | "document-detail"
-    | "pi-request-detail"
   >("overview");
   const [selectedProject, setSelectedProject] = useState<LegacyProject | null>(
     null
@@ -76,8 +72,6 @@ const ProjectManagementOverview: React.FC = () => {
     null
   );
   const [selectedDocument] = useState<SelectedDocument | null>(null);
-  const [selectedPIRequest, setSelectedPIRequest] =
-    useState<SelectedPIRequest | null>(null);
 
   // Get breadcrumb functions from layout context
   const { setBreadcrumbItems } = useOutletContext<StaffLayoutContext>();
@@ -102,26 +96,17 @@ const ProjectManagementOverview: React.FC = () => {
         setCurrentView("overview");
         setSelectedProject(null);
         setSelectedMilestone(null);
-        setSelectedPIRequest(null);
       } else if (item.type === "project" && item.data) {
         // Navigate back to project detail
         const project = item.data as LegacyProject;
         setSelectedProject(project);
         setCurrentView("project-detail");
         setSelectedMilestone(null);
-        setSelectedPIRequest(null);
       } else if (item.type === "milestone" && item.data && selectedProject) {
         // Navigate back to milestone detail
         const milestone = item.data as SelectedMilestone;
         setSelectedMilestone(milestone);
         setCurrentView("milestone-detail");
-      } else if (item.type === "request" && item.data) {
-        // Navigate back to PI request detail
-        const piRequest = item.data as SelectedPIRequest;
-        setSelectedPIRequest(piRequest);
-        setCurrentView("pi-request-detail");
-        setSelectedProject(null);
-        setSelectedMilestone(null);
       }
     };
 
@@ -216,10 +201,10 @@ const ProjectManagementOverview: React.FC = () => {
       | "project"
       | "evaluation"
       | "evaluation-stage"
-      | "request"
       | "milestone"
       | "council"
       | "document"
+      | "request"
       | "pi-request",
     data?: unknown
   ) => {
@@ -229,7 +214,6 @@ const ProjectManagementOverview: React.FC = () => {
       setCurrentView("project-detail");
       // Clear other selections
       setSelectedMilestone(null);
-      setSelectedPIRequest(null);
 
       setBreadcrumbItems([
         createBreadcrumbItem("overview", "Projects", "overview"),
@@ -258,23 +242,6 @@ const ProjectManagementOverview: React.FC = () => {
           milestone.title,
           "milestone",
           milestone
-        ),
-      ]);
-    } else if (type === "request" && data) {
-      const piRequest = data as SelectedPIRequest;
-      setSelectedPIRequest(piRequest);
-      setCurrentView("pi-request-detail");
-      // Clear other selections
-      setSelectedProject(null);
-      setSelectedMilestone(null);
-
-      setBreadcrumbItems([
-        createBreadcrumbItem("overview", "Projects", "overview"),
-        createBreadcrumbItem(
-          "pi-request-detail",
-          `PI Request - ${piRequest.projectRegistrationDetails.projectTitle}`,
-          "request",
-          piRequest
         ),
       ]);
     }
@@ -312,8 +279,6 @@ const ProjectManagementOverview: React.FC = () => {
         );
       case "document-detail":
         return <DocumentDetailView selectedDocument={selectedDocument} />;
-      case "pi-request-detail":
-        return <PIRequestDetailView selectedPIRequest={selectedPIRequest} />;
       default:
         return null;
     }
@@ -334,13 +299,6 @@ const ProjectManagementOverview: React.FC = () => {
           <p className="text-base sm:text-lg text-gray-600 mt-2 break-words">
             Manage projects, proposals, evaluations, and PI requests
           </p>
-        </div>
-        <div className="flex items-center space-x-3 flex-shrink-0">
-          <Button variant="outline" size="default" className="w-full sm:w-auto">
-            <Settings className="w-4 h-4 mr-2" />
-            <span className="hidden xs:inline">Settings</span>
-            <span className="xs:hidden">Config</span>
-          </Button>
         </div>
       </div>
 
@@ -407,9 +365,8 @@ const ProjectManagementOverview: React.FC = () => {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-1">
           <TabsTrigger value="projects">Projects</TabsTrigger>
-          <TabsTrigger value="requests">PI Requests</TabsTrigger>
         </TabsList>
 
         <TabsContent value="projects" className="space-y-6">
@@ -487,62 +444,6 @@ const ProjectManagementOverview: React.FC = () => {
               )}
             </>
           )}
-        </TabsContent>
-
-        <TabsContent value="requests" className="space-y-6">
-          <div className="space-y-4">
-            {enhancedPIRequests.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <FileText className="w-12 h-12 text-gray-400 mb-4" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                  No PI requests found
-                </h3>
-                <p className="text-base text-gray-500 text-center">
-                  All requests have been processed
-                </p>
-              </div>
-            ) : (
-              enhancedPIRequests.map((request) => (
-                <div
-                  key={request.id}
-                  className="border border-gray-200 rounded-lg p-4 sm:p-6 bg-white hover:bg-gray-50 cursor-pointer transition-colors"
-                  onClick={() => navigateToPage("request", request)}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-start gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3 gap-3">
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-lg font-semibold text-gray-900 break-words">
-                            {request.requestType
-                              .replace(/_/g, " ")
-                              .replace(/\b\w/g, (l: string) => l.toUpperCase())}
-                          </h4>
-                          <p className="text-base text-gray-600 break-words">
-                            Project:{" "}
-                            {request.projectRegistrationDetails?.projectTitle ||
-                              "Unknown Project"}
-                          </p>
-                        </div>
-                        <div className="flex-shrink-0">
-                          <StatusBadge status={request.status} size="md" />
-                        </div>
-                      </div>
-                      <p className="text-base text-gray-700 mb-3 break-words">
-                        {request.description}
-                      </p>
-                      <div className="flex flex-col xs:flex-row xs:items-center gap-2 xs:gap-4 text-sm text-gray-500">
-                        <span className="break-words">
-                          Submitted: {request.submittedAt}
-                        </span>
-                        <span className="hidden xs:inline">•</span>
-                        <span className="break-words">ID: {request.id}</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
         </TabsContent>
       </Tabs>
     </div>
