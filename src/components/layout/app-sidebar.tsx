@@ -97,7 +97,7 @@ const data = {
       title: "People",
       items: [
         {
-          title: "User Access",
+          title: "Users Management",
           url: "/staff/users",
           icon: Users,
         },
@@ -146,9 +146,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Filter menu items based on role
   const getFilteredNavItems = (items: (typeof data.navMain)[0]["items"]) => {
     return items.filter((item) => {
-      // Only Admin can see Config System and User Access
-      if (item.title === "Config System" || item.title === "User Access") {
+      // Only Admin can see Config System
+      if (item.title === "Config System") {
         return currentRole === UserRole.ADMIN;
+      }
+      // Both Staff and Admin can see Users Management
+      if (item.title === "Users Management") {
+        return currentRole === UserRole.ADMIN || currentRole === UserRole.STAFF;
       }
       // All other items are visible to both Staff and Admin
       return true;

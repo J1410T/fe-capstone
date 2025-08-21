@@ -1993,7 +1993,7 @@ const DocumentManagement: React.FC = () => {
           }
         }}
       >
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden">
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <FileText className="h-5 w-5 text-purple-600" />

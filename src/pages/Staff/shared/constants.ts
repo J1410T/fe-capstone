@@ -100,7 +100,7 @@ export const FORM_STYLES = {
 
 // Dialog Style Constants
 export const DIALOG_STYLES = {
-  content: "w-[70vw] max-w-[85vw] h-[90vh] max-h-[90vh] overflow-y-auto",
+  content: "max-w-md w-full",
   header: "space-y-2",
   title: "text-lg font-semibold",
   description: "text-sm text-muted-foreground pt-0 pb-2",
