@@ -26,6 +26,9 @@ import {
   updateUserStatus,
   getUserRolesByAppraisalCouncil,
   updateUserRole,
+  getStaffList,
+  getBaseUserRoleId,
+  getPIUserRoleByProjectId,
 } from "@/services/resources/auth";
 import {
   UserRole,
@@ -480,5 +483,30 @@ export function useUserRolesByAccountId(
     queryFn: () => getUserRoleByAccountId(accountId),
     enabled: enabled && !!accountId,
     staleTime: 30000, // Cache for 30 seconds
+  });
+}
+
+export function useStaffList() {
+  return useQuery({
+    queryKey: ["user-roles-staff-list"],
+    queryFn: () => getStaffList(),
+    staleTime: 30000,
+  });
+}
+
+export function useBaseUserRoleId() {
+  return useQuery({
+    queryKey: ["base-user-role-id"],
+    queryFn: () => getBaseUserRoleId(),
+    staleTime: 30000,
+  });
+}
+
+export function usePIUserRoleByProjectId(projectId: string) {
+  return useQuery({
+    queryKey: ["pi-user-role-by-project", projectId],
+    queryFn: () => getPIUserRoleByProjectId(projectId),
+    enabled: !!projectId,
+    staleTime: 30000,
   });
 }
