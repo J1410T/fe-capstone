@@ -232,8 +232,8 @@ export interface CreateProjectRequest {
 // Project Filter Request for Staff Management
 export interface StaffProjectFilterRequest {
   title?: string;
-  genres: ("propose" | "normal")[];
-  statuses: (
+  genres: ("propose" | "normal" | "proposal")[];
+  statuses?: (
     | "created"
     | "inprogress"
     | "completed"

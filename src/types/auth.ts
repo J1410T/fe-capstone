@@ -109,6 +109,7 @@ export interface UpdateUserRoleRequest {
 export interface UserRoleFilterRequest {
   "account-id"?: string;
   "project-id"?: string;
+  "role-id"?: string;
   status?: string;
   "page-index": number;
   "page-size": number;
