@@ -9,6 +9,7 @@ import {
   getDocumentByProjectId,
   getDocumentByProjectIdWithUserRole,
   createDocumentByIndividualEvaluation,
+  createMilestoneByDocumentProject,
 } from "@/services/resources/document";
 import {
   CreateDocumentRequest,
@@ -16,6 +17,8 @@ import {
   GetDocumentByProjectIdRequest,
   CreateDocumentByIndividualEvaluationResponse,
   CreateDocumentByIndividualEvaluationRequest,
+  CreateMilestoneByDocumentProjectRequest,
+  CreateMilestoneByDocumentProjectResponse,
 } from "@/types/document";
 
 export function useDocumentsByFilter(
@@ -226,6 +229,43 @@ export const useCreateDocumentByIndividualEvaluation = () => {
         "Failed to create document by individual evaluation:",
         error
       );
+    },
+  });
+};
+
+export const useCreateMilestoneByDocumentProject = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    CreateMilestoneByDocumentProjectResponse,
+    Error,
+    CreateMilestoneByDocumentProjectRequest
+  >({
+    mutationFn: (request: CreateMilestoneByDocumentProjectRequest) =>
+      createMilestoneByDocumentProject(request),
+    onSuccess: (data, variables) => {
+      console.log(
+        "Milestone created by document project successfully:",
+        data.id
+      );
+
+      // Invalidate relevant queries after successful creation
+      queryClient.invalidateQueries({
+        queryKey: ["document"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["milestones"],
+      });
+
+      // Invalidate project query if project-id exists
+      if (variables["project-id"]) {
+        queryClient.invalidateQueries({
+          queryKey: ["project", variables["project-id"]],
+        });
+      }
+    },
+    onError: (error) => {
+      console.error("Failed to create milestone by document project:", error);
     },
   });
 };

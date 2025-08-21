@@ -580,3 +580,41 @@ export const checkIsChaimainInCouncil = async (appraisalCouncilId: string) => {
     throw error;
   }
 };
+
+export const getStaffList = async () => {
+  const allRoles = await getAllRoles();
+  const RoleIdStaff = allRoles.find((role) => role.name === "Staff")?.id;
+
+  const res = await getUserRoleByFilter({
+    "role-id": RoleIdStaff,
+    "page-index": 1,
+    "page-size": 100,
+  });
+  return res;
+};
+
+export const getBaseUserRoleId = async () => {
+  const accessToken = getAccessToken();
+
+  return await axiosClient.get<string>("/auth/my-base-role", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+};
+
+export const getPIUserRoleByProjectId = async (projectId: string) => {
+  const allRoles = await getAllRoles();
+  const RoleIdPI = allRoles.find(
+    (role) => role.name === "Principal Investigator"
+  )?.id;
+
+  const request = {
+    "project-id": projectId,
+    "role-id": RoleIdPI,
+    "page-index": 1,
+    "page-size": 1,
+  };
+  return await getUserRoleByFilter(request);
+};

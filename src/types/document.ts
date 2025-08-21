@@ -155,6 +155,21 @@ export interface CreateDocumentByIndividualEvaluationResponse {
   id: string;
 }
 
+export interface CreateMilestoneByDocumentProjectRequest {
+  "section-title": string;
+  description: string;
+  objective: string;
+  "cost-estimate": string;
+  "time-estimate": string;
+  "project-id": string;
+  "document-content": string;
+  "creator-id": string;
+}
+
+export interface CreateMilestoneByDocumentProjectResponse {
+  id: string;
+}
+
 export interface DocumentInEvaluation {
   id: string;
   name: string;

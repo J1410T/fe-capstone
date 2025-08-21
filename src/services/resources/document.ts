@@ -10,6 +10,8 @@ import {
   DocumentWithUserRole,
   CreateDocumentByIndividualEvaluationRequest,
   CreateDocumentByIndividualEvaluationResponse,
+  CreateMilestoneByDocumentProjectRequest,
+  CreateMilestoneByDocumentProjectResponse,
 } from "@/types/document";
 import { getUserRoleById } from "./auth";
 
@@ -178,6 +180,32 @@ export const createDocumentByIndividualEvaluation = async (
     };
   } catch (error) {
     console.error("Error creating document by individual evaluation:", error);
+    throw error;
+  }
+};
+
+export const createMilestoneByDocumentProject = async (
+  request: CreateMilestoneByDocumentProjectRequest
+): Promise<CreateMilestoneByDocumentProjectResponse> => {
+  try {
+    const accessToken = getAccessToken();
+
+    const response = await axiosClient.post<string>(
+      "/project/document",
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return {
+      id: response.data,
+    };
+  } catch (error) {
+    console.error("Error creating milestone by document project:", error);
     throw error;
   }
 };
