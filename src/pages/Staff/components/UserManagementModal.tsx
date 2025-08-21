@@ -200,7 +200,7 @@ export const UserManagementModal: React.FC<UserManagementModalProps> = ({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle className="flex items-center space-x-2">
               {mode === "create" ? (
