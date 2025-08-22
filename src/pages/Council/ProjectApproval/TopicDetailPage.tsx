@@ -162,6 +162,65 @@ export const TopicDetailPage: React.FC = () => {
   //   }
   // };
 
+  // const handleSelectProposal = async (proposalId: string) => {
+  //   try {
+  //     setIsApproving(true); // Bắt đầu loading
+
+  //     // Find the selected proposal
+  //     const selectedProposal = topicProposals.find((p) => p.id === proposalId);
+  //     if (!selectedProposal) {
+  //       toast.error("Không tìm thấy proposal được chọn");
+  //       return;
+  //     }
+
+  //     // Only submitted proposals can be approved
+  //     if (selectedProposal.status !== "submitted") {
+  //       toast.error("Chỉ có thể approve proposals có status 'submitted'");
+  //       return;
+  //     }
+
+  //     // Approve the selected proposal using the new API
+  //     await approveProjectMutation.mutateAsync(proposalId);
+
+  //     // Chỉ chạy các bước này sau khi approve thành công
+  //     try {
+  //       // Create notifications for Staff to handle the approved proposal
+  //       // const notificationRequest: NotificationRequest = {
+  //       //   title: `Proposal Approved: ${selectedProposal["english-title"]}`,
+  //       //   type: "project",
+  //       //   status: "create",
+  //       //   "objec-notification-id": selectedProposal.id,
+  //       //   "list-account-id": selectedProposal["pi-account-id"]
+  //       //     ? [selectedProposal["pi-account-id"]]
+  //       //     : [],
+  //       // };
+
+  //       // await sendNotificationMutation.mutateAsync(notificationRequest);
+
+  //       setSelectedProposalId(proposalId);
+  //       toast.success(
+  //         `Đã approve proposal "${selectedProposal["english-title"]}"`
+  //       );
+
+  //       // Chuyển sang trang my-council sau khi hoàn thành tất cả
+  //       navigate("/council/my-council");
+  //     } catch (notificationError) {
+  //       console.error("Error sending notification:", notificationError);
+  //       // Vẫn coi như thành công vì proposal đã được approve
+  //       toast.success(
+  //         `Đã approve proposal "${selectedProposal["english-title"]}" (lỗi gửi thông báo)`
+  //       );
+  //       navigate("/council/my-council");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error approving proposal:", error);
+  //     toast.error("Có lỗi xảy ra khi approve proposal");
+  //     // Không chuyển trang nếu approve thất bại
+  //   } finally {
+  //     setIsApproving(false); // Dừng loading trong mọi trường hợp
+  //   }
+  // };
+
   const handleSelectProposal = async (proposalId: string) => {
     try {
       setIsApproving(true); // Bắt đầu loading
@@ -182,40 +241,17 @@ export const TopicDetailPage: React.FC = () => {
       // Approve the selected proposal using the new API
       await approveProjectMutation.mutateAsync(proposalId);
 
-      // Chỉ chạy các bước này sau khi approve thành công
-      try {
-        // Create notifications for Staff to handle the approved proposal
-        // const notificationRequest: NotificationRequest = {
-        //   title: `Proposal Approved: ${selectedProposal["english-title"]}`,
-        //   type: "project",
-        //   status: "create",
-        //   "objec-notification-id": selectedProposal.id,
-        //   "list-account-id": selectedProposal["pi-account-id"]
-        //     ? [selectedProposal["pi-account-id"]]
-        //     : [],
-        // };
+      // Set selected proposal and show success message
+      setSelectedProposalId(proposalId);
+      toast.success(
+        `Đã approve proposal "${selectedProposal["english-title"]}"`
+      );
 
-        // await sendNotificationMutation.mutateAsync(notificationRequest);
-
-        setSelectedProposalId(proposalId);
-        toast.success(
-          `Đã approve proposal "${selectedProposal["english-title"]}"`
-        );
-
-        // Chuyển sang trang my-council sau khi hoàn thành tất cả
-        navigate("/council/my-council");
-      } catch (notificationError) {
-        console.error("Error sending notification:", notificationError);
-        // Vẫn coi như thành công vì proposal đã được approve
-        toast.success(
-          `Đã approve proposal "${selectedProposal["english-title"]}" (lỗi gửi thông báo)`
-        );
-        navigate("/council/my-council");
-      }
+      // Navigate to my-council page after success
+      navigate("/council/my-council");
     } catch (error) {
       console.error("Error approving proposal:", error);
       toast.error("Có lỗi xảy ra khi approve proposal");
-      // Không chuyển trang nếu approve thất bại
     } finally {
       setIsApproving(false); // Dừng loading trong mọi trường hợp
     }
@@ -225,7 +261,7 @@ export const TopicDetailPage: React.FC = () => {
     <div className="min-h-screen">
       {/* Loading overlay */}
       {isApproving && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-70 backdrop-blur-sm">
           <div className="bg-white rounded-lg p-8 shadow-lg">
             <Loading />
             <p className="text-center text-sm text-gray-600 mt-4">
