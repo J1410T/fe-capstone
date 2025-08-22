@@ -214,6 +214,35 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
     table, th, td {
       border: 1px solid #ccc;
     }
+    
+    /* Custom styles for source code dialog */
+    .tox-dialog[aria-label*="HTML Source Code"] {
+      width: 90vw !important;
+      max-width: 1200px !important;
+      height: 80vh !important;
+      max-height: 800px !important;
+    }
+    
+    .tox-dialog[aria-label*="HTML Source Code"] .tox-dialog__body {
+      padding: 20px !important;
+      max-height: none !important;
+    }
+    
+    .tox-dialog[aria-label*="HTML Source Code"] textarea[name="source"] {
+      font-family: Monaco, Menlo, "Ubuntu Mono", Consolas, source-code-pro, monospace !important;
+      font-size: 13px !important;
+      line-height: 1.4 !important;
+      min-height: 500px !important;
+      height: 500px !important;
+      resize: vertical !important;
+      white-space: pre !important;
+      word-wrap: break-word !important;
+      tab-size: 2 !important;
+      border: 1px solid #ccc !important;
+      border-radius: 4px !important;
+      padding: 12px !important;
+      background-color: #f8f9fa !important;
+    }
   `;
 
   const isLoading =
@@ -265,6 +294,13 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                 Excel/Word and paste directly. Use the "Copy Table" button to
                 copy entire tables. Tables will maintain their structure when
                 pasted.
+              </li>
+              <li>
+                <strong>Source Code:</strong> Use the{" "}
+                <strong>"View Source"</strong> button or press{" "}
+                <strong>Ctrl+Shift+S</strong> to view and edit the HTML source
+                code directly. You can also use the <strong>"Code"</strong>{" "}
+                button for inline code editing.
               </li>
             </ul>
           </div>
@@ -323,7 +359,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                   "powerpaste", // Plugin powerpaste cho paste từ Word/Excel
                 ],
                 toolbar:
-                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table quickAddRow quickAddCol copyTable | tablerowheader tablecol tablerow tablecell | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | tableprops tablerowprops tablecellprops tabledelete | link image uploadImage | preview code fullscreen | insertSignature | forecolor backcolor | fontsize | hr pagebreak | searchreplace | spellchecker",
+                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table quickAddRow quickAddCol copyTable | tablerowheader tablecol tablerow tablecell | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | tableprops tablerowprops tablecellprops tabledelete | link image uploadImage | preview code codesample viewSource fullscreen | insertSignature | forecolor backcolor | fontsize | hr pagebreak | searchreplace | spellchecker",
                 setup: (editor) => {
                   // Use shared ref to track uploaded images for deletion
                   const uploadedImages = uploadedImagesRef.current;
@@ -367,6 +403,80 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                       } else {
                         toast.error("Please place cursor inside a table first");
                       }
+                    },
+                  });
+
+                  // Custom Source Code Viewer button
+                  editor.ui.registry.addButton("viewSource", {
+                    text: "View Source",
+                    icon: "sourcecode",
+                    tooltip: "View/Edit HTML Source Code",
+                    onAction: () => {
+                      // Get current content from editor
+                      const currentContent = editor.getContent();
+
+                      // Create a dialog to show/edit source code
+                      editor.windowManager.open({
+                        title: "HTML Source Code",
+                        size: "large", // Make dialog larger
+                        body: {
+                          type: "panel",
+                          items: [
+                            {
+                              type: "textarea",
+                              name: "source",
+                              label: "HTML Source:",
+                              maximized: true, // Make textarea take full space
+                              placeholder:
+                                "HTML source code will appear here...",
+                            },
+                          ],
+                        },
+                        buttons: [
+                          {
+                            type: "cancel",
+                            text: "Cancel",
+                          },
+                          {
+                            type: "custom",
+                            text: "Copy to Clipboard",
+                            name: "copy",
+                          },
+                          {
+                            type: "submit",
+                            text: "Update",
+                            primary: true,
+                          },
+                        ],
+                        initialData: {
+                          source: currentContent,
+                        },
+                        onAction: (api, details) => {
+                          if (details.name === "copy") {
+                            const data = api.getData();
+                            navigator.clipboard
+                              .writeText(data.source)
+                              .then(() => {
+                                toast.success(
+                                  "Source code copied to clipboard!"
+                                );
+                              })
+                              .catch(() => {
+                                toast.error("Failed to copy to clipboard");
+                              });
+                          }
+                        },
+                        onSubmit: (api) => {
+                          const data = api.getData();
+                          // Update editor content with modified source
+                          editor.setContent(data.source);
+                          api.close();
+                          toast.success("Source code updated successfully!");
+                        },
+                        onCancel: () => {
+                          // Optional: Add any cleanup when dialog is cancelled
+                        },
+                      });
                     },
                   });
 
@@ -508,6 +618,79 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                     "Delete current row",
                     () => {
                       editor.execCommand("mceTableDeleteRow");
+                    }
+                  );
+
+                  // Keyboard shortcut for source code view
+                  editor.addShortcut(
+                    "Ctrl+Shift+S",
+                    "View/Edit Source Code",
+                    () => {
+                      // Get current content from editor
+                      const currentContent = editor.getContent();
+
+                      // Create a dialog to show/edit source code
+                      editor.windowManager.open({
+                        title: "HTML Source Code",
+                        size: "large", // Make dialog larger
+                        body: {
+                          type: "panel",
+                          items: [
+                            {
+                              type: "textarea",
+                              name: "source",
+                              label: "HTML Source:",
+                              maximized: true, // Make textarea take full space
+                              placeholder:
+                                "HTML source code will appear here...",
+                            },
+                          ],
+                        },
+                        buttons: [
+                          {
+                            type: "cancel",
+                            text: "Cancel",
+                          },
+                          {
+                            type: "custom",
+                            text: "Copy to Clipboard",
+                            name: "copy",
+                          },
+                          {
+                            type: "submit",
+                            text: "Update",
+                            primary: true,
+                          },
+                        ],
+                        initialData: {
+                          source: currentContent,
+                        },
+                        onAction: (api, details) => {
+                          if (details.name === "copy") {
+                            const data = api.getData();
+                            navigator.clipboard
+                              .writeText(data.source)
+                              .then(() => {
+                                toast.success(
+                                  "Source code copied to clipboard!"
+                                );
+                              })
+                              .catch(() => {
+                                toast.error("Failed to copy to clipboard");
+                              });
+                          }
+                        },
+                        onSubmit: (api) => {
+                          const data = api.getData();
+                          // Update editor content with modified source
+                          editor.setContent(data.source);
+                          api.close();
+                          toast.success("Source code updated successfully!");
+                        },
+                        onCancel: () => {
+                          // Optional: Add any cleanup when dialog is cancelled
+                        },
+                      });
                     }
                   );
 
