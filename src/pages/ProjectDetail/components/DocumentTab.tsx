@@ -775,10 +775,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
           }
         }}
       >
-        <DialogContent
-          className="max-w-6xl max-h-[95vh] overflow-hidden z-[9999]"
-          style={{ zIndex: 9999, position: "fixed" }}
-        >
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
               <Edit className="h-5 w-5 text-blue-600" />

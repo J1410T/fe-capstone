@@ -168,11 +168,7 @@ export const routes: RouteObject[] = [
           },
           {
             path: "users",
-            element: (
-              <AdminGuard>
-                <UserAccessControl />
-              </AdminGuard>
-            ),
+            element: <UserAccessControl />,
           },
           {
             path: "meetings",

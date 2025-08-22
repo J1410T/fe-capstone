@@ -1,27 +1,49 @@
-import React, { useState, useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import {
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  Line,
+  ComposedChart,
+} from "recharts";
 import {
   BarChart3,
   Users,
   FolderOpen,
   DollarSign,
   TrendingUp,
-  CheckCircle,
   Activity,
   UserCheck,
   Target,
   BookOpen,
   Building2,
+  PieChart as PieChartIcon,
+  CheckCircle2,
   XCircle,
-  Clock,
+  Award,
+  Calendar,
+  Filter,
 } from "lucide-react";
 import { UI_CONSTANTS } from "@/lib/ui-constants";
 import { formatVND } from "../shared";
-
-// Project interface based on the provided data structure
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/utils";
+import { Calendar as CalendarComp } from "@/components/ui/calendar";
 interface Project {
   id: string;
   code: string;
@@ -137,6 +159,14 @@ const mockProjects: Project[] = [
   },
 ];
 
+const majorData = [
+  { name: "Software Eng", value: 35, students: 120 },
+  { name: "IT", value: 28, students: 95 },
+  { name: "Computer Sci", value: 20, students: 68 },
+  { name: "Data Science", value: 12, students: 41 },
+  { name: "Cybersecurity", value: 5, students: 17 },
+];
+
 // User Management Stats with roles
 const userStats = {
   totalUsers: 156,
@@ -158,17 +188,14 @@ const transactionStats = {
   monthlyAmount: 12400000000, // VND
 };
 
-// Academic Management Stats
-const academicStats = {
-  totalFields: 8,
-  totalMajors: 24,
-  totalCouncils: 6,
-  activeCouncils: 4,
-  councilMembers: 18,
-};
-
 const StaffDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState("overview");
+  // Date range state
+  const [dateRange, setDateRange] = useState({
+    from: new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1)
+      .toISOString()
+      .split("T")[0],
+    to: new Date().toISOString().split("T")[0],
+  });
 
   // Calculate project statistics (excluding proposals)
   const projectStats = useMemo(() => {
@@ -203,6 +230,43 @@ const StaffDashboard: React.FC = () => {
       activeProjects,
     };
   }, []);
+
+  // Academic Management Stats with calculated average
+  const academicStats = useMemo(
+    () => ({
+      totalFields: 8,
+      totalMajors: 24,
+      totalCouncils: 6,
+      activeCouncils: 4,
+      councilMembers: 18,
+      averageProjectsPerCouncil: Math.round((projectStats.total / 6) * 10) / 10, // 6 total councils
+    }),
+    [projectStats.total]
+  );
+
+  // Evaluation Stats
+  const evaluationStats = {
+    totalEvaluations: 156,
+    completedEvaluations: 142,
+    passedEvaluations: 128,
+    failedEvaluations: 14,
+    pendingEvaluations: 14,
+  };
+
+  // Milestone Stats
+  const milestoneStats = {
+    totalMilestones: 89,
+    completedMilestones: 67,
+    inProgressMilestones: 15,
+    overdueMilestones: 7,
+  };
+
+  const data = [
+    { name: "Created", value: projectStats.created, color: "#3b82f6" },
+    { name: "Ongoing", value: projectStats.ongoing, color: "#f59e0b" },
+    { name: "Completed", value: projectStats.completed, color: "#10b981" },
+    { name: "Cancelled", value: projectStats.cancelled, color: "#ef4444" },
+  ];
 
   const StatCard = ({
     title,
@@ -263,9 +327,152 @@ const StaffDashboard: React.FC = () => {
     );
   };
 
+  // Generate data based on selected date range
+  const generateTimeSeriesData = () => {
+    const startDate = new Date(dateRange.from);
+    const endDate = new Date(dateRange.to);
+    const data = [];
+
+    const current = new Date(startDate);
+    while (current <= endDate) {
+      const monthName = current.toLocaleDateString("en-US", { month: "short" });
+      const dayOfMonth = current.getDate();
+
+      // Generate realistic data based on time progression
+      const baseProjects = Math.floor(Math.random() * 15) + 5;
+      const baseUsers = Math.floor(Math.random() * 50) + 140;
+      const baseTransactions = Math.floor(Math.random() * 100) + 200;
+      const baseEvaluations = Math.floor(Math.random() * 20) + 10;
+      const baseMilestones = Math.floor(Math.random() * 25) + 15;
+
+      data.push({
+        date: current.toISOString().split("T")[0],
+        month: `${monthName} ${dayOfMonth}`,
+        projects: baseProjects,
+        users: baseUsers,
+        transactions: baseTransactions,
+        evaluations: baseEvaluations,
+        milestones: baseMilestones,
+      });
+
+      current.setDate(
+        current.getDate() +
+          Math.max(
+            1,
+            Math.floor(
+              (endDate.getTime() - startDate.getTime()) /
+                (1000 * 60 * 60 * 24 * 10)
+            )
+          )
+      );
+    }
+
+    return data.slice(0, 12); // Limit to 12 data points for readability
+  };
+
+  // Performance Line Chart
+  const PerformanceLineChart = () => {
+    const data = generateTimeSeriesData();
+
+    return (
+      <div className="h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="month" />
+            <YAxis />
+            <Tooltip />
+
+            {/* All metrics as line charts */}
+            <Line
+              type="monotone"
+              dataKey="projects"
+              stroke="#3b82f6"
+              strokeWidth={3}
+              dot={{ fill: "#3b82f6", strokeWidth: 2, r: 5 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="evaluations"
+              stroke="#10b981"
+              strokeWidth={3}
+              dot={{ fill: "#10b981", strokeWidth: 2, r: 5 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="milestones"
+              stroke="#f59e0b"
+              strokeWidth={3}
+              dot={{ fill: "#f59e0b", strokeWidth: 2, r: 5 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="users"
+              stroke="#8b5cf6"
+              strokeWidth={3}
+              dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 5 }}
+            />
+            <Line
+              type="monotone"
+              dataKey="transactions"
+              stroke="#ef4444"
+              strokeWidth={3}
+              dot={{ fill: "#ef4444", strokeWidth: 2, r: 5 }}
+            />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Pie Chart for Project Status
+  const ProjectStatusPieChart = () => {
+    return (
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              cx="50%"
+              cy="50%"
+              outerRadius={80}
+              fill="#8884d8"
+              dataKey="value"
+              label={({ name, percent }) =>
+                `${name} ${(percent * 100).toFixed(0)}%`
+              }
+            >
+              {data.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
+  // Bar Chart for Major Distribution
+  const MajorBarChart = () => {
+    return (
+      <div className="h-64">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={majorData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar dataKey="value" fill="#8b5cf6" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
+      {/* Header with Date Range Picker */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Staff Dashboard</h1>
@@ -273,15 +480,136 @@ const StaffDashboard: React.FC = () => {
             Monitor system activity and manage platform operations
           </p>
         </div>
+        <Card className="p-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              <span className="text-sm font-medium">Date Range:</span>
+            </div>
+
+            {/* From Date */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-36 justify-start text-left font-normal",
+                    !dateRange.from && "text-muted-foreground"
+                  )}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {dateRange.from
+                    ? new Date(dateRange.from).toLocaleDateString("vi-VN")
+                    : "Choose start date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComp
+                  key={`from-${dateRange.from}`}
+                  mode="single"
+                  selected={
+                    dateRange.from ? new Date(dateRange.from) : undefined
+                  }
+                  onSelect={(date) => {
+                    if (date) {
+                      setDateRange((prev) => ({
+                        ...prev,
+                        from: date.toISOString().split("T")[0],
+                      }));
+                    }
+                  }}
+                  disabled={(date) => {
+                    // Disable dates after the 'to' date if it's set
+                    if (dateRange.to) {
+                      return date > new Date(dateRange.to);
+                    }
+                    return false;
+                  }}
+                  defaultMonth={
+                    dateRange.from ? new Date(dateRange.from) : undefined
+                  }
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+
+            <span className="text-gray-500">to</span>
+
+            {/* To Date */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-36 justify-start text-left font-normal",
+                    !dateRange.to && "text-muted-foreground"
+                  )}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  {dateRange.to
+                    ? new Date(dateRange.to).toLocaleDateString("vi-VN")
+                    : "Choose end date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComp
+                  key={`to-${dateRange.to}`}
+                  mode="single"
+                  selected={dateRange.to ? new Date(dateRange.to) : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      setDateRange((prev) => ({
+                        ...prev,
+                        to: date.toISOString().split("T")[0],
+                      }));
+                    }
+                  }}
+                  disabled={(date) => {
+                    // Disable dates before the 'from' date if it's set
+                    if (dateRange.from) {
+                      return date < new Date(dateRange.from);
+                    }
+                    return false;
+                  }}
+                  defaultMonth={
+                    dateRange.to ? new Date(dateRange.to) : undefined
+                  }
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setDateRange({
+                  from: new Date(
+                    new Date().getFullYear(),
+                    new Date().getMonth() - 5,
+                    1
+                  )
+                    .toISOString()
+                    .split("T")[0],
+                  to: new Date().toISOString().split("T")[0],
+                });
+              }}
+            >
+              <Filter className="w-4 h-4 mr-1" />
+              Reset
+            </Button>
+          </div>
+        </Card>
       </div>
 
       {/* Key Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Projects"
           value={projectStats.total}
           icon={FolderOpen}
           trend="up"
+          trendValue="+12%"
           color="default"
         />
         <StatCard
@@ -289,554 +617,401 @@ const StaffDashboard: React.FC = () => {
           value={projectStats.activeProjects}
           icon={Activity}
           trend="up"
+          trendValue="+8%"
           color="success"
         />
         <StatCard
-          title="Total Transactions"
-          value={transactionStats.totalTransactions}
-          icon={DollarSign}
+          title="Evaluations"
+          value={evaluationStats.totalEvaluations}
+          icon={Award}
           trend="up"
-          color="success"
+          trendValue="+6%"
+          color="warning"
+        />
+        <StatCard
+          title="Milestones"
+          value={milestoneStats.totalMilestones}
+          icon={Target}
+          trend="up"
+          trendValue="+10%"
+          color="default"
         />
         <StatCard
           title="Active Users"
           value={userStats.activeUsers}
           icon={Users}
           trend="up"
-          color="default"
+          trendValue="+5%"
+          color="success"
         />
       </div>
 
-      {/* Main Content Tabs */}
-      <Tabs
-        value={activeTab}
-        onValueChange={setActiveTab}
-        className="space-y-4"
-      >
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview" className="flex items-center space-x-2">
-            <BarChart3 className="w-4 h-4" />
-            <span>Overview</span>
-          </TabsTrigger>
-          <TabsTrigger value="projects" className="flex items-center space-x-2">
-            <FolderOpen className="w-4 h-4" />
-            <span>Projects</span>
-          </TabsTrigger>
-          <TabsTrigger value="users" className="flex items-center space-x-2">
-            <UserCheck className="w-4 h-4" />
-            <span>Users</span>
-          </TabsTrigger>
-          <TabsTrigger value="finance" className="flex items-center space-x-2">
-            <DollarSign className="w-4 h-4" />
-            <span>Finance</span>
-          </TabsTrigger>
-        </TabsList>
+      {/* Overview Section */}
+      <div className="space-y-8">
+        {/* Charts Row 1 - Main Analytics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Project Status Pie Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <PieChartIcon className="w-5 h-5 text-blue-600" />
+                <span>Project Status Distribution</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ProjectStatusPieChart />
+            </CardContent>
+          </Card>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Project Status Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Target className="w-5 h-5" />
-                  <span>Project Status Overview</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-blue-200 rounded-full">
-                        <FolderOpen className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <p className="text-2xl font-bold text-blue-600">
-                        {projectStats.created}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Created</p>
-                    </div>
-                    <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                      <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-yellow-200 rounded-full">
-                        <Clock className="w-6 h-6 text-yellow-600" />
-                      </div>
-                      <p className="text-2xl font-bold text-yellow-600">
-                        {projectStats.ongoing}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Ongoing</p>
-                    </div>
+          {/* Major Distribution Bar Chart */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <BarChart3 className="w-5 h-5 text-green-600" />
+                <span>Major Distribution</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MajorBarChart />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Combined Performance Chart - Full Width */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Activity className="w-5 h-5 text-purple-600" />
+                <span>
+                  Performance Analytics ({dateRange.from} to {dateRange.to})
+                </span>
+              </div>
+              <div className="flex items-center space-x-4 text-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded"></div>
+                  <span>Projects</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded"></div>
+                  <span>Evaluations</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-yellow-500 rounded"></div>
+                  <span>Milestones</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-purple-500 rounded"></div>
+                  <span>Users</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-red-500 rounded"></div>
+                  <span>Transactions</span>
+                </div>
+              </div>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <PerformanceLineChart />
+          </CardContent>
+        </Card>
+
+        {/* Financial & Academic Overview Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Transaction Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <DollarSign className="w-5 h-5 text-green-600" />
+                <span>Financial Overview</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatVND(transactionStats.totalAmount)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Total Amount</p>
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center p-3 bg-blue-50 rounded-lg">
+                    <p className="text-lg font-bold text-blue-600">
+                      {transactionStats.totalTransactions}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Total</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-green-200 rounded-full">
-                        <CheckCircle className="w-6 h-6 text-green-600" />
-                      </div>
-                      <p className="text-2xl font-bold text-green-600">
-                        {projectStats.completed}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Completed</p>
-                    </div>
-                    <div className="text-center p-4 bg-red-50 rounded-lg">
-                      <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-red-200 rounded-full">
-                        <XCircle className="w-6 h-6 text-red-600" />
-                      </div>
-                      <p className="text-2xl font-bold text-red-600">
-                        {projectStats.cancelled}
-                      </p>
-                      <p className="text-sm text-muted-foreground">Cancelled</p>
-                    </div>
+                  <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                    <p className="text-lg font-bold text-yellow-600">
+                      {transactionStats.pendingTransactions}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Pending</p>
+                  </div>
+                  <div className="text-center p-3 bg-purple-50 rounded-lg">
+                    <p className="text-lg font-bold text-purple-600">
+                      {transactionStats.monthlyTransactions}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Monthly</p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Transaction Overview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <DollarSign className="w-5 h-5" />
-                  <span>Transaction Overview</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <p className="text-lg font-bold text-green-600">
-                      {formatVND(transactionStats.totalAmount)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Total Amount
-                    </p>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Processing Rate</span>
+                    <span className="font-medium">
+                      {Math.round(
+                        ((transactionStats.totalTransactions -
+                          transactionStats.pendingTransactions) /
+                          transactionStats.totalTransactions) *
+                          100
+                      )}
+                      %
+                    </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-xl font-bold text-yellow-600">
-                        {transactionStats.pendingTransactions}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Pending</p>
-                      <p className="text-sm font-medium text-yellow-600">
-                        {formatVND(transactionStats.pendingAmount)}
-                      </p>
-                    </div>
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <p className="text-xl font-bold text-blue-600">
-                        {transactionStats.monthlyTransactions}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Monthly</p>
-                      <p className="text-sm font-medium text-blue-600">
-                        {formatVND(transactionStats.monthlyAmount)}
-                      </p>
-                    </div>
-                  </div>
+                  <Progress
+                    value={
+                      ((transactionStats.totalTransactions -
+                        transactionStats.pendingTransactions) /
+                        transactionStats.totalTransactions) *
+                      100
+                    }
+                    className="h-2"
+                  />
                 </div>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Academic Management Overview */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <BookOpen className="w-5 h-5" />
-                <span>Academic Management Overview</span>
+                <BookOpen className="w-5 h-5 text-indigo-600" />
+                <span>Academic Management</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-indigo-100 rounded-full">
-                    <BookOpen className="w-8 h-8 text-indigo-600" />
+              <div className="space-y-6">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="text-center p-4 bg-indigo-50 rounded-lg">
+                    <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-indigo-200 rounded-full">
+                      <BookOpen className="w-6 h-6 text-indigo-600" />
+                    </div>
+                    <p className="text-xl font-bold text-indigo-600">
+                      {academicStats.totalFields}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Fields</p>
                   </div>
-                  <p className="text-2xl font-bold text-indigo-600">
-                    {academicStats.totalFields}
+                  <div className="text-center p-4 bg-cyan-50 rounded-lg">
+                    <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-cyan-200 rounded-full">
+                      <Building2 className="w-6 h-6 text-cyan-600" />
+                    </div>
+                    <p className="text-xl font-bold text-cyan-600">
+                      {academicStats.totalMajors}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Majors</p>
+                  </div>
+                  <div className="text-center p-4 bg-teal-50 rounded-lg">
+                    <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-teal-200 rounded-full">
+                      <Users className="w-6 h-6 text-teal-600" />
+                    </div>
+                    <p className="text-xl font-bold text-teal-600">
+                      {academicStats.totalCouncils}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Councils</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm font-medium">Council Members</span>
+                    <Badge className="bg-blue-100 text-blue-800">
+                      {academicStats.councilMembers}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                    <span className="text-sm font-medium">
+                      Avg Projects/Council
+                    </span>
+                    <Badge className="bg-green-100 text-green-800">
+                      {academicStats.averageProjectsPerCouncil}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Detailed Stats Row - Evaluations & Milestones */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Evaluation Overview */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Award className="w-5 h-5 text-orange-600" />
+                <span>Evaluation Overview</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border border-orange-200">
+                  <p className="text-2xl font-bold text-orange-600">
+                    {evaluationStats.totalEvaluations}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Academic Fields
+                    Total Evaluations
                   </p>
                 </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-cyan-100 rounded-full">
-                    <Building2 className="w-8 h-8 text-cyan-600" />
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="text-center p-3 bg-green-50 rounded-lg">
+                    <CheckCircle2 className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-green-600">
+                      {evaluationStats.passedEvaluations}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Passed</p>
                   </div>
-                  <p className="text-2xl font-bold text-cyan-600">
-                    {academicStats.totalMajors}
+                  <div className="text-center p-3 bg-red-50 rounded-lg">
+                    <XCircle className="w-5 h-5 text-red-600 mx-auto mb-1" />
+                    <p className="text-lg font-bold text-red-600">
+                      {evaluationStats.failedEvaluations}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Failed</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Pass Rate</span>
+                    <span className="font-medium">
+                      {Math.round(
+                        (evaluationStats.passedEvaluations /
+                          evaluationStats.completedEvaluations) *
+                          100
+                      )}
+                      %
+                    </span>
+                  </div>
+                  <Progress
+                    value={
+                      (evaluationStats.passedEvaluations /
+                        evaluationStats.completedEvaluations) *
+                      100
+                    }
+                    className="h-2"
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Milestone Progress */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <Target className="w-5 h-5 text-blue-600" />
+                <span>Milestone Progress</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                  <p className="text-2xl font-bold text-blue-600">
+                    {Math.round(
+                      (milestoneStats.completedMilestones /
+                        milestoneStats.totalMilestones) *
+                        100
+                    )}
+                    %
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Academic Majors
+                    Completion Rate
                   </p>
                 </div>
-                <div className="text-center">
-                  <div className="flex items-center justify-center w-16 h-16 mx-auto mb-2 bg-teal-100 rounded-full">
-                    <Users className="w-8 h-8 text-teal-600" />
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center p-2 bg-green-50 rounded-lg">
+                    <p className="text-sm font-bold text-green-600">
+                      {milestoneStats.completedMilestones}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Done</p>
                   </div>
-                  <p className="text-2xl font-bold text-teal-600">
-                    {academicStats.totalCouncils}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Appraisal Councils
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {academicStats.activeCouncils} Active
+                  <div className="text-center p-2 bg-yellow-50 rounded-lg">
+                    <p className="text-sm font-bold text-yellow-600">
+                      {milestoneStats.inProgressMilestones}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Progress</p>
+                  </div>
+                  <div className="text-center p-2 bg-red-50 rounded-lg">
+                    <p className="text-sm font-bold text-red-600">
+                      {milestoneStats.overdueMilestones}
+                    </p>
+                    <p className="text-xs text-muted-foreground">Overdue</p>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Progress
+                    value={
+                      (milestoneStats.completedMilestones /
+                        milestoneStats.totalMilestones) *
+                      100
+                    }
+                    className="h-3"
+                  />
+                  <p className="text-xs text-center text-muted-foreground">
+                    {milestoneStats.completedMilestones}/
+                    {milestoneStats.totalMilestones} milestones completed
                   </p>
                 </div>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="projects" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Project Statistics */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BarChart3 className="w-5 h-5" />
-                  <span>Project Statistics</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      Total Projects (Non-Proposal)
-                    </span>
-                    <Badge
-                      variant="secondary"
-                      className="bg-blue-100 text-blue-800"
-                    >
-                      {projectStats.total}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">
-                      Active Projects (In Progress)
-                    </span>
-                    <Badge
-                      variant="secondary"
-                      className="bg-green-100 text-green-800"
-                    >
-                      {projectStats.activeProjects}
-                    </Badge>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Project Completion Rate</span>
-                      <span>
-                        {Math.round(
-                          (projectStats.completed / projectStats.total) * 100
-                        )}
-                        %
-                      </span>
-                    </div>
-                    <Progress
-                      value={
-                        (projectStats.completed / projectStats.total) * 100
-                      }
-                      className="h-2"
-                    />
-                  </div>
+          {/* User Roles Distribution */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <UserCheck className="w-5 h-5 text-purple-600" />
+                <span>User Roles Distribution</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                  <span className="text-sm font-medium">
+                    Principal Investigators
+                  </span>
+                  <Badge className="bg-purple-100 text-purple-800">
+                    {userStats.principalInvestigators}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Project Status Breakdown */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Target className="w-5 h-5" />
-                  <span>Status Breakdown</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Created</span>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="secondary">{projectStats.created}</Badge>
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-blue-500 h-2 rounded-full"
-                          style={{
-                            width: `${
-                              (projectStats.created / projectStats.total) * 100
-                            }%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Ongoing</span>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="secondary">{projectStats.ongoing}</Badge>
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-yellow-500 h-2 rounded-full"
-                          style={{
-                            width: `${
-                              (projectStats.ongoing / projectStats.total) * 100
-                            }%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Completed</span>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="secondary">
-                        {projectStats.completed}
-                      </Badge>
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-green-500 h-2 rounded-full"
-                          style={{
-                            width: `${
-                              (projectStats.completed / projectStats.total) *
-                              100
-                            }%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Cancelled</span>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="secondary">
-                        {projectStats.cancelled}
-                      </Badge>
-                      <div className="w-16 bg-gray-200 rounded-full h-2">
-                        <div
-                          className="bg-red-500 h-2 rounded-full"
-                          style={{
-                            width: `${
-                              (projectStats.cancelled / projectStats.total) *
-                              100
-                            }%`,
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                  <span className="text-sm font-medium">Researchers</span>
+                  <Badge className="bg-blue-100 text-blue-800">
+                    {userStats.researchers}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="users" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* User Management Overview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Users className="w-5 h-5" />
-                  <span>User Management Overview</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 bg-blue-50 rounded-lg">
-                      <p className="text-2xl font-bold text-blue-600">
-                        {userStats.totalUsers}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Total Users
-                      </p>
-                    </div>
-                    <div className="text-center p-4 bg-green-50 rounded-lg">
-                      <p className="text-2xl font-bold text-green-600">
-                        {userStats.activeUsers}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        Active Users
-                      </p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>User Activity Rate</span>
-                      <span>
-                        {Math.round(
-                          (userStats.activeUsers / userStats.totalUsers) * 100
-                        )}
-                        %
-                      </span>
-                    </div>
-                    <Progress
-                      value={
-                        (userStats.activeUsers / userStats.totalUsers) * 100
-                      }
-                      className="h-2"
-                    />
-                  </div>
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                  <span className="text-sm font-medium">Staffs</span>
+                  <Badge className="bg-green-100 text-green-800">
+                    {userStats.staffs}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* User Roles Distribution */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <UserCheck className="w-5 h-5" />
-                  <span>User Roles Distribution</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Principal Investigators</span>
-                    <Badge
-                      variant="secondary"
-                      className="bg-purple-100 text-purple-800"
-                    >
-                      {userStats.principalInvestigators}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Researchers</span>
-                    <Badge
-                      variant="secondary"
-                      className="bg-blue-100 text-blue-800"
-                    >
-                      {userStats.researchers}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Staffs</span>
-                    <Badge
-                      variant="secondary"
-                      className="bg-green-100 text-green-800"
-                    >
-                      {userStats.staffs}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Host Institutions</span>
-                    <Badge
-                      variant="secondary"
-                      className="bg-orange-100 text-orange-800"
-                    >
-                      {userStats.hostInstitutions}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Council Members</span>
-                    <Badge
-                      variant="secondary"
-                      className="bg-teal-100 text-teal-800"
-                    >
-                      {userStats.councilMembers}
-                    </Badge>
-                  </div>
+                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                  <span className="text-sm font-medium">Host Institutions</span>
+                  <Badge className="bg-orange-100 text-orange-800">
+                    {userStats.hostInstitutions}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="finance" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Transaction Statistics */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <DollarSign className="w-5 h-5" />
-                  <span>Transaction Statistics</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-green-50 rounded-lg">
-                    <p className="text-lg font-bold text-green-600">
-                      {formatVND(transactionStats.totalAmount)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Total Transaction Amount
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <p className="text-xl font-bold text-blue-600">
-                        {transactionStats.totalTransactions}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Total</p>
-                    </div>
-                    <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                      <p className="text-xl font-bold text-yellow-600">
-                        {transactionStats.pendingTransactions}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Pending</p>
-                    </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-lg">
-                      <p className="text-xl font-bold text-purple-600">
-                        {transactionStats.monthlyTransactions}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Monthly</p>
-                    </div>
-                  </div>
+                <div className="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
+                  <span className="text-sm font-medium">Council Members</span>
+                  <Badge className="bg-teal-100 text-teal-800">
+                    {userStats.councilMembers}
+                  </Badge>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-            {/* Financial Overview */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <BarChart3 className="w-5 h-5" />
-                  <span>Financial Overview</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Pending Amount</span>
-                      <span className="text-sm font-bold text-yellow-600">
-                        {formatVND(transactionStats.pendingAmount)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Monthly Amount</span>
-                      <span className="text-sm font-bold text-blue-600">
-                        {formatVND(transactionStats.monthlyAmount)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Processing Rate</span>
-                      <Badge
-                        variant="secondary"
-                        className="bg-green-100 text-green-800"
-                      >
-                        {Math.round(
-                          ((transactionStats.totalTransactions -
-                            transactionStats.pendingTransactions) /
-                            transactionStats.totalTransactions) *
-                            100
-                        )}
-                        %
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full"
-                      style={{
-                        width: `${
-                          ((transactionStats.totalTransactions -
-                            transactionStats.pendingTransactions) /
-                            transactionStats.totalTransactions) *
-                          100
-                        }%`,
-                      }}
-                    ></div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-      </Tabs>
+        {/* User Management Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
+      </div>
     </div>
   );
 };
