@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,12 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+// Removed shadcn Dialog import - using custom dialog instead
 import {
   AlertDialog,
   AlertDialogAction,
@@ -80,6 +75,23 @@ const DocumentManagement: React.FC = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   const editorRef = useRef<ScientificCVEditorRef>(null);
+
+  // Simple effect to handle ESC key for custom dialog
+  useEffect(() => {
+    if (!isDocumentDialogOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsDocumentDialogOpen(false);
+        setEditingDocument(null);
+        setIsEditMode(false);
+        setDocumentContent("");
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isDocumentDialogOpen]);
 
   // Get BM5 contract template
   const {
@@ -152,9 +164,18 @@ const DocumentManagement: React.FC = () => {
 
   const { data: baseUserRoleId } = useBaseUserRoleId();
 
-  const projects = projectsData?.["data-list"] || [];
-  const contractTemplates = templateData?.data?.["data-list"] || [];
-  const allProjectDocuments = projectDocumentsResponse?.["data-list"] || [];
+  const projects = useMemo(
+    () => projectsData?.["data-list"] || [],
+    [projectsData]
+  );
+  const contractTemplates = useMemo(
+    () => templateData?.data?.["data-list"] || [],
+    [templateData]
+  );
+  const allProjectDocuments = useMemo(
+    () => projectDocumentsResponse?.["data-list"] || [],
+    [projectDocumentsResponse]
+  );
 
   const [isMilestoneModalOpen, setIsMilestoneModalOpen] = useState(false);
 
@@ -941,40 +962,54 @@ const DocumentManagement: React.FC = () => {
         </Card>
       )}
 
-      {/* Document Creation/Edit Dialog */}
-      <Dialog
-        open={isDocumentDialogOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            const tinyMCEDialogs =
-              document.querySelectorAll(".tox-dialog-wrap");
-            if (tinyMCEDialogs.length === 0) {
+      {/* Custom Document Dialog - TinyMCE Friendly */}
+      {isDocumentDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => {
               setIsDocumentDialogOpen(false);
-            }
-          } else {
-            setIsDocumentDialogOpen(true);
-          }
-        }}
-      >
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <FileText className="h-5 w-5 text-purple-600" />
-              {isEditMode ? "Edit Document" : "Create Contract"}
-            </DialogTitle>
-          </DialogHeader>
+              setEditingDocument(null);
+              setIsEditMode(false);
+              setDocumentContent("");
+            }}
+          />
 
-          <div className="flex flex-col gap-4 overflow-hidden">
-            <div className="flex-1 overflow-hidden">
+          {/* Dialog Content */}
+          <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[85vh] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <div className="flex items-center gap-3">
+                <FileText className="h-5 w-5 text-purple-600" />
+                <h2 className="text-lg font-semibold">
+                  {isEditMode ? "Edit Document" : "Create Contract"}
+                </h2>
+              </div>
+              <button
+                onClick={() => {
+                  setIsDocumentDialogOpen(false);
+                  setEditingDocument(null);
+                  setIsEditMode(false);
+                  setDocumentContent("");
+                }}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 flex-1 overflow-hidden">
               {!isEditMode && isTemplateLoading ? (
-                <div className="flex items-center justify-center h-[500px] bg-white rounded-xl shadow-inner">
+                <div className="flex items-center justify-center h-[500px]">
                   <div className="text-center">
                     <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-600 border-t-transparent mx-auto mb-4"></div>
                     <p className="text-gray-600">Loading template...</p>
                   </div>
                 </div>
               ) : !isEditMode && templateError ? (
-                <div className="text-center text-red-500 p-6 bg-white rounded-xl shadow">
+                <div className="text-center text-red-500 p-6">
                   <div className="mb-4">
                     ⚠️ Template error: {(templateError as Error).message}
                   </div>
@@ -1003,7 +1038,8 @@ const DocumentManagement: React.FC = () => {
               )}
             </div>
 
-            <div className="flex justify-between items-center pt-4 border-t">
+            {/* Footer */}
+            <div className="flex justify-between items-center p-6 border-t bg-gray-50">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -1082,8 +1118,8 @@ const DocumentManagement: React.FC = () => {
               </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
 
       {/* ✅ NEW: Confirmation Dialog for Contract Submission */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
