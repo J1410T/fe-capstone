@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { Milestone, Task } from "../shared/types";
 import { ProjectTask } from "@/types/task";
-import { Milestone as APIMilestone } from "@/types/task";
+import { Milestone as APIMilestone } from "@/types/milestone";
 import { useMilestonesByProjectId } from "@/hooks/queries/milestone";
 import { useTasksByMilestoneId } from "@/hooks/queries/task";
 import { format } from "date-fns";
@@ -29,8 +29,8 @@ const transformMilestone = (apiMilestone: APIMilestone): Milestone => ({
   // deadline: apiMilestone.endDate || "",
   status: transformMilestoneStatus(apiMilestone.status),
   progress: 0, // Will be calculated later
-  "start-date": apiMilestone.startDate || "",
-  "end-date": apiMilestone.endDate || "",
+  "start-date": apiMilestone["start-date"] || "",
+  "end-date": apiMilestone["end-date"] || "",
   tasks: [], // Tasks will be loaded separately
 });
 
@@ -245,8 +245,8 @@ const EnhancedMilestoneCard: React.FC<{
       >
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <div className="flex items-center gap-3 mb-3">
-              <h3 className="text-base font-semibold text-gray-900">
+            <div className="flex justify-between items-start gap-2">
+              <h3 className="text-base font-semibold text-gray-900 break-words whitespace-normal flex-1">
                 {milestone.name}
               </h3>
               <span
