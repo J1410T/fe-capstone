@@ -39,7 +39,7 @@ import { useMyProject } from "@/hooks/queries/project";
 import { useAuth } from "@/contexts";
 import { UserRole } from "@/contexts/auth-types";
 import { Loading } from "@/components/ui/loaders";
-import { toast } from "sonner";
+// import { toast } from "sonner";
 
 const MyProject: React.FC = () => {
   const navigate = useNavigate();
@@ -193,16 +193,16 @@ const MyProject: React.FC = () => {
       const project = filteredProjects.find((p) => p.id === id);
 
       // Block access to draft projects for PI
-      if (project && project.status === "draft") {
-        toast.error("You cannot access the project in draft status.");
-        return;
-      }
+      // if (project && project.status === "draft") {
+      //   toast.error("You cannot access the project in draft status.");
+      //   return;
+      // }
 
       // Allow access to all other statuses (submitted, approved, inprogress, etc.)
       if (
         project &&
         project.genre?.toLowerCase() === "proposal" &&
-        project.status === "created"
+        project.status === "draft"
       ) {
         navigate(`/pi/project/${id}/enroll`);
       } else {
