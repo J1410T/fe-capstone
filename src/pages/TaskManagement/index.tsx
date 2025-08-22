@@ -259,7 +259,10 @@ const UserTaskManagement: React.FC = () => {
   };
 
   // API hooks with error handling
-  const { data: projectsData, error: projectsError } = useMyProject();
+  const { data: projectsData, error: projectsError } = useMyProject(
+    "inprogress",
+    "proposal"
+  );
   const { data: milestonesData, error: milestonesError } =
     useMilestonesByProjectId(selectedProjectId);
   const { data: tasksData, error: tasksError } = useTasksByMilestoneId(

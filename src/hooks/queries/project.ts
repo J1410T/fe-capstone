@@ -68,10 +68,10 @@ export function useProject(projectId: string) {
 }
 
 // Accept userId and role as query key dependencies
-export function useMyProject(userId?: string, role?: string) {
+export function useMyProject(Statuses?: string, Genres?: string) {
   return useQuery({
-    queryKey: ["my-projects", userId, role],
-    queryFn: getMyProjectList,
+    queryKey: ["my-projects", Statuses, Genres],
+    queryFn: () => getMyProjectList({ Statuses, Genres }),
   });
 }
 
