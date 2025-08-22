@@ -16,14 +16,88 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+// Custom Modal Component
+interface ModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+  size?: "sm" | "md" | "lg" | "xl";
+  showFooter?: boolean;
+  footerContent?: React.ReactNode;
+}
+
+const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  title,
+  description,
+  children,
+  size = "lg",
+  showFooter = false,
+  footerContent,
+}) => {
+  if (!isOpen) return null;
+
+  const sizeClasses = {
+    sm: "max-w-md",
+    md: "max-w-lg",
+    lg: "max-w-4xl",
+    xl: "max-w-6xl",
+  };
+
+  return (
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        onClick={onClose}
+      />
+
+      {/* Modal Content */}
+      <div
+        className={`relative bg-white rounded-lg shadow-xl ${sizeClasses[size]} w-full mx-4 max-h-[90vh] flex flex-col`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+            {description && (
+              <p className="text-sm text-gray-600 mt-1">{description}</p>
+            )}
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-auto p-6">{children}</div>
+
+        {/* Footer */}
+        {showFooter && footerContent && (
+          <div className="border-t p-6">{footerContent}</div>
+        )}
+      </div>
+    </div>
+  );
+};
 import {
   Select,
   SelectContent,
@@ -677,63 +751,58 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
         )}
       </CardContent>
 
-      {/* --- View Dialog --- */}
-      <Dialog open={showViewDialog} onOpenChange={setShowViewDialog}>
-        <DialogContent className="max-w-4xl max-h-[85vh] p-0 overflow-hidden px-4 pt-5">
-          <DialogHeader>
-            <DialogTitle>{selectedDocument?.name || "Document"}</DialogTitle>
-          </DialogHeader>
-          {selectedDocument ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div>
-                  <strong>Type:</strong> {selectedDocument.type}
-                </div>
-                <div>
-                  <strong>Upload Date:</strong>{" "}
-                  {formatDateTime(selectedDocument["upload-at"])}
-                </div>
-                <div>
-                  <strong>Status:</strong> {selectedDocument.status}
-                </div>
+      {/* --- View Modal --- */}
+      <Modal
+        isOpen={showViewDialog}
+        onClose={() => setShowViewDialog(false)}
+        title={selectedDocument?.name || "Document"}
+        size="xl"
+      >
+        {selectedDocument ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4 text-sm bg-gray-50 p-4 rounded-lg">
+              <div>
+                <strong>Type:</strong> {selectedDocument.type}
               </div>
-              <div className="flex-1 overflow-hidden p-4 bg-white">
-                <div className="w-full">
-                  {selectedDocument?.["content-html"] ? (
-                    <TinyMCEViewer
-                      key={selectedDocument.id}
-                      content={selectedDocument?.["content-html"] ?? ""}
-                      height={600}
-                      useTinyMCE={true}
-                      className="w-full"
-                    />
-                  ) : (
-                    <p className="text-gray-500">No content available.</p>
-                  )}
-                </div>
+              <div>
+                <strong>Upload Date:</strong>{" "}
+                {formatDateTime(selectedDocument["upload-at"])}
+              </div>
+              <div>
+                <strong>Status:</strong> {selectedDocument.status}
               </div>
             </div>
-          ) : (
-            <p className="text-gray-500">Loading document...</p>
-          )}
-        </DialogContent>
-      </Dialog>
+            <div className="bg-white border rounded-lg">
+              <div className="w-full">
+                {selectedDocument?.["content-html"] ? (
+                  <TinyMCEViewer
+                    key={selectedDocument.id}
+                    content={selectedDocument?.["content-html"] ?? ""}
+                    height={600}
+                    useTinyMCE={true}
+                    className="w-full"
+                  />
+                ) : (
+                  <p className="text-gray-500 p-4">No content available.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-gray-500">Loading document...</p>
+        )}
+      </Modal>
 
-      {/* Upload Scientific CV Confirmation Dialog */}
-      <Dialog
-        open={showUploadConfirmDialog}
-        onOpenChange={setShowUploadConfirmDialog}
-      >
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Upload Scientific CV</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to upload your Scientific CV to this
-              project? If you already have a Scientific CV uploaded, it will be
-              replaced with the new one.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
+      {/* Upload Scientific CV Confirmation Modal */}
+      <Modal
+        isOpen={showUploadConfirmDialog}
+        onClose={() => setShowUploadConfirmDialog(false)}
+        title="Upload Scientific CV"
+        description="Are you sure you want to upload your Scientific CV to this project? If you already have a Scientific CV uploaded, it will be replaced with the new one."
+        size="md"
+        showFooter={true}
+        footerContent={
+          <div className="flex justify-end gap-3">
             <Button
               variant="outline"
               onClick={() => setShowUploadConfirmDialog(false)}
@@ -754,120 +823,166 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
                 "Confirm Upload"
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Document Dialog */}
-      <Dialog
-        open={showEditDialog}
-        onOpenChange={(open) => {
-          // Only close if user explicitly wants to close, not when clicking on TinyMCE dialogs
-          if (!open) {
-            // Check if there are any TinyMCE dialogs open
-            const tinyMCEDialogs =
-              document.querySelectorAll(".tox-dialog-wrap");
-            if (tinyMCEDialogs.length === 0) {
-              setShowEditDialog(false);
-            }
-          } else {
-            setShowEditDialog(true);
-          }
-        }}
+          </div>
+        }
       >
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3">
-              <Edit className="h-5 w-5 text-blue-600" />
-              Edit Document - {editingDocument?.name}
-            </DialogTitle>
-            <DialogDescription>
-              Make changes to the document content. Changes will be saved when
-              you click Save.
-            </DialogDescription>
-          </DialogHeader>
+        <div className="text-center py-4">
+          <p className="text-gray-600">
+            This action will upload your current Scientific CV to this project.
+          </p>
+        </div>
+      </Modal>
 
-          <div className="flex flex-col gap-4 overflow-hidden">
-            {/* Document Info */}
-            {editingDocument && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center gap-4 text-sm">
-                  <span>
-                    <strong>Type:</strong> {editingDocument.type}
-                  </span>
-                  <span>
-                    <strong>Status:</strong> {editingDocument.status}
-                  </span>
-                  <span>
-                    <strong>Last Updated:</strong>{" "}
-                    {formatDateTime(
-                      editingDocument["updated-at"] ||
-                        editingDocument["upload-at"]
-                    )}
-                  </span>
-                </div>
+      {/* Edit Document Modal - Special Modal for TinyMCE */}
+      {showEditDialog && (
+        <div className="fixed inset-0 z-[9998] flex items-center justify-center">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => {
+              // Check if there are any TinyMCE dialogs open before closing
+              const tinyMCEDialogs =
+                document.querySelectorAll(".tox-dialog-wrap");
+              if (tinyMCEDialogs.length === 0) {
+                setShowEditDialog(false);
+                setEditingDocument(null);
+                setEditingContent("");
+              }
+            }}
+          />
+
+          {/* Modal Content with higher z-index for TinyMCE */}
+          <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full mx-4 max-h-[95vh] flex flex-col z-[9999]">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-3">
+                  <Edit className="h-5 w-5 text-blue-600" />
+                  Edit Document - {editingDocument?.name}
+                </h2>
+                <p className="text-sm text-gray-600 mt-1">
+                  Make changes to the document content. Changes will be saved
+                  when you click Save.
+                </p>
               </div>
-            )}
+              <button
+                onClick={() => {
+                  const tinyMCEDialogs =
+                    document.querySelectorAll(".tox-dialog-wrap");
+                  if (tinyMCEDialogs.length === 0) {
+                    setShowEditDialog(false);
+                    setEditingDocument(null);
+                    setEditingContent("");
+                  }
+                }}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
 
-            {/* Editor */}
-            <div className="flex-1 overflow-hidden">
-              <div className="h-[500px] overflow-hidden relative z-[150]">
-                <ScientificCVEditor
-                  ref={editEditorRef}
-                  value={editingContent}
-                  onChange={handleEditorChange}
-                  height={500}
-                  preset="document"
-                  readOnly={editingDocument?.status === "completed"}
-                />
+            {/* Content */}
+            <div className="flex-1 overflow-hidden p-6">
+              <div className="flex flex-col gap-4 h-full">
+                {/* Document Info */}
+                {editingDocument && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="flex items-center gap-4 text-sm">
+                      <span>
+                        <strong>Type:</strong> {editingDocument.type}
+                      </span>
+                      <span>
+                        <strong>Status:</strong> {editingDocument.status}
+                      </span>
+                      <span>
+                        <strong>Last Updated:</strong>{" "}
+                        {formatDateTime(
+                          editingDocument["updated-at"] ||
+                            editingDocument["upload-at"]
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Editor with high z-index */}
+                <div className="flex-1 overflow-hidden">
+                  <div
+                    className="h-[500px] overflow-hidden relative"
+                    style={{ zIndex: 10000 }}
+                  >
+                    <ScientificCVEditor
+                      ref={editEditorRef}
+                      value={editingContent}
+                      onChange={handleEditorChange}
+                      height={500}
+                      preset="document"
+                      readOnly={editingDocument?.status === "completed"}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Action buttons */}
-            <div className="flex justify-between items-center pt-4 border-t">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowEditDialog(false);
-                  setEditingDocument(null);
-                  setEditingContent("");
-                }}
-                disabled={isEditLoading}
-              >
-                Cancel
-              </Button>
-
-              {/* Show different buttons based on document status */}
-              {editingDocument?.status === "completed" ? (
-                /* Completed document - View only */
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <Eye className="h-4 w-4" />
-                  <span>Document is completed and read-only</span>
-                </div>
-              ) : (
-                /* Save button for non-completed documents */
+            {/* Footer */}
+            <div className="border-t p-6">
+              <div className="flex justify-between items-center">
                 <Button
-                  onClick={handleSaveEditDocument}
+                  variant="outline"
+                  onClick={() => {
+                    setShowEditDialog(false);
+                    setEditingDocument(null);
+                    setEditingContent("");
+                  }}
                   disabled={isEditLoading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
-                  {isEditLoading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-4 w-4 mr-2" />
-                      Save Changes
-                    </>
-                  )}
+                  Cancel
                 </Button>
-              )}
+
+                {/* Show different buttons based on document status */}
+                {editingDocument?.status === "completed" ? (
+                  /* Completed document - View only */
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <Eye className="h-4 w-4" />
+                    <span>Document is completed and read-only</span>
+                  </div>
+                ) : (
+                  /* Save button for non-completed documents */
+                  <Button
+                    onClick={handleSaveEditDocument}
+                    disabled={isEditLoading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    {isEditLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      )}
     </Card>
   );
 };
