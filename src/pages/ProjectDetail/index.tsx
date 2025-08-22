@@ -208,7 +208,7 @@ function ProjectDetail() {
       id: milestone.id,
       name: milestone.title,
       description: milestone.description,
-      deadline: milestone.endDate,
+      deadline: milestone["end-date"],
       status: milestone.status,
       tasks: milestone.tasks,
     })),

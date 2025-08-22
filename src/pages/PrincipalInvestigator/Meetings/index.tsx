@@ -180,8 +180,8 @@ const ProjectMilestoneFetcher: React.FC<{
         id: milestone.id,
         name: milestone.title || `Milestone ${milestone.code}`,
         description: milestone.description,
-        startDate: milestone.startDate,
-        endDate: milestone.endDate,
+        startDate: milestone["start-date"],
+        endDate: milestone["end-date"],
         projectId,
         projectName,
       }));

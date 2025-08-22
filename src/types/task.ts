@@ -1,10 +1,5 @@
 import { User } from "@/contexts/AuthContext";
-import { Member } from "./auth";
-import {
-  Evaluation,
-  EvaluationStage,
-  IndividualEvaluation,
-} from "./evaluation";
+import { EvaluationStage, IndividualEvaluation } from "./evaluation";
 
 // Re-export evaluation types for backward compatibility
 export type { EvaluationStage, IndividualEvaluation };
@@ -88,26 +83,6 @@ export interface UpdateTaskData {
   memberTasks?: unknown;
   [key: string]: unknown; // optional for flexibility
 }
-
-export type Milestone = {
-  id: string;
-  code: string;
-  title: string;
-  description: string | null;
-  objective: string | null;
-  cost: number | 0;
-  startDate: string | null;
-  endDate: string | null;
-  type: string;
-  createdAt: string;
-  status: string;
-  projectId: string;
-  creatorId: string;
-  project: string | null;
-  creator: Member | null;
-  evaluations: Evaluation[] | null;
-  tasks: ProjectTask[] | null;
-};
 
 export type ProjectTaskResponse = {
   "page-index": number;
