@@ -180,8 +180,8 @@ const ProjectMilestoneFetcher: React.FC<{
         id: milestone.id,
         name: milestone.title || `Milestone ${milestone.code}`,
         description: milestone.description,
-        startDate: milestone.startDate,
-        endDate: milestone.endDate,
+        startDate: milestone["start-date"],
+        endDate: milestone["end-date"],
         projectId,
         projectName,
       }));
@@ -210,7 +210,10 @@ const PImeetings: React.FC = () => {
   const [projectFilter, setProjectFilter] = useState<string>("All");
 
   // API hooks following TaskManagement pattern
-  const { data: projectsData, error: projectsError } = useMyProject();
+  const { data: projectsData, error: projectsError } = useMyProject(
+    "inprogress",
+    "proposal"
+  );
 
   // Extract projects
   const projects = useMemo(

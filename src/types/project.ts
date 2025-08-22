@@ -1,9 +1,10 @@
 import { Member } from "./auth";
 import { Transaction } from "./transaction";
 import { DocumentProject } from "./document";
-import { IndividualEvaluation, Milestone } from "./task";
+import { IndividualEvaluation } from "./task";
 import { Evaluation } from "./evaluation";
 import { ProjectMajorItem } from "./major";
+import { Milestone } from "./milestone";
 
 // Filter types
 export type StatusFilter = "all" | "created" | "done";
