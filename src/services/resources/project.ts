@@ -280,12 +280,17 @@ export const getProjectDetail = async (projectId: string) => {
   });
 };
 
-export const getMyProjectList = async () => {
+export const getMyProjectList = async (params?: {
+  Statuses?: string;
+  Genres?: string;
+}) => {
   const accessToken = getAccessToken();
+
   return await axiosClient.get<MyProjectResponse[]>(`/project/my-project`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+    params,
   });
 };
 

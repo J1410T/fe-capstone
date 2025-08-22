@@ -27,10 +27,13 @@ import {
 } from "@/components/ui/table";
 import {
   Search,
-  // Users,
   Briefcase,
   ArrowUpDown,
   Eye,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import { useMyProject } from "@/hooks/queries/project";
 import { useAuth } from "@/contexts";
@@ -47,6 +50,11 @@ const MyProject: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState("All");
   const [sortBy, setSortBy] = useState("englishTitle");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
   const { user } = useAuth();
 
   // Add user id and role to query key so it refetches on role change
@@ -54,7 +62,7 @@ const MyProject: React.FC = () => {
     data: projectsResponse,
     isLoading: isQueryLoading,
     error,
-  } = useMyProject(user?.id, user?.role);
+  } = useMyProject(undefined, "proposal");
   const projects = projectsResponse?.data || [];
 
   // Loader: reset on every navigation or role change
@@ -67,6 +75,11 @@ const MyProject: React.FC = () => {
       setIsPageLoading(false);
     }
   }, [isQueryLoading]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, categoryFilter, typeFilter]);
 
   // Get status color
   const getStatusColor = (status: string) => {
@@ -81,7 +94,7 @@ const MyProject: React.FC = () => {
       case "inprogress":
         return "text-blue-700 border-blue-200 bg-blue-50";
       case "on hold":
-      case "suspended":
+      case "submitted":
         return "text-orange-700 border-orange-200 bg-orange-50";
       case "rejected":
         return "text-red-700 border-red-200 bg-red-50";
@@ -137,6 +150,34 @@ const MyProject: React.FC = () => {
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
     });
+
+  // Calculate pagination
+  const totalItems = filteredProjects.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProjects = filteredProjects.slice(startIndex, endIndex);
+
+  // Get page numbers to display
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxPagesToShow = 5;
+
+    if (totalPages <= maxPagesToShow) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const start = Math.max(1, currentPage - Math.floor(maxPagesToShow / 2));
+      const end = Math.min(totalPages, start + maxPagesToShow - 1);
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+    }
+
+    return pages;
+  };
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -278,6 +319,24 @@ const MyProject: React.FC = () => {
                 ))}
               </SelectContent>
             </Select>
+
+            <Select
+              value={itemsPerPage.toString()}
+              onValueChange={(value) => {
+                setItemsPerPage(Number(value));
+                setCurrentPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full md:w-[120px]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="5">5 per page</SelectItem>
+                <SelectItem value="10">10 per page</SelectItem>
+                <SelectItem value="20">20 per page</SelectItem>
+                <SelectItem value="50">50 per page</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -285,10 +344,20 @@ const MyProject: React.FC = () => {
       {/* Projects Table */}
       <Card>
         <CardHeader>
-          <CardTitle>Projects ({filteredProjects.length})</CardTitle>
-          <CardDescription>
-            Your research projects and their current status
-          </CardDescription>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Projects ({totalItems})</CardTitle>
+              <CardDescription>
+                Your research projects and their current status
+                {totalItems > 0 && (
+                  <span className="ml-2">
+                    Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of{" "}
+                    {totalItems}
+                  </span>
+                )}
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -314,7 +383,7 @@ const MyProject: React.FC = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProjects.map((project) => (
+                {currentProjects.map((project) => (
                   <TableRow key={project.id}>
                     <TableCell className="font-medium">
                       <div className="max-w-[330px]">
@@ -379,6 +448,73 @@ const MyProject: React.FC = () => {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between pt-4">
+              <div className="text-sm text-muted-foreground">
+                Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of{" "}
+                {totalItems} results
+              </div>
+
+              <div className="flex items-center space-x-2">
+                {/* First Page */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronsLeft className="h-4 w-4" />
+                </Button>
+
+                {/* Previous Page */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+
+                {/* Page Numbers */}
+                {getPageNumbers().map((pageNum) => (
+                  <Button
+                    key={pageNum}
+                    variant={currentPage === pageNum ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setCurrentPage(pageNum)}
+                    className="min-w-[40px]"
+                  >
+                    {pageNum}
+                  </Button>
+                ))}
+
+                {/* Next Page */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setCurrentPage(Math.min(totalPages, currentPage + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+
+                {/* Last Page */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(totalPages)}
+                  disabled={currentPage === totalPages}
+                >
+                  <ChevronsRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
 
           {filteredProjects.length === 0 && (
             <div className="text-center py-8">

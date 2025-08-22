@@ -210,7 +210,10 @@ const PImeetings: React.FC = () => {
   const [projectFilter, setProjectFilter] = useState<string>("All");
 
   // API hooks following TaskManagement pattern
-  const { data: projectsData, error: projectsError } = useMyProject();
+  const { data: projectsData, error: projectsError } = useMyProject(
+    "inprogress",
+    "proposal"
+  );
 
   // Extract projects
   const projects = useMemo(

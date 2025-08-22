@@ -708,7 +708,7 @@ const DocumentManagement: React.FC = () => {
             )}
 
             {/* ✅ ENHANCED DEBUG INFO */}
-            {selectedProjectId && (
+            {/* {selectedProjectId && (
               <div className="mt-4 p-3 bg-gray-100 rounded text-xs text-gray-600">
                 <strong>Debug Info:</strong>
                 <br />
@@ -734,7 +734,7 @@ const DocumentManagement: React.FC = () => {
                   </div>
                 )}
               </div>
-            )}
+            )} */}
           </div>
         </CardContent>
       </Card>
