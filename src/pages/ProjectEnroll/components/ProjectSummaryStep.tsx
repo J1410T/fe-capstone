@@ -353,13 +353,12 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                   "advlist autolink lists link image charmap preview anchor",
                   "searchreplace visualblocks code fullscreen",
                   "insertdatetime media table help wordcount",
-                  "textcolor colorpicker hr pagebreak spellchecker",
+                  "textcolor colorpicker hr pagebreak",
                   "contextmenu", // Thêm context menu cho right-click
                   "paste", // Plugin paste để xử lý copy-paste tốt hơn
-                  "powerpaste", // Plugin powerpaste cho paste từ Word/Excel
                 ],
                 toolbar:
-                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table quickAddRow quickAddCol copyTable | tablerowheader tablecol tablerow tablecell | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | tableprops tablerowprops tablecellprops tabledelete | link image uploadImage | preview code codesample viewSource fullscreen | insertSignature | forecolor backcolor | fontsize | hr pagebreak | searchreplace | spellchecker",
+                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table quickAddRow quickAddCol copyTable | tablerowheader tablecol tablerow tablecell | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | tableprops tablerowprops tablecellprops tabledelete | link image uploadImage | preview code codesample viewSource fullscreen | insertSignature | forecolor backcolor | fontsize | hr pagebreak | searchreplace",
                 setup: (editor) => {
                   // Use shared ref to track uploaded images for deletion
                   const uploadedImages = uploadedImagesRef.current;
@@ -856,10 +855,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                 paste_remove_styles_if_webkit: false,
                 paste_strip_class_attributes: "none",
                 paste_retain_style_properties: "all",
-                // Cấu hình powerpaste cho Excel/Word
-                powerpaste_word_import: "clean",
-                powerpaste_html_import: "clean",
-                powerpaste_allow_local_images: true,
+
                 // Cấu hình table selection và copy
                 table_clone_elements: "strong em b i u strike sub sup a",
                 table_use_colgroups: true,
