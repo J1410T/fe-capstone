@@ -261,7 +261,10 @@ export const TopicDetailPage: React.FC = () => {
     <div className="min-h-screen">
       {/* Loading overlay */}
       {isApproving && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-100 bg-opacity-70 backdrop-blur-sm">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center 
+                  bg-white/70 backdrop-blur-sm"
+        >
           <div className="bg-white rounded-lg p-8 shadow-lg">
             <Loading />
             <p className="text-center text-sm text-gray-600 mt-4">
