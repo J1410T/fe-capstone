@@ -16,7 +16,7 @@ export interface ResultPublish {
 export interface ProjectResult {
   id?: string;
   name: string;
-  url: string;
+  url: string | null;
   "project-id": string;
   "added-date": string;
   "result-publishs"?: ResultPublish[];
@@ -108,6 +108,8 @@ export const updateProjectResult = async (
 ): Promise<ProjectResultResponse> => {
   try {
     const accessToken = getAccessToken();
+    console.log("updateProjectResult - sending data:", data);
+
     const response = await axiosClient.put<ProjectResultResponse>(
       "/project-result",
       data,
@@ -118,6 +120,8 @@ export const updateProjectResult = async (
         },
       }
     );
+
+    console.log("updateProjectResult - response:", response.data);
     return response.data;
   } catch (error) {
     console.error("updateProjectResult error:", error);

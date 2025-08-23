@@ -52,11 +52,14 @@ export const useUpdateProjectResult = () => {
 
   return useMutation({
     mutationFn: updateProjectResult,
-    onSuccess: (data) => {
-      // Invalidate specific project result query
-      queryClient.invalidateQueries({
-        queryKey: ["project-result", data.data["project-id"]],
-      });
+    onSuccess: (data, variables) => {
+      // Invalidate specific project result query using variables (input data)
+      const projectId = variables["project-id"] || data?.data?.["project-id"];
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: ["project-result", projectId],
+        });
+      }
       // Also invalidate general project result queries
       queryClient.invalidateQueries({ queryKey: ["project-result"] });
       toast.success("Project result updated successfully!");

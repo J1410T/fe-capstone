@@ -133,12 +133,10 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
       return;
     }
 
-    if (!resultUrl.trim()) {
-      toast.error(
-        isApplicationCategory
-          ? "Please upload a ZIP file"
-          : "Please enter result URL"
-      );
+    // Với application category thì bắt buộc phải có URL (từ upload ZIP)
+    // Với basic category thì có thể tạo với URL null trước, sau đó thêm publications
+    if (isApplicationCategory && !resultUrl.trim()) {
+      toast.error("Please upload a ZIP file");
       return;
     }
 
@@ -146,7 +144,7 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
       const resultData: ProjectResult = {
         id: projectResult?.id,
         name: resultName,
-        url: resultUrl,
+        url: resultUrl || null, // Có thể null cho basic category
         "project-id": projectId,
         "added-date": new Date().toISOString(),
         ...(isBasicCategory && {
@@ -195,7 +193,7 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
               : p
           ) || [];
       } else {
-        // Add new (without id for creation)
+        // Add new - ID sẽ được backend generate
         updatedPublishes = [
           ...(projectResult?.["result-publishs"] || []),
           newPublish,
@@ -207,6 +205,7 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
         "result-publishs": updatedPublishes,
       };
 
+      console.log("handleSavePublish - updatedResult:", updatedResult);
       await updateProjectResult.mutateAsync(updatedResult);
 
       setShowPublishDialog(false);
@@ -340,14 +339,23 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
                       Added: {formatDateTime(projectResult["added-date"])}
                     </p>
                     <div className="flex items-center gap-2 mt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => window.open(projectResult.url, "_blank")}
-                      >
-                        <ExternalLink className="h-3 w-3 mr-1" />
-                        {isApplicationCategory ? "Download" : "View"}
-                      </Button>
+                      {projectResult.url && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            window.open(projectResult.url!, "_blank")
+                          }
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          {isApplicationCategory ? "Download" : "View"}
+                        </Button>
+                      )}
+                      {!projectResult.url && isBasicCategory && (
+                        <p className="text-sm text-amber-600">
+                          Add publications to complete this result
+                        </p>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -552,14 +560,23 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
             ) : (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Result URL *
+                  Result URL {isBasicCategory ? "(Optional)" : "*"}
                 </label>
                 <Input
                   value={resultUrl}
                   onChange={(e) => setResultUrl(e.target.value)}
-                  placeholder="https://example.com/project-result"
+                  placeholder={
+                    isBasicCategory
+                      ? "https://example.com/project-result (optional - can add publications later)"
+                      : "https://example.com/project-result"
+                  }
                   type="url"
                 />
+                {isBasicCategory && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    You can create the result first and add publications later
+                  </p>
+                )}
               </div>
             )}
           </div>
