@@ -34,6 +34,7 @@ import {
   Award,
   Calendar,
   Filter,
+  Loader2,
 } from "lucide-react";
 import { UI_CONSTANTS } from "@/lib/ui-constants";
 import { formatVND } from "../shared";
@@ -44,229 +45,136 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/utils";
 import { Calendar as CalendarComp } from "@/components/ui/calendar";
-interface Project {
-  id: string;
-  code: string;
-  "english-title": string;
-  "vietnamese-title": string;
-  language: string;
-  category: string;
-  type: string;
-  genre: string;
-  status: string;
-  progress: number;
-  "maximum-member": number;
-  "created-at": string;
-  "updated-at": string | null;
-  "creator-id": string;
-  majors: Array<{
-    id: string;
-    name: string;
-    field: {
-      id: string;
-      name: string;
-    };
-  }>;
-  "project-tags": Array<{
-    name: string;
-  }>;
+// import { useDashboardSystemStats } from "@/hooks/queries/dashboard";
+import {
+  useDashboardSystemStats,
+  useDashboardTransactions,
+  useDashboardMilestonesProgress,
+  useDashboardCouncils,
+  useDashboardProjectStatus,
+  useDashboardUserRoles,
+  useDashboardMajorDistribution,
+} from "@/hooks/queries/dashboard";
+
+interface DateRange {
+  from: string | null;
+  to: string | null;
 }
 
-// Mock projects data with proper statuses
-const mockProjects: Project[] = [
-  {
-    id: "7a117ebd-e5c0-459f-a977-075b492a9aa1",
-    code: "PRJ015",
-    "english-title":
-      "BookStreet - The application helps people look up information about books",
-    "vietnamese-title":
-      "BookStreet - Ứng dụng giúp mọi người tra cứu thông tin về sách",
-    language: "Vietnamese",
-    category: "basic",
-    type: "school level",
-    genre: "normal", // Not proposal
-    status: "created",
-    progress: 15,
-    "maximum-member": 6,
-    "created-at": "2025-07-18T14:50:33.66",
-    "updated-at": null,
-    "creator-id": "403c10a6-4889-49c6-b3b7-75d65572e1ee",
-    majors: [],
-    "project-tags": [],
-  },
-  {
-    id: "319ad3ec-7c7b-433e-9cdf-0ba9fa9b182d",
-    code: "PRJ002",
-    "english-title": "Science Research Project Management",
-    "vietnamese-title": "Ứng dụng quản lý đề tài khoa học",
-    language: "English",
-    category: "basic",
-    type: "school level",
-    genre: "normal",
-    status: "ongoing",
-    progress: 45,
-    "maximum-member": 6,
-    "created-at": "2025-07-18T14:50:33.66",
-    "updated-at": null,
-    "creator-id": "5439fe48-5101-4266-a10f-afabcafb2f74",
-    majors: [
-      {
-        id: "74c32ee6-b8a6-4455-8b34-02321af11590",
-        name: "Software Engineering",
-        field: {
-          id: "b0686776-c61c-44d2-a17a-8c05fc6fd7f6",
-          name: "Information Technology",
-        },
-      },
-    ],
-    "project-tags": [],
-  },
-  {
-    id: "37262efd-0640-45bb-a5a6-148c54d9b7f6",
-    code: "PRJ001",
-    "english-title": "AI-based Learning Support System",
-    "vietnamese-title": "Hệ thống hỗ trợ học tập dùng AI",
-    language: "English",
-    category: "basic",
-    type: "school level",
-    genre: "normal",
-    status: "completed",
-    progress: 100,
-    "maximum-member": 6,
-    "created-at": "2025-07-18T14:50:33.66",
-    "updated-at": null,
-    "creator-id": "5439fe48-5101-4266-a10f-afabcafb2f74",
-    majors: [],
-    "project-tags": [],
-  },
-  {
-    id: "a07cbf07-c165-459c-b99f-2023cbe32653",
-    code: "PRJ007",
-    "english-title": "FUC - Capstone management system",
-    "vietnamese-title": "FUC - Hệ thống quản lý đồ án",
-    language: "English",
-    category: "basic",
-    type: "school level",
-    genre: "normal",
-    status: "cancelled",
-    progress: 30,
-    "maximum-member": 6,
-    "created-at": "2025-07-18T14:50:33.66",
-    "updated-at": null,
-    "creator-id": "2427d29b-b64f-4315-b8b4-b0bf2f3c4cee",
-    majors: [],
-    "project-tags": [],
-  },
-];
-
-const majorData = [
-  { name: "Software Eng", value: 35, students: 120 },
-  { name: "IT", value: 28, students: 95 },
-  { name: "Computer Sci", value: 20, students: 68 },
-  { name: "Data Science", value: 12, students: 41 },
-  { name: "Cybersecurity", value: 5, students: 17 },
-];
-
-// User Management Stats with roles
-const userStats = {
-  totalUsers: 156,
-  activeUsers: 142,
-  principalInvestigators: 25,
-  researchers: 78,
-  hostInstitutions: 12,
-  councilMembers: 18,
-  staffs: 23,
-};
-
-// Transaction Stats
-const transactionStats = {
-  totalTransactions: 342,
-  pendingTransactions: 23,
-  monthlyTransactions: 89,
-  totalAmount: 58800000000, // VND
-  pendingAmount: 3200000000, // VND
-  monthlyAmount: 12400000000, // VND
-};
-
 const StaffDashboard: React.FC = () => {
-  // Date range state
-  const [dateRange, setDateRange] = useState({
-    from: new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1)
-      .toISOString()
-      .split("T")[0],
-    to: new Date().toISOString().split("T")[0],
+  // Date range state - defaults to null as requested
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: null,
+    to: null,
   });
 
-  // Calculate project statistics (excluding proposals)
-  const projectStats = useMemo(() => {
-    // Filter out proposals
-    const nonProposalProjects = mockProjects.filter(
-      (p) => p.genre !== "proposal"
-    );
+  // API queries with date range parameters
+  const systemStatsQuery = useDashboardSystemStats(dateRange);
+  const transactionsQuery = useDashboardTransactions(dateRange);
+  const milestonesQuery = useDashboardMilestonesProgress();
+  const councilsQuery = useDashboardCouncils();
+  const projectStatusQuery = useDashboardProjectStatus(dateRange);
+  const userRolesQuery = useDashboardUserRoles();
+  const majorDistributionQuery = useDashboardMajorDistribution(dateRange);
 
-    const total = nonProposalProjects.length;
-    const created = nonProposalProjects.filter(
-      (p) => p.status === "created"
-    ).length;
-    const ongoing = nonProposalProjects.filter(
-      (p) => p.status === "ongoing"
-    ).length;
-    const completed = nonProposalProjects.filter(
-      (p) => p.status === "completed"
-    ).length;
-    const cancelled = nonProposalProjects.filter(
-      (p) => p.status === "cancelled"
-    ).length;
+  // Handle loading states
+  // const isLoading =
+  //   systemStatsQuery.isLoading ||
+  //   transactionsQuery.isLoading ||
+  //   milestonesQuery.isLoading ||
+  //   councilsQuery.isLoading ||
+  //   projectStatusQuery.isLoading ||
+  //   userRolesQuery.isLoading ||
+  //   majorDistributionQuery.isLoading;
 
-    // Active projects are those in progress (ongoing)
-    const activeProjects = ongoing;
+  // Process API data
+  const systemStats = systemStatsQuery.data?.data;
+  const transactions = transactionsQuery.data?.data;
+  const milestones = milestonesQuery.data?.data;
+  const councils = councilsQuery.data?.data;
+  const projectStatus = projectStatusQuery.data?.data;
+  const userRoles = userRolesQuery.data?.data;
+  const majorDistribution = majorDistributionQuery.data?.data;
 
-    return {
-      total,
-      created,
-      ongoing,
-      completed,
-      cancelled,
-      activeProjects,
-    };
-  }, []);
-
-  // Academic Management Stats with calculated average
-  const academicStats = useMemo(
+  // Calculate evaluation stats (using mock data for now since no API provided)
+  const evaluationStats = useMemo(
     () => ({
-      totalFields: 8,
-      totalMajors: 24,
-      totalCouncils: 6,
-      activeCouncils: 4,
-      councilMembers: 18,
-      averageProjectsPerCouncil: Math.round((projectStats.total / 6) * 10) / 10, // 6 total councils
+      totalEvaluations: systemStats?.["total-evaluations"] || 0,
+      completedEvaluations: Math.floor(
+        (systemStats?.["total-evaluations"] || 0) * 0.9
+      ),
+      passedEvaluations: Math.floor(
+        (systemStats?.["total-evaluations"] || 0) * 0.8
+      ),
+      failedEvaluations: Math.floor(
+        (systemStats?.["total-evaluations"] || 0) * 0.1
+      ),
+      pendingEvaluations: Math.floor(
+        (systemStats?.["total-evaluations"] || 0) * 0.1
+      ),
     }),
-    [projectStats.total]
+    [systemStats]
   );
 
-  // Evaluation Stats
-  const evaluationStats = {
-    totalEvaluations: 156,
-    completedEvaluations: 142,
-    passedEvaluations: 128,
-    failedEvaluations: 14,
-    pendingEvaluations: 14,
-  };
+  // Project status pie chart data
+  const projectStatusPieData = useMemo(() => {
+    if (!projectStatus) return [];
+    return [
+      { name: "Created", value: projectStatus.created, color: "#3b82f6" },
+      {
+        name: "In Progress",
+        value: projectStatus["in-progress"],
+        color: "#f59e0b",
+      },
+      { name: "Completed", value: projectStatus.completed, color: "#10b981" },
+      { name: "Cancelled", value: projectStatus.cancelled, color: "#ef4444" },
+    ];
+  }, [projectStatus]);
 
-  // Milestone Stats
-  const milestoneStats = {
-    totalMilestones: 89,
-    completedMilestones: 67,
-    inProgressMilestones: 15,
-    overdueMilestones: 7,
-  };
+  // Major distribution bar chart data
+  const majorDistributionBarData = useMemo(() => {
+    if (!majorDistribution) return [];
+    return majorDistribution.map((item) => ({
+      name: item["major-name"],
+      value: item["project-count"],
+    }));
+  }, [majorDistribution]);
 
-  const data = [
-    { name: "Created", value: projectStats.created, color: "#3b82f6" },
-    { name: "Ongoing", value: projectStats.ongoing, color: "#f59e0b" },
-    { name: "Completed", value: projectStats.completed, color: "#10b981" },
-    { name: "Cancelled", value: projectStats.cancelled, color: "#ef4444" },
-  ];
+  // User roles processed for display
+  const processedUserRoles = useMemo(() => {
+    if (!userRoles) return {};
+
+    const roles: { [key: string]: number } = {};
+    userRoles.forEach((role) => {
+      const roleName = role["role-name"];
+      const count = role["user-count"];
+
+      // Map API role names to our display names
+      switch (roleName.toLowerCase()) {
+        case "principal investigator":
+          roles.principalInvestigators = count;
+          break;
+        case "researcher":
+          roles.researchers = count;
+          break;
+        case "staff":
+          roles.staffs = count;
+          break;
+        case "host institution":
+          roles.hostInstitutions = count;
+          break;
+        case "appraisal council":
+          roles.councilMembers = count;
+          break;
+        case "admin":
+        case "leader":
+          roles.admins = (roles.admins || 0) + count;
+          break;
+      }
+    });
+
+    return roles;
+  }, [userRoles]);
 
   const StatCard = ({
     title,
@@ -275,6 +183,7 @@ const StaffDashboard: React.FC = () => {
     trend,
     trendValue,
     color = "default",
+    isLoading: cardLoading = false,
   }: {
     title: string;
     value: string | number;
@@ -282,6 +191,7 @@ const StaffDashboard: React.FC = () => {
     trend?: "up" | "down";
     trendValue?: string;
     color?: "default" | "success" | "warning" | "error";
+    isLoading?: boolean;
   }) => {
     const colorClasses = {
       default: "text-blue-600 bg-blue-50",
@@ -300,22 +210,33 @@ const StaffDashboard: React.FC = () => {
               <p className="text-sm font-medium text-muted-foreground">
                 {title}
               </p>
-              <p className="text-2xl font-bold">{value}</p>
-              {trend && trendValue && (
-                <div className="flex items-center mt-1">
-                  <TrendingUp
-                    className={`w-4 h-4 mr-1 ${
-                      trend === "up" ? "text-green-500" : "text-red-500"
-                    }`}
-                  />
-                  <span
-                    className={`text-sm ${
-                      trend === "up" ? "text-green-600" : "text-red-600"
-                    }`}
-                  >
-                    {trendValue}
+              {cardLoading ? (
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span className="text-sm text-muted-foreground">
+                    Loading...
                   </span>
                 </div>
+              ) : (
+                <>
+                  <p className="text-2xl font-bold">{value}</p>
+                  {trend && trendValue && (
+                    <div className="flex items-center mt-1">
+                      <TrendingUp
+                        className={`w-4 h-4 mr-1 ${
+                          trend === "up" ? "text-green-500" : "text-red-500"
+                        }`}
+                      />
+                      <span
+                        className={`text-sm ${
+                          trend === "up" ? "text-green-600" : "text-red-600"
+                        }`}
+                      >
+                        {trendValue}
+                      </span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div className={`p-3 rounded-full ${colorClasses[color]}`}>
@@ -329,8 +250,10 @@ const StaffDashboard: React.FC = () => {
 
   // Generate data based on selected date range
   const generateTimeSeriesData = () => {
-    const startDate = new Date(dateRange.from);
-    const endDate = new Date(dateRange.to);
+    const startDate = dateRange.from
+      ? new Date(dateRange.from)
+      : new Date(new Date().getFullYear(), new Date().getMonth() - 5, 1);
+    const endDate = dateRange.to ? new Date(dateRange.to) : new Date();
     const data = [];
 
     const current = new Date(startDate);
@@ -367,7 +290,7 @@ const StaffDashboard: React.FC = () => {
       );
     }
 
-    return data.slice(0, 12); // Limit to 12 data points for readability
+    return data.slice(0, 12);
   };
 
   // Performance Line Chart
@@ -383,7 +306,6 @@ const StaffDashboard: React.FC = () => {
             <YAxis />
             <Tooltip />
 
-            {/* All metrics as line charts */}
             <Line
               type="monotone"
               dataKey="projects"
@@ -427,12 +349,20 @@ const StaffDashboard: React.FC = () => {
 
   // Pie Chart for Project Status
   const ProjectStatusPieChart = () => {
+    if (projectStatusQuery.isLoading) {
+      return (
+        <div className="h-64 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      );
+    }
+
     return (
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
-              data={data}
+              data={projectStatusPieData}
               cx="50%"
               cy="50%"
               outerRadius={80}
@@ -442,7 +372,7 @@ const StaffDashboard: React.FC = () => {
                 `${name} ${(percent * 100).toFixed(0)}%`
               }
             >
-              {data.map((entry, index) => (
+              {projectStatusPieData.map((entry, index) => (
                 <Cell key={`cell-${index}`} fill={entry.color} />
               ))}
             </Pie>
@@ -455,10 +385,18 @@ const StaffDashboard: React.FC = () => {
 
   // Bar Chart for Major Distribution
   const MajorBarChart = () => {
+    if (majorDistributionQuery.isLoading) {
+      return (
+        <div className="h-64 flex items-center justify-center">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      );
+    }
+
     return (
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={majorData}>
+          <BarChart data={majorDistributionBarData}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="name" />
             <YAxis />
@@ -468,6 +406,11 @@ const StaffDashboard: React.FC = () => {
         </ResponsiveContainer>
       </div>
     );
+  };
+
+  // Reset date range function
+  const resetDateRange = () => {
+    setDateRange({ from: null, to: null });
   };
 
   return (
@@ -500,12 +443,11 @@ const StaffDashboard: React.FC = () => {
                   <Calendar className="mr-2 h-4 w-4" />
                   {dateRange.from
                     ? new Date(dateRange.from).toLocaleDateString("vi-VN")
-                    : "Choose start date"}
+                    : "00-00-0000"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <CalendarComp
-                  key={`from-${dateRange.from}`}
                   mode="single"
                   selected={
                     dateRange.from ? new Date(dateRange.from) : undefined
@@ -519,15 +461,11 @@ const StaffDashboard: React.FC = () => {
                     }
                   }}
                   disabled={(date) => {
-                    // Disable dates after the 'to' date if it's set
                     if (dateRange.to) {
                       return date > new Date(dateRange.to);
                     }
                     return false;
                   }}
-                  defaultMonth={
-                    dateRange.from ? new Date(dateRange.from) : undefined
-                  }
                   initialFocus
                 />
               </PopoverContent>
@@ -548,12 +486,11 @@ const StaffDashboard: React.FC = () => {
                   <Calendar className="mr-2 h-4 w-4" />
                   {dateRange.to
                     ? new Date(dateRange.to).toLocaleDateString("vi-VN")
-                    : "Choose end date"}
+                    : "00-00-0000"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <CalendarComp
-                  key={`to-${dateRange.to}`}
                   mode="single"
                   selected={dateRange.to ? new Date(dateRange.to) : undefined}
                   onSelect={(date) => {
@@ -565,36 +502,17 @@ const StaffDashboard: React.FC = () => {
                     }
                   }}
                   disabled={(date) => {
-                    // Disable dates before the 'from' date if it's set
                     if (dateRange.from) {
                       return date < new Date(dateRange.from);
                     }
                     return false;
                   }}
-                  defaultMonth={
-                    dateRange.to ? new Date(dateRange.to) : undefined
-                  }
                   initialFocus
                 />
               </PopoverContent>
             </Popover>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setDateRange({
-                  from: new Date(
-                    new Date().getFullYear(),
-                    new Date().getMonth() - 5,
-                    1
-                  )
-                    .toISOString()
-                    .split("T")[0],
-                  to: new Date().toISOString().split("T")[0],
-                });
-              }}
-            >
+            <Button variant="outline" size="sm" onClick={resetDateRange}>
               <Filter className="w-4 h-4 mr-1" />
               Reset
             </Button>
@@ -606,43 +524,48 @@ const StaffDashboard: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           title="Total Projects"
-          value={projectStats.total}
+          value={systemStats?.["total-projects-created"] || 0}
           icon={FolderOpen}
           trend="up"
           trendValue="+12%"
           color="default"
+          isLoading={systemStatsQuery.isLoading}
         />
         <StatCard
           title="Active Projects"
-          value={projectStats.activeProjects}
+          value={systemStats?.["active-projects"] || 0}
           icon={Activity}
           trend="up"
           trendValue="+8%"
           color="success"
+          isLoading={systemStatsQuery.isLoading}
         />
         <StatCard
           title="Evaluations"
-          value={evaluationStats.totalEvaluations}
+          value={systemStats?.["total-evaluations"] || 0}
           icon={Award}
           trend="up"
           trendValue="+6%"
           color="warning"
+          isLoading={systemStatsQuery.isLoading}
         />
         <StatCard
           title="Milestones"
-          value={milestoneStats.totalMilestones}
+          value={systemStats?.["total-milestones"] || 0}
           icon={Target}
           trend="up"
           trendValue="+10%"
           color="default"
+          isLoading={systemStatsQuery.isLoading}
         />
         <StatCard
           title="Active Users"
-          value={userStats.activeUsers}
+          value={systemStats?.["active-users"] || 0}
           icon={Users}
           trend="up"
           trendValue="+5%"
           color="success"
+          isLoading={systemStatsQuery.isLoading}
         />
       </div>
 
@@ -684,7 +607,8 @@ const StaffDashboard: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <Activity className="w-5 h-5 text-purple-600" />
                 <span>
-                  Performance Analytics ({dateRange.from} to {dateRange.to})
+                  Performance Analytics ({dateRange.from || "All time"} to{" "}
+                  {dateRange.to || "Present"})
                 </span>
               </div>
               <div className="flex items-center space-x-4 text-sm">
@@ -727,57 +651,59 @@ const StaffDashboard: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                  <p className="text-2xl font-bold text-green-600">
-                    {formatVND(transactionStats.totalAmount)}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Total Amount</p>
+              {transactionsQuery.isLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="w-8 h-8 animate-spin" />
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <p className="text-lg font-bold text-blue-600">
-                      {transactionStats.totalTransactions}
+              ) : (
+                <div className="space-y-6">
+                  <div className="text-center p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <p className="text-2xl font-bold text-green-600">
+                      {formatVND(transactions?.["total-money"] || 0)}
                     </p>
-                    <p className="text-xs text-muted-foreground">Total</p>
-                  </div>
-                  <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                    <p className="text-lg font-bold text-yellow-600">
-                      {transactionStats.pendingTransactions}
+                    <p className="text-sm text-muted-foreground">
+                      Total Amount
                     </p>
-                    <p className="text-xs text-muted-foreground">Pending</p>
                   </div>
-                  <div className="text-center p-3 bg-purple-50 rounded-lg">
-                    <p className="text-lg font-bold text-purple-600">
-                      {transactionStats.monthlyTransactions}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Monthly</p>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center p-3 bg-blue-50 rounded-lg">
+                      <p className="text-lg font-bold text-blue-600">
+                        {transactions?.["total-transactions"] || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Total</p>
+                    </div>
+                    <div className="text-center p-3 bg-yellow-50 rounded-lg">
+                      <p className="text-lg font-bold text-yellow-600">
+                        {transactions?.["pending-transactions"] || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Pending</p>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded-lg">
+                      <p className="text-lg font-bold text-purple-600">
+                        {transactions?.["average-monthly"] || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Monthly Avg
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Processing Rate</span>
-                    <span className="font-medium">
-                      {Math.round(
-                        ((transactionStats.totalTransactions -
-                          transactionStats.pendingTransactions) /
-                          transactionStats.totalTransactions) *
-                          100
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Processing Rate</span>
+                      <span className="font-medium">
+                        {transactions?.["processing-rate"] || "0%"}
+                      </span>
+                    </div>
+                    <Progress
+                      value={parseFloat(
+                        transactions?.["processing-rate"]?.replace("%", "") ||
+                          "0"
                       )}
-                      %
-                    </span>
+                      className="h-2"
+                    />
                   </div>
-                  <Progress
-                    value={
-                      ((transactionStats.totalTransactions -
-                        transactionStats.pendingTransactions) /
-                        transactionStats.totalTransactions) *
-                      100
-                    }
-                    className="h-2"
-                  />
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -790,53 +716,61 @@ const StaffDashboard: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-6">
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="text-center p-4 bg-indigo-50 rounded-lg">
-                    <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-indigo-200 rounded-full">
-                      <BookOpen className="w-6 h-6 text-indigo-600" />
+              {councilsQuery.isLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center p-4 bg-indigo-50 rounded-lg">
+                      <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-indigo-200 rounded-full">
+                        <BookOpen className="w-6 h-6 text-indigo-600" />
+                      </div>
+                      <p className="text-xl font-bold text-indigo-600">
+                        {councils?.["total-fields"] || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Fields</p>
                     </div>
-                    <p className="text-xl font-bold text-indigo-600">
-                      {academicStats.totalFields}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Fields</p>
+                    <div className="text-center p-4 bg-cyan-50 rounded-lg">
+                      <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-cyan-200 rounded-full">
+                        <Building2 className="w-6 h-6 text-cyan-600" />
+                      </div>
+                      <p className="text-xl font-bold text-cyan-600">
+                        {councils?.["total-majors"] || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Majors</p>
+                    </div>
+                    <div className="text-center p-4 bg-teal-50 rounded-lg">
+                      <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-teal-200 rounded-full">
+                        <Users className="w-6 h-6 text-teal-600" />
+                      </div>
+                      <p className="text-xl font-bold text-teal-600">
+                        {processedUserRoles.councilMembers || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Councils</p>
+                    </div>
                   </div>
-                  <div className="text-center p-4 bg-cyan-50 rounded-lg">
-                    <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-cyan-200 rounded-full">
-                      <Building2 className="w-6 h-6 text-cyan-600" />
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium">
+                        Council Members
+                      </span>
+                      <Badge className="bg-blue-100 text-blue-800">
+                        {councils?.["total-council-members"] || 0}
+                      </Badge>
                     </div>
-                    <p className="text-xl font-bold text-cyan-600">
-                      {academicStats.totalMajors}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Majors</p>
-                  </div>
-                  <div className="text-center p-4 bg-teal-50 rounded-lg">
-                    <div className="flex items-center justify-center w-12 h-12 mx-auto mb-2 bg-teal-200 rounded-full">
-                      <Users className="w-6 h-6 text-teal-600" />
+                    <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                      <span className="text-sm font-medium">
+                        Avg Projects/Council
+                      </span>
+                      <Badge className="bg-green-100 text-green-800">
+                        {councils?.["average-projects-per-council"] || 0}
+                      </Badge>
                     </div>
-                    <p className="text-xl font-bold text-teal-600">
-                      {academicStats.totalCouncils}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Councils</p>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                    <span className="text-sm font-medium">Council Members</span>
-                    <Badge className="bg-blue-100 text-blue-800">
-                      {academicStats.councilMembers}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="text-sm font-medium">
-                      Avg Projects/Council
-                    </span>
-                    <Badge className="bg-green-100 text-green-800">
-                      {academicStats.averageProjectsPerCouncil}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -852,53 +786,63 @@ const StaffDashboard: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="text-center p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border border-orange-200">
-                  <p className="text-2xl font-bold text-orange-600">
-                    {evaluationStats.totalEvaluations}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Total Evaluations
-                  </p>
+              {systemStatsQuery.isLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="w-8 h-8 animate-spin" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <CheckCircle2 className="w-5 h-5 text-green-600 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-green-600">
-                      {evaluationStats.passedEvaluations}
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-center p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border border-orange-200">
+                    <p className="text-2xl font-bold text-orange-600">
+                      {evaluationStats.totalEvaluations}
                     </p>
-                    <p className="text-xs text-muted-foreground">Passed</p>
-                  </div>
-                  <div className="text-center p-3 bg-red-50 rounded-lg">
-                    <XCircle className="w-5 h-5 text-red-600 mx-auto mb-1" />
-                    <p className="text-lg font-bold text-red-600">
-                      {evaluationStats.failedEvaluations}
+                    <p className="text-sm text-muted-foreground">
+                      Total Evaluations
                     </p>
-                    <p className="text-xs text-muted-foreground">Failed</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="text-center p-3 bg-green-50 rounded-lg">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-green-600">
+                        {evaluationStats.passedEvaluations}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Passed</p>
+                    </div>
+                    <div className="text-center p-3 bg-red-50 rounded-lg">
+                      <XCircle className="w-5 h-5 text-red-600 mx-auto mb-1" />
+                      <p className="text-lg font-bold text-red-600">
+                        {evaluationStats.failedEvaluations}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Failed</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Pass Rate</span>
+                      <span className="font-medium">
+                        {evaluationStats.completedEvaluations > 0
+                          ? Math.round(
+                              (evaluationStats.passedEvaluations /
+                                evaluationStats.completedEvaluations) *
+                                100
+                            )
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                    <Progress
+                      value={
+                        evaluationStats.completedEvaluations > 0
+                          ? (evaluationStats.passedEvaluations /
+                              evaluationStats.completedEvaluations) *
+                            100
+                          : 0
+                      }
+                      className="h-2"
+                    />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span>Pass Rate</span>
-                    <span className="font-medium">
-                      {Math.round(
-                        (evaluationStats.passedEvaluations /
-                          evaluationStats.completedEvaluations) *
-                          100
-                      )}
-                      %
-                    </span>
-                  </div>
-                  <Progress
-                    value={
-                      (evaluationStats.passedEvaluations /
-                        evaluationStats.completedEvaluations) *
-                      100
-                    }
-                    className="h-2"
-                  />
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
@@ -911,57 +855,58 @@ const StaffDashboard: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                  <p className="text-2xl font-bold text-blue-600">
-                    {Math.round(
-                      (milestoneStats.completedMilestones /
-                        milestoneStats.totalMilestones) *
-                        100
-                    )}
-                    %
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    Completion Rate
-                  </p>
+              {milestonesQuery.isLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="w-8 h-8 animate-spin" />
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="text-center p-2 bg-green-50 rounded-lg">
-                    <p className="text-sm font-bold text-green-600">
-                      {milestoneStats.completedMilestones}
+              ) : (
+                <div className="space-y-4">
+                  <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                    <p className="text-2xl font-bold text-blue-600">
+                      {milestones?.["completion-rate"] || "0%"}
                     </p>
-                    <p className="text-xs text-muted-foreground">Done</p>
+                    <p className="text-sm text-muted-foreground">
+                      Completion Rate
+                    </p>
                   </div>
-                  <div className="text-center p-2 bg-yellow-50 rounded-lg">
-                    <p className="text-sm font-bold text-yellow-600">
-                      {milestoneStats.inProgressMilestones}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Progress</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="text-center p-2 bg-green-50 rounded-lg">
+                      <p className="text-sm font-bold text-green-600">
+                        {milestones?.["completed-milestones"] || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Done</p>
+                    </div>
+                    <div className="text-center p-2 bg-yellow-50 rounded-lg">
+                      <p className="text-sm font-bold text-yellow-600">
+                        {milestones?.["in-progress-milestones"] || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Progress</p>
+                    </div>
+                    <div className="text-center p-2 bg-red-50 rounded-lg">
+                      <p className="text-sm font-bold text-red-600">
+                        {milestones?.["cancelled-milestones"] || 0}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Cancelled</p>
+                    </div>
                   </div>
-                  <div className="text-center p-2 bg-red-50 rounded-lg">
-                    <p className="text-sm font-bold text-red-600">
-                      {milestoneStats.overdueMilestones}
+                  <div className="space-y-2">
+                    <Progress
+                      value={parseFloat(
+                        milestones?.["completion-rate"]?.replace("%", "") || "0"
+                      )}
+                      className="h-3"
+                    />
+                    <p className="text-xs text-center text-muted-foreground">
+                      {milestones?.["completed-milestones"] || 0}/
+                      {milestones?.["total-milestones"] || 0} milestones
+                      completed
                     </p>
-                    <p className="text-xs text-muted-foreground">Overdue</p>
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Progress
-                    value={
-                      (milestoneStats.completedMilestones /
-                        milestoneStats.totalMilestones) *
-                      100
-                    }
-                    className="h-3"
-                  />
-                  <p className="text-xs text-center text-muted-foreground">
-                    {milestoneStats.completedMilestones}/
-                    {milestoneStats.totalMilestones} milestones completed
-                  </p>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
+
           {/* User Roles Distribution */}
           <Card>
             <CardHeader>
@@ -971,46 +916,61 @@ const StaffDashboard: React.FC = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
-                  <span className="text-sm font-medium">
-                    Principal Investigators
-                  </span>
-                  <Badge className="bg-purple-100 text-purple-800">
-                    {userStats.principalInvestigators}
-                  </Badge>
+              {userRolesQuery.isLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="w-8 h-8 animate-spin" />
                 </div>
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                  <span className="text-sm font-medium">Researchers</span>
-                  <Badge className="bg-blue-100 text-blue-800">
-                    {userStats.researchers}
-                  </Badge>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                    <span className="text-sm font-medium">
+                      Principal Investigators
+                    </span>
+                    <Badge className="bg-purple-100 text-purple-800">
+                      {processedUserRoles.principalInvestigators || 0}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                    <span className="text-sm font-medium">Researchers</span>
+                    <Badge className="bg-blue-100 text-blue-800">
+                      {processedUserRoles.researchers || 0}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                    <span className="text-sm font-medium">Staffs</span>
+                    <Badge className="bg-green-100 text-green-800">
+                      {processedUserRoles.staffs || 0}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                    <span className="text-sm font-medium">
+                      Host Institutions
+                    </span>
+                    <Badge className="bg-orange-100 text-orange-800">
+                      {processedUserRoles.hostInstitutions || 0}
+                    </Badge>
+                  </div>
+                  <div className="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
+                    <span className="text-sm font-medium">Council Members</span>
+                    <Badge className="bg-teal-100 text-teal-800">
+                      {processedUserRoles.councilMembers || 0}
+                    </Badge>
+                  </div>
+                  {processedUserRoles.admins && (
+                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                      <span className="text-sm font-medium">
+                        Admins & Leaders
+                      </span>
+                      <Badge className="bg-gray-100 text-gray-800">
+                        {processedUserRoles.admins}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
-                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                  <span className="text-sm font-medium">Staffs</span>
-                  <Badge className="bg-green-100 text-green-800">
-                    {userStats.staffs}
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                  <span className="text-sm font-medium">Host Institutions</span>
-                  <Badge className="bg-orange-100 text-orange-800">
-                    {userStats.hostInstitutions}
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
-                  <span className="text-sm font-medium">Council Members</span>
-                  <Badge className="bg-teal-100 text-teal-800">
-                    {userStats.councilMembers}
-                  </Badge>
-                </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </div>
-
-        {/* User Management Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
       </div>
     </div>
   );
