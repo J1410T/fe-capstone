@@ -633,7 +633,7 @@ const EditScientificCV: React.FC = () => {
                 )}
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Reset Scientific CV</DialogTitle>
                 <DialogDescription>

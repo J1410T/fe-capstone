@@ -69,7 +69,9 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
   const updateProjectResult = useUpdateProjectResult();
   const uploadFileToAzure = useUploadFileToAzure();
 
-  const projectResult = projectResultResponse?.data;
+  const projectResult = projectResultResponse?.success
+    ? projectResultResponse.data
+    : null;
 
   // Debug logging
   console.log("ResultTab - projectResultResponse:", projectResultResponse);
@@ -321,7 +323,7 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
           </div>
         </CardHeader>
         <CardContent>
-          {projectResult ? (
+          {projectResult && projectResult.id ? (
             <div className="space-y-4">
               <div className="flex items-start justify-between p-4 border rounded-lg bg-green-50">
                 <div className="flex items-start gap-3">
@@ -370,7 +372,7 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
       </Card>
 
       {/* Publications (Only for Basic category) */}
-      {isBasicCategory && projectResult && (
+      {isBasicCategory && projectResult && projectResult.id && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">

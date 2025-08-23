@@ -9,6 +9,7 @@ import {
   type ProjectResult,
   type ResultPublish,
   type ProjectResultResponse,
+  type ProjectResultListResponse,
 } from "@/services/resources/projectResult";
 
 // React Query hooks
@@ -98,4 +99,9 @@ export const useUploadFileToAzure = () => {
 };
 
 // Export types for use in components
-export type { ProjectResult, ResultPublish, ProjectResultResponse };
+export type {
+  ProjectResult,
+  ResultPublish,
+  ProjectResultResponse,
+  ProjectResultListResponse,
+};

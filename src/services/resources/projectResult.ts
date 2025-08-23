@@ -22,6 +22,14 @@ export interface ProjectResult {
   "result-publishs"?: ResultPublish[];
 }
 
+export interface ProjectResultListResponse {
+  "page-index": number;
+  "page-size": number;
+  "total-count": number;
+  "total-page": number;
+  "data-list": ProjectResult[];
+}
+
 export interface ProjectResultResponse {
   data: ProjectResult;
   success: boolean;
@@ -34,8 +42,15 @@ export const getProjectResult = async (
 ): Promise<ProjectResultResponse> => {
   try {
     const accessToken = getAccessToken();
-    const response = await axiosClient.get<ProjectResultResponse>(
-      `/project-result/${projectId}`,
+
+    // Gọi API list với project-id trong body
+    const listResponse = await axiosClient.post<ProjectResultListResponse>(
+      "/project-result/list",
+      {
+        "project-id": projectId,
+        "page-index": 0,
+        "page-size": 0, // 0 để lấy tất cả
+      },
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -43,7 +58,23 @@ export const getProjectResult = async (
         },
       }
     );
-    return response.data;
+
+    // Lấy result đầu tiên từ data-list (vì đã filter theo project-id)
+    const projectResult = listResponse.data["data-list"]?.[0];
+
+    if (projectResult) {
+      return {
+        data: projectResult,
+        success: true,
+      };
+    } else {
+      // Không tìm thấy result cho project này
+      return {
+        data: {} as ProjectResult,
+        success: false,
+        message: "No result found for this project",
+      };
+    }
   } catch (error) {
     console.error("getProjectResult error:", error);
     throw error;
