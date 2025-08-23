@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useGetIndividualEvaluationById } from "@/hooks/queries/evaluation";
 import { IndividualEvaluationApi } from "@/types/evaluation";
+import { Loading } from "@/components";
 
 export const AIEvaluationDetailPage: React.FC = () => {
   const navigate = useNavigate();
@@ -53,8 +54,7 @@ export const AIEvaluationDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex items-center gap-2">
-          <div className="animate-spin h-6 w-6 border-2 border-emerald-500 border-t-transparent rounded-full"></div>
-          <span className="text-gray-600">Loading evaluation...</span>
+          <Loading />
         </div>
       </div>
     );

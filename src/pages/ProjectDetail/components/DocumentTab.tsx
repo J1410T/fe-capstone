@@ -142,6 +142,7 @@ import { useNavigate } from "react-router-dom";
 import { NotificationRequest } from "@/types/notification";
 import { useProject } from "@/hooks/queries/project";
 import { useSendNotification } from "@/hooks/queries/notification";
+import { Loading } from "@/components";
 // import { getAllRoles } from "@/services/resources/auth";
 
 interface DocumentTabProps {
@@ -199,17 +200,6 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
 
   const { data: staffList } = useStaffList();
 
-  // Determine document status based on project status
-  // const getDocumentStatus = () => {
-  //   if (projectStatus === "submitted") {
-  //     return "submitted";
-  //   }
-  //   if (projectStatus === "Approved") {
-  //     return "submitted";
-  //   }
-  //   return "draft";
-  // };
-
   // Fetch documents by project ID with pagination and user role data
   const {
     data: documentsResponse,
@@ -266,11 +256,6 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
     setEditingContent(content);
   };
 
-  // const handleDownloadDocument = (document: DocumentWithUserRole) => {
-  //   console.log("Download", document.name);
-  //   // TODO: implement actual download
-  // };
-
   const handleUploadScientificCV = () => {
     setShowUploadConfirmDialog(true);
   };
@@ -326,125 +311,6 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
       setIsUploading(false);
     }
   };
-
-  // const handleSignDocument = async (document: DocumentWithUserRole) => {
-  //   if (!user || user.role !== UserRole.PRINCIPAL_INVESTIGATOR) {
-  //     toast.error("Only Principal Investigators can sign documents");
-  //     return;
-  //   }
-
-  //   if (document.status !== "pending") {
-  //     toast.error("Only pending documents can be signed");
-  //     return;
-  //   }
-
-  //   try {
-  //     await updateDocument.mutateAsync({
-  //       id: document.id,
-  //       name: document.name,
-  //       type: document.type,
-  //       status: "inprogress", // Change status to inprogress after PI signs
-  //       "is-template": false,
-  //       "content-html": document["content-html"],
-  //       "project-id": document["project-id"],
-  //     });
-
-  //     toast.success("Document signed successfully!");
-  //     await refetch(); // Refresh the document list
-  //   } catch (error) {
-  //     console.error("Failed to sign document:", error);
-  //     toast.error("Failed to sign document");
-  //   }
-  // };
-
-  // const handleSaveEditDocument = async () => {
-  //   if (!editingDocument) {
-  //     toast.error("No document selected for editing");
-  //     return;
-  //   }
-
-  //   // Use state content instead of ref
-  //   const content = editingContent.trim();
-  //   if (!content) {
-  //     toast.error("Please add content to the document");
-  //     return;
-  //   }
-
-  //   console.log("💾 Saving document with content length:", content.length);
-
-  //   setIsEditLoading(true);
-
-  //   try {
-  //     // Determine if this is a Contract document being completed
-  //     // const isContractDocument = editingDocument.name
-  //     //   ?.toLowerCase()
-  //     //   .includes("contract");
-  //     // const isBeingCompleted = editingDocument.status !== "completed"; // Will be completed after save
-
-  //     await updateDocument.mutateAsync({
-  //       id: editingDocument.id,
-  //       name: editingDocument.name,
-  //       type: editingDocument.type,
-  //       status: editingDocument.status,
-  //       "is-template": false,
-  //       "content-html": content,
-  //       "project-id": editingDocument["project-id"],
-  //     });
-
-  //     const staffAccountId =
-  //       staffList?.["data-list"].map((item) => item["account-id"]) ?? [];
-
-  //     const notificationRequest: NotificationRequest = {
-  //       title: `Check and Sign Contract project: ${projectData?.data["project-detail"]["english-title"]}`,
-  //       type: "project",
-  //       status: "create",
-  //       "objec-notification-id": projectId || "",
-  //       "list-account-id": staffAccountId,
-  //     };
-  //     await sendNotification.mutateAsync(notificationRequest);
-
-  //     // If this is a Contract document being completed, update project status to inprogress
-  //     // if (isContractDocument && isBeingCompleted && projectId) {
-  //     //   try {
-  //     //     // Create minimal UpdateProjectRequest with required fields
-  //     //     await updateProject.mutateAsync({
-  //     //       projectId: projectId,
-  //     //       data: {
-  //     //         "english-title": "",
-  //     //         "vietnamese-title": "",
-  //     //         "maximum-member": 1,
-  //     //         language: "Vietnamese",
-  //     //         category: "basic",
-  //     //         type: "basic",
-  //     //         genre: "normal",
-  //     //       },
-  //     //       status: "inprogress",
-  //     //     });
-  //     //     toast.success(
-  //     //       "Document completed and project status updated to In Progress!"
-  //     //     );
-  //     //   } catch (projectError) {
-  //     //     console.error("Failed to update project status:", projectError);
-  //     //     toast.success(
-  //     //       "Document completed successfully, but failed to update project status"
-  //     //     );
-  //     //   }
-  //     // } else {
-  //     //   toast.success("Document updated successfully!");
-  //     // }
-
-  //     setShowEditDialog(false);
-  //     setEditingDocument(null);
-  //     setEditingContent("");
-  //     await refetch(); // Refresh the document list
-  //   } catch (error) {
-  //     console.error("Failed to update document:", error);
-  //     toast.error("Failed to update document");
-  //   } finally {
-  //     setIsEditLoading(false);
-  //   }
-  // };
-
   const handleSaveEditDocument = async () => {
     if (!editingDocument) {
       toast.error("No document selected for editing");
@@ -462,7 +328,6 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
     setIsEditLoading(true);
 
     try {
-      // 📌 1. Gọi update document
       await updateDocument.mutateAsync({
         id: editingDocument.id,
         name: editingDocument.name,
@@ -472,15 +337,9 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
         "content-html": content,
         "project-id": editingDocument["project-id"],
       });
-
-      // ✅ Nếu tới đây không bị lỗi => update thành công
       toast.success("Document updated successfully!");
-
-      // 📌 2. Lấy danh sách account-id từ staffList
       const staffAccountId =
         staffList?.["data-list"]?.map((item) => item["account-id"]) ?? [];
-
-      // 📌 3. Gửi thông báo
       const notificationRequest: NotificationRequest = {
         title: `Check and Sign Contract project: ${projectData?.data["project-detail"]["english-title"]}`,
         type: "project",
@@ -490,8 +349,6 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
       };
 
       await sendNotification.mutateAsync(notificationRequest);
-
-      // 📌 4. Reset UI và reload dữ liệu
       setShowEditDialog(false);
       setEditingDocument(null);
       setEditingContent("");
@@ -558,7 +415,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
       <CardContent className="pt-0">
         {isDocumentsLoading ? (
           <div className="flex justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loading />
           </div>
         ) : (
           <>
@@ -640,27 +497,6 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
                             <span className="hidden sm:inline">Edit</span>
                           </Button>
                         )}
-                        {/* Sign button for PI on pending documents */}
-                        {/* {user?.role === UserRole.PRINCIPAL_INVESTIGATOR &&
-                          document.status === "pending" &&
-                          document.type === "BM5" && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleSignDocument(document)}
-                              className="bg-green-50 hover:bg-green-100 border-green-200"
-                            >
-                              <CheckSquare className="w-3 h-3 mr-1" />
-                              <span className="hidden sm:inline">Sign</span>
-                            </Button>
-                          )} */}
-                        {/* <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadDocument(document)}
-                        >
-                =0          <Download className="w-3 h-3" />
-                        </Button> */}
                       </div>
                     </TableCell>
                   </TableRow>

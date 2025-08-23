@@ -54,6 +54,7 @@ import { useBaseUserRoleId, usePIUserRoleByProjectId } from "@/hooks/queries";
 import { NotificationRequest } from "@/types/notification";
 import { useSendNotification } from "@/hooks/queries/notification";
 import MilestoneModal from "./MilestoneModal";
+import { Loading } from "@/components";
 
 interface Project {
   id: string;
@@ -585,8 +586,7 @@ const DocumentManagement: React.FC = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading projects...</p>
+          <Loading />
         </div>
       </div>
     );
@@ -774,8 +774,7 @@ const DocumentManagement: React.FC = () => {
           <CardContent>
             {isProjectDocumentsLoading ? (
               <div className="flex items-center justify-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-2 border-purple-600 border-t-transparent"></div>
-                <p className="ml-2 text-gray-600">Loading documents...</p>
+                <Loading />
               </div>
             ) : (
               <div className="space-y-6">
@@ -893,7 +892,6 @@ const DocumentManagement: React.FC = () => {
                   </div>
                 )}
 
-                {/* ✅ NEW: Other Status Documents */}
                 {otherStatusDocuments.length > 0 && (
                   <div>
                     <h3 className="text-md font-semibold text-gray-800 mb-3">
@@ -977,9 +975,9 @@ const DocumentManagement: React.FC = () => {
           />
 
           {/* Dialog Content */}
-          <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[85vh] overflow-hidden">
+          <div className="relative bg-white rounded-lg shadow-xl w-full mx-2 sm:mx-4 max-w-[95vw] sm:max-w-4xl lg:max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b">
+            <div className="flex items-center justify-between p-3 sm:p-4 lg:p-6 border-b flex-shrink-0">
               <div className="flex items-center gap-3">
                 <FileText className="h-5 w-5 text-purple-600" />
                 <h2 className="text-lg font-semibold">
@@ -1000,12 +998,11 @@ const DocumentManagement: React.FC = () => {
             </div>
 
             {/* Body */}
-            <div className="p-6 flex-1 overflow-hidden">
+            <div className="p-2 sm:p-3 lg:p-4 flex-1 overflow-hidden min-h-0">
               {!isEditMode && isTemplateLoading ? (
                 <div className="flex items-center justify-center h-[500px]">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-10 w-10 border-2 border-purple-600 border-t-transparent mx-auto mb-4"></div>
-                    <p className="text-gray-600">Loading template...</p>
+                    <Loading />
                   </div>
                 </div>
               ) : !isEditMode && templateError ? (
@@ -1016,12 +1013,12 @@ const DocumentManagement: React.FC = () => {
                   <p>Please create a template before creating a contract.</p>
                 </div>
               ) : (
-                <div className="h-[500px] overflow-hidden">
+                <div className="h-[50vh] sm:h-[55vh] lg:h-[60vh] min-h-[300px] sm:min-h-[350px] lg:min-h-[400px] max-h-[500px] overflow-hidden">
                   {editingDocument?.status === "completed" ||
                   editingDocument?.type === "BM1" ? (
                     <TinyMCEViewer
                       content={documentContent}
-                      height={500}
+                      height={400}
                       useTinyMCE={true}
                       className="w-full h-full"
                     />
@@ -1030,7 +1027,7 @@ const DocumentManagement: React.FC = () => {
                       ref={editorRef}
                       value={documentContent}
                       onChange={handleEditorChange}
-                      height={500}
+                      height={400}
                       preset="document"
                     />
                   )}
@@ -1039,7 +1036,7 @@ const DocumentManagement: React.FC = () => {
             </div>
 
             {/* Footer */}
-            <div className="flex justify-between items-center p-6 border-t bg-gray-50">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-0 p-3 sm:p-4 border-t bg-gray-50 flex-shrink-0">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -1053,7 +1050,7 @@ const DocumentManagement: React.FC = () => {
                 Cancel
               </Button>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                 {isEditMode ? (
                   <>
                     {editingDocument?.status === "completed" ||

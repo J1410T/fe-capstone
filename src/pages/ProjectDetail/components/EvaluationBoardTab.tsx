@@ -6,9 +6,10 @@ import {
   CardTitle,
   CardContent,
   CardDescription,
+  Loading,
 } from "@/components/ui";
 import { useNavigate, useParams } from "react-router-dom";
-import { FileText, Calendar, Users, ArrowRight, Loader2 } from "lucide-react";
+import { FileText, Calendar, Users, ArrowRight } from "lucide-react";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
 import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
 
@@ -82,10 +83,7 @@ const EvaluationBoardTab: React.FC = () => {
         {isLoading ? (
           <div className="text-center py-12">
             <div className="flex flex-col items-center gap-4">
-              <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
-              <p className="text-lg font-medium text-gray-900">
-                Loading evaluations...
-              </p>
+              <Loading />
             </div>
           </div>
         ) : error ? (

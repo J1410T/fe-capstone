@@ -23,7 +23,7 @@ import {
   Target,
   ChevronDown,
   ChevronRight,
-  X,
+  // X,
   Plus,
   Edit2,
   Trash2,
@@ -1172,14 +1172,14 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
                   Add Milestone
                 </Button>
               )}
-              <Button
+              {/* <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleClose}
                 className="h-8 w-8 p-0"
               >
                 <X className="h-4 w-4" />
-              </Button>
+              </Button> */}
             </div>
           </div>
         </DialogHeader>
