@@ -33,9 +33,12 @@ export const useCreateProjectResult = () => {
     mutationFn: createProjectResult,
     onSuccess: (_, variables) => {
       // Invalidate specific project result query
-      queryClient.invalidateQueries({
-        queryKey: ["project-result", variables["project-id"]],
-      });
+      const projectId = variables["project-id"];
+      if (projectId) {
+        queryClient.invalidateQueries({
+          queryKey: ["project-result", projectId],
+        });
+      }
       // Also invalidate general project result queries
       queryClient.invalidateQueries({ queryKey: ["project-result"] });
       toast.success("Project result created successfully!");

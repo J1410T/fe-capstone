@@ -82,7 +82,7 @@ export const getProjectResult = async (
 };
 
 export const createProjectResult = async (
-  data: Omit<ProjectResult, "id" | "added-date">
+  data: Record<string, unknown> // Flexible payload cho basic vs application
 ): Promise<ProjectResultResponse> => {
   try {
     const accessToken = getAccessToken();
@@ -104,7 +104,7 @@ export const createProjectResult = async (
 };
 
 export const updateProjectResult = async (
-  data: ProjectResult
+  data: Record<string, unknown>
 ): Promise<ProjectResultResponse> => {
   try {
     const accessToken = getAccessToken();

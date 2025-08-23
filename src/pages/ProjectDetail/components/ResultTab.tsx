@@ -45,7 +45,6 @@ import {
   useCreateProjectResult,
   useUpdateProjectResult,
   useUploadFileToAzure,
-  type ProjectResult,
   type ResultPublish,
 } from "@/hooks/queries/projectResult";
 
@@ -141,16 +140,25 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
     }
 
     try {
-      const resultData: ProjectResult = {
-        id: projectResult?.id,
+      const resultData: Record<string, unknown> = {
         name: resultName,
-        url: resultUrl || null, // Có thể null cho basic category
         "project-id": projectId,
-        "added-date": new Date().toISOString(),
-        ...(isBasicCategory && {
-          "result-publishs": projectResult?.["result-publishs"] || [],
-        }),
       };
+      if (projectResult?.id) {
+        resultData.id = projectResult.id;
+      }
+      if (isBasicCategory) {
+        resultData["result-publishs"] =
+          projectResult?.["result-publishs"] || [];
+        if (resultUrl?.trim()) {
+          resultData.url = resultUrl;
+        }
+      } else {
+        resultData.url = resultUrl;
+        resultData["added-date"] = new Date().toISOString();
+      }
+
+      console.log("handleSaveResult - resultData:", resultData);
 
       if (projectResult?.id) {
         // Update existing result
