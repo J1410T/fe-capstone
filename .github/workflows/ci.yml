@@ -22,9 +22,3 @@ jobs:
       - run: pnpm install
       - run: pnpm lint
       - run: pnpm build
-
-      # Deploy lên Vercel
-      - name: Deploy to Vercel
-        run: |
-          npm install -g vercel
-          vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
