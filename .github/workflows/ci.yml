@@ -1,13 +1,11 @@
-name: CI
+name: CI/CD
 
 on:
   push:
-    branches: [ develop ]
-  pull_request:
-    branches: [ main ]
+    branches: [ develop ]   # Chỉ chạy khi push develop
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,10 +19,12 @@ jobs:
           node-version: '22.x'
           cache: 'pnpm'
 
-     
-      - run: pnpm -v
-      - run: which pnpm
-
       - run: pnpm install
       - run: pnpm lint
       - run: pnpm build
+
+      # Deploy lên Vercel
+      - name: Deploy to Vercel
+        run: |
+          npm install -g vercel
+          vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
