@@ -166,9 +166,10 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   // Shared set to track uploaded images for deletion
   const uploadedImagesRef = useRef(new Set<string>());
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const currentContent = editorRef.current?.getContent() || "";
     onContentChange(currentContent);
+    await handleSave();
     onNext();
   };
 
