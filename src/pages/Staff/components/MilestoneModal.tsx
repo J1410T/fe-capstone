@@ -198,8 +198,8 @@ const MilestoneForm: React.FC<{
   }>({});
 
   const { data: userRoleData } = useBaseUserRoleId();
-  const createMutation = useCreateMilestone();
-  const updateMutation = useUpdateMilestone();
+  const createMilestoneMutation = useCreateMilestone();
+  const updateMilestoneMutation = useUpdateMilestone();
 
   // Validation function for milestones
   const validateMilestoneDates = useCallback(
@@ -282,13 +282,13 @@ const MilestoneForm: React.FC<{
       };
 
       if (milestone) {
-        await updateMutation.mutateAsync({
+        await updateMilestoneMutation.mutateAsync({
           id: milestone.id,
           data: submitData,
         });
         toast.success("Milestone updated successfully");
       } else {
-        await createMutation.mutateAsync(submitData);
+        await createMilestoneMutation.mutateAsync(submitData);
         toast.success("Milestone created successfully");
       }
       onSave();
@@ -391,10 +391,13 @@ const MilestoneForm: React.FC<{
         <Button
           type="submit"
           disabled={
-            createMutation.isPending || updateMutation.isPending || !isFormValid
+            createMilestoneMutation.isPending ||
+            updateMilestoneMutation.isPending ||
+            !isFormValid
           }
         >
-          {createMutation.isPending || updateMutation.isPending ? (
+          {createMilestoneMutation.isPending ||
+          updateMilestoneMutation.isPending ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
               Saving...
@@ -1021,8 +1024,52 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
 
   // API hooks
   const { data: milestonesData } = useMilestonesByProjectId(projectId);
+  const { data: userRoleData } = useBaseUserRoleId();
+  const createMilestoneMutation = useCreateMilestone();
   const deleteMilestoneMutation = useDeleteMilestone();
   const deleteTaskMutation = useDeleteTask();
+
+  useEffect(() => {
+    if (!isOpen || !milestonesData?.data || !userRoleData?.data) {
+      return;
+    }
+
+    const apiMilestones = milestonesData.data;
+
+    // Check if Meeting milestone exists (case-insensitive, trimmed)
+    const hasMeetingMilestone = apiMilestones.some(
+      (milestone) => milestone.title?.trim().toLowerCase() === "meeting"
+    );
+
+    if (!hasMeetingMilestone) {
+      // Auto-create Meeting milestone
+      const createMeetingMilestone = async () => {
+        try {
+          const meetingMilestoneData = {
+            title: "Meeting",
+            description: "Meeting Schedule",
+            type: "normal",
+            "project-id": projectId,
+            "creator-id": userRoleData.data,
+          };
+
+          await createMilestoneMutation.mutateAsync(meetingMilestoneData);
+          console.log("Meeting milestone created automatically");
+        } catch (error) {
+          console.error("Error auto-creating Meeting milestone:", error);
+          // Don't show toast error to avoid interrupting user experience
+        }
+      };
+
+      createMeetingMilestone();
+    }
+  }, [
+    isOpen,
+    milestonesData?.data,
+    userRoleData?.data,
+    projectId,
+    createMilestoneMutation,
+  ]);
 
   // Extract milestones from API response
   const apiMilestones = useMemo(

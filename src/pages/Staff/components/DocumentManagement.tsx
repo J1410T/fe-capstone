@@ -316,15 +316,6 @@ const DocumentManagement: React.FC = () => {
     setIsLoading(true);
 
     try {
-      await createDocument.mutateAsync({
-        name: `Contract`,
-        type: "BM5",
-        status: "pending",
-        "is-template": false,
-        "content-html": content,
-        "project-id": selectedProject.id,
-      });
-
       await createMilestoneByDocumentProject.mutateAsync({
         "section-title": "Tóm tắt kế hoạch và lộ trình triển khai nghiên cứu",
         description: "Nội dung, công việc chủ yếu",
@@ -334,6 +325,15 @@ const DocumentManagement: React.FC = () => {
         "project-id": bm1Document["project-id"] || "",
         "document-content": bm1Document["content-html"] || "",
         "creator-id": baseUserRoleId?.data || "",
+      });
+
+      await createDocument.mutateAsync({
+        name: `Contract`,
+        type: "BM5",
+        status: "pending",
+        "is-template": false,
+        "content-html": content,
+        "project-id": selectedProject.id,
       });
 
       toast.success("Document saved successfully!");
