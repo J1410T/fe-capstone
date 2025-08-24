@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { ProjectWithProposals, TopicsListProps } from "@/types/project";
 import { useProjectsByAppraisalCouncilWithPI } from "@/hooks/queries/project";
+import { Loading } from "@/components";
 
 export const TopicsList: React.FC<TopicsListProps> = ({ selectedCouncil }) => {
   const navigate = useNavigate();
@@ -31,8 +32,7 @@ export const TopicsList: React.FC<TopicsListProps> = ({ selectedCouncil }) => {
     return (
       <div className="text-center py-12">
         <div className="flex flex-col items-center gap-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-          <p className="text-sm text-gray-500">Loading projects...</p>
+          <Loading />
         </div>
       </div>
     );

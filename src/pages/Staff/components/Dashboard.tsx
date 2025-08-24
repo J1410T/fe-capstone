@@ -55,6 +55,7 @@ import {
   useDashboardUserRoles,
   useDashboardMajorDistribution,
 } from "@/hooks/queries/dashboard";
+import { Loading } from "@/components";
 
 interface DateRange {
   from: string | null;
@@ -212,10 +213,7 @@ const StaffDashboard: React.FC = () => {
               </p>
               {cardLoading ? (
                 <div className="flex items-center space-x-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span className="text-sm text-muted-foreground">
-                    Loading...
-                  </span>
+                  <Loading />
                 </div>
               ) : (
                 <>

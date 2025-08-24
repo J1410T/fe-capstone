@@ -51,33 +51,6 @@ export const ProposalSelectionDialog: React.FC<
 
   const selectedProposal = proposals.find((p) => p.id === selectedProposalId);
 
-  // Helper function to get PI name from members (same as TopicDetailPage)
-  // const getPIName = (proposal: RolePrincipalInvestigatorInfo) => {
-  //   // Look for Principal Investigator role in members first
-  //   if (proposal.members && proposal.members.length > 0) {
-  //     const pi = proposal.members.find(
-  //       (member) =>
-  //         member.name === "Principal Investigator" || member.name === "PI"
-  //     );
-  //     if (pi && pi["full-name"]) {
-  //       return pi["full-name"];
-  //     }
-
-  //     // If no PI role, try any member with full-name as fallback
-  //     const anyMember = proposal.members.find((m) => m["full-name"]);
-  //     if (anyMember) {
-  //       return anyMember["full-name"];
-  //     }
-  //   }
-
-  //   // Fallback to creator if no PI found
-  //   if (proposal.creator?.["full-name"]) {
-  //     return proposal.creator["full-name"];
-  //   }
-
-  //   return "Unknown";
-  // };
-
   const handleConfirmSelection = () => {
     if (selectedProposalId) {
       onSelectProposal(selectedProposalId);
@@ -140,7 +113,7 @@ export const ProposalSelectionDialog: React.FC<
                   <SelectValue
                     placeholder={
                       isLoading
-                        ? "Đang xử lý..."
+                        ? "Processing..."
                         : "Select a proposal to review..."
                     }
                   />
@@ -413,7 +386,7 @@ export const ProposalSelectionDialog: React.FC<
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
-                {isLoading ? "Đang xử lý..." : "Select Proposal"}
+                {isLoading ? "Processing..." : "Select Proposal"}
               </Button>
             </>
           ) : (
@@ -431,7 +404,7 @@ export const ProposalSelectionDialog: React.FC<
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <CheckCircle className="h-4 w-4 mr-2" />
-                {isLoading ? "Đang xử lý..." : "Confirm Selection"}
+                {isLoading ? "Processing..." : "Confirm Selection"}
               </Button>
             </>
           )}

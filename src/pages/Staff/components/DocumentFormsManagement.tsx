@@ -54,6 +54,7 @@ import {
   Calendar,
   FileText,
 } from "lucide-react";
+import { Loading } from "@/components";
 
 // Interface for processed form data
 interface ProcessedFormTemplate extends DocumentForm {
@@ -620,8 +621,7 @@ const DocumentFormsManagement: React.FC = () => {
                   className="h-32 text-center text-gray-500"
                 >
                   <div className="flex flex-col items-center justify-center space-y-2">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                    <p className="text-lg font-medium">Loading forms...</p>
+                    <Loading />
                   </div>
                 </TableCell>
               </TableRow>

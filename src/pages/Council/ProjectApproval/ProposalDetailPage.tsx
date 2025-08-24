@@ -1,11 +1,13 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TinyMCEViewDialog } from "./components/TinyMCEViewDialog";
 import { ArrowLeft, FileText, User, Calendar, Plus, Eye } from "lucide-react";
 import { useProject } from "@/hooks/queries/project";
+// import { getProjectById } from "@/services/resources/project";
 import { useAllRoles, useUserRolesByProjectId } from "@/hooks/queries";
+import { useQueryClient } from "@tanstack/react-query";
 import { TeamMember, UserRole } from "@/types/auth";
 // import { useScientificCVByEmail } from "@/hooks/queries/document";
 import { getScientificCVByEmail } from "@/services/resources/document";
@@ -15,171 +17,12 @@ import {
   useGetIndividualEvaluationsByStageId,
 } from "@/hooks/queries/evaluation";
 import { useDocumentsByFilter } from "@/hooks/queries/document";
-// import { IndividualEvaluationApi } from "@/types/evaluation";
-
-// interface AIReview {
-//   id: string;
-//   name: string;
-//   totalRate: number | null;
-//   comment: string;
-//   submittedAt: string;
-//   isApproved: boolean;
-//   reviewerResult: unknown | null;
-//   isAiReport: boolean;
-//   status: string;
-//   evaluationStageId: string;
-//   reviewerId: string | null;
-//   documents: unknown | null;
-//   projectsSimilarityResult: unknown | null;
-// }
-
-// interface IndividualEvaluation {
-//   id: string;
-//   evaluatorName: string;
-//   evaluatorRole: string;
-//   status: "completed" | "pending" | "in-progress";
-//   score: number | null;
-//   submittedAt: string | null;
-//   comment: string;
-//   totalRate?: number | null;
-//   isAiReport?: boolean;
-// }
-
-// interface EvaluationStage {
-//   id: string;
-//   name: string;
-//   description: string;
-//   status: "active" | "completed" | "pending";
-//   totalEvaluations: number;
-//   completedEvaluations: number;
-//   createdAt: string;
-//   aiReview?: AIReview;
-//   individualEvaluations: IndividualEvaluation[];
-// }
-
-// Mock evaluation stages data
-// const mockEvaluationStages: EvaluationStage[] = [
-//   {
-//     id: "a44bebc5-0324-4e3e-987e-4014cee7fef8",
-//     name: "Initial Review",
-//     description:
-//       "First stage evaluation including AI review and individual assessments",
-//     status: "active",
-//     totalEvaluations: 4,
-//     completedEvaluations: 2,
-//     createdAt: "2025-08-11T14:05:12.0316727",
-//     aiReview: {
-//       id: "e2105b84-b602-4ab8-917e-24f1e8439433",
-//       name: "AI Review",
-//       totalRate: null,
-//       comment: `The project titled "Build an Online Certification Management System with Digital Signature Integration for an Aviation Academy" presents a compelling initiative aimed at enhancing the management of certification processes within an educational context, specifically tailored for aviation training.
-
-// ### Project Overview
-
-// **Title:** Build an Online Certification Management System with Digital Signature Integration for an Aviation Academy
-// **Description:** This system serves as a comprehensive tool to streamline the implementation and management of projects, beginning from registration through to certification issuance. The platform will facilitate students in easily searching, registering for, and tracking their projects, while also assisting instructors in managing, evaluating, and providing feedback to students efficiently.
-
-// ### Key Elements
-
-// 1. **Target Audience:**
-//    - The primary users are students and instructors at an aviation academy. Students will benefit from a user-friendly interface that simplifies the certification process, while instructors will have tools to manage and evaluate student projects effectively.
-
-// 2. **Functionality:**
-//    - The system will incorporate digital signature integration, enhancing the legitimacy and security of the issued certifications. This feature is crucial in ensuring that the documentation is tamper-proof and recognized within the aviation industry.
-
-// 3. **Team Composition:**
-//    - The maximum number of team members for the project is set at six, indicating a collaborative approach that leverages diverse skills and expertise.
-
-// 4. **Project Type:**
-//    - Classified as a cooperative project, emphasizing teamwork and shared responsibilities in the development and implementation phases.
-
-// 5. **Category and Genre:**
-//    - The project falls under the application/implementation category and is framed as a proposal, suggesting it is in the planning stage and seeks approval or support for execution.
-
-// ### Conclusion
-
-// The proposed Online Certification Management System is a forward-thinking solution that addresses significant needs within the aviation education sector. By incorporating features that enhance usability for students and operational efficiency for instructors, it stands to contribute positively to the landscape of aviation training programs.
-// The integration of digital signatures further adds value, ensuring that the certifications issued are secure and credible.
-
-// **Next Steps:**
-// - Detailed planning and resource allocation should be initiated to move from the proposal stage to implementation.
-// - Engaging stakeholders for feedback and refining the system's functionalities based on their needs will be crucial for the project's success.
-
-// This project, if executed effectively, could serve as a model for similar educational initiatives across various fields.`,
-//       submittedAt: "2025-08-11T14:05:12.0316727",
-//       isApproved: false,
-//       reviewerResult: null,
-//       isAiReport: true,
-//       status: "created",
-//       evaluationStageId: "a44bebc5-0324-4e3e-987e-4014cee7fef8",
-//       reviewerId: null,
-//       documents: null,
-//       projectsSimilarityResult: null,
-//     },
-//     individualEvaluations: [
-//       {
-//         id: "eval-1",
-//         evaluatorName: "Prof. Dr. Emily Davis",
-//         evaluatorRole: "Technical Reviewer",
-//         status: "completed",
-//         score: 8.5,
-//         totalRate: 8.5,
-//         submittedAt: "2025-08-12T10:30:00.000Z",
-//         comment:
-//           "The technical approach is sound with good integration of digital signature technology. The system architecture is well-designed for scalability. I recommend approval with minor revisions to the security protocols.",
-//       },
-//       {
-//         id: "eval-2",
-//         evaluatorName: "Dr. Robert Wilson",
-//         evaluatorRole: "Domain Expert",
-//         status: "completed",
-//         score: 9.0,
-//         totalRate: 9.0,
-//         submittedAt: "2025-08-12T14:15:00.000Z",
-//         comment:
-//           "Excellent understanding of aviation academy requirements. The certification management process is well-structured and addresses industry needs. The digital signature integration is particularly well-thought-out and addresses compliance requirements.",
-//       },
-//       {
-//         id: "eval-3",
-//         evaluatorName: "Prof. Lisa Anderson",
-//         evaluatorRole: "Security Specialist",
-//         status: "in-progress",
-//         score: null,
-//         totalRate: null,
-//         submittedAt: null,
-//         comment:
-//           "Currently reviewing the digital signature implementation and security protocols. Initial assessment shows promising security architecture but requires detailed cryptographic analysis.",
-//       },
-//       {
-//         id: "e2105b84-b602-4ab8-917e-24f1e8439433",
-//         evaluatorName: "AI Evaluation System",
-//         evaluatorRole: "AI Reviewer",
-//         status: "completed",
-//         score: 8.7,
-//         totalRate: 8.7,
-//         submittedAt: "2025-08-11T14:05:12.000Z",
-//         comment:
-//           "AI-generated evaluation completed. The project shows strong technical merit and addresses practical needs in aviation education. Comprehensive analysis available in detailed view.",
-//         isAiReport: true,
-//       },
-//       {
-//         id: "eval-5",
-//         evaluatorName: "Dr. Mark Thompson",
-//         evaluatorRole: "Educational Technology Expert",
-//         status: "pending",
-//         score: null,
-//         totalRate: null,
-//         submittedAt: null,
-//         comment:
-//           "Evaluation not yet started. Will focus on user experience and educational effectiveness.",
-//       },
-//     ],
-//   },
-// ];
 
 export const ProposalDetailPage: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { proposalId } = useParams<{ proposalId: string }>();
+  const queryClient = useQueryClient();
   const [selectedCV, setSelectedCV] = useState<{
     name: string;
     content: string;
@@ -289,6 +132,19 @@ export const ProposalDetailPage: React.FC = () => {
       .catch(console.error);
   }, [teamMembersBase]);
 
+  useEffect(() => {
+    const state = location.state as any;
+    if (state?.shouldReload) {
+      queryClient.invalidateQueries({
+        queryKey: ["evaluations", proposalId],
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["individual-evaluations"],
+      });
+      navigate(location.pathname, { replace: true, state: null });
+    }
+  }, [location.state, queryClient, proposalId, navigate, location.pathname]);
+
   const ScientificCVs = useMemo(() => {
     return scientificCVResults.map((res) => {
       const documentForm = res as DocumentForm | undefined;
@@ -350,7 +206,19 @@ export const ProposalDetailPage: React.FC = () => {
   }
 
   const handleCreateEvaluation = () => {
-    navigate(`/council/evaluation/create?proposalId=${proposal.id}`);
+    navigate(`/council/evaluation/create?proposalId=${proposal.id}`, {
+      state: {
+        onSuccess: () => {
+          // Invalidate queries để reload data
+          queryClient.invalidateQueries({
+            queryKey: ["evaluations", proposalId],
+          });
+          queryClient.invalidateQueries({
+            queryKey: ["individual-evaluations"],
+          });
+        },
+      },
+    });
   };
 
   return (
@@ -362,7 +230,27 @@ export const ProposalDetailPage: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate(-1)}
+              onClick={async () => {
+                // try {
+                //   const parentProjectId =
+                //     (proposal as any)["creator-id"] || proposal.id;
+                //   const projectWithProposals = await getProjectById(
+                //     parentProjectId
+                //   );
+                //   navigate(
+                //     `/council/project-approval/topic/${projectWithProposals.id}`,
+                //     {
+                //       state: {
+                //         project: projectWithProposals,
+                //         proposals: projectWithProposals.proposals || [],
+                //       },
+                //     }
+                //   );
+                // } catch (error) {
+                //   console.error("Error getting parent project:", error);
+                navigate("/council/project-approval");
+                // }
+              }}
               className="flex items-center gap-2 hover:bg-gray-50 rounded-xl"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -390,9 +278,15 @@ export const ProposalDetailPage: React.FC = () => {
         <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-4">
           <div className="flex items-start gap-4 mb-4">
             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-              <span className="text-lg font-bold text-blue-700">
-                {proposal["logo-url"]}
-              </span>
+              {proposal["logo-url"] ? (
+                <img
+                  src={proposal["logo-url"]}
+                  alt="Project Logo"
+                  className="w-10 h-10 rounded-lg object-cover"
+                />
+              ) : (
+                <FileText className="w-6 h-6 text-blue-600" />
+              )}
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold text-gray-900 mb-3">
@@ -582,91 +476,87 @@ export const ProposalDetailPage: React.FC = () => {
                       Individual Evaluations
                     </h5>
                     <div className="space-y-1">
-                      {individualEvaluations.map(
-                        (
-                          evaluation // ✅ ĐÚNG
-                        ) => (
-                          <div
-                            key={evaluation.id}
-                            className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all duration-200 ${
-                              evaluation["is-ai-report"]
-                                ? "bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 hover:from-emerald-100 hover:to-teal-100 shadow-sm"
-                                : "bg-gray-50 hover:bg-gray-100 border border-gray-200"
-                            }`}
-                            onClick={() =>
-                              handleViewIndividualEvaluation(evaluation.id)
-                            }
-                          >
-                            <div className="flex items-center gap-2">
-                              <div
-                                className={`w-6 h-6 rounded-full flex items-center justify-center shadow-sm ${
-                                  evaluation["is-ai-report"]
-                                    ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
-                                    : "bg-blue-100 text-blue-700"
-                                }`}
-                              >
-                                {evaluation["is-ai-report"] ? (
-                                  <span className="text-[10px] font-bold">
-                                    AI
-                                  </span>
-                                ) : (
-                                  <span className="text-[10px] font-medium">
-                                    {evaluation.name?.charAt(0) || "U"}
-                                  </span>
-                                )}
-                              </div>
-                              <div>
-                                <p
-                                  className={`text-sm font-medium ${
-                                    evaluation["is-ai-report"]
-                                      ? "text-emerald-900"
-                                      : "text-gray-900"
-                                  }`}
-                                >
-                                  {evaluation.name || "Unknown"}
-                                </p>
-                                <p
-                                  className={`text-xs ${
-                                    evaluation["is-ai-report"]
-                                      ? "text-emerald-600"
-                                      : "text-gray-500"
-                                  }`}
-                                >
-                                  {evaluation["is-ai-report"]
-                                    ? "AI Reviewer"
-                                    : "Human Reviewer"}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {evaluation["total-rate"] && (
-                                <div className="text-right">
-                                  <p className="text-xs font-medium text-gray-900">
-                                    Rate: {evaluation["total-rate"]}/100
-                                  </p>
-                                </div>
+                      {individualEvaluations.map((evaluation) => (
+                        <div
+                          key={evaluation.id}
+                          className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-all duration-200 ${
+                            evaluation["is-ai-report"]
+                              ? "bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 hover:from-emerald-100 hover:to-teal-100 shadow-sm"
+                              : "bg-gray-50 hover:bg-gray-100 border border-gray-200"
+                          }`}
+                          onClick={() =>
+                            handleViewIndividualEvaluation(evaluation.id)
+                          }
+                        >
+                          <div className="flex items-center gap-2">
+                            <div
+                              className={`w-6 h-6 rounded-full flex items-center justify-center shadow-sm ${
+                                evaluation["is-ai-report"]
+                                  ? "bg-gradient-to-br from-emerald-500 to-teal-600 text-white"
+                                  : "bg-blue-100 text-blue-700"
+                              }`}
+                            >
+                              {evaluation["is-ai-report"] ? (
+                                <span className="text-[10px] font-bold">
+                                  AI
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-medium">
+                                  {evaluation.name?.charAt(0) || "U"}
+                                </span>
                               )}
-                              <Badge
-                                variant="outline"
-                                className={`text-xs px-2 py-1 ${
-                                  evaluation.status === "completed"
-                                    ? evaluation["is-ai-report"]
-                                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                                      : "bg-green-50 text-green-700 border-green-200"
-                                    : evaluation.status === "in-progress"
-                                    ? "bg-yellow-50 text-yellow-700 border-yellow-200"
-                                    : "bg-gray-50 text-gray-700 border-gray-200"
+                            </div>
+                            <div>
+                              <p
+                                className={`text-sm font-medium ${
+                                  evaluation["is-ai-report"]
+                                    ? "text-emerald-900"
+                                    : "text-gray-900"
                                 }`}
                               >
-                                {evaluation["is-ai-report"] &&
-                                evaluation.status === "created"
-                                  ? "AI Generated"
-                                  : evaluation.status}
-                              </Badge>
+                                {evaluation.name || "Unknown"}
+                              </p>
+                              <p
+                                className={`text-xs ${
+                                  evaluation["is-ai-report"]
+                                    ? "text-emerald-600"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                {evaluation["is-ai-report"]
+                                  ? "AI Reviewer"
+                                  : "Human Reviewer"}
+                              </p>
                             </div>
                           </div>
-                        )
-                      )}
+                          <div className="flex items-center gap-2">
+                            {evaluation["total-rate"] && (
+                              <div className="text-right">
+                                <p className="text-xs font-medium text-gray-900">
+                                  Rate: {evaluation["total-rate"]}/100
+                                </p>
+                              </div>
+                            )}
+                            <Badge
+                              variant="outline"
+                              className={`text-xs px-2 py-1 ${
+                                evaluation.status === "completed"
+                                  ? evaluation["is-ai-report"]
+                                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                                    : "bg-green-50 text-green-700 border-green-200"
+                                  : evaluation.status === "in-progress"
+                                  ? "bg-yellow-50 text-yellow-700 border-yellow-200"
+                                  : "bg-gray-50 text-gray-700 border-gray-200"
+                              }`}
+                            >
+                              {evaluation["is-ai-report"] &&
+                              evaluation.status === "created"
+                                ? "AI Generated"
+                                : evaluation.status}
+                            </Badge>
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
