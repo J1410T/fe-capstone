@@ -131,9 +131,10 @@ function Header() {
 
   // Get menu items based on current selected role (from auth-response or user context)
   const currentRole = (authData?.["selected-role"] as UserRole) || user?.role;
-  const menuItems = (currentRole && currentRole in menuItemsByRole)
-    ? menuItemsByRole[currentRole]
-    : menuItemsByRole[UserRole.RESEARCHER];
+  const menuItems =
+    currentRole && currentRole in menuItemsByRole
+      ? menuItemsByRole[currentRole]
+      : menuItemsByRole[UserRole.RESEARCHER];
 
   const handleProfileClick = () => {
     // Navigate to role-specific profile page based on current selected role
@@ -157,16 +158,16 @@ function Header() {
   // Get notifications from API data
   const notifications = notificationData?.["data-list"] || [];
 
-  const markAsRead = async (notificationId: string) => {
-    try {
-      await markNotificationMutation.mutateAsync({
-        notification: notificationId,
-      });
-      refetchNotifications();
-    } catch (error) {
-      console.error("Failed to mark notification as read:", error);
-    }
-  };
+  // const markAsRead = async (notificationId: string) => {
+  //   try {
+  //     await markNotificationMutation.mutateAsync({
+  //       notification: notificationId,
+  //     });
+  //     refetchNotifications();
+  //   } catch (error) {
+  //     console.error("Failed to mark notification as read:", error);
+  //   }
+  // };
 
   // useEffect(() => {
   //   const result = getAuthResponse<AuthResponse>();
@@ -338,7 +339,7 @@ function Header() {
                       <DropdownMenuItem
                         key={notification.id}
                         className="p-0 focus:bg-gray-50 cursor-pointer"
-                        onClick={() => markAsRead(notification.id)}
+                        // onClick={() => markAsRead(notification.id)}
                       >
                         <div
                           className={`w-full p-4 border-b border-gray-100 last:border-0 ${
