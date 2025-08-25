@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -27,13 +27,11 @@ import {
   getEvaluationStagesByEvaluationId,
   getEvaluationById,
 } from "@/services/resources/evaluation";
-import {
-  getUserRolesByAppraisalCouncilId,
-  getUserRoleByFilter,
-  getMyAccountInfo,
-} from "@/services/resources/auth";
-import { getMyAppraisalCouncils } from "@/services/resources/appraisal-council";
+import { checkIsChaimainInCouncil } from "@/services/resources/auth";
+import { getAppraisalCouncilByProjectId } from "@/services/resources/appraisal-council";
 import { useAuth } from "@/contexts";
+import { useProject } from "@/hooks/queries/project";
+import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
 import { Evaluation, EvaluationStageApi } from "@/types/evaluation";
 import CreateEvaluationStageModal from "./CreateEvaluationStageModal";
 
@@ -49,6 +47,42 @@ const EvaluationDetailPage: React.FC = () => {
   const [isChairman, setIsChairman] = useState(false);
   const [isCreateStageModalOpen, setIsCreateStageModalOpen] = useState(false);
   const [projectData, setProjectData] = useState<any>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
+
+  // Query hooks
+  const { data: projectQueryData } = useProject(projectId || "");
+  const { data: evaluationsData } = useGetEvaluationsByProjectId(
+    projectId || ""
+  );
+
+  // Simple Chairman Role Check Function (from TopicDetailPage)
+  const checkChairmanRole = useCallback(async (projectId: string | null) => {
+    try {
+      if (!projectId) {
+        console.log("No project ID available");
+        setIsChairman(false);
+        return;
+      }
+
+      // Get appraisal council by project ID
+      const appraisalCouncilProjectMain = await getAppraisalCouncilByProjectId(
+        projectId
+      );
+
+      // Check if current user is chairman in this council
+      const responseAppraisalCouncilProjectMain =
+        await checkIsChaimainInCouncil(appraisalCouncilProjectMain.id);
+
+      if (responseAppraisalCouncilProjectMain["total-count"] === 1) {
+        setIsChairman(true);
+      } else {
+        setIsChairman(false);
+      }
+    } catch (error) {
+      console.error("Chairman role check error:", error);
+      setIsChairman(false);
+    }
+  }, []);
 
   // Load evaluation details and stages
   useEffect(() => {
@@ -63,240 +97,18 @@ const EvaluationDetailPage: React.FC = () => {
           const evaluationData = await getEvaluationById(evaluationId, true);
           console.log("=== DEBUG: Evaluation Data ===");
           console.log("Full evaluation data:", evaluationData);
-          console.log(
-            "Appraisal Council ID:",
-            evaluationData["appraisal-council-id"]
-          );
           console.log("Project ID:", evaluationData["project-id"]);
 
           setEvaluation(evaluationData);
           setStages(evaluationData["evaluation-stages"] || []);
 
-          // Load project data if project-id is available
+          // Set project ID to trigger query hooks
           if (evaluationData["project-id"]) {
-            const projectDataKey = `project_${evaluationData["project-id"]}`;
-            const storedProjectData =
-              localStorage.getItem(projectDataKey) ||
-              sessionStorage.getItem(projectDataKey);
-
-            if (storedProjectData) {
-              try {
-                const parsedProjectData = JSON.parse(storedProjectData);
-                console.log(
-                  "✅ Found project data for evaluation:",
-                  parsedProjectData
-                );
-                setProjectData(parsedProjectData);
-              } catch (parseError) {
-                console.error("Error parsing project data:", parseError);
-              }
-            }
+            setProjectId(evaluationData["project-id"]);
           }
 
-          // Check if current user is chairman of the appraisal council
-          console.log("=== DEBUG: Pre-check Values ===");
-          console.log(
-            "Has appraisal-council-id?",
-            !!evaluationData["appraisal-council-id"]
-          );
-          console.log("Has user?", !!user);
-          console.log("Has user.id?", !!user?.id);
-          console.log("User object:", user);
-
-          // Get user ID - fallback to API call if not available
-          let currentUserId = user?.id;
-          if (!currentUserId && user) {
-            try {
-              console.log("=== DEBUG: Fetching user ID from API ===");
-              const accountInfo = await getMyAccountInfo();
-              console.log("Account info from API:", accountInfo);
-              currentUserId = accountInfo.id;
-            } catch (error) {
-              console.error("Failed to get account info:", error);
-            }
-          }
-
-          console.log("Final user ID:", currentUserId);
-
-          if (evaluationData["appraisal-council-id"] && currentUserId) {
-            try {
-              console.log("=== DEBUG: Checking Chairman Role ===");
-              console.log(
-                "Appraisal Council ID:",
-                evaluationData["appraisal-council-id"]
-              );
-              console.log("Current User Object:", user);
-              console.log("Current User ID:", currentUserId);
-
-              // Method 1: Try different filter approaches
-              let currentUserRole = null;
-
-              // Approach 1: Filter by appraisal-council-id only (get all members)
-              console.log("=== Approach 1: Filter by council ID only ===");
-              try {
-                const filterRequest1 = {
-                  "appraisal-council-id":
-                    evaluationData["appraisal-council-id"],
-                  "page-index": 1,
-                  "page-size": 50,
-                };
-                console.log("Filter request 1:", filterRequest1);
-
-                const response1 = await getUserRoleByFilter(filterRequest1);
-                console.log("Response 1 (all council members):", response1);
-
-                const allCouncilMembers = response1["data-list"] || [];
-                currentUserRole = allCouncilMembers.find(
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  (role: any) => role["account-id"] === currentUserId
-                );
-                console.log("Found user role in approach 1:", currentUserRole);
-              } catch (error1) {
-                console.error("Approach 1 failed:", error1);
-              }
-
-              // Approach 2: If not found, try with account-id filter
-              if (!currentUserRole) {
-                console.log("=== Approach 2: Filter by account ID ===");
-                try {
-                  const filterRequest2 = {
-                    "account-id": currentUserId,
-                    "page-index": 1,
-                    "page-size": 20,
-                  };
-                  console.log("Filter request 2:", filterRequest2);
-
-                  const response2 = await getUserRoleByFilter(filterRequest2);
-                  console.log("Response 2 (user's all roles):", response2);
-
-                  const userAllRoles = response2["data-list"] || [];
-                  // Find role in the specific council
-                  currentUserRole = userAllRoles.find(
-                    (role: any) =>
-                      role["appraisal-council-id"] ===
-                      evaluationData["appraisal-council-id"]
-                  );
-                  console.log(
-                    "Found user role in approach 2:",
-                    currentUserRole
-                  );
-                } catch (error2) {
-                  console.error("Approach 2 failed:", error2);
-                }
-              }
-
-              // Approach 3: If still not found, use My Appraisal Councils API
-              if (!currentUserRole) {
-                console.log(
-                  "=== Approach 3: Use My Appraisal Councils API ==="
-                );
-                try {
-                  const myCouncilsResponse = await getMyAppraisalCouncils({
-                    "page-index": 1,
-                    "page-size": 20,
-                  });
-                  console.log("My councils response:", myCouncilsResponse);
-
-                  const myCouncils = myCouncilsResponse["data-list"] || [];
-                  const targetCouncil = myCouncils.find(
-                    (council: any) =>
-                      council.id === evaluationData["appraisal-council-id"]
-                  );
-
-                  console.log("Found target council:", targetCouncil);
-
-                  if (targetCouncil && targetCouncil.member) {
-                    const myRoleInCouncil = targetCouncil.member.find(
-                      (member: any) => member["account-id"] === currentUserId
-                    );
-                    console.log("My role in target council:", myRoleInCouncil);
-                    currentUserRole = myRoleInCouncil;
-                  }
-                } catch (error3) {
-                  console.error("Approach 3 failed:", error3);
-                }
-              }
-
-              console.log("Final Current User Role Found:", currentUserRole);
-
-              if (currentUserRole) {
-                const roleName =
-                  (currentUserRole as any)["role-name"] ||
-                  (currentUserRole as any)["name"];
-                console.log(
-                  "Role Name (role-name):",
-                  (currentUserRole as any)["role-name"]
-                );
-                console.log(
-                  "Role Name (name):",
-                  (currentUserRole as any)["name"]
-                );
-                console.log("Final Role Name:", roleName);
-
-                // Check if role name is exactly "Chairman"
-                const isChairmanRole = roleName === "Chairman";
-
-                console.log("Expected Role Name: Chairman");
-                console.log("Actual Role Name:", roleName);
-                console.log("Is Chairman?", isChairmanRole);
-
-                setIsChairman(isChairmanRole);
-              } else {
-                console.log("No role found for current user");
-                setIsChairman(false);
-              }
-            } catch (roleError) {
-              console.error("Error checking chairman role:", roleError);
-              setIsChairman(false);
-            }
-          } else {
-            console.log("Missing appraisal-council-id or user.id");
-
-            // Fallback: Check from stored council data
-            try {
-              const storedCouncilData =
-                sessionStorage.getItem("current_council");
-              if (storedCouncilData && currentUserId) {
-                console.log("=== DEBUG: Fallback Chairman Check ===");
-                const currentCouncil = JSON.parse(storedCouncilData);
-                console.log("Stored Council Data:", currentCouncil);
-                console.log("Council ID:", currentCouncil.id);
-
-                const userRolesResponse =
-                  await getUserRolesByAppraisalCouncilId(currentCouncil.id);
-
-                console.log(
-                  "Fallback User Roles API Response:",
-                  userRolesResponse
-                );
-
-                const userRoles = userRolesResponse["data-list"] || [];
-                const currentUserRole = userRoles.find(
-                  (role: any) => role["account-id"] === currentUserId
-                );
-
-                console.log("Fallback Current User Role:", currentUserRole);
-
-                if (currentUserRole) {
-                  const isChairmanRole =
-                    (currentUserRole as any)["role-name"] === "Chairman";
-                  console.log(
-                    "Fallback Role Name:",
-                    (currentUserRole as any)["role-name"]
-                  );
-                  console.log("Fallback Is Chairman?", isChairmanRole);
-                  setIsChairman(isChairmanRole);
-                } else {
-                  setIsChairman(false);
-                }
-              } else {
-                setIsChairman(false);
-              }
-            } catch (fallbackError) {
-              console.error("Fallback chairman check failed:", fallbackError);
-              setIsChairman(false);
-            }
-          }
+          // Simple Chairman Role Check using project ID
+          await checkChairmanRole(evaluationData["project-id"]);
         } catch {
           // Fallback: Load stages separately and create mock evaluation
           const stagesResponse = await getEvaluationStagesByEvaluationId({
@@ -321,6 +133,9 @@ const EvaluationDetailPage: React.FC = () => {
             documents: null,
             "evaluation-stages": stagesResponse["data-list"] || [],
           });
+
+          // Still try to check chairman role with fallback
+          await checkChairmanRole(null);
         }
       } catch {
         setEvaluation(null);
@@ -332,7 +147,30 @@ const EvaluationDetailPage: React.FC = () => {
     };
 
     loadEvaluationDetails();
-  }, [evaluationId, user?.id, user]);
+  }, [evaluationId, user?.id, user, checkChairmanRole]);
+
+  // Handle project data from query hooks
+  useEffect(() => {
+    if (projectQueryData?.data?.["project-detail"]) {
+      setProjectData(projectQueryData.data["project-detail"]);
+    }
+  }, [projectQueryData]);
+
+  // Handle evaluations data from query hooks
+  useEffect(() => {
+    if (
+      evaluationsData?.["data-list"] &&
+      evaluationsData["data-list"].length > 0
+    ) {
+      // Update evaluation if needed
+      const currentEvaluation = evaluationsData["data-list"].find(
+        (evaluation: any) => evaluation.id === evaluationId
+      );
+      if (currentEvaluation && !evaluation) {
+        setEvaluation(currentEvaluation);
+      }
+    }
+  }, [evaluationsData, evaluationId, evaluation]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
@@ -362,67 +200,10 @@ const EvaluationDetailPage: React.FC = () => {
   const handleStageCreated = () => {
     // Reload evaluation data to get updated stages
     if (evaluationId) {
-      loadEvaluationDetails();
+      // Re-run the useEffect logic
+      window.location.reload();
     }
   };
-
-  // Extract loadEvaluationDetails function to be reusable
-  const loadEvaluationDetails = async () => {
-    if (!evaluationId) return;
-
-    try {
-      setIsLoading(true);
-
-      // Load evaluation with stages using the new API
-      try {
-        const evaluationData = await getEvaluationById(evaluationId, true);
-
-        setEvaluation(evaluationData);
-        setStages(evaluationData["evaluation-stages"] || []);
-
-        // Check chairman role (existing logic)
-        await checkChairmanRole();
-      } catch {
-        // Fallback logic (existing code)
-        const stagesResponse = await getEvaluationStagesByEvaluationId({
-          "evaluation-id": evaluationId,
-          "page-index": 1,
-          "page-size": 20,
-        });
-
-        setStages(stagesResponse["data-list"] || []);
-
-        // Mock evaluation data for fallback
-        setEvaluation({
-          id: evaluationId,
-          code: "EVA-SAMPLE",
-          title: "Sample Evaluation",
-          "total-rate": null,
-          comment: null,
-          "create-date": new Date().toISOString(),
-          status: "created",
-          "project-id": "",
-          "appraisal-council-id": null,
-          documents: null,
-          "evaluation-stages": stagesResponse["data-list"] || [],
-        });
-      }
-    } catch {
-      setEvaluation(null);
-      setStages([]);
-      setIsChairman(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Extract chairman role check logic
-  const checkChairmanRole = async () => {
-    // TODO: Move existing chairman role check logic here
-    setIsChairman(true); // Temporary - use existing logic from useEffect
-  };
-
-  // Chairman check is handled in useEffect via API call
 
   if (isLoading) {
     return (

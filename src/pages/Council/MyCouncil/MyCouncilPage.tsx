@@ -29,6 +29,8 @@ import { getMyAppraisalCouncils } from "@/services/resources/appraisal-council";
 import { getProjectsByCouncilId } from "@/services/resources/project";
 import { AppraisalCouncil } from "@/types/appraisal-council";
 import { ProjectWithProposals } from "@/types/project";
+import { useMyAppraisalCouncils } from "@/hooks/queries/appraisal-council";
+import { useProjectsByAppraisalCouncil } from "@/hooks/queries/project";
 // import { ProjectWithProposals } from "@/types/project";
 
 const MyCouncilPage: React.FC = () => {
@@ -41,6 +43,21 @@ const MyCouncilPage: React.FC = () => {
   const [projects, setProjects] = useState<ProjectWithProposals[]>([]);
   const [isLoadingCouncils, setIsLoadingCouncils] = useState(true);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
+
+  // Query hooks
+  const { data: councilsData, isLoading: isLoadingCouncilsQuery } =
+    useMyAppraisalCouncils({
+      "page-index": 1,
+      "page-size": 10,
+    });
+
+  const { data: projectsData, isLoading: isLoadingProjectsQuery } =
+    useProjectsByAppraisalCouncil(selectedCouncilId, [
+      "inprogress",
+      "completed",
+      "canceled",
+      "approved",
+    ]);
 
   // Load user's councils on mount
   useEffect(() => {
@@ -66,6 +83,27 @@ const MyCouncilPage: React.FC = () => {
 
     loadCouncils();
   }, []);
+
+  // Handle councils data from query hooks
+  useEffect(() => {
+    if (councilsData?.["data-list"]) {
+      setCouncils(councilsData["data-list"]);
+      setIsLoadingCouncils(false);
+
+      // Auto-select first council if available and none selected
+      if (councilsData["data-list"].length > 0 && !selectedCouncilId) {
+        setSelectedCouncilId(councilsData["data-list"][0].id);
+      }
+    }
+  }, [councilsData, selectedCouncilId]);
+
+  // Handle projects data from query hooks
+  useEffect(() => {
+    if (projectsData) {
+      setProjects(projectsData);
+      setIsLoadingProjects(false);
+    }
+  }, [projectsData]);
 
   // Load projects when council is selected
   useEffect(() => {
@@ -150,7 +188,7 @@ const MyCouncilPage: React.FC = () => {
 
   // Remove evaluation handlers since they're now in project detail
 
-  if (isLoadingCouncils) {
+  if (isLoadingCouncils || isLoadingCouncilsQuery) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loading />
@@ -219,7 +257,7 @@ const MyCouncilPage: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                {isLoadingProjects ? (
+                {isLoadingProjects || isLoadingProjectsQuery ? (
                   <div className="flex justify-center py-8">
                     <Loading />
                   </div>
