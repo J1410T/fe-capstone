@@ -65,7 +65,7 @@ const transformTaskPriority = (priority: string): "Low" | "Medium" | "High" => {
     case "high":
       return "High";
     default:
-      return "Medium";
+      return "Low"; // Default to Low when priority is null/undefined
   }
 };
 

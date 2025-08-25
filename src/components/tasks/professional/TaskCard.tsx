@@ -12,7 +12,10 @@ interface TaskCardProps {
 }
 
 const getPriorityConfig = (priority: string) => {
-  switch (priority) {
+  // Handle null/undefined priority - default to "Low"
+  const safePriority = priority || "Low";
+
+  switch (safePriority) {
     case "High":
       return {
         color: "text-red-600",
@@ -35,11 +38,12 @@ const getPriorityConfig = (priority: string) => {
         icon: "🟢",
       };
     default:
+      // Default to Low configuration
       return {
-        color: "text-slate-600",
-        bgColor: "bg-slate-50",
-        borderColor: "border-slate-200",
-        icon: "⚪",
+        color: "text-green-600",
+        bgColor: "bg-green-50",
+        borderColor: "border-blue-200",
+        icon: "🟢",
       };
   }
 };
@@ -126,7 +130,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
           <div className="flex items-center space-x-1">
             <span className="text-xs sm:text-sm">{priorityConfig.icon}</span>
             <span className={`text-sm font-semibold ${priorityConfig.color}`}>
-              {task.priority}
+              {task.priority || "Low"}
             </span>
           </div>
           {overdue && (
@@ -175,26 +179,32 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onClick }) => {
                   if (memberData) {
                     // Use embedded member data
                     return (
-                      <Avatar key={memberId} className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0">
+                      <Avatar
+                        key={memberId}
+                        className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0"
+                      >
                         {memberData.avatarUrl ? (
                           <img
                             src={memberData.avatarUrl}
                             alt={memberData.name}
                             className="w-full h-full rounded-full object-cover"
                             onError={(e) => {
-                              e.currentTarget.style.display = 'none';
-                              const nextElement = e.currentTarget.nextElementSibling as HTMLElement;
+                              e.currentTarget.style.display = "none";
+                              const nextElement = e.currentTarget
+                                .nextElementSibling as HTMLElement;
                               if (nextElement) {
-                                nextElement.style.display = 'flex';
+                                nextElement.style.display = "flex";
                               }
                             }}
                           />
                         ) : null}
                         <AvatarFallback
                           className="text-xs bg-blue-100 text-blue-600"
-                          style={{ display: memberData.avatarUrl ? 'none' : 'flex' }}
+                          style={{
+                            display: memberData.avatarUrl ? "none" : "flex",
+                          }}
                         >
-                          {memberData.name?.charAt(0)?.toUpperCase() || 'U'}
+                          {memberData.name?.charAt(0)?.toUpperCase() || "U"}
                         </AvatarFallback>
                       </Avatar>
                     );

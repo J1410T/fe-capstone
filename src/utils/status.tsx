@@ -230,11 +230,12 @@ export const getPriorityConfig = (priority: string) => {
       };
 
     default:
+      // Default to Low priority configuration
       return {
-        color: "text-gray-600",
-        bgColor: "bg-gray-50",
-        borderColor: "border-gray-200",
-        badgeColor: "bg-gray-100 text-gray-800",
+        color: "text-green-600",
+        bgColor: "bg-green-50",
+        borderColor: "border-green-200",
+        badgeColor: "bg-green-100 text-green-800",
       };
   }
 };
