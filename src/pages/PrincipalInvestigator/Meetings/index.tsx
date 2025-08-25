@@ -23,7 +23,6 @@ import {
   Users,
   CheckCircle,
   AlertCircle,
-  ExternalLink,
   RefreshCw,
 } from "lucide-react";
 import { format, isAfter, isBefore, parseISO } from "date-fns";
@@ -523,7 +522,6 @@ const MeetingTableRow: React.FC<{ meeting: Meeting }> = ({ meeting }) => {
             >
               <Video className="w-3 h-3" />
               Join
-              <ExternalLink className="w-3 h-3" />
             </Button>
           ) : (
             <span className="text-xs text-gray-500">No link</span>

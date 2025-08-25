@@ -705,18 +705,22 @@ const UserTaskManagement: React.FC = () => {
                 </p>
               </div>
 
-              {/* Create Task Button - Mobile Priority */}
-              {isLeader && (
-                <div className="flex-shrink-0">
-                  <Button
-                    onClick={handleCreateTaskClick}
-                    className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer text-white flex items-center space-x-2 w-full sm:w-auto"
-                  >
-                    <Plus className="w-4 h-4" />
-                    <span>Create Task</span>
-                  </Button>
-                </div>
-              )}
+              {/* Create Task Button - Mobile Priority - Hidden for meetings */}
+              {isLeader &&
+                !milestones
+                  .find((m) => m.id === selectedMilestoneId)
+                  ?.title?.toLowerCase()
+                  .includes("meeting") && (
+                  <div className="flex-shrink-0">
+                    <Button
+                      onClick={handleCreateTaskClick}
+                      className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer text-white flex items-center space-x-2 w-full sm:w-auto"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Create Task</span>
+                    </Button>
+                  </div>
+                )}
             </div>
 
             {/* Project and Milestone Selection */}
@@ -819,27 +823,32 @@ const UserTaskManagement: React.FC = () => {
                 </div>
               </div>
 
-              {/* View Toggle */}
-              <div className="flex items-center space-x-2 bg-slate-100 rounded-lg p-1">
-                <Button
-                  variant={activeView === "table" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveView("table")}
-                  className="flex items-center space-x-2 flex-1 sm:flex-none"
-                >
-                  <TableIcon className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm">Table</span>
-                </Button>
-                <Button
-                  variant={activeView === "kanban" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setActiveView("kanban")}
-                  className="flex items-center space-x-2 flex-1 sm:flex-none"
-                >
-                  <Kanban className="w-4 h-4" />
-                  <span className="text-xs sm:text-sm">Kanban</span>
-                </Button>
-              </div>
+              {/* View Toggle - Hidden for meetings */}
+              {!milestones
+                .find((m) => m.id === selectedMilestoneId)
+                ?.title?.toLowerCase()
+                .includes("meeting") && (
+                <div className="flex items-center space-x-2 bg-slate-100 rounded-lg p-1">
+                  <Button
+                    variant={activeView === "table" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveView("table")}
+                    className="flex items-center space-x-2 flex-1 sm:flex-none"
+                  >
+                    <TableIcon className="w-4 h-4" />
+                    <span className="text-xs sm:text-sm">Table</span>
+                  </Button>
+                  <Button
+                    variant={activeView === "kanban" ? "default" : "ghost"}
+                    size="sm"
+                    onClick={() => setActiveView("kanban")}
+                    className="flex items-center space-x-2 flex-1 sm:flex-none"
+                  >
+                    <Kanban className="w-4 h-4" />
+                    <span className="text-xs sm:text-sm">Kanban</span>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -847,7 +856,11 @@ const UserTaskManagement: React.FC = () => {
 
       {/* Content Area - Responsive */}
       <div className="flex-1">
-        {activeView === "table" ? (
+        {activeView === "table" ||
+        milestones
+          .find((m) => m.id === selectedMilestoneId)
+          ?.title?.toLowerCase()
+          .includes("meeting") ? (
           <>
             {/* Task Statistics Dashboard - Table View */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
@@ -874,6 +887,10 @@ const UserTaskManagement: React.FC = () => {
                 onTaskClick={handleTaskClick}
                 onCreateTask={handleCreateTaskClick}
                 isLeader={isLeader}
+                milestoneName={
+                  milestones.find((m) => m.id === selectedMilestoneId)?.title ||
+                  ""
+                }
               />
             </div>
           </>
