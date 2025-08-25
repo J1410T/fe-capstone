@@ -30,7 +30,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   const navigate = useNavigate();
 
   const handleBack = () => {
-    navigate(-1);
+    navigate("/pi/my-projects");
   };
 
   // Props are available for future use
