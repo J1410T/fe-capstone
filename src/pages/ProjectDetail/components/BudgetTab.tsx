@@ -168,7 +168,7 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
           {user?.role === UserRole.PRINCIPAL_INVESTIGATOR && (
             <Button
               onClick={handleRequestTransaction}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               <Plus className="w-4 h-4 mr-2" />
               Request Transaction
