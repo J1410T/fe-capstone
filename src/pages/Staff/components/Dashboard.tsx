@@ -34,7 +34,6 @@ import {
   Award,
   Calendar,
   Filter,
-  Loader2,
 } from "lucide-react";
 import { UI_CONSTANTS } from "@/lib/ui-constants";
 import { formatVND } from "../shared";
@@ -350,7 +349,7 @@ const StaffDashboard: React.FC = () => {
     if (projectStatusQuery.isLoading) {
       return (
         <div className="h-64 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin" />
+          <Loading />
         </div>
       );
     }
@@ -386,7 +385,7 @@ const StaffDashboard: React.FC = () => {
     if (majorDistributionQuery.isLoading) {
       return (
         <div className="h-64 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin" />
+          <Loading />
         </div>
       );
     }
@@ -651,7 +650,7 @@ const StaffDashboard: React.FC = () => {
             <CardContent>
               {transactionsQuery.isLoading ? (
                 <div className="flex items-center justify-center h-64">
-                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <Loading />
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -716,7 +715,7 @@ const StaffDashboard: React.FC = () => {
             <CardContent>
               {councilsQuery.isLoading ? (
                 <div className="flex items-center justify-center h-64">
-                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <Loading />
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -786,7 +785,7 @@ const StaffDashboard: React.FC = () => {
             <CardContent>
               {systemStatsQuery.isLoading ? (
                 <div className="flex items-center justify-center h-64">
-                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <Loading />
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -855,7 +854,7 @@ const StaffDashboard: React.FC = () => {
             <CardContent>
               {milestonesQuery.isLoading ? (
                 <div className="flex items-center justify-center h-64">
-                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <Loading />
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -916,7 +915,7 @@ const StaffDashboard: React.FC = () => {
             <CardContent>
               {userRolesQuery.isLoading ? (
                 <div className="flex items-center justify-center h-64">
-                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <Loading />
                 </div>
               ) : (
                 <div className="space-y-4">

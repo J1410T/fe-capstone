@@ -34,6 +34,7 @@ import {
   LegacyProject,
   Council,
 } from "../../../types/detailViewTypes";
+import { Loading } from "@/components";
 
 // Interface for outlet context from StaffLayout
 interface StaffLayoutContext {
@@ -372,8 +373,7 @@ const ProjectManagementOverview: React.FC = () => {
         <TabsContent value="projects" className="space-y-6">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
-              <p className="text-base text-gray-500">Loading projects...</p>
+              <Loading />
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-12">

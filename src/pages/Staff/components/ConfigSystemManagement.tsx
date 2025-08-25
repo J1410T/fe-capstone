@@ -31,6 +31,7 @@ import {
   systemConfigService,
   ConfigItem,
 } from "@/services/resources/systemConfigService";
+import { Loading } from "@/components";
 
 const ConfigSystemManagement: React.FC = () => {
   const [configs, setConfigs] = useState<ConfigItem[]>([]);
@@ -130,8 +131,7 @@ const ConfigSystemManagement: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <RefreshCw className="h-8 w-8 animate-spin" />
-        <span className="ml-2">Loading...</span>
+        <Loading />
       </div>
     );
   }
