@@ -391,7 +391,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
               projectStatus === "inprogress" && (
                 <Button
                   onClick={handleCreateDocument}
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Create Document

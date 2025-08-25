@@ -322,7 +322,7 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
               onClick={
                 projectResult ? openEditResult : () => setShowResultDialog(true)
               }
-              className="bg-green-600 hover:bg-green-700 text-white"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               <Plus className="h-4 w-4 mr-2" />
               {projectResult ? "Edit Result" : "Add Result"}

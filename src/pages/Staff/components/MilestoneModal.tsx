@@ -47,6 +47,7 @@ import { Milestone } from "@/types/milestone";
 import { toast } from "sonner";
 import { useBaseUserRoleId } from "@/hooks/queries";
 import { Loading } from "@/components";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Task {
   id: string;
@@ -1019,6 +1020,9 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
     milestoneId: string;
   } | null>(null);
   const [creatingTask, setCreatingTask] = useState<string | null>(null);
+  const [hasCreatedMeetingMilestone, setHasCreatedMeetingMilestone] =
+    useState(false);
+  const queryClient = useQueryClient();
 
   // API hooks
   const { data: milestonesData } = useMilestonesByProjectId(projectId);
@@ -1027,8 +1031,58 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
   const deleteMilestoneMutation = useDeleteMilestone();
   const deleteTaskMutation = useDeleteTask();
 
+  // useEffect(() => {
+  //   if (!isOpen || !milestonesData?.data || !userRoleData?.data) {
+  //     return;
+  //   }
+
+  //   const apiMilestones = milestonesData.data;
+
+  //   // Check if Meeting milestone exists (case-insensitive, trimmed)
+  //   const hasMeetingMilestone = apiMilestones.some(
+  //     (milestone) => milestone.title?.trim().toLowerCase() === "meeting"
+  //   );
+
+  //   if (!hasMeetingMilestone) {
+  //     // Auto-create Meeting milestone
+  //     const createMeetingMilestone = async () => {
+  //       try {
+  //         const meetingMilestoneData = {
+  //           title: "Meeting",
+  //           description: "Meeting Schedule",
+  //           type: "normal",
+  //           "project-id": projectId,
+  //           "creator-id": userRoleData.data,
+  //         };
+
+  //         await createMilestoneMutation.mutateAsync(meetingMilestoneData);
+  //         console.log("Meeting milestone created automatically");
+  //       } catch (error) {
+  //         console.error("Error auto-creating Meeting milestone:", error);
+  //         // Don't show toast error to avoid interrupting user experience
+  //       }
+  //     };
+
+  //     createMeetingMilestone();
+  //   }
+  // }, [
+  //   isOpen,
+  //   milestonesData?.data,
+  //   userRoleData?.data,
+  //   projectId,
+  //   createMilestoneMutation,
+  // ]);
+
+  // Extract milestones from API response
+
   useEffect(() => {
-    if (!isOpen || !milestonesData?.data || !userRoleData?.data) {
+    // Chỉ chạy khi modal mở, có data milestone, có user data, và chưa tạo Meeting milestone
+    if (
+      !isOpen ||
+      !milestonesData?.data ||
+      !userRoleData?.data ||
+      hasCreatedMeetingMilestone
+    ) {
       return;
     }
 
@@ -1040,6 +1094,9 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
     );
 
     if (!hasMeetingMilestone) {
+      // Set flag để tránh tạo lại
+      setHasCreatedMeetingMilestone(true);
+
       // Auto-create Meeting milestone
       const createMeetingMilestone = async () => {
         try {
@@ -1052,24 +1109,33 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
           };
 
           await createMilestoneMutation.mutateAsync(meetingMilestoneData);
+
+          // Refresh milestone data sau khi tạo
+          queryClient.invalidateQueries({
+            queryKey: ["milestones", projectId],
+          });
+
           console.log("Meeting milestone created automatically");
         } catch (error) {
           console.error("Error auto-creating Meeting milestone:", error);
-          // Don't show toast error to avoid interrupting user experience
+          // Reset flag nếu tạo thất bại để có thể thử lại
+          setHasCreatedMeetingMilestone(false);
         }
       };
 
       createMeetingMilestone();
+    } else {
+      // Nếu đã có Meeting milestone thì set flag = true
+      setHasCreatedMeetingMilestone(true);
     }
   }, [
     isOpen,
     milestonesData?.data,
     userRoleData?.data,
     projectId,
-    createMilestoneMutation,
+    hasCreatedMeetingMilestone, // Thêm dependency này
+    // Bỏ createMilestoneMutation khỏi dependencies để tránh re-run
   ]);
-
-  // Extract milestones from API response
   const apiMilestones = useMemo(
     () => milestonesData?.data || [],
     [milestonesData?.data]
@@ -1189,6 +1255,7 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
     setCreatingMilestone(false);
     setEditingTask(null);
     setCreatingTask(null);
+    setHasCreatedMeetingMilestone(false); // Reset flag khi đóng modal
     onClose();
   };
 
