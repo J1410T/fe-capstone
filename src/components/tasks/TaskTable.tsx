@@ -155,25 +155,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   // Determine which tasks to use - wrapped in useMemo to prevent dependency issues
   const tasks = useMemo(() => {
     const finalTasks = milestoneId ? fetchedTasks : propTasks || [];
-
-    // Debug logging
-    // console.log("🔍 TaskTable Debug:", {
-    //   milestoneId,
-    //   usingEnhancedHook: !!milestoneId,
-    //   fetchedTasksCount: fetchedTasks.length,
-    //   finalTasksCount: finalTasks.length,
-    //   fetchingTasks,
-    //   fetchError,
-    //   sampleTask: finalTasks[0]
-    //     ? {
-    //         id: finalTasks[0].id,
-    //         title: finalTasks[0].title,
-    //         memberTasksCount: finalTasks[0]["member-tasks"]?.length || 0,
-    //         memberTasksData: finalTasks[0]["member-tasks"],
-    //       }
-    //     : null,
-    // });
-
     return finalTasks;
   }, [milestoneId, fetchedTasks, propTasks]);
 
@@ -202,8 +183,10 @@ export const TaskTable: React.FC<TaskTableProps> = ({
 
   // Get priority configuration from shared utilities
   const getPriorityConfig = (priority: string) => {
-    const config = getPriorityConfigShared(priority);
-    const normalizedPriority = priority.toLowerCase().trim();
+    // Handle null/undefined priority - default to "Low"
+    const safePriority = priority || "Low";
+    const config = getPriorityConfigShared(safePriority);
+    const normalizedPriority = safePriority.toLowerCase().trim();
 
     // Add icon based on priority
     let icon = "";
@@ -220,7 +203,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         icon = "🟢";
         break;
       default:
-        icon = "⚪";
+        icon = "🟢"; // Default to Low icon
     }
 
     return { color: config.badgeColor, icon };
@@ -294,10 +277,11 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         ),
         cell: ({ row }: { row: Row<Task> }) => {
           const priorityConfig = getPriorityConfig(row.original.priority);
+          const displayPriority = row.original.priority || "Low";
           return (
             <div className="flex justify-center">
               <Badge variant="outline" className={priorityConfig.color}>
-                {priorityConfig.icon} {row.original.priority}
+                {priorityConfig.icon} {displayPriority}
               </Badge>
             </div>
           );
@@ -697,7 +681,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="min-w-[600px]">
           {" "}
-          {/* Đảm bảo bảng không bị bóp quá nhỏ */}
           <Table>
             <TableHeader className="pt-0">
               <TableRow className="pt-0 border-slate-200">
