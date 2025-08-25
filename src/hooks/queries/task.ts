@@ -47,6 +47,9 @@ export function useCreateTask() {
       // Invalidate and refetch tasks
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks-with-members"] });
+      queryClient.invalidateQueries({
+        queryKey: ["project-list-with-meeting-task"],
+      });
       toast.success("Task created successfully");
     },
     onError: (error) => {
@@ -95,6 +98,9 @@ export function useUpdateTask() {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["member-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks-with-members"] });
+      queryClient.invalidateQueries({
+        queryKey: ["project-list-with-meeting-task"],
+      });
 
       console.log(
         "✅ Query invalidation - All task-related queries invalidated"
@@ -119,6 +125,9 @@ export function useDeleteTask() {
       queryClient.invalidateQueries({ queryKey: ["tasks"] });
       queryClient.invalidateQueries({ queryKey: ["member-tasks"] });
       queryClient.invalidateQueries({ queryKey: ["tasks-with-members"] });
+      queryClient.invalidateQueries({
+        queryKey: ["project-list-with-meeting-task"],
+      });
       // Don't show toast here - let the calling component handle it
     },
     onError: (error) => {

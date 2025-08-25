@@ -1,7 +1,7 @@
 import { Member } from "./auth";
 import { Transaction } from "./transaction";
 import { DocumentProject } from "./document";
-import { IndividualEvaluation } from "./task";
+import { IndividualEvaluation, ProjectTask } from "./task";
 import { Evaluation } from "./evaluation";
 import { ProjectMajorItem } from "./major";
 import { Milestone } from "./milestone";
@@ -249,6 +249,14 @@ export interface StaffProjectFilterRequest {
   "include-members": boolean;
 }
 
+export interface ProjectListWithMeetingTaskRequest {
+  title?: string;
+  genres: "proposal"[];
+  statuses?: "inprogress"[];
+  "page-index": number;
+  "page-size": number;
+}
+
 // Creator information in project response
 export interface ProjectCreator {
   id: string;
@@ -469,4 +477,49 @@ export interface TopicsListProps {
 export interface CheckUserEnrollmentResponse {
   "proposal-id": string;
   "is-enrolled": boolean;
+}
+
+export interface ProjectFilterMeetingTaskResponse {
+  "page-index": number;
+  "page-size": number;
+  "total-count": number;
+  "total-page": number;
+  "data-list": ProjectItemWithTask[];
+}
+
+export interface ProjectItemWithTask {
+  id: string;
+  "logo-url": string | null;
+  "picture-url": string | null;
+  code: string | null;
+  "english-title": string;
+  "vietnamese-title": string;
+  abbreviations: string | null;
+  duration: number | null;
+  "start-date": string | null;
+  "end-date": string | null;
+  description: string | null;
+  "requirement-note": string | null;
+  budget: number | null;
+  progress: number | null;
+  "maximum-member": number;
+  language: string;
+  category: string;
+  type: string;
+  genres: string;
+  "created-at": string;
+  "updated-at": string | null;
+  status: string;
+  "creator-id": string;
+  creator: Member | null;
+  members: Member[] | null;
+  milestones: Milestone[] | null;
+  evaluations: Evaluation[] | null;
+  "individual-evaluations": IndividualEvaluation[] | null;
+  majors: ProjectMajor[] | null;
+  "project-tags": ProjectTag[] | null;
+  documents: DocumentProject[] | null;
+  transactions: Transaction[] | null;
+  milestoneID: string;
+  tasks: ProjectTask[] | null;
 }

@@ -1,528 +1,594 @@
-import React, { useState, useMemo } from "react";
-import { ColumnDef } from "@tanstack/react-table";
+import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   Plus,
-  Calendar as CalendarIcon,
-  Clock,
   Video,
   Users,
-  Building,
+  ExternalLink,
+  ChevronDown,
+  ChevronUp,
+  Edit,
+  Trash2,
+  Search,
+  Clock,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
-import {
-  DataTable,
-  StatusBadge,
-  ActionButtons,
-  PageHeader,
-  FilterBar,
-  createCommonActions,
-  type StaffMeeting,
-  type FilterConfig,
-  MEETING_STATUSES,
-  MEETING_TYPES,
-  formatDate,
-} from "../shared";
-import CreateMeetingForm from "./CreateMeetingForm";
-import BulkMeetingCreation from "./BulkMeetingCreation";
+import { Badge } from "@/components/ui/badge";
+import { Loading } from "@/components/ui/loaders";
+import { useProjectListWithMeetingTask } from "@/hooks/queries/project";
+import { useDeleteTask } from "@/hooks/queries/task";
+import { ProjectItemWithTask } from "@/types/project";
+import { ProjectTask } from "@/types/task";
+import { ConfirmDialog } from "@/components/common/ConfirmDialog";
+import MeetingTaskModal from "./MeetingTaskModal";
+import { formatDateTime } from "@/utils";
 
-// Import types from the form components
-interface MeetingFormData {
-  title: string;
-  projectId: string;
-  milestoneId: string;
-  council: string;
-  date: Date | undefined;
-  startTime: string;
-  endTime: string;
-  meetingLink: string;
-}
-
-interface BulkMeetingData {
-  projectId: string;
-  projectName: string;
-  council: string;
-  meetingLinkTemplate: string;
-  milestones: Array<{
-    milestoneId: string;
-    milestoneName: string;
-    date: Date | undefined;
-    startTime: string;
-    endTime: string;
-  }>;
-}
-
-// Mock data for staff meetings
-const mockMeetings: StaffMeeting[] = [
-  {
-    id: "meeting-1",
-    title: "Milestone 2 Review: AI-Driven Medical Diagnostics",
-    projectName: "AI-Driven Medical Diagnostics",
-    projectId: "PRJ-2024-001",
-    milestone: "Data Collection and Preprocessing",
-    milestoneId: "MS-001-02",
-    council: "Technical Council",
-    date: "2024-02-15T10:00:00Z",
-    time: "10:00 AM - 12:00 PM",
-    meetingLink: "https://meet.google.com/abc-defg-hij",
-    status: "Upcoming",
-    type: "Milestone Review",
-    attendees: 8,
-    createdBy: "Staff Admin",
-    createdAt: "2024-01-20T00:00:00Z",
-    updatedAt: "2024-01-20T00:00:00Z",
-  },
-  {
-    id: "meeting-2",
-    title: "Milestone 1 Review: Sustainable Energy Solutions",
-    projectName: "Sustainable Energy Solutions",
-    projectId: "PRJ-2024-002",
-    milestone: "Project Planning and Setup",
-    milestoneId: "MS-002-01",
-    council: "Environmental Council",
-    date: "2024-02-20T14:00:00Z",
-    time: "2:00 PM - 4:00 PM",
-    meetingLink: "https://zoom.us/j/123456789",
-    status: "Upcoming",
-    type: "Milestone Review",
-    attendees: 6,
-    createdBy: "Staff Admin",
-    createdAt: "2024-01-25T00:00:00Z",
-    updatedAt: "2024-01-25T00:00:00Z",
-  },
-  {
-    id: "meeting-3",
-    title: "Final Review: Smart City Infrastructure",
-    projectName: "Smart City Infrastructure",
-    projectId: "PRJ-2023-015",
-    milestone: "Project Completion",
-    milestoneId: "MS-015-05",
-    council: "Technical Council",
-    date: "2024-01-30T09:00:00Z",
-    time: "9:00 AM - 11:00 AM",
-    meetingLink: "https://meet.google.com/xyz-abcd-efg",
-    status: "Completed",
-    type: "Final Review",
-    attendees: 10,
-    createdBy: "Staff Admin",
-    createdAt: "2024-01-10T00:00:00Z",
-    updatedAt: "2024-01-30T00:00:00Z",
-  },
-  {
-    id: "meeting-4",
-    title: "Progress Review: Quantum Computing Research",
-    projectName: "Quantum Computing Research",
-    projectId: "PRJ-2024-003",
-    milestone: "Algorithm Development",
-    milestoneId: "MS-003-03",
-    council: "Technical Council",
-    date: "2024-02-25T16:00:00Z",
-    time: "4:00 PM - 5:30 PM",
-    meetingLink: "https://teams.microsoft.com/l/meetup-join/xyz",
-    status: "Upcoming",
-    type: "Progress Review",
-    attendees: 5,
-    createdBy: "Staff Admin",
-    createdAt: "2024-02-01T00:00:00Z",
-    updatedAt: "2024-02-01T00:00:00Z",
-  },
-  {
-    id: "meeting-5",
-    title: "Proposal Evaluation: Renewable Energy Storage",
-    projectName: "Renewable Energy Storage",
-    projectId: "PRJ-2024-004",
-    milestone: "Initial Proposal",
-    milestoneId: "MS-004-01",
-    council: "Environmental Council",
-    date: "2024-01-25T13:00:00Z",
-    time: "1:00 PM - 3:00 PM",
-    meetingLink: "https://meet.google.com/renewable-energy-review",
-    status: "Completed",
-    type: "Proposal Evaluation",
-    attendees: 7,
-    createdBy: "Staff Admin",
-    createdAt: "2024-01-15T00:00:00Z",
-    updatedAt: "2024-01-25T00:00:00Z",
-  },
-];
+// Default image URL for projects without logo
+const DEFAULT_PROJECT_IMAGE =
+  "https://t3.ftcdn.net/jpg/04/72/54/68/360_F_472546867_4MBw9cVFYE7AwnrIIbmZ8xXS0V3mrIzr.jpg";
 
 const StaffMeetings: React.FC = () => {
-  const [meetings] = useState<StaffMeeting[]>(mockMeetings);
-  const [globalFilter, setGlobalFilter] = useState("");
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [isBulkCreateDialogOpen, setIsBulkCreateDialogOpen] = useState(false);
-  const [filterValues, setFilterValues] = useState<Record<string, string>>({
-    status: "all",
-    type: "all",
-    council: "all",
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(
+    new Set()
+  );
+  const [searchTitle, setSearchTitle] = useState("");
+  const [selectedTask, setSelectedTask] = useState<{
+    id: string;
+    title: string;
+    description: string;
+    priority: string;
+    "start-date": string;
+    "end-date": string;
+    "meeting-url": string | null;
+    note: string;
+    status: string;
+    "milestone-id": string;
+  } | null>(null);
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState<string>("");
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Track initial load state
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
+
+  // API call to get projects with meeting tasks
+  const {
+    data: projectsData,
+    isLoading,
+    error,
+    refetch: refetchProjects,
+  } = useProjectListWithMeetingTask({
+    title: searchTitle,
+    genres: ["proposal"],
+    statuses: ["inprogress"],
+    "page-index": currentPage,
+    "page-size": pageSize,
   });
 
-  // Table columns definition - Optimized for responsive design
-  const columns = useMemo<ColumnDef<StaffMeeting>[]>(
-    () => [
-      {
-        accessorKey: "title",
-        header: "Meeting Details",
-        cell: ({ row }) => (
-          <div className="min-w-0 max-w-[280px]">
-            <div
-              className="font-medium text-sm truncate"
-              title={row.getValue("title")}
-            >
-              {row.getValue("title")}
-            </div>
-            <div
-              className="text-xs text-muted-foreground truncate"
-              title={row.original.projectName}
-            >
-              {row.original.projectName}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              {row.original.milestone}
-            </div>
-          </div>
-        ),
-      },
-      {
-        accessorKey: "date",
-        header: "Schedule",
-        cell: ({ row }) => (
-          <div className="min-w-0">
-            <div className="text-sm font-medium">
-              {formatDate(row.getValue("date"))}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {row.original.time}
-            </div>
-            <div className="text-xs text-blue-600 mt-1">
-              {row.original.council}
-            </div>
-          </div>
-        ),
-      },
-      {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-          <div className="space-y-1">
-            <StatusBadge status={row.getValue("status")} size="sm" />
-            <div className="text-xs">
-              <StatusBadge
-                status={row.original.type}
-                variant="type"
-                size="sm"
-              />
-            </div>
-          </div>
-        ),
-      },
-      {
-        accessorKey: "attendees",
-        header: "Info",
-        cell: ({ row }) => (
-          <div className="text-center">
-            <div className="flex items-center justify-center">
-              <Users className="w-3 h-3 mr-1 text-muted-foreground" />
-              <span className="text-sm">{row.getValue("attendees")}</span>
-            </div>
-          </div>
-        ),
-      },
-      {
-        id: "actions",
-        header: "Actions",
-        cell: ({ row }) => {
-          const meeting = row.original;
-          const actions = [];
+  const deleteTaskMutation = useDeleteTask();
 
-          // Add join meeting action for upcoming meetings
-          if (meeting.status === "Upcoming") {
-            actions.push({
-              label: "Join",
-              icon: Video,
-              onClick: () => handleJoinMeeting(meeting),
-              variant: "default" as const,
-            });
-          }
+  // Extract projects from API response
+  const projects = useMemo(() => {
+    return projectsData?.["data-list"] || [];
+  }, [projectsData]);
 
-          actions.push(
-            createCommonActions.view(() => handleView(meeting)),
-            createCommonActions.edit(() => handleEdit(meeting)),
-            createCommonActions.delete(() => handleDelete(meeting))
-          );
+  // Track when data has been loaded for the first time
+  useEffect(() => {
+    if (projectsData && !hasInitiallyLoaded) {
+      setHasInitiallyLoaded(true);
+    }
+  }, [projectsData, hasInitiallyLoaded]);
 
-          return <ActionButtons actions={actions} size="sm" />;
-        },
-      },
-    ],
-    []
-  );
+  // Determine loading states
+  const isInitialLoading = isLoading && !hasInitiallyLoaded;
+  const isRefetching = isLoading && hasInitiallyLoaded;
 
-  // Filter configuration
-  const filterConfig: FilterConfig[] = [
-    {
-      key: "status",
-      label: "Status",
-      type: "select",
-      options: MEETING_STATUSES.map((status) => ({
-        value: status.value,
-        label: status.label,
-      })),
-    },
-    {
-      key: "type",
-      label: "Type",
-      type: "select",
-      options: MEETING_TYPES.map((type) => ({
-        value: type.value,
-        label: type.label,
-      })),
-    },
-    {
-      key: "council",
-      label: "Council",
-      type: "select",
-      options: [
-        { value: "Technical Council", label: "Technical Council" },
-        { value: "Environmental Council", label: "Environmental Council" },
-        { value: "Medical Council", label: "Medical Council" },
-      ],
-    },
-  ];
+  // Toggle project expansion
+  const toggleProjectExpansion = (projectId: string) => {
+    setExpandedProjects((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(projectId)) {
+        newSet.delete(projectId);
+      } else {
+        newSet.add(projectId);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle pagination
+  const handlePageChange = (newPage: number) => {
+    setCurrentPage(newPage);
+  };
 
   // Handler functions
-  const handleView = (meeting: StaffMeeting) => {
-    toast.info(`Viewing ${meeting.title}`);
+  const handleJoinMeeting = (meetingUrl: string) => {
+    if (meetingUrl) {
+      window.open(meetingUrl, "_blank");
+      toast.success("Joining meeting");
+    } else {
+      toast.error("No meeting URL available");
+    }
   };
 
-  const handleEdit = (meeting: StaffMeeting) => {
-    toast.info(`Editing ${meeting.title}`);
+  const handleCreateTask = (project: ProjectItemWithTask) => {
+    setSelectedTask(null);
+    // Sử dụng milestoneID từ project hoặc milestone đầu tiên nếu có
+    const milestoneId =
+      project.milestoneID ||
+      (project.milestones && project.milestones.length > 0
+        ? project.milestones[0].id
+        : "");
+
+    if (!milestoneId) {
+      toast.error("No milestone found for this project");
+      return;
+    }
+
+    setSelectedMilestoneId(milestoneId);
+    setIsTaskModalOpen(true);
   };
 
-  const handleDelete = (meeting: StaffMeeting) => {
-    toast.info(`Deleting ${meeting.title}`);
-  };
-
-  const handleJoinMeeting = (meeting: StaffMeeting) => {
-    window.open(meeting.meetingLink, "_blank");
-    toast.success(`Joining ${meeting.title}`);
-  };
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilterValues((prev) => ({ ...prev, [key]: value }));
-  };
-
-  const handleClearFilters = () => {
-    setFilterValues({ status: "all", type: "all", council: "all" });
-  };
-
-  // Filter meetings based on current filter values
-  const filteredMeetings = useMemo(() => {
-    return meetings.filter((meeting) => {
-      const statusMatch =
-        filterValues.status === "all" || meeting.status === filterValues.status;
-      const typeMatch =
-        filterValues.type === "all" || meeting.type === filterValues.type;
-      const councilMatch =
-        filterValues.council === "all" ||
-        meeting.council === filterValues.council;
-      return statusMatch && typeMatch && councilMatch;
+  const handleUpdateTask = (task: ProjectTask) => {
+    setSelectedTask({
+      id: task.id,
+      title: task.name,
+      description: task.description,
+      priority: task.priority,
+      "start-date": task["start-date"],
+      "end-date": task["end-date"],
+      "meeting-url": task["meeting-url"],
+      note: task.note,
+      status: task.status,
+      "milestone-id": task["milestone-id"],
     });
-  }, [meetings, filterValues]);
+    setSelectedMilestoneId(task["milestone-id"]);
+    setIsTaskModalOpen(true);
+  };
 
-  // Calculate summary statistics
-  const stats = useMemo(() => {
-    const upcomingCount = meetings.filter(
-      (m) => m.status === "Upcoming"
-    ).length;
-    const completedCount = meetings.filter(
-      (m) => m.status === "Completed"
-    ).length;
-    const totalAttendees = meetings.reduce((sum, m) => sum + m.attendees, 0);
+  const handleDeleteTask = async (task: ProjectTask) => {
+    setIsDeleting(true);
+    try {
+      await deleteTaskMutation.mutateAsync(task.id);
+      toast.success("Task deleted successfully");
+      // Refresh the projects list to reflect the changes
+      refetchProjects();
+    } catch (error) {
+      console.error("Error deleting task:", error);
+      toast.error("Failed to delete task");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
-    return {
-      upcoming: upcomingCount,
-      completed: completedCount,
-      total: meetings.length,
-      totalAttendees,
-    };
-  }, [meetings]);
+  const handleTaskModalSuccess = () => {
+    setIsTaskModalOpen(false);
+    // Refresh the projects list to reflect the changes
+    refetchProjects();
+  };
+
+  const getPriorityColor = (priority: string) => {
+    switch (priority.toLowerCase()) {
+      case "high":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "low":
+        return "bg-green-100 text-green-800 border-green-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "completed":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "inprogress":
+      case "in-progress":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      case "pending":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  // Show loading only on initial load when there's no data
+  if (isInitialLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loading />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-red-600 mb-2">Error loading projects</div>
+        <p className="text-gray-600">Please try again later</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <PageHeader
-        title="Staff Meetings"
-        description="Manage and schedule staff meetings for project reviews"
-        badge={{ text: `${meetings.length} meetings`, variant: "secondary" }}
-        actions={
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <Dialog
-              open={isBulkCreateDialogOpen}
-              onOpenChange={setIsBulkCreateDialogOpen}
-            >
-              <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full sm:w-auto"
-                >
-                  <CalendarIcon className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Bulk Create</span>
-                  <span className="sm:hidden">Bulk</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="w-[95vw] max-w-[95vw] h-[95vh] max-h-[95vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Bulk Meeting Creation</DialogTitle>
-                  <DialogDescription>
-                    Create multiple meetings for a project at once
-                  </DialogDescription>
-                </DialogHeader>
-                <BulkMeetingCreation
-                  onSubmit={(data: BulkMeetingData) => {
-                    console.log("Bulk meeting data:", data);
-                    setIsBulkCreateDialogOpen(false);
-                    toast.success("Meetings created successfully");
-                  }}
-                  onCancel={() => setIsBulkCreateDialogOpen(false)}
-                  isSubmitting={false}
-                />
-              </DialogContent>
-            </Dialog>
-            <Dialog
-              open={isCreateDialogOpen}
-              onOpenChange={setIsCreateDialogOpen}
-            >
-              <DialogTrigger asChild>
-                <Button size="sm" className="w-full sm:w-auto">
-                  <Plus className="w-4 h-4 sm:mr-2" />
-                  <span className="hidden sm:inline">Create Meeting</span>
-                  <span className="sm:hidden">Create</span>
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
-                  <DialogTitle>Create New Meeting</DialogTitle>
-                  <DialogDescription>
-                    Schedule a new staff meeting for project review
-                  </DialogDescription>
-                </DialogHeader>
-                <CreateMeetingForm
-                  onSubmit={(data: MeetingFormData) => {
-                    console.log("Meeting data:", data);
-                    setIsCreateDialogOpen(false);
-                    toast.success("Meeting created successfully");
-                  }}
-                  onCancel={() => setIsCreateDialogOpen(false)}
-                  isSubmitting={false}
-                />
-              </DialogContent>
-            </Dialog>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Staff Meetings
+            </h1>
+            <p className="text-gray-600">
+              Manage project meetings and tasks across all projects
+            </p>
           </div>
-        }
+        </div>
+
+        {/* Search Bar - Full width */}
+        <div className="w-full">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search projects by title..."
+              value={searchTitle}
+              onChange={(e) => setSearchTitle(e.target.value)}
+              className="pl-10 w-full"
+            />
+          </div>
+
+          {/* Loading indicator under search when refetching */}
+          {/* {isRefetching && (
+            <div className="flex items-center justify-center py-3">
+              <Loading />
+            </div>
+          )} */}
+        </div>
+      </div>
+
+      {/* Projects with Meeting Tasks */}
+      <div className="space-y-4 relative">
+        {/* Loading overlay for project list when refetching */}
+        {isRefetching && (
+          <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-lg">
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <Loading />
+            </div>
+          </div>
+        )}
+        {projects.length === 0 ? (
+          <Card>
+            <CardContent className="p-8 text-center">
+              <div className="text-gray-500 mb-2">No projects found</div>
+              <p className="text-sm text-gray-400">
+                No projects with meeting tasks available
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          projects.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              isExpanded={expandedProjects.has(project.id)}
+              onToggleExpansion={() => toggleProjectExpansion(project.id)}
+              onJoinMeeting={handleJoinMeeting}
+              onCreateTask={handleCreateTask}
+              onUpdateTask={handleUpdateTask}
+              onDeleteTask={handleDeleteTask}
+              getPriorityColor={getPriorityColor}
+              getStatusColor={getStatusColor}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Pagination - Always show */}
+      {projectsData && (
+        <div className="flex justify-center items-center gap-2 mt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <span className="text-sm text-gray-600">
+            Page {currentPage} of {projectsData["total-page"] || 1}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === (projectsData["total-page"] || 1)}
+          >
+            Next
+          </Button>
+        </div>
+      )}
+
+      {/* Loading Dialog for Delete Task */}
+      {isDeleting && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center gap-4">
+            <Loading />
+            <p className="text-gray-700 font-medium">Deleting task...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Meeting Task Modal */}
+      <MeetingTaskModal
+        isOpen={isTaskModalOpen}
+        onClose={() => setIsTaskModalOpen(false)}
+        onSuccess={handleTaskModalSuccess}
+        task={selectedTask}
+        milestoneId={selectedMilestoneId}
       />
-
-      {/* Summary Cards - Compact Design */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <CalendarIcon className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-muted-foreground truncate">
-                  Upcoming
-                </p>
-                <p className="text-xl font-bold">{stats.upcoming}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Clock className="h-5 w-5 text-green-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-muted-foreground truncate">
-                  Completed
-                </p>
-                <p className="text-xl font-bold">{stats.completed}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Building className="h-5 w-5 text-purple-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-muted-foreground truncate">
-                  Total
-                </p>
-                <p className="text-xl font-bold">{stats.total}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <Users className="h-5 w-5 text-orange-600" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-medium text-muted-foreground truncate">
-                  Attendees
-                </p>
-                <p className="text-xl font-bold">{stats.totalAttendees}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Filters - Compact Layout */}
-      <Card>
-        <CardContent className="p-4">
-          <FilterBar
-            filters={filterConfig}
-            values={filterValues}
-            onChange={handleFilterChange}
-            onClear={handleClearFilters}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Meetings Table - Responsive */}
-      <div className="overflow-hidden">
-        <DataTable
-          data={filteredMeetings}
-          columns={columns}
-          searchable={true}
-          searchPlaceholder="Search meetings..."
-          searchFields={["title", "projectName", "milestone"]}
-          globalFilter={globalFilter}
-          onGlobalFilterChange={setGlobalFilter}
-          emptyMessage="No meetings found. Get started by creating your first meeting."
-          className="min-w-0"
-        />
-      </div>
     </div>
+  );
+};
+
+// ProjectCard Component
+interface ProjectCardProps {
+  project: ProjectItemWithTask;
+  isExpanded: boolean;
+  onToggleExpansion: () => void;
+  onJoinMeeting: (meetingUrl: string) => void;
+  onCreateTask: (project: ProjectItemWithTask) => void;
+  onUpdateTask: (task: ProjectTask) => void;
+  onDeleteTask: (task: ProjectTask) => void;
+  getPriorityColor: (priority: string) => string;
+  getStatusColor: (status: string) => string;
+}
+
+const ProjectCard: React.FC<ProjectCardProps> = ({
+  project,
+  isExpanded,
+  onToggleExpansion,
+  onJoinMeeting,
+  onCreateTask,
+  onUpdateTask,
+  onDeleteTask,
+  getPriorityColor,
+  getStatusColor,
+}) => {
+  const getImageSrc = (logoUrl: string | null) => {
+    return logoUrl || DEFAULT_PROJECT_IMAGE;
+  };
+
+  const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    e.currentTarget.src = DEFAULT_PROJECT_IMAGE;
+  };
+
+  return (
+    <Card className="overflow-hidden hover:shadow-md transition-shadow">
+      <CardContent className="p-0">
+        {/* Project Header */}
+        <div
+          className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+          onClick={onToggleExpansion}
+        >
+          <div className="flex items-start gap-4">
+            {/* Project Logo */}
+            <div className="flex-shrink-0">
+              <img
+                src={getImageSrc(project["logo-url"])}
+                alt={project["english-title"]}
+                className="w-16 h-16 rounded-lg object-cover border shadow-sm"
+                onError={handleImageError}
+              />
+            </div>
+
+            {/* Project Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-semibold text-gray-900 truncate">
+                    {project["english-title"]}
+                  </h3>
+                  <p className="text-sm text-gray-600 truncate mt-1">
+                    {project["vietnamese-title"]}
+                  </p>
+                  <div className="flex items-center gap-3 mt-3">
+                    <Badge variant="outline" className="text-xs">
+                      {project.type}
+                    </Badge>
+                    <Badge variant="outline" className="text-xs">
+                      {project.category}
+                    </Badge>
+                    {project.duration && (
+                      <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {project.duration} months
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 ml-4">
+                  {project.tasks && project.tasks.length > 0 && (
+                    <Badge className="bg-blue-100 text-blue-800">
+                      {project.tasks.length} meeting
+                      {project.tasks.length !== 1 ? "s" : ""}
+                    </Badge>
+                  )}
+                  {project.milestoneID && (
+                    <Button
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onCreateTask(project);
+                      }}
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Create Meeting
+                    </Button>
+                  )}
+
+                  {isExpanded ? (
+                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                  ) : (
+                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Meeting Tasks (Expanded) */}
+        {isExpanded && project.tasks && project.tasks.length > 0 && (
+          <div className="border-t bg-gradient-to-br from-gray-50 to-gray-100">
+            <div className="p-6">
+              <h4 className="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Meeting Tasks
+              </h4>
+              <div className="grid gap-4">
+                {project.tasks.map((task) => (
+                  <div
+                    key={task.id}
+                    className="bg-white rounded-lg border shadow-sm p-5 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="grid grid-cols-12 gap-4 mb-3">
+                      {/* Title + Description + Note */}
+                      <div className="col-span-5 flex flex-col min-w-0">
+                        <h5 className="font-semibold text-gray-900 text-base truncate">
+                          {task.name}
+                        </h5>
+                        {task.description && (
+                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                            {task.description}
+                          </p>
+                        )}
+                        {task.note && (
+                          <p className="text-xs text-gray-500 italic mt-1">
+                            Note: {task.note}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* DateTime */}
+                      <div className="col-span-4 flex flex-col items-center justify-center">
+                        <div className="flex items-center gap-1 text-sm font-medium text-gray-800 bg-gray-100 rounded-md px-3 py-1">
+                          <Calendar className="w-4 h-4 text-blue-600" />
+                          <span>
+                            {formatDateTime(task["start-date"])}
+                            <span className="mx-1 text-gray-500">→</span>
+                            {formatDateTime(task["end-date"])}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Priority + Status */}
+                      <div className="col-span-3 flex items-start justify-end gap-2">
+                        <Badge
+                          className={`text-xs px-2 py-1 ${getPriorityColor(
+                            task.priority
+                          )}`}
+                        >
+                          {task.priority}
+                        </Badge>
+                        <Badge
+                          className={`text-xs px-2 py-1 ${getStatusColor(
+                            task.status
+                          )}`}
+                        >
+                          {task.status}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                      <div>
+                        {task["meeting-url"] ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            onClick={() => onJoinMeeting(task["meeting-url"]!)}
+                          >
+                            <Video className="w-3 h-3" />
+                            Join Meeting
+                            <ExternalLink className="w-3 h-3" />
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-gray-500 italic">
+                            No meeting link available
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => onUpdateTask(task)}
+                          className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50"
+                        >
+                          <Edit className="w-3 h-3" />
+                          Edit
+                        </Button>
+                        <ConfirmDialog
+                          trigger={
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              Delete
+                            </Button>
+                          }
+                          onConfirm={() => onDeleteTask(task)}
+                          title="Delete Task"
+                          description={`Are you sure you want to delete the task "${task.name}"? This action cannot be undone.`}
+                          confirmText="Delete"
+                          cancelText="Cancel"
+                          variant="destructive"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* No Tasks Message */}
+        {isExpanded && (!project.tasks || project.tasks.length === 0) && (
+          <div className="border-t bg-gray-50 p-6 text-center flex flex-col items-center">
+            <div className="text-gray-400 mb-2">
+              <Users className="w-8 h-8 mx-auto mb-2" />
+            </div>
+            <p className="text-sm text-gray-500 mb-3">
+              No meeting tasks found for this project
+            </p>
+            {project.milestoneID && (
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => onCreateTask(project)}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-3 h-3" />
+                Create First Task
+              </Button>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };
 

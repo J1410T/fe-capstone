@@ -15,6 +15,7 @@ import {
   getProjectsByCouncilIdWithPI,
   checkUserEnrollment,
   approveProject,
+  getProjecListWithMeetingsTask,
 } from "@/services/resources/project";
 import {
   CreateProjectMajorRequest,
@@ -23,6 +24,7 @@ import {
   UpdateProjectRequest,
   SortOption,
   StaffProjectFilterRequest,
+  ProjectListWithMeetingTaskRequest,
 } from "@/types/project";
 
 export function useProjectListFilter(
@@ -215,5 +217,17 @@ export function useApproveProject() {
         queryKey: ["projects-by-appraisal-council-with-pi"],
       });
     },
+  });
+}
+
+export function useProjectListWithMeetingTask(
+  request: ProjectListWithMeetingTaskRequest
+) {
+  return useQuery({
+    queryKey: ["project-list-with-meeting-task", request],
+    queryFn: () => getProjecListWithMeetingsTask(request),
+    enabled: !!request,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
   });
 }

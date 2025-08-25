@@ -15,7 +15,7 @@ import {
 export const getTasksByMilestoneId = async (
   milestoneId: string,
   pageIndex: number = 1,
-  pageSize: number = 10
+  pageSize: number = 100
 ) => {
   const accessToken = getAccessToken();
   return await axiosClient.get<ProjectTaskResponse>(
