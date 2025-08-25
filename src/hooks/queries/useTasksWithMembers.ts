@@ -31,6 +31,7 @@ interface TaskTableTask {
   }>;
   createdAt: string;
   updatedAt: string;
+  "meeting-url"?: string | null;
 }
 
 // Helper function to transform task status
@@ -243,23 +244,25 @@ export function useTasksWithMembersByMilestoneId(
                 );
               }
 
-              // Automatic overdue status logic: Set status to "Overdue" if end-date is past today
-              // and the task is not already completed, regardless of the stored status
-              let isOverdue = false;
-              if (task["end-date"] && task["end-date"] !== "null") {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0); // Reset time to start of day for accurate comparison
-                const endDate = new Date(task["end-date"]);
-                endDate.setHours(0, 0, 0, 0); // Reset time to start of day
+              // Automatic status logic for meetings vs regular tasks
+              let finalStatus = transformTaskStatus(task.status);
 
-                isOverdue =
-                  endDate < today &&
+              if (task["end-date"] && task["end-date"] !== "null") {
+                const now = new Date();
+                const endDate = new Date(task["end-date"]);
+
+                // If end time has passed and task is not already completed
+                if (
+                  endDate < now &&
                   task.status.toLowerCase() !== "completed" &&
-                  task.status.toLowerCase() !== "complete";
+                  task.status.toLowerCase() !== "complete"
+                ) {
+                  // For meetings: auto-complete instead of marking overdue
+                  // Check if this might be a meeting by looking at milestone context
+                  // We'll handle this more specifically in the component level
+                  finalStatus = "Overdue"; // Default behavior, will be overridden for meetings
+                }
               }
-              const finalStatus = isOverdue
-                ? "Overdue"
-                : transformTaskStatus(task.status);
 
               // Transform ProjectTask to TaskTableTask format
               return {
@@ -273,6 +276,7 @@ export function useTasksWithMembersByMilestoneId(
                 "member-tasks": memberTasksWithDetails,
                 createdAt: task["start-date"] || "", // Map start-date to createdAt, handle null
                 updatedAt: task["start-date"] || "", // Using start-date as fallback since API doesn't provide updated date
+                "meeting-url": task["meeting-url"], // Pass through meeting URL
               };
             } catch (taskError) {
               console.error(`Error processing task ${task.id}:`, taskError);
@@ -303,6 +307,7 @@ export function useTasksWithMembersByMilestoneId(
                 "member-tasks": [],
                 createdAt: task["start-date"], // Map start-date to createdAt
                 updatedAt: task["start-date"],
+                "meeting-url": task["meeting-url"], // Pass through meeting URL
               };
             }
           })

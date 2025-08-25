@@ -349,12 +349,12 @@ const MyProject: React.FC = () => {
               <CardTitle>Projects ({totalItems})</CardTitle>
               <CardDescription>
                 Your research projects and their current status
-                {totalItems > 0 && (
+                {/* {totalItems > 0 && (
                   <span className="ml-2">
                     Showing {startIndex + 1}-{Math.min(endIndex, totalItems)} of{" "}
                     {totalItems}
                   </span>
-                )}
+                )} */}
               </CardDescription>
             </div>
           </div>
