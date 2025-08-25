@@ -49,6 +49,7 @@ import {
   ArrowDown,
   X,
   AlertCircle,
+  VideoIcon,
 } from "lucide-react";
 import { format, parseISO, isAfter, isValid } from "date-fns";
 import { getPriorityConfig as getPriorityConfigShared } from "@/utils";
@@ -73,6 +74,7 @@ interface Task {
   }>;
   createdAt: string;
   updatedAt: string;
+  "meeting-url"?: string | null;
 }
 
 interface TaskTableProps {
@@ -89,6 +91,8 @@ interface TaskTableProps {
   isLeader?: boolean;
   title?: string;
   description?: string;
+  // Milestone name to determine if it's a meeting
+  milestoneName?: string;
 }
 
 // Date validation helpers
@@ -144,6 +148,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   onTaskEdit,
   onTaskView,
   onTaskClick,
+  milestoneName,
 }) => {
   // Use enhanced hook if milestoneId is provided, otherwise use passed tasks
   const {
@@ -155,25 +160,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   // Determine which tasks to use - wrapped in useMemo to prevent dependency issues
   const tasks = useMemo(() => {
     const finalTasks = milestoneId ? fetchedTasks : propTasks || [];
-
-    // Debug logging
-    // console.log("🔍 TaskTable Debug:", {
-    //   milestoneId,
-    //   usingEnhancedHook: !!milestoneId,
-    //   fetchedTasksCount: fetchedTasks.length,
-    //   finalTasksCount: finalTasks.length,
-    //   fetchingTasks,
-    //   fetchError,
-    //   sampleTask: finalTasks[0]
-    //     ? {
-    //         id: finalTasks[0].id,
-    //         title: finalTasks[0].title,
-    //         memberTasksCount: finalTasks[0]["member-tasks"]?.length || 0,
-    //         memberTasksData: finalTasks[0]["member-tasks"],
-    //       }
-    //     : null,
-    // });
-
     return finalTasks;
   }, [milestoneId, fetchedTasks, propTasks]);
 
@@ -183,27 +169,51 @@ export const TaskTable: React.FC<TaskTableProps> = ({
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
   const [dueDateFilter, setDueDateFilter] = useState<string>("all");
 
+  // Check if this is a meeting milestone
+  const isMeetingMilestone =
+    milestoneName?.toLowerCase().includes("meeting") || false;
+
   // Note: Overdue status is now handled in the useTasksWithMembersByMilestoneId hook
   // to ensure consistency across the application. We'll use tasks directly.
+  // Special handling for meetings: auto-complete instead of overdue
   const tasksWithOverdueCheck = useMemo(() => {
     // If using the enhanced hook (milestoneId provided), overdue logic is already applied
     if (milestoneId) {
+      // For meetings, convert overdue to completed if end time has passed
+      if (isMeetingMilestone) {
+        return tasks.map((task) => {
+          if (task.status === "Overdue" && isValidDateString(task.dueDate)) {
+            const now = new Date();
+            const endDate = parseISO(task.dueDate);
+            if (endDate < now) {
+              return { ...task, status: "Completed" as const };
+            }
+          }
+          return task;
+        });
+      }
       return tasks;
     }
 
     // For backward compatibility with passed tasks, still apply overdue logic
     return tasks.map((task) => {
       if (isOverdue(task.dueDate, task.status) && task.status !== "Completed") {
+        // For meetings, auto-complete instead of overdue
+        if (isMeetingMilestone) {
+          return { ...task, status: "Completed" as const };
+        }
         return { ...task, status: "Overdue" as const };
       }
       return task;
     });
-  }, [tasks, milestoneId]);
+  }, [tasks, milestoneId, isMeetingMilestone]);
 
   // Get priority configuration from shared utilities
   const getPriorityConfig = (priority: string) => {
-    const config = getPriorityConfigShared(priority);
-    const normalizedPriority = priority.toLowerCase().trim();
+    // Handle null/undefined priority - default to "Low"
+    const safePriority = priority || "Low";
+    const config = getPriorityConfigShared(safePriority);
+    const normalizedPriority = safePriority.toLowerCase().trim();
 
     // Add icon based on priority
     let icon = "";
@@ -220,7 +230,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         icon = "🟢";
         break;
       default:
-        icon = "⚪";
+        icon = "🟢"; // Default to Low icon
     }
 
     return { color: config.badgeColor, icon };
@@ -242,8 +252,181 @@ export const TaskTable: React.FC<TaskTableProps> = ({
     }
   };
 
-  // Table columns definition
-  const columns = useMemo<ColumnDef<Task>[]>(
+  // Meeting columns definition (for meeting milestones)
+  const meetingColumns = useMemo<ColumnDef<Task>[]>(
+    () => [
+      {
+        accessorKey: "title",
+        header: ({ column }: { column: Column<Task, unknown> }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-auto p-0 font-semibold text-slate-700 hover:text-slate-900"
+          >
+            Meeting Title
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-2 h-4 w-4" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-2 h-4 w-4" />
+            ) : (
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            )}
+          </Button>
+        ),
+        cell: ({ row }: { row: Row<Task> }) => (
+          <div className="max-w-[300px]">
+            <div className="font-medium text-slate-900 truncate">
+              {row.original.title}
+            </div>
+            <div className="text-sm text-slate-500 truncate">
+              {row.original.description}
+            </div>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "dateTime",
+        header: ({ column }: { column: Column<Task, unknown> }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-auto p-0 font-semibold text-slate-700 hover:text-slate-900"
+          >
+            Date & Time
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-2 h-4 w-4" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-2 h-4 w-4" />
+            ) : (
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            )}
+          </Button>
+        ),
+        cell: ({ row }: { row: Row<Task> }) => {
+          const startDate = row.original.createdAt;
+          const endDate = row.original.dueDate;
+
+          const isStartValid = isValidDateString(startDate);
+          const isEndValid = isValidDateString(endDate);
+
+          if (!isStartValid && !isEndValid) {
+            return (
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-slate-400" />
+                <span className="text-sm text-slate-400 italic">
+                  Not set - Not set
+                </span>
+              </div>
+            );
+          }
+
+          try {
+            let dateDisplay = "";
+            let timeDisplay = "";
+
+            if (isStartValid && isEndValid) {
+              const startDateTime = parseISO(startDate);
+              const endDateTime = parseISO(endDate);
+
+              // Format date: Aug 25, 2025
+              dateDisplay = format(startDateTime, "MMM dd, yyyy");
+
+              // Format time: 04:45 - 04:55
+              const startTime = format(startDateTime, "HH:mm");
+              const endTime = format(endDateTime, "HH:mm");
+              timeDisplay = `${startTime} - ${endTime}`;
+            } else if (isStartValid) {
+              const startDateTime = parseISO(startDate);
+              dateDisplay = format(startDateTime, "MMM dd, yyyy");
+              timeDisplay = format(startDateTime, "HH:mm") + " - Not set";
+            } else if (isEndValid) {
+              const endDateTime = parseISO(endDate);
+              dateDisplay = format(endDateTime, "MMM dd, yyyy");
+              timeDisplay = "Not set - " + format(endDateTime, "HH:mm");
+            }
+
+            return (
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-slate-400" />
+                <div className="flex flex-col">
+                  <span className="text-sm text-slate-700 font-medium">
+                    {dateDisplay}
+                  </span>
+                  <span className="text-xs text-slate-500">{timeDisplay}</span>
+                </div>
+              </div>
+            );
+          } catch {
+            return (
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-slate-400" />
+                <span className="text-sm text-slate-400 italic">
+                  Invalid date
+                </span>
+              </div>
+            );
+          }
+        },
+      },
+      {
+        accessorKey: "status",
+        header: ({ column }: { column: Column<Task, unknown> }) => (
+          <Button
+            variant="ghost"
+            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+            className="h-auto p-0 font-semibold text-slate-700 hover:text-slate-900"
+          >
+            Status
+            {column.getIsSorted() === "asc" ? (
+              <ArrowUp className="ml-2 h-4 w-4" />
+            ) : column.getIsSorted() === "desc" ? (
+              <ArrowDown className="ml-2 h-4 w-4" />
+            ) : (
+              <ArrowUpDown className="ml-2 h-4 w-4" />
+            )}
+          </Button>
+        ),
+        cell: ({ row }: { row: Row<Task> }) => {
+          const statusConfig = getStatusConfig(row.original.status);
+          return (
+            <Badge className={statusConfig.color}>{row.original.status}</Badge>
+          );
+        },
+      },
+      {
+        id: "actions",
+        header: "Actions",
+        cell: ({ row }: { row: Row<Task> }) => {
+          const meetingUrl = row.original["meeting-url"];
+          const hasValidMeetingUrl = meetingUrl && meetingUrl.trim() !== "";
+
+          return (
+            <div className="flex items-center space-x-2">
+              {hasValidMeetingUrl ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    window.open(meetingUrl, "_blank");
+                  }}
+                  className="border-blue-300 text-blue-700 hover:bg-blue-50"
+                >
+                  <VideoIcon className="w-4 h-4 mr-1" />
+                  Join
+                </Button>
+              ) : (
+                <span className="text-xs text-slate-400 italic">No link</span>
+              )}
+            </div>
+          );
+        },
+      },
+    ],
+    [] // No dependencies for meeting columns
+  );
+
+  // Regular task columns definition
+  const taskColumns = useMemo<ColumnDef<Task>[]>(
     () => [
       {
         accessorKey: "title",
@@ -294,10 +477,11 @@ export const TaskTable: React.FC<TaskTableProps> = ({
         ),
         cell: ({ row }: { row: Row<Task> }) => {
           const priorityConfig = getPriorityConfig(row.original.priority);
+          const displayPriority = row.original.priority || "Low";
           return (
             <div className="flex justify-center">
               <Badge variant="outline" className={priorityConfig.color}>
-                {priorityConfig.icon} {row.original.priority}
+                {priorityConfig.icon} {displayPriority}
               </Badge>
             </div>
           );
@@ -480,6 +664,9 @@ export const TaskTable: React.FC<TaskTableProps> = ({
     [onTaskEdit, onTaskView]
   );
 
+  // Choose columns based on milestone type
+  const columns = isMeetingMilestone ? meetingColumns : taskColumns;
+
   // Filter tasks based on all filters
   const filteredTasks = useMemo(() => {
     let filtered = tasksWithOverdueCheck;
@@ -630,23 +817,28 @@ export const TaskTable: React.FC<TaskTableProps> = ({
               </Select>
             </div>
 
-            {/* Priority Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-700">
-                Priority
-              </label>
-              <Select value={priorityFilter} onValueChange={setPriorityFilter}>
-                <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue placeholder="All priorities" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Priorities</SelectItem>
-                  <SelectItem value="High">High</SelectItem>
-                  <SelectItem value="Medium">Medium</SelectItem>
-                  <SelectItem value="Low">Low</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            {/* Priority Filter - Hidden for meetings */}
+            {!isMeetingMilestone && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-slate-700">
+                  Priority
+                </label>
+                <Select
+                  value={priorityFilter}
+                  onValueChange={setPriorityFilter}
+                >
+                  <SelectTrigger className="border-slate-300 focus:border-blue-500 focus:ring-blue-500">
+                    <SelectValue placeholder="All priorities" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Priorities</SelectItem>
+                    <SelectItem value="High">High</SelectItem>
+                    <SelectItem value="Medium">Medium</SelectItem>
+                    <SelectItem value="Low">Low</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
             {/* Due Date Filter */}
             <div className="space-y-2">
@@ -697,7 +889,6 @@ export const TaskTable: React.FC<TaskTableProps> = ({
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div className="min-w-[600px]">
           {" "}
-          {/* Đảm bảo bảng không bị bóp quá nhỏ */}
           <Table>
             <TableHeader className="pt-0">
               <TableRow className="pt-0 border-slate-200">

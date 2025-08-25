@@ -29,6 +29,7 @@ import {
 import { useAuth } from "@/contexts";
 import { UserRole } from "@/contexts/auth-types";
 import { toast } from "sonner";
+import { Loading } from "@/components";
 
 // Document types that can be created by PI
 const DOCUMENT_TYPES = [
@@ -428,15 +429,7 @@ const CreateDocument: React.FC = () => {
                   )}
                   {form.type && isTemplateLoading && (
                     <div className="absolute inset-0 bg-white bg-opacity-80 border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center z-10">
-                      <div className="text-center text-blue-600">
-                        <Loader2 className="w-12 h-12 mx-auto mb-4 animate-spin" />
-                        <p className="text-lg font-medium mb-2">
-                          Loading Template...
-                        </p>
-                        <p className="text-sm">
-                          Please wait while we fetch the document template
-                        </p>
-                      </div>
+                      <Loading />
                     </div>
                   )}
                   <ScientificCVEditor

@@ -60,6 +60,7 @@ import { getAuthResponse } from "@/utils/cookie-manager";
 import { getUserRoleByFilter } from "@/services/resources/auth";
 import { toast } from "sonner";
 import { useSendNotification } from "@/hooks/queries/notification";
+import { Loading } from "@/components";
 
 interface InviteMembersStepProps {
   collaborators: SimpleInvitedUser[];
@@ -1198,8 +1199,7 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
               <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
                 {isSearching ? (
                   <div className="py-4 px-4 text-center text-gray-500 text-sm">
-                    <Loader2 className="w-4 h-4 animate-spin mx-auto mb-2" />
-                    Searching...
+                    <Loading />
                   </div>
                 ) : filteredUsers.length > 0 ? (
                   <div className="py-2">
