@@ -32,6 +32,8 @@ import {
   getEvaluationById,
 } from "@/services/resources/evaluation";
 import { useAuth } from "@/contexts";
+import { useGetIndividualEvaluationsByStageId } from "@/hooks/queries/evaluation";
+import { useProject } from "@/hooks/queries/project";
 import {
   EvaluationStageApi,
   IndividualEvaluationApi,
@@ -53,6 +55,12 @@ const EvaluationStageDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [loadTimestamp, setLoadTimestamp] = useState<number>(Date.now());
   const [projectData, setProjectData] = useState<any>(null);
+  const [projectId, setProjectId] = useState<string | null>(null);
+
+  // Query hooks
+  const { data: individualEvaluationsData } =
+    useGetIndividualEvaluationsByStageId(stageId || "");
+  const { data: projectQueryData } = useProject(projectId || "");
 
   // Load stage details and individual evaluations
   useEffect(() => {
@@ -97,6 +105,11 @@ const EvaluationStageDetailPage: React.FC = () => {
                   } catch (parseError) {
                     console.error("Error parsing project data:", parseError);
                   }
+                }
+
+                // Set project ID for query hook
+                if (evaluationData["project-id"]) {
+                  setProjectId(evaluationData["project-id"]);
                 }
               }
             } catch (evalError) {
@@ -165,6 +178,20 @@ const EvaluationStageDetailPage: React.FC = () => {
 
     loadStageDetails();
   }, [stageId, evaluationId]);
+
+  // Handle individual evaluations data from query hooks
+  useEffect(() => {
+    if (individualEvaluationsData?.["data-list"]) {
+      setIndividualEvaluations(individualEvaluationsData["data-list"]);
+    }
+  }, [individualEvaluationsData]);
+
+  // Handle project data from query hooks
+  useEffect(() => {
+    if (projectQueryData?.data?.["project-detail"]) {
+      setProjectData(projectQueryData.data["project-detail"]);
+    }
+  }, [projectQueryData]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {

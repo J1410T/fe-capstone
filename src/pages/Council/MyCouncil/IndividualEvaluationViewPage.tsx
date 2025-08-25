@@ -14,6 +14,7 @@ import { TinyMCEViewer } from "@/components/ui/TinyMCE";
 import { AIEvaluationDisplay } from "@/components/ui/ai-evaluation-display";
 import { getIndividualEvaluationById } from "@/services/resources/evaluation";
 import { IndividualEvaluationApi } from "@/types/evaluation";
+import { useGetIndividualEvaluationById } from "@/hooks/queries/evaluation";
 
 const IndividualEvaluationViewPage: React.FC = () => {
   const { evaluationId, stageId, individualId } = useParams<{
@@ -27,6 +28,10 @@ const IndividualEvaluationViewPage: React.FC = () => {
   const [individualEvaluation, setIndividualEvaluation] =
     useState<IndividualEvaluationApi | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Query hooks
+  const { data: individualEvaluationData, isLoading: isLoadingQuery } =
+    useGetIndividualEvaluationById(individualId || "");
 
   // Load individual evaluation details
   useEffect(() => {
@@ -51,6 +56,14 @@ const IndividualEvaluationViewPage: React.FC = () => {
     loadIndividualEvaluation();
   }, [individualId]);
 
+  // Handle individual evaluation data from query hooks
+  useEffect(() => {
+    if (individualEvaluationData) {
+      setIndividualEvaluation(individualEvaluationData);
+      setIsLoading(false);
+    }
+  }, [individualEvaluationData]);
+
   const handleEdit = () => {
     navigate(
       `/council/edit-individual-evaluation/${evaluationId}/${stageId}/${individualId}`
@@ -61,7 +74,7 @@ const IndividualEvaluationViewPage: React.FC = () => {
     navigate(`/council/evaluation-stages/${evaluationId}/${stageId}`);
   };
 
-  if (isLoading) {
+  if (isLoading || isLoadingQuery) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loading />

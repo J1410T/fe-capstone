@@ -26,6 +26,8 @@ import {
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { getEvaluationsByProjectId } from "@/services/resources/evaluation";
+import { useProject } from "@/hooks/queries/project";
+import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
 
 import { Evaluation } from "@/types/evaluation";
 
@@ -37,6 +39,11 @@ const ProjectDetailPage: React.FC = () => {
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
   const [isLoadingEvaluations, setIsLoadingEvaluations] = useState(true);
   const [projectData, setProjectData] = useState<any>(null);
+
+  // Query hooks
+  const { data: projectQueryData } = useProject(projectId || "");
+  const { data: evaluationsQueryData, isLoading: isLoadingEvaluationsQuery } =
+    useGetEvaluationsByProjectId(projectId || "");
 
   // Load evaluations for this project
   useEffect(() => {
@@ -144,6 +151,21 @@ const ProjectDetailPage: React.FC = () => {
 
     loadEvaluations();
   }, [projectId]);
+
+  // Handle project data from query hooks
+  useEffect(() => {
+    if (projectQueryData?.data?.["project-detail"]) {
+      setProjectData(projectQueryData.data["project-detail"]);
+    }
+  }, [projectQueryData]);
+
+  // Handle evaluations data from query hooks
+  useEffect(() => {
+    if (evaluationsQueryData?.["data-list"]) {
+      setEvaluations(evaluationsQueryData["data-list"]);
+      setIsLoadingEvaluations(false);
+    }
+  }, [evaluationsQueryData]);
 
   const getStatusBadgeVariant = (status: string | undefined) => {
     if (!status) return "secondary";
@@ -352,7 +374,7 @@ const ProjectDetailPage: React.FC = () => {
           <CardDescription>Main evaluation of this project</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoadingEvaluations ? (
+          {isLoadingEvaluations || isLoadingEvaluationsQuery ? (
             <div className="flex justify-center py-8">
               <Loading />
             </div>
