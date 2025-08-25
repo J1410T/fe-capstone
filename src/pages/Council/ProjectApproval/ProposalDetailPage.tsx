@@ -134,13 +134,14 @@ export const ProposalDetailPage: React.FC = () => {
 
   useEffect(() => {
     const state = location.state as any;
-    if (state?.shouldReload) {
+    if (state?.shouldReload || state?.evaluationCreated) {
       queryClient.invalidateQueries({
         queryKey: ["evaluations", proposalId],
       });
       queryClient.invalidateQueries({
         queryKey: ["individual-evaluations"],
       });
+      // Clear the state to prevent infinite reloads
       navigate(location.pathname, { replace: true, state: null });
     }
   }, [location.state, queryClient, proposalId, navigate, location.pathname]);
@@ -206,19 +207,7 @@ export const ProposalDetailPage: React.FC = () => {
   }
 
   const handleCreateEvaluation = () => {
-    navigate(`/council/evaluation/create?proposalId=${proposal.id}`, {
-      state: {
-        onSuccess: () => {
-          // Invalidate queries để reload data
-          queryClient.invalidateQueries({
-            queryKey: ["evaluations", proposalId],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["individual-evaluations"],
-          });
-        },
-      },
-    });
+    navigate(`/council/evaluation/create?proposalId=${proposal.id}`);
   };
 
   return (

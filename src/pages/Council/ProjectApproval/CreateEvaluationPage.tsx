@@ -191,7 +191,7 @@ export const CreateEvaluationPage: React.FC = () => {
               Create Individual Evaluation
             </h1>
             <p className="text-gray-600 mt-1">
-              Create a detailed evaluation for proposal #{proposalId}
+              Create a detailed evaluation for proposal
             </p>
           </div>
         </div>
@@ -245,25 +245,30 @@ export const CreateEvaluationPage: React.FC = () => {
                         : 0
                     }
                     onChange={(e) => {
-                      const value = e.target.value;
+                      let value = e.target.value;
+
                       if (value === "") {
                         handleInputChange("total-rate", 0); // luôn mặc định là 0
-                      } else {
-                        const numValue = parseInt(value, 10);
-
-                        if (numValue > 100) {
-                          toast.error("Score must be between 0 and 100!");
-                          return;
-                        }
-                        if (numValue < 0) {
-                          toast.error(
-                            "Score must be greater than or equal to 0!"
-                          );
-                          return;
-                        }
-
-                        handleInputChange("total-rate", numValue);
+                        return;
                       }
+                      if (/^0\d+/.test(value)) {
+                        value = String(parseInt(value, 10));
+                      }
+
+                      const numValue = parseInt(value, 10);
+
+                      if (numValue > 100) {
+                        toast.error("Score must be between 0 and 100!");
+                        return;
+                      }
+                      if (numValue < 0) {
+                        toast.error(
+                          "Score must be greater than or equal to 0!"
+                        );
+                        return;
+                      }
+
+                      handleInputChange("total-rate", numValue);
                     }}
                     placeholder="Enter total rate (e.g., 85)"
                     className="mt-1"
