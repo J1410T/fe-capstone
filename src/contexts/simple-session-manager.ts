@@ -229,7 +229,7 @@ export class SimpleSessionManager {
 
       // Check for inactivity
       if (this.checkInactivity()) {
-        console.log("User inactive for 15 minutes - triggering auto-logout");
+        console.log("User inactive for 90 minutes - triggering auto-logout");
         this.clearSession();
         this.onLogoutCallback?.();
       }

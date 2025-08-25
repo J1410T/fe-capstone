@@ -17,10 +17,14 @@ import {
   ProjectItem,
   ProjectWithProposals,
   CheckUserEnrollmentResponse,
+  ProjectListWithMeetingTaskRequest,
+  ProjectFilterMeetingTaskResponse,
   // RolePrincipalInvestigatorInfo,
 } from "@/types/project";
 import { axiosClient, getAccessToken } from "../api";
 import { getAllRoles, getUserRoleByProjectIdAndRoleId } from "./auth";
+import { getMilestonesByProjectId } from "./milestone";
+import { getTasksByMilestoneId } from "./task";
 // import { getProjectMajors } from "./major";
 // import { getAllRoles } from "./auth";
 
@@ -386,6 +390,75 @@ export const getStaffProjectFilter = async (
     return res.data;
   } catch (error) {
     console.error("getStaffProjectFilter error:", error);
+    throw error;
+  }
+};
+
+export const getProjecList = async (
+  request: ProjectListWithMeetingTaskRequest
+) => {
+  try {
+    const accessToken = getAccessToken();
+    const res = await axiosClient.post<ProjectFilterResponse>(
+      `/project/filter`,
+      request,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+    return res.data;
+  } catch (error) {
+    console.error("getProjecListWithMeetingsTask error:", error);
+    throw error;
+  }
+};
+
+export const getProjecListWithMeetingsTask = async (
+  request: ProjectListWithMeetingTaskRequest
+): Promise<ProjectFilterMeetingTaskResponse> => {
+  try {
+    // 1. Lấy danh sách project
+    const projectResponse = await getProjecList(request);
+
+    // 2. Duyệt qua từng project
+    const updatedProjects = await Promise.all(
+      projectResponse["data-list"].map(async (project) => {
+        try {
+          // 3. Lấy milestones của project
+          const milestoneRes = await getMilestonesByProjectId(project.id);
+          const milestones = milestoneRes.data;
+
+          // 4. Tìm milestone có title = "meeting"
+          const meetingMilestone = milestones.find(
+            (m) => m.title?.trim().toLowerCase() === "meeting"
+          );
+
+          if (!meetingMilestone) {
+            return { ...project, tasks: null, milestoneID: "" };
+          }
+
+          // 5. Lấy danh sách tasks theo milestone
+          const tasksRes = await getTasksByMilestoneId(meetingMilestone.id);
+          const tasks = tasksRes.data["data-list"];
+
+          return { ...project, tasks, milestoneID: meetingMilestone.id };
+        } catch (err) {
+          console.error(`Error when processing project ${project.id}:`, err);
+          return { ...project, tasks: null, milestoneID: "" };
+        }
+      })
+    );
+
+    // 6. Trả kết quả cuối
+    return {
+      ...projectResponse,
+      "data-list": updatedProjects,
+    };
+  } catch (error) {
+    console.error("getProjecListWithMeetingsTask error:", error);
     throw error;
   }
 };
