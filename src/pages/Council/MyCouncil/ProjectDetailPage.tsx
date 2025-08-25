@@ -359,7 +359,7 @@ const ProjectDetailPage: React.FC = () => {
           ) : evaluations.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>Dự án này chưa có đánh giá</p>
+              <p>This project has no evaluations</p>
             </div>
           ) : (
             <div className="grid gap-4">

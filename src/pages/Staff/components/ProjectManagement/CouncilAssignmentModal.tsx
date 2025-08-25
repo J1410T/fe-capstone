@@ -86,7 +86,7 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl w-full max-h-[85vh]">
+      <DialogContent className="max-w-2xl w-full max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center space-x-2 text-lg">
             <Users className="w-5 h-5" />
@@ -98,80 +98,86 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
           </DialogDescription>
         </DialogHeader>
 
-        {/* Search Bar */}
-        <div className="space-y-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              placeholder="Search councils..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          {!isLoadingCouncils && councils.length > 0 && (
-            <div className="text-xs text-gray-500 px-1">
-              Found {councils.length} council{councils.length !== 1 ? "s" : ""}
+        {/* Body (scrollable) */}
+        <div className="flex-1 overflow-hidden flex flex-col space-y-3">
+          {/* Search Bar */}
+          <div className="space-y-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+              <Input
+                placeholder="Search councils..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          )}
+            {!isLoadingCouncils && councils.length > 0 && (
+              <div className="text-xs text-gray-500 px-1">
+                Found {councils.length} council
+                {councils.length !== 1 ? "s" : ""}
+              </div>
+            )}
+          </div>
+
+          {/* Scroll content */}
+          <ScrollArea className="flex-1 pr-4">
+            {isLoadingCouncils ? (
+              <div className="text-center py-8 text-gray-500">
+                Loading councils...
+              </div>
+            ) : councils.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No councils found
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {councils.map((council) => (
+                  <div
+                    key={council.id}
+                    className={`border rounded-lg p-3 cursor-pointer transition-all ${
+                      selectedCouncil?.id === council.id
+                        ? "border-blue-500 bg-blue-50 ring-1 ring-blue-200"
+                        : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
+                    } ${
+                      council.currentProjects >= council.maxProjects
+                        ? "opacity-60 cursor-not-allowed"
+                        : ""
+                    }`}
+                    onClick={() => {
+                      if (council.currentProjects < council.maxProjects) {
+                        setSelectedCouncil(council);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center space-x-2 mb-1">
+                          <h3 className="text-base font-semibold text-gray-900 truncate">
+                            {council.name}
+                          </h3>
+                          {council.currentProjects >= council.maxProjects && (
+                            <Badge variant="destructive" className="text-xs">
+                              <AlertCircle className="w-3 h-3 mr-1" />
+                              Full
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 truncate">
+                          {council.description}
+                        </p>
+                      </div>
+                      {selectedCouncil?.id === council.id && (
+                        <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 ml-2" />
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
         </div>
 
-        <ScrollArea className="max-h-[50vh] pr-4">
-          {isLoadingCouncils ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500">Loading councils...</div>
-            </div>
-          ) : councils.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500">No councils found</div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {councils.map((council) => (
-                <div
-                  key={council.id}
-                  className={`border rounded-lg p-3 cursor-pointer transition-all ${
-                    selectedCouncil?.id === council.id
-                      ? "border-blue-500 bg-blue-50 ring-1 ring-blue-200"
-                      : "border-gray-200 hover:border-gray-300 hover:bg-gray-50"
-                  } ${
-                    council.currentProjects >= council.maxProjects
-                      ? "opacity-60 cursor-not-allowed"
-                      : ""
-                  }`}
-                  onClick={() => {
-                    if (council.currentProjects < council.maxProjects) {
-                      setSelectedCouncil(council);
-                    }
-                  }}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="text-base font-semibold text-gray-900 truncate">
-                          {council.name}
-                        </h3>
-                        {council.currentProjects >= council.maxProjects && (
-                          <Badge variant="destructive" className="text-xs">
-                            <AlertCircle className="w-3 h-3 mr-1" />
-                            Full
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-gray-600 truncate">
-                        {council.description}
-                      </p>
-                    </div>
-                    {selectedCouncil?.id === council.id && (
-                      <CheckCircle className="w-5 h-5 text-blue-500 flex-shrink-0 ml-2" />
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
-
+        {/* Footer luôn ở dưới */}
         <DialogFooter className="pt-2 border-t mt-2">
           <Button variant="outline" onClick={handleClose}>
             Cancel

@@ -129,9 +129,7 @@ export const TopicDetailPage: React.FC = () => {
 
       // Set selected proposal and show success message
       setSelectedProposalId(proposalId);
-      toast.success(
-        `Đã approve proposal "${selectedProposal["english-title"]}"`
-      );
+      toast.success(`Approved proposal "${selectedProposal["english-title"]}"`);
 
       // Navigate to my-council page after success
       navigate("/council/my-council");
