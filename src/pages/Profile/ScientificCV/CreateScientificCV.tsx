@@ -15,6 +15,7 @@ import {
   getImageUrlFromAzure,
   deleteImageFromAzure,
 } from "@/services/resources/azure-image";
+import { Loading } from "@/components";
 
 type EditorInstance = {
   getContent: () => string;
@@ -269,8 +270,7 @@ const CreateScientificCV: React.FC = () => {
         {isTemplateLoading ? (
           <div className="flex items-center justify-center h-[600px] bg-white rounded-xl shadow-inner">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-2 border-blue-600 border-t-transparent mx-auto mb-4"></div>
-              <p className="text-gray-600">Loading BM2 template...</p>
+              <Loading />
             </div>
           </div>
         ) : templateError ? (

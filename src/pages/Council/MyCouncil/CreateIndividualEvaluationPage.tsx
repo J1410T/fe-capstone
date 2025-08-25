@@ -31,6 +31,7 @@ import {
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth-hooks";
 import { getMyAccountInfo } from "@/services/resources/auth";
+import { Loading } from "@/components";
 
 // Document types available for individual evaluation
 const EVALUATION_DOCUMENT_TYPES = [
@@ -362,10 +363,7 @@ const CreateIndividualEvaluationPage: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">
-            {isLoading ? "Loading evaluation data..." : "Loading template..."}
-          </p>
+          <Loading />
         </div>
       </div>
     );

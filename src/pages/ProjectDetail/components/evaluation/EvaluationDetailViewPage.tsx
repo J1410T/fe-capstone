@@ -7,6 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  Loading,
 } from "@/components/ui";
 import { Button } from "@/components/ui/button";
 import {
@@ -149,8 +150,7 @@ const EvaluationDetailViewPage: React.FC = () => {
         <div className="container mx-auto py-8">
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4" />
-              <p className="text-gray-600">Loading evaluation details...</p>
+              <Loading />
             </div>
           </div>
         </div>
