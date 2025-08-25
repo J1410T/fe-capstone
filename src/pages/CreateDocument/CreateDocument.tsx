@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { ArrowLeft, Save, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, FileText } from "lucide-react";
 import {
   ScientificCVEditor,
   ScientificCVEditorRef,
@@ -29,7 +29,6 @@ import {
 import { useAuth } from "@/contexts";
 import { UserRole } from "@/contexts/auth-types";
 import { toast } from "sonner";
-import { Loading } from "@/components";
 
 // Document types that can be created by PI
 const DOCUMENT_TYPES = [
@@ -121,29 +120,6 @@ const CreateDocument: React.FC = () => {
     }
   }, [templateData, form.type, selectedTemplate]);
 
-  const handleLoadTemplate = () => {
-    if (
-      templateData?.data?.["data-list"]?.length &&
-      templateData.data["data-list"].length > 0
-    ) {
-      const template = templateData.data["data-list"][0];
-      const templateContent = template["content-html"].replace(/\\"/g, '"');
-      setForm((prev) => ({ ...prev, content: templateContent }));
-      setSelectedTemplate(template.name);
-
-      // Update the editor content with a small delay to ensure editor is ready
-      setTimeout(() => {
-        if (editorRef.current) {
-          editorRef.current.setContent(templateContent);
-        }
-      }, 100);
-
-      toast.success("Template reloaded successfully!");
-    } else {
-      toast.error("No template found for this document type");
-    }
-  };
-
   const handleEditorChange = (content: string) => {
     setForm((prev) => ({ ...prev, content }));
   };
@@ -217,235 +193,176 @@ const CreateDocument: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center text-sm text-gray-500 mb-4">
-          <button
-            onClick={handleBack}
-            className="hover:text-gray-700 transition-colors"
-          >
-            Projects
-          </button>
-          <span className="mx-2">/</span>
-          <button
-            onClick={handleBack}
-            className="hover:text-gray-700 transition-colors"
-          >
-            Project Detail
-          </button>
-          <span className="mx-2">/</span>
-          <span className="text-gray-900 font-medium">Create Document</span>
-        </div>
-
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            onClick={handleBack}
-            className="flex items-center gap-2 w-fit"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Project
-          </Button>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Create Document
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Create a new document for this project
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-          {/* Form Section */}
-          <div className="xl:col-span-1 order-2 xl:order-1">
-            <Card className="sticky top-6">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
-                  Document Details
-                </CardTitle>
-                <CardDescription>
-                  Configure your document settings before creating
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="type" className="text-sm font-medium">
-                    Document Type <span className="text-red-500">*</span>
-                  </Label>
-                  <Select onValueChange={handleTypeChange} value={form.type}>
-                    <SelectTrigger
-                      className={`mt-1 ${!form.type ? "border-red-200" : ""}`}
-                    >
-                      <SelectValue placeholder="Select document type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {DOCUMENT_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {!form.type && (
-                    <p className="text-xs text-red-500 mt-1">
-                      Please select a document type
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <Label htmlFor="name" className="text-sm font-medium">
-                    Document Name <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id="name"
-                    value={form.name}
-                    onChange={(e) =>
-                      setForm((prev) => ({ ...prev, name: e.target.value }))
-                    }
-                    placeholder="Enter document name"
-                    className={`mt-1 ${
-                      !form.name.trim() ? "border-red-200" : ""
-                    }`}
-                  />
-                  {!form.name.trim() && (
-                    <p className="text-xs text-red-500 mt-1">
-                      Please enter a document name
-                    </p>
-                  )}
-                </div>
-
-                {form.type && (
-                  <div className="pt-2">
-                    {selectedTemplate ? (
-                      <div className="space-y-2">
-                        <div className="p-2 bg-green-50 border border-green-200 rounded-md">
-                          <p className="text-sm text-green-700">
-                            ✓ Template "{selectedTemplate}" loaded automatically
-                          </p>
-                        </div>
-                        <Button
-                          onClick={handleLoadTemplate}
-                          disabled={isTemplateLoading}
-                          className="w-full"
-                          variant="outline"
-                          size="sm"
-                        >
-                          {isTemplateLoading ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Reloading...
-                            </>
-                          ) : (
-                            <>
-                              <FileText className="w-4 h-4 mr-2" />
-                              Reload Template
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div className="p-2 bg-yellow-50 border border-yellow-200 rounded-md">
-                          <p className="text-sm text-yellow-700">
-                            {isTemplateLoading
-                              ? "Loading template..."
-                              : "No template available for this document type"}
-                          </p>
-                        </div>
-                        {!isTemplateLoading && (
-                          <Button
-                            onClick={handleLoadTemplate}
-                            className="w-full"
-                            variant="outline"
-                            size="sm"
-                          >
-                            <FileText className="w-4 h-4 mr-2" />
-                            Try Load Template
-                          </Button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div className="pt-4 border-t">
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={isLoading || !form.name.trim() || !form.type}
-                    className="w-full bg-blue-600 hover:bg-blue-700"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Creating Document...
-                      </>
-                    ) : (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        Create Document
-                      </>
-                    )}
-                  </Button>
-
-                  <p className="text-xs text-gray-500 mt-2 text-center">
-                    The document will be saved with "draft" status
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Editor Section */}
-          <div className="xl:col-span-2 order-1 xl:order-2">
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-green-600" />
-                  Document Content
-                </CardTitle>
-                <CardDescription>
-                  Create your document content using the rich text editor below
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="h-[600px] relative">
-                  {!form.type && (
-                    <div className="absolute inset-0 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center z-10">
-                      <div className="text-center text-gray-500">
-                        <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-                        <p className="text-lg font-medium mb-2">
-                          Select Document Type
-                        </p>
-                        <p className="text-sm">
-                          Choose a document type to start editing
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {form.type && isTemplateLoading && (
-                    <div className="absolute inset-0 bg-white bg-opacity-80 border-2 border-dashed border-blue-300 rounded-lg flex items-center justify-center z-10">
-                      <Loading />
-                    </div>
-                  )}
-                  <ScientificCVEditor
-                    ref={editorRef}
-                    value={form.content}
-                    onChange={handleEditorChange}
-                    height={580}
-                    preset="document"
-                    readOnly={!form.type || isTemplateLoading}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+    <div className="container mx-auto p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center gap-4">
+        <Button variant="ghost" onClick={handleBack}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Project
+        </Button>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Create Document</h1>
+          <p className="text-gray-600 mt-1">
+            Create a new document for this project
+          </p>
         </div>
       </div>
+
+      {/* Form */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleSubmit();
+        }}
+        className="space-y-6"
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Document Details
+            </CardTitle>
+            <CardDescription>
+              Configure your document settings before creating
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="type">Document Type *</Label>
+              <Select onValueChange={handleTypeChange} value={form.type}>
+                <SelectTrigger
+                  className={`mt-1 ${!form.type ? "border-red-200" : ""}`}
+                >
+                  <SelectValue placeholder="Select document type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {DOCUMENT_TYPES.map((type) => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {!form.type && (
+                <p className="text-xs text-red-500 mt-1">
+                  Please select a document type
+                </p>
+              )}
+            </div>
+
+            <div>
+              <Label htmlFor="name">Document Name *</Label>
+              <Input
+                id="name"
+                value={form.name}
+                onChange={(e) =>
+                  setForm((prev) => ({ ...prev, name: e.target.value }))
+                }
+                placeholder="Enter document name"
+                className={`mt-1 ${!form.name.trim() ? "border-red-200" : ""}`}
+              />
+              {!form.name.trim() && (
+                <p className="text-xs text-red-500 mt-1">
+                  Please enter a document name
+                </p>
+              )}
+            </div>
+
+            {/* Template Status */}
+            {form.type && (
+              <div className="pt-2 border-t">
+                {isTemplateLoading ? (
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <p className="text-sm text-blue-700">
+                      🔄 Loading template for {form.type}...
+                    </p>
+                  </div>
+                ) : selectedTemplate ? (
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm text-green-700">
+                      ✓ Template "{selectedTemplate}" loaded automatically
+                    </p>
+                  </div>
+                ) : (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-sm text-yellow-700">
+                      ⚠️ No template available for {form.type}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Content Editor */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Document Content *</CardTitle>
+            <CardDescription>
+              Write detailed document content using the editor
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {!form.type && (
+                <div className="mb-4 p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
+                  <FileText className="w-12 h-12 mx-auto mb-2 text-gray-400" />
+                  <p className="text-gray-600 font-medium">
+                    Select Document Type First
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Choose a document type to load the appropriate template
+                  </p>
+                </div>
+              )}
+              <ScientificCVEditor
+                ref={editorRef}
+                value={form.content}
+                onChange={handleEditorChange}
+                height={500}
+                preset="document"
+                placeholder={
+                  form.type
+                    ? "Enter detailed document content..."
+                    : "Please select document type first..."
+                }
+                readOnly={!form.type || isTemplateLoading}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Actions */}
+        <Card>
+          <CardContent className="flex justify-end gap-4 pt-6">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleBack}
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              disabled={isLoading || !form.type || !form.name.trim()}
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  Create Document
+                </>
+              )}
+            </Button>
+          </CardContent>
+        </Card>
+      </form>
     </div>
   );
 };

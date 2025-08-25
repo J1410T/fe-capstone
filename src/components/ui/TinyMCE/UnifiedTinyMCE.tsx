@@ -522,14 +522,6 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
           (img) => (img as HTMLImageElement).src
         );
 
-        console.log("🔍 NodeChange Debug:", {
-          isInitialized,
-          previousCount: previousImages.length,
-          currentCount: currentImageUrls.length,
-          previousImages: [...previousImages],
-          currentImages: [...currentImageUrls],
-        });
-
         // Auto-delete logic - Enable when needed
         if (isInitialized) {
           // Chỉ xóa ảnh khi số lượng ảnh hiện tại ít hơn trước đó
@@ -553,8 +545,6 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
 
       // DEBUG: Theo dõi tất cả commands
       editor.on("ExecCommand", (e) => {
-        console.log("🎯 ExecCommand:", e.command, e);
-
         if (e.command === "mceInsertContent" || e.command === "mceImage") {
           console.log("📸 Image command detected:", e.command);
           // Delay một chút để đảm bảo ảnh đã được thêm vào DOM
@@ -574,22 +564,6 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
             );
           }, 500);
         }
-      });
-
-      // DEBUG: Theo dõi content changes
-      editor.on("SetContent", (e) => {
-        console.log("📝 SetContent event:", e);
-      });
-
-      // DEBUG: Theo dõi khi content thay đổi
-      editor.on("input", () => {
-        const currentImages = editor
-          .getBody()
-          .querySelectorAll('img[src*="storage00image.blob.core.windows.net"]');
-        console.log(
-          "⌨️ Input event - Current images count:",
-          currentImages.length
-        );
       });
 
       // Enhanced drag and drop functionality
