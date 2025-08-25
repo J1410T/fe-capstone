@@ -17,7 +17,7 @@ import {
 
 // Session configuration
 const SESSION_CONFIG = {
-  INACTIVITY_TIMEOUT: 60 * 60 * 1000,
+  INACTIVITY_TIMEOUT: 90 * 60 * 1000,
   CHECK_INTERVAL: 60 * 1000,
 } as const;
 
