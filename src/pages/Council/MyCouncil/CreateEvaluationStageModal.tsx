@@ -21,6 +21,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { createEvaluationStage } from "@/services/resources/evaluation";
 import { toast } from "sonner";
+import { useMilestonesByProjectId } from "@/hooks/queries/milestone";
 
 interface CreateEvaluationStageModalProps {
   open: boolean;
@@ -29,6 +30,7 @@ interface CreateEvaluationStageModalProps {
   existingStages: Array<{ "stage-order": number }>;
   onStageCreated: () => void;
   loading?: boolean;
+  projectId?: string;
 }
 
 interface StageFormData {
@@ -36,6 +38,7 @@ interface StageFormData {
   "stage-order": number;
   phrase: string;
   type: string;
+  "milestone-id"?: string;
 }
 
 const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
@@ -45,9 +48,14 @@ const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
   existingStages,
   onStageCreated,
   loading = false,
+  projectId,
 }) => {
   // Calculate next stage order
   const nextStageOrder = (existingStages.length || 0) + 1;
+
+  // Fetch milestones if projectId is available
+  const { data: milestonesData, isLoading: isLoadingMilestones } =
+    useMilestonesByProjectId(projectId || "");
 
   // Form state
   const [formData, setFormData] = useState<StageFormData>({
@@ -64,10 +72,27 @@ const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
     field: keyof StageFormData,
     value: string | number
   ) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    // If selecting a milestone ID, set type to milestone and store milestone-id
+    if (field === "type" && value !== "project") {
+      setFormData((prev) => ({
+        ...prev,
+        type: "milestone",
+        "milestone-id": value as string,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
+
+      // Reset milestone-id when type changes to project
+      if (field === "type" && value === "project") {
+        setFormData((prev) => ({
+          ...prev,
+          "milestone-id": undefined,
+        }));
+      }
+    }
   };
 
   // Handle form submission
@@ -75,18 +100,27 @@ const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
     e.preventDefault();
 
     if (!formData.name.trim()) {
+      toast.error("Please enter stage name");
+      return;
+    }
+
+    // Validate milestone selection for milestone type
+    if (formData.type === "milestone" && !formData["milestone-id"]) {
+      toast.error("Please select a milestone for milestone type evaluation");
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      // API call to create stage
-      await createEvaluationStage({
+      const payload = {
         ...formData,
         "evaluation-id": evaluationId,
         status: "created",
-      });
+      };
+
+      // API call to create stage
+      await createEvaluationStage(payload);
 
       toast.success("Evaluation stage created successfully");
 
@@ -144,33 +178,38 @@ const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
             />
           </div>
 
-          {/* Stage Info */}
-          <div className="space-y-2">
-            <Label>Stage Information</Label>
-            <div className="text-sm text-gray-600 space-y-1">
-              <p>
-                <strong>Order:</strong> {nextStageOrder}
-              </p>
-              <p>
-                <strong>Phrase:</strong> Approval
-              </p>
-            </div>
-          </div>
-
           {/* Type Selection */}
           <div className="space-y-2">
-            <Label htmlFor="type">Type</Label>
+            <Label htmlFor="type">Type / Milestone</Label>
             <Select
-              value={formData.type}
+              value={
+                formData.type === "milestone"
+                  ? formData["milestone-id"]
+                  : formData.type
+              }
               onValueChange={(value) => handleInputChange("type", value)}
               disabled={isSubmitting || loading}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select type" />
+                <SelectValue placeholder="Select project or milestone" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="project">Project</SelectItem>
-                <SelectItem value="milestone">Milestone</SelectItem>
+                {isLoadingMilestones ? (
+                  <SelectItem value="" disabled>
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Loading milestones...
+                    </div>
+                  </SelectItem>
+                ) : Array.isArray(milestonesData?.data) &&
+                  milestonesData.data.length > 0 ? (
+                  milestonesData.data.map((milestone: any) => (
+                    <SelectItem key={milestone.id} value={milestone.id}>
+                      {milestone.title}
+                    </SelectItem>
+                  ))
+                ) : null}
               </SelectContent>
             </Select>
           </div>
@@ -186,7 +225,12 @@ const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
             </Button>
             <Button
               type="submit"
-              disabled={isSubmitting || loading || !formData.name.trim()}
+              disabled={
+                isSubmitting ||
+                loading ||
+                !formData.name.trim() ||
+                (formData.type === "milestone" && !formData["milestone-id"])
+              }
             >
               {isSubmitting ? (
                 <>

@@ -14,10 +14,8 @@ import {
   ArrowLeft,
   Calendar,
   FileText,
-  Star,
   Eye,
   Plus,
-  Users,
   Briefcase,
   Tag,
   Clock,
@@ -95,9 +93,6 @@ const EvaluationDetailPage: React.FC = () => {
         // Load evaluation with stages using the new API
         try {
           const evaluationData = await getEvaluationById(evaluationId, true);
-          console.log("=== DEBUG: Evaluation Data ===");
-          console.log("Full evaluation data:", evaluationData);
-          console.log("Project ID:", evaluationData["project-id"]);
 
           setEvaluation(evaluationData);
           setStages(evaluationData["evaluation-stages"] || []);
@@ -329,56 +324,6 @@ const EvaluationDetailPage: React.FC = () => {
         </Card>
       )}
 
-      {/* Evaluation Info */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                {evaluation.code}
-              </CardTitle>
-              <CardDescription className="mt-2">
-                {evaluation.title}
-              </CardDescription>
-            </div>
-            <Badge variant={getStatusBadgeVariant(evaluation.status)}>
-              {evaluation.status}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Calendar className="h-4 w-4" />
-              Created:{" "}
-              {new Date(evaluation["create-date"]).toLocaleDateString("vi-VN")}
-            </div>
-
-            {evaluation["total-rate"] && (
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Star className="h-4 w-4" />
-                Rating: {evaluation["total-rate"]}/100
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Users className="h-4 w-4" />
-              Stages: {stages.length}
-            </div>
-          </div>
-
-          {evaluation.comment && (
-            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-              <h4 className="font-medium text-sm text-gray-700 mb-2">
-                Comments:
-              </h4>
-              <p className="text-sm text-gray-600">{evaluation.comment}</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       {/* Evaluation Stages */}
       <Card>
         <CardHeader>
@@ -439,7 +384,7 @@ const EvaluationDetailPage: React.FC = () => {
                           </div>
 
                           <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span>Phase: {stage.phrase}</span>
+                            <span>Phrase: {stage.phrase}</span>
                             <span>Type: {stage.type}</span>
                             {stage["individual-evaluations"] && (
                               <span>
@@ -478,6 +423,7 @@ const EvaluationDetailPage: React.FC = () => {
         existingStages={stages}
         onStageCreated={handleStageCreated}
         loading={isLoading}
+        projectId={projectId || undefined}
       />
     </div>
   );
