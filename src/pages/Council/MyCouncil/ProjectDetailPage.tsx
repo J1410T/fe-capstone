@@ -28,6 +28,7 @@ import { Loading } from "@/components/ui/loaders";
 import { getEvaluationsByProjectId } from "@/services/resources/evaluation";
 import { useProject } from "@/hooks/queries/project";
 import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
+import { useMilestonesByProjectId } from "@/hooks/queries/milestone";
 
 import { Evaluation } from "@/types/evaluation";
 
@@ -44,6 +45,8 @@ const ProjectDetailPage: React.FC = () => {
   const { data: projectQueryData } = useProject(projectId || "");
   const { data: evaluationsQueryData, isLoading: isLoadingEvaluationsQuery } =
     useGetEvaluationsByProjectId(projectId || "");
+  const { data: milestonesData, isLoading: isLoadingMilestones } =
+    useMilestonesByProjectId(projectId || "");
 
   // Load evaluations for this project
   useEffect(() => {
@@ -52,8 +55,6 @@ const ProjectDetailPage: React.FC = () => {
 
       try {
         setIsLoadingEvaluations(true);
-        console.log("=== DEBUG: Loading evaluations for project ===");
-        console.log("Project ID:", projectId);
 
         // First priority: Try to get evaluation from stored project data
         const projectDataKey = `project_${projectId}`;
@@ -64,7 +65,6 @@ const ProjectDetailPage: React.FC = () => {
         if (storedProjectData) {
           try {
             const parsedProjectData = JSON.parse(storedProjectData);
-            console.log("✅ Found stored project data:", parsedProjectData);
 
             // Set project data for display
             setProjectData(parsedProjectData);
@@ -74,14 +74,6 @@ const ProjectDetailPage: React.FC = () => {
               parsedProjectData.proposals[0]?.evaluations?.[0]
             ) {
               const evaluation = parsedProjectData.proposals[0].evaluations[0];
-              console.log(
-                "✅ Using evaluation from stored project data:",
-                evaluation
-              );
-              console.log(
-                "Evaluation belongs to project:",
-                evaluation["project-id"]
-              );
               setEvaluations([evaluation]);
               return; // Exit early, no need for API call
             } else {
@@ -92,21 +84,15 @@ const ProjectDetailPage: React.FC = () => {
           }
         }
 
-        // Second priority: Try API call if no stored data
-        console.log("No stored data, trying API call...");
-
         const requestBody = {
           "project-id": projectId,
           "page-index": 1,
           "page-size": 10,
         };
-        console.log("API Request body:", requestBody);
 
         const evaluationsResponse = await getEvaluationsByProjectId(
           requestBody
         );
-        console.log("=== DEBUG: API Response ===");
-        console.log("Full response:", evaluationsResponse);
 
         const evaluationsList = evaluationsResponse["data-list"] || [];
 
@@ -116,24 +102,15 @@ const ProjectDetailPage: React.FC = () => {
             (evaluation: any) => evaluation["project-id"] === projectId
           );
 
-          console.log("All evaluations from API:", evaluationsList);
-          console.log("Filtered evaluations for project:", projectEvaluations);
-
           if (projectEvaluations.length > 0) {
-            console.log("✅ Found matching evaluation:", projectEvaluations[0]);
             setEvaluations([projectEvaluations[0]]);
           } else {
-            console.log("❌ No evaluations match this project ID");
             setEvaluations([]);
           }
         } else {
-          console.log("❌ No evaluations found in API response");
           setEvaluations([]);
         }
       } catch (error: any) {
-        console.error("Error loading evaluations:", error);
-        console.error("Failed to load evaluations for project:", projectId);
-
         if (error.response?.status === 404) {
           console.log(
             "Evaluation endpoint not found (404) - this project may not have evaluations yet"
@@ -222,13 +199,6 @@ const ProjectDetailPage: React.FC = () => {
       default:
         return "secondary";
     }
-  };
-
-  const handleMilestoneClick = (milestone: any) => {
-    // Navigate to milestone detail page or show modal
-    console.log("Clicked milestone:", milestone);
-    // You can implement navigation to milestone detail here
-    // navigate(`/project/${projectId}/milestone/${milestone.id}`);
   };
 
   return (
@@ -332,7 +302,7 @@ const ProjectDetailPage: React.FC = () => {
                 <Star className="h-4 w-4" />
                 <div>
                   <p className="font-medium">Milestones</p>
-                  <p>{projectData.milestones?.length || "0"} milestones</p>
+                  <p>{milestonesData?.data?.length || "0"} milestones</p>
                 </div>
               </div>
             </div>
@@ -442,76 +412,114 @@ const ProjectDetailPage: React.FC = () => {
           <CardTitle className="flex items-center gap-2">
             <Target className="h-5 w-5" />
             Milestones{" "}
-            {projectData?.milestones
-              ? `(${projectData.milestones.length})`
-              : `(0)`}
+            {milestonesData?.data ? `(${milestonesData.data.length})` : `(0)`}
           </CardTitle>
           <CardDescription>
             Project milestones and their current status
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {projectData?.milestones && projectData.milestones.length > 0 ? (
-            <div className="grid gap-4">
-              {projectData.milestones.map((milestone: any, index: number) => (
-                <Card
+          {isLoadingMilestones ? (
+            <div className="flex justify-center py-8">
+              <Loading />
+            </div>
+          ) : milestonesData?.data && milestonesData.data.length > 0 ? (
+            <div className="grid gap-3">
+              {milestonesData.data.map((milestone: any, index: number) => (
+                <div
                   key={milestone.id || index}
-                  className="hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => handleMilestoneClick(milestone)}
+                  className="border rounded-lg p-3 bg-white hover:bg-gray-50 transition-colors"
                 >
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          {getMilestoneStatusIcon(milestone.status)}
-                          <h3 className="font-semibold">
-                            {milestone.title || milestone.name}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2 min-w-0 flex-1">
+                      {getMilestoneStatusIcon(milestone.status)}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-medium text-sm truncate">
+                            {milestone.title}
                           </h3>
                           <Badge
                             variant={getMilestoneStatusBadge(milestone.status)}
+                            className="text-xs shrink-0"
                           >
-                            {milestone.status || "Pending"}
+                            {milestone.status || "created"}
                           </Badge>
                         </div>
 
-                        {milestone.description && (
-                          <p className="text-gray-600 text-sm">
-                            {milestone.description}
-                          </p>
-                        )}
-
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          {milestone["start-date"] && (
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              Start:{" "}
-                              {new Date(
-                                milestone["start-date"]
-                              ).toLocaleDateString("vi-VN")}
-                            </span>
+                        <div className="flex items-center gap-3 text-xs text-gray-500">
+                          {milestone.code && (
+                            <span className="font-mono">{milestone.code}</span>
                           )}
-                          {milestone["end-date"] && (
-                            <span className="flex items-center gap-1">
-                              <Calendar className="h-4 w-4" />
-                              End:{" "}
-                              {new Date(
-                                milestone["end-date"]
-                              ).toLocaleDateString("vi-VN")}
-                            </span>
-                          )}
-                          {milestone.duration && (
-                            <span className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              {milestone.duration} days
+                          {milestone.type && (
+                            <span className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">
+                              {milestone.type}
                             </span>
                           )}
                         </div>
                       </div>
-
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
                     </div>
-                  </CardContent>
-                </Card>
+
+                    <div className="text-right text-xs text-gray-500 shrink-0 space-y-1">
+                      {milestone["start-date"] && milestone["end-date"] ? (
+                        <>
+                          <div className="flex items-center gap-1 justify-end">
+                            <Calendar className="h-3 w-3" />
+                            <span>Duration</span>
+                          </div>
+                          <div className="font-mono text-right">
+                            {new Date(
+                              milestone["start-date"]
+                            ).toLocaleDateString("vi-VN", {
+                              day: "2-digit",
+                              month: "2-digit",
+                            })}
+                            {" → "}
+                            {new Date(milestone["end-date"]).toLocaleDateString(
+                              "vi-VN",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                              }
+                            )}
+                          </div>
+                        </>
+                      ) : milestone["created-at"] ? (
+                        <>
+                          <div className="flex items-center gap-1 justify-end">
+                            <Clock className="h-3 w-3" />
+                            <span>Created</span>
+                          </div>
+                          <div className="font-mono text-right">
+                            {new Date(
+                              milestone["created-at"]
+                            ).toLocaleDateString("vi-VN", {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "2-digit",
+                            })}
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {milestone.description && (
+                    <p className="text-xs text-gray-600 mt-2 line-clamp-2">
+                      {milestone.description}
+                    </p>
+                  )}
+
+                  {milestone.objective && (
+                    <div className="mt-2 text-xs">
+                      <span className="text-blue-600 font-medium">
+                        Objective:{" "}
+                      </span>
+                      <span className="text-gray-600">
+                        {milestone.objective}
+                      </span>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           ) : (

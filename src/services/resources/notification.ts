@@ -30,22 +30,11 @@ export const createNotification = async (
   try {
     const accessToken = getAccessToken();
 
-    console.log("Debug: Creating notification", {
-      title: request.title,
-      type: request.type,
-      objectId: request["objec-notification-id"],
-      accountIds: request["list-account-id"],
-    });
-
     const response = await axiosClient.post<string>("/notification", request, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json-patch+json",
       },
-    });
-
-    console.log("Debug: Notification created successfully", {
-      id: response.data,
     });
 
     // API returns notification ID as string
@@ -175,8 +164,6 @@ export const getPIAccountIdByProjectId = async (
   try {
     const accessToken = getAccessToken();
 
-    console.log("Debug: Getting PI for project", { projectId });
-
     // Get user roles for the project
     const response = await axiosClient.post(
       "/user-role/filter",
@@ -194,17 +181,6 @@ export const getPIAccountIdByProjectId = async (
     );
 
     const userRoles = response.data?.["data-list"] || [];
-
-    console.log("Debug: User roles response", {
-      projectId,
-      userRolesCount: userRoles.length,
-      userRoles: userRoles.map((role: UserRole) => ({
-        accountId: role["account-id"],
-        roleName: role.role?.name || role.name,
-        fullName: role["full-name"],
-        email: role.email,
-      })),
-    });
 
     // Find PI role - try multiple possible role names
     const piRole = userRoles.find((role: UserRole) => {

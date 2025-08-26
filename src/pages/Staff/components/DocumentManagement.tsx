@@ -186,30 +186,6 @@ const DocumentManagement: React.FC = () => {
   );
   const hasBM5Document = projectDocuments.some((doc) => doc.type === "BM5");
 
-  // ✅ ENHANCED DEBUG LOG
-  useEffect(() => {
-    if (selectedProjectId && allProjectDocuments.length > 0) {
-      console.log("=== DOCUMENT DEBUG INFO ===");
-      console.log("Selected Project ID:", selectedProjectId);
-      console.log("All Documents Count:", allProjectDocuments.length);
-      console.log("All Documents:", allProjectDocuments);
-      console.log("Filtered Documents (BM1/BM5):", projectDocuments);
-      console.log("Document Types Found:", [
-        ...new Set(allProjectDocuments.map((doc) => doc.type)),
-      ]);
-      console.log("Document Statuses Found:", [
-        ...new Set(allProjectDocuments.map((doc) => doc.status)),
-      ]);
-
-      // ✅ DETAILED STATUS ANALYSIS
-      projectDocuments.forEach((doc) => {
-        console.log(
-          `Document ${doc.id}: Type=${doc.type}, Status='${doc.status}', Name=${doc.name}`
-        );
-      });
-    }
-  }, [selectedProjectId, allProjectDocuments, projectDocuments]);
-
   // ✅ FIX: Improved status filtering with fallback and normalization
   const normalizeStatus = (status: string | undefined | null): string => {
     if (!status) return "pending"; // Default fallback
@@ -727,35 +703,6 @@ const DocumentManagement: React.FC = () => {
                 <p className="text-gray-600">Cannot find any project.</p>
               </div>
             )}
-
-            {/* ✅ ENHANCED DEBUG INFO */}
-            {/* {selectedProjectId && (
-              <div className="mt-4 p-3 bg-gray-100 rounded text-xs text-gray-600">
-                <strong>Debug Info:</strong>
-                <br />
-                All Documents: {allProjectDocuments.length} | Filtered
-                (BM1/BM5): {projectDocuments.length} | Pending:{" "}
-                {pendingDocuments.length} | In Progress:{" "}
-                {inProgressDocuments.length} | Completed:{" "}
-                {completedDocuments.length} | Other Status:{" "}
-                {otherStatusDocuments.length}
-                {allProjectDocuments.length > 0 && (
-                  <div className="mt-1">
-                    Types found:{" "}
-                    {[
-                      ...new Set(allProjectDocuments.map((doc) => doc.type)),
-                    ].join(", ")}
-                    <br />
-                    Statuses found:{" "}
-                    {[
-                      ...new Set(
-                        allProjectDocuments.map((doc) => doc.status || "null")
-                      ),
-                    ].join(", ")}
-                  </div>
-                )}
-              </div>
-            )} */}
           </div>
         </CardContent>
       </Card>

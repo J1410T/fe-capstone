@@ -38,6 +38,28 @@ import {
   EvaluationStageApi,
   IndividualEvaluationApi,
 } from "@/types/evaluation";
+import { useGetUserRoleById } from "@/hooks/queries/useAuth";
+
+// Component to display reviewer name from reviewer ID
+const ReviewerName: React.FC<{ reviewerId: string | null }> = ({
+  reviewerId,
+}) => {
+  const { data: userRole, isLoading } = useGetUserRoleById(reviewerId || "");
+
+  if (!reviewerId) {
+    return <span className="text-sm text-gray-600">Reviewer: N/A</span>;
+  }
+
+  if (isLoading) {
+    return <span className="text-sm text-gray-600">Reviewer: Loading...</span>;
+  }
+
+  return (
+    <span className="text-sm text-gray-600">
+      Reviewer: {userRole?.["full-name"] || "Unknown"}
+    </span>
+  );
+};
 
 const EvaluationStageDetailPage: React.FC = () => {
   const { evaluationId, stageId } = useParams<{
@@ -375,7 +397,7 @@ const EvaluationStageDetailPage: React.FC = () => {
                 {stage.name}
               </CardTitle>
               <CardDescription className="mt-2">
-                Phase: {stage.phrase} • Type: {stage.type}
+                Phrase: {stage.phrase} • Type: {stage.type}
               </CardDescription>
             </div>
             <Badge variant={getStatusBadgeVariant(stage.status)}>
@@ -482,9 +504,9 @@ const EvaluationStageDetailPage: React.FC = () => {
                                     {(evaluation as any).rate}/100
                                   </span>
                                 )}
-                                <span>
-                                  Reviewer: {evaluation["reviewer-id"] || "N/A"}
-                                </span>
+                                <ReviewerName
+                                  reviewerId={evaluation["reviewer-id"]}
+                                />
                               </div>
                             </div>
 
