@@ -26,11 +26,11 @@ import {
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { getMyAppraisalCouncils } from "@/services/resources/appraisal-council";
-import { getProjectsByCouncilId } from "@/services/resources/project";
+import { getProjectsByCouncilIdWithProposal } from "@/services/resources/project";
 import { AppraisalCouncil } from "@/types/appraisal-council";
 import { ProjectWithProposals } from "@/types/project";
 import { useMyAppraisalCouncils } from "@/hooks/queries/appraisal-council";
-import { useProjectsByAppraisalCouncil } from "@/hooks/queries/project";
+import { useProjectsByAppraisalCouncilWithProposal } from "@/hooks/queries/project";
 // import { ProjectWithProposals } from "@/types/project";
 
 const MyCouncilPage: React.FC = () => {
@@ -52,12 +52,7 @@ const MyCouncilPage: React.FC = () => {
     });
 
   const { data: projectsData, isLoading: isLoadingProjectsQuery } =
-    useProjectsByAppraisalCouncil(selectedCouncilId, [
-      "inprogress",
-      "completed",
-      "canceled",
-      "approved",
-    ]);
+    useProjectsByAppraisalCouncilWithProposal(selectedCouncilId, true);
 
   // Load user's councils on mount
   useEffect(() => {
@@ -117,12 +112,10 @@ const MyCouncilPage: React.FC = () => {
         setIsLoadingProjects(true);
         console.log("Loading projects for council:", selectedCouncilId);
 
-        const projectsData = await getProjectsByCouncilId(selectedCouncilId, [
-          "inprogress",
-          "completed",
-          "canceled",
-          "approved",
-        ]);
+        const projectsData = await getProjectsByCouncilIdWithProposal(
+          selectedCouncilId,
+          true
+        );
 
         console.log("Projects data received:", projectsData);
         setProjects(projectsData || []);

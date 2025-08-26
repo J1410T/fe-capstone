@@ -12,6 +12,7 @@ import {
   getProjectByHostInstitution,
   getStaffProjectFilter,
   getProjectsByCouncilId,
+  getProjectsByCouncilIdWithProposal,
   getProjectsByCouncilIdWithPI,
   checkUserEnrollment,
   approveProject,
@@ -176,6 +177,24 @@ export function useProjectsByAppraisalCouncil(
   return useQuery({
     queryKey: ["projects-by-appraisal-council", councilId, statuses],
     queryFn: () => getProjectsByCouncilId(councilId, statuses),
+    enabled: !!councilId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+  });
+}
+
+// Hook mới cho API với proposal
+export function useProjectsByAppraisalCouncilWithProposal(
+  councilId: string,
+  isProposal: boolean = true
+) {
+  return useQuery({
+    queryKey: [
+      "projects-by-appraisal-council-with-proposal",
+      councilId,
+      isProposal,
+    ],
+    queryFn: () => getProjectsByCouncilIdWithProposal(councilId, isProposal),
     enabled: !!councilId,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes

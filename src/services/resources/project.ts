@@ -492,6 +492,39 @@ export const getProjectsByCouncilId = async (
   }
 };
 
+// API mới theo yêu cầu: gọi /appraisal-council/list-project với body {council-id, is-proposal}
+export const getProjectsByCouncilIdWithProposal = async (
+  councilId: string,
+  isProposal: boolean = true
+): Promise<ProjectWithProposals[]> => {
+  try {
+    const accessToken = getAccessToken();
+    if (!accessToken) {
+      throw new Error("Access token not found");
+    }
+
+    const res = await axiosClient.post<ProjectWithProposals[]>(
+      `/appraisal-council/list-project`,
+      {
+        "council-id": councilId,
+        "is-proposal": isProposal,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+          Accept: "*/*",
+        },
+      }
+    );
+
+    return res.data;
+  } catch (error) {
+    console.error("getProjectsByCouncilIdWithProposal error:", error);
+    throw error;
+  }
+};
+
 export const getProjectsByCouncilIdWithPI = async (
   councilId: string,
   statuses: string[] = []
