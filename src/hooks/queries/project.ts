@@ -12,6 +12,7 @@ import {
   getProjectByHostInstitution,
   getStaffProjectFilter,
   getProjectsByCouncilId,
+  getProjectsByCouncilIdWithProposal,
   getProjectsByCouncilIdWithPI,
   checkUserEnrollment,
   approveProject,
@@ -176,6 +177,26 @@ export function useProjectsByAppraisalCouncil(
   return useQuery({
     queryKey: ["projects-by-appraisal-council", councilId, statuses],
     queryFn: () => getProjectsByCouncilId(councilId, statuses),
+    enabled: !!councilId,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+  });
+}
+
+export function useProjectsByAppraisalCouncilWithProposal(
+  councilId: string,
+  isProposal: boolean = true,
+  statuses?: string[]
+) {
+  return useQuery({
+    queryKey: [
+      "projects-by-appraisal-council-with-proposal",
+      councilId,
+      isProposal,
+      statuses,
+    ],
+    queryFn: () =>
+      getProjectsByCouncilIdWithProposal(councilId, isProposal, statuses),
     enabled: !!councilId,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes

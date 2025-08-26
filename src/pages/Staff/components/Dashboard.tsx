@@ -524,7 +524,6 @@ const StaffDashboard: React.FC = () => {
           value={systemStats?.["total-projects-created"] || 0}
           icon={FolderOpen}
           trend="up"
-          trendValue="+12%"
           color="default"
           isLoading={systemStatsQuery.isLoading}
         />
@@ -533,7 +532,6 @@ const StaffDashboard: React.FC = () => {
           value={systemStats?.["active-projects"] || 0}
           icon={Activity}
           trend="up"
-          trendValue="+8%"
           color="success"
           isLoading={systemStatsQuery.isLoading}
         />
@@ -542,7 +540,6 @@ const StaffDashboard: React.FC = () => {
           value={systemStats?.["total-evaluations"] || 0}
           icon={Award}
           trend="up"
-          trendValue="+6%"
           color="warning"
           isLoading={systemStatsQuery.isLoading}
         />
@@ -551,7 +548,6 @@ const StaffDashboard: React.FC = () => {
           value={systemStats?.["total-milestones"] || 0}
           icon={Target}
           trend="up"
-          trendValue="+10%"
           color="default"
           isLoading={systemStatsQuery.isLoading}
         />
@@ -560,7 +556,6 @@ const StaffDashboard: React.FC = () => {
           value={systemStats?.["active-users"] || 0}
           icon={Users}
           trend="up"
-          trendValue="+5%"
           color="success"
           isLoading={systemStatsQuery.isLoading}
         />
