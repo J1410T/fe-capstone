@@ -24,7 +24,6 @@ export interface Task {
   dueDate: string;
   updatedAt: string;
   projectId?: string;
-  // Enhanced member-tasks field from the API response
   "member-tasks"?: Array<{
     id: string;
     "member-id": string;

@@ -29,6 +29,15 @@ import {
 import { useAuth } from "@/contexts";
 import { UserRole } from "@/contexts/auth-types";
 import { toast } from "sonner";
+import {
+  useAllUserRoleAdmin,
+  useAppraisalCouncilUserRoleByProjectId,
+  useCreatorByProposalProjectId,
+  useStaffList,
+} from "@/hooks/queries";
+import { useSendNotification } from "@/hooks/queries/notification";
+import { NotificationRequest } from "@/types/notification";
+import { useProject } from "@/hooks/queries/project";
 
 // Document types that can be created by PI
 const DOCUMENT_TYPES = [
@@ -58,9 +67,30 @@ const CreateDocument: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const sendNotification = useSendNotification();
 
   // API hooks
   const createDocument = useCreateDocument();
+  const { data: allUserRoleAdmin } = useAllUserRoleAdmin();
+  const { data: creatorProject } = useCreatorByProposalProjectId(
+    projectId || ""
+  );
+  const { data: appraisalCouncilUserRole } =
+    useAppraisalCouncilUserRoleByProjectId(projectId || "");
+  const { data: allUserRoleStaff } = useStaffList();
+  const { data: projectData } = useProject(projectId || "");
+
+  const projectDetail = projectData?.data?.["project-detail"];
+
+  const AdminAccountIdList =
+    allUserRoleAdmin?.["data-list"]?.map((item) => item["account-id"]) ?? [];
+  const creatorAccountId = creatorProject?.["account-id"] ?? "";
+  const appraisalCouncilAccountIdList =
+    appraisalCouncilUserRole?.["data-list"]?.map(
+      (item) => item["account-id"]
+    ) ?? [];
+  const staffAccountIdList =
+    allUserRoleStaff?.["data-list"]?.map((item) => item["account-id"]) ?? [];
 
   // Fetch template when document type is selected
   const {
@@ -147,6 +177,97 @@ const CreateDocument: React.FC = () => {
     }
 
     setIsLoading(true);
+
+    switch (form.type) {
+      case "BM6": {
+        const notificationRequest: NotificationRequest = {
+          title: `Project progress report: ${projectDetail?.["english-title"]}`,
+          type: "project",
+          status: "create",
+          "objec-notification-id": projectId || "",
+          "list-account-id": appraisalCouncilAccountIdList,
+        };
+
+        await sendNotification.mutateAsync(notificationRequest);
+
+        toast.success("Send project progress report successfully!");
+        break;
+      }
+
+      case "BM7": {
+        const accountIdList = [
+          ...AdminAccountIdList,
+          ...(creatorAccountId ? [creatorAccountId] : []),
+        ];
+
+        const notificationRequest: NotificationRequest = {
+          title: `Requesting Change Requests During Project Execution: ${projectDetail?.["english-title"]}`,
+          type: "project",
+          status: "create",
+          "objec-notification-id": projectId || "",
+          "list-account-id": accountIdList,
+        };
+
+        await sendNotification.mutateAsync(notificationRequest);
+
+        toast.success(
+          "Submit change requests during project implementation successfully!"
+        );
+        break;
+      }
+
+      case "BM8": {
+        const accountIdList = [
+          ...AdminAccountIdList,
+          ...(creatorAccountId ? [creatorAccountId] : []),
+        ];
+
+        const notificationRequest: NotificationRequest = {
+          title: `Register seminar for the project: ${projectDetail?.["english-title"]}`,
+          type: "project",
+          status: "create",
+          "objec-notification-id": projectId || "",
+          "list-account-id": accountIdList,
+        };
+
+        await sendNotification.mutateAsync(notificationRequest);
+
+        toast.success(
+          "Successfully submitted seminar registration for the project!"
+        );
+        break;
+      }
+      case "BM9": {
+        const notificationRequest: NotificationRequest = {
+          title: `Project summary report: ${projectDetail?.["english-title"]}`,
+          type: "project",
+          status: "create",
+          "objec-notification-id": projectId || "",
+          "list-account-id": appraisalCouncilAccountIdList,
+        };
+
+        await sendNotification.mutateAsync(notificationRequest);
+
+        toast.success("Submit project summary report successfully!");
+        break;
+      }
+      case "BM13": {
+        const notificationRequest: NotificationRequest = {
+          title: `Project Contract Termination Request: ${projectDetail?.["english-title"]}`,
+          type: "project",
+          status: "create",
+          "objec-notification-id": projectId || "",
+          "list-account-id": staffAccountIdList,
+        };
+
+        await sendNotification.mutateAsync(notificationRequest);
+
+        toast.success(
+          "Project Contract Termination Request Successfully Submitted!"
+        );
+        break;
+      }
+    }
 
     try {
       await createDocument.mutateAsync({

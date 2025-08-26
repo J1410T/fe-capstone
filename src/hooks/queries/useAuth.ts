@@ -29,6 +29,9 @@ import {
   getStaffList,
   getBaseUserRoleId,
   getPIUserRoleByProjectId,
+  getAppraisalCouncilUserRoleByProjectId,
+  getCreatorByProposalProjectId,
+  getAllUserRoleAdmin,
 } from "@/services/resources/auth";
 import {
   UserRole,
@@ -507,6 +510,32 @@ export function usePIUserRoleByProjectId(projectId: string) {
     queryKey: ["pi-user-role-by-project", projectId],
     queryFn: () => getPIUserRoleByProjectId(projectId),
     enabled: !!projectId,
+    staleTime: 30000,
+  });
+}
+
+export function useAppraisalCouncilUserRoleByProjectId(projectId: string) {
+  return useQuery({
+    queryKey: ["appraisal-council-user-role-by-project", projectId],
+    queryFn: () => getAppraisalCouncilUserRoleByProjectId(projectId),
+    enabled: !!projectId,
+    staleTime: 30000,
+  });
+}
+
+export function useCreatorByProposalProjectId(projectId: string) {
+  return useQuery({
+    queryKey: ["creator-by-proposal-project", projectId],
+    queryFn: () => getCreatorByProposalProjectId(projectId),
+    enabled: !!projectId,
+    staleTime: 30000,
+  });
+}
+
+export function useAllUserRoleAdmin() {
+  return useQuery({
+    queryKey: ["all-user-role-admin"],
+    queryFn: () => getAllUserRoleAdmin(),
     staleTime: 30000,
   });
 }

@@ -34,22 +34,19 @@ export type AuthInfo = {
 export interface Member {
   id: string;
   code: string;
-  groupName: string;
-  isOfficial: boolean | null;
-  expireDate: string | null;
-  createdAt: string | null;
+  "group-name": string | null;
+  "is-official": boolean | null;
+  "expire-date": string | null;
+  "created-at": string | null;
   status: string | null;
-  accountId: string | null;
+  "account-id": string | null;
   "full-name": string | null;
   email: string | null;
-  phoneNumber: string | null;
-  address: string | null;
-  companyName: string | null;
   "avatar-url": string | null;
-  roleId: string | null;
+  "role-id": string | null;
   name: string | null;
-  projectId: string | null;
-  appraisalCouncilId: string | null;
+  "project-id": string | null;
+  "appraisal-council-id": string | null;
 }
 
 export interface StaffLoginRequest {

@@ -186,7 +186,7 @@ function ProjectDetail() {
     team:
       project.members?.map((member) => ({
         id: member.id,
-        accountId: member.accountId,
+        accountId: member["account-id"],
         name: member["full-name"] || `Member ${member.id.substring(0, 8)}`,
         role:
           member.name === "Principal Investigator"
@@ -196,7 +196,7 @@ function ProjectDetail() {
             : member.name === "Secretary"
             ? "Secretary"
             : "Researcher",
-        major: member.companyName || "Vietnam",
+        // major: member. || "Vietnam",
         email: member.email || `None`,
         avartar:
           member["avatar-url"] ||
