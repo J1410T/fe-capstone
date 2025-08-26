@@ -183,18 +183,20 @@ export function useProjectsByAppraisalCouncil(
   });
 }
 
-// Hook mới cho API với proposal
 export function useProjectsByAppraisalCouncilWithProposal(
   councilId: string,
-  isProposal: boolean = true
+  isProposal: boolean = true,
+  statuses?: string[]
 ) {
   return useQuery({
     queryKey: [
       "projects-by-appraisal-council-with-proposal",
       councilId,
       isProposal,
+      statuses,
     ],
-    queryFn: () => getProjectsByCouncilIdWithProposal(councilId, isProposal),
+    queryFn: () =>
+      getProjectsByCouncilIdWithProposal(councilId, isProposal, statuses),
     enabled: !!councilId,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes

@@ -496,7 +496,8 @@ export const getProjectsByCouncilId = async (
 // API mới theo yêu cầu: gọi /appraisal-council/list-project với body {council-id, is-proposal}
 export const getProjectsByCouncilIdWithProposal = async (
   councilId: string,
-  isProposal: boolean = true
+  isProposal: boolean = true,
+  statuses?: string[]
 ): Promise<ProjectWithProposals[]> => {
   try {
     const accessToken = getAccessToken();
@@ -509,6 +510,7 @@ export const getProjectsByCouncilIdWithProposal = async (
       {
         "council-id": councilId,
         "is-proposal": isProposal,
+        ...(statuses && statuses.length > 0 && { statuses }),
       },
       {
         headers: {

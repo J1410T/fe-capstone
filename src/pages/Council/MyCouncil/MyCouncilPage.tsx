@@ -52,7 +52,9 @@ const MyCouncilPage: React.FC = () => {
     });
 
   const { data: projectsData, isLoading: isLoadingProjectsQuery } =
-    useProjectsByAppraisalCouncilWithProposal(selectedCouncilId, true);
+    useProjectsByAppraisalCouncilWithProposal(selectedCouncilId, true, [
+      "inprogress",
+    ]);
 
   // Load user's councils on mount
   useEffect(() => {
@@ -114,7 +116,8 @@ const MyCouncilPage: React.FC = () => {
 
         const projectsData = await getProjectsByCouncilIdWithProposal(
           selectedCouncilId,
-          true
+          true,
+          ["inprogress"]
         );
 
         console.log("Projects data received:", projectsData);
