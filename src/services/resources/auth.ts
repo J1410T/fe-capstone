@@ -14,6 +14,9 @@ import {
   SearchAccountsParams,
 } from "@/types/auth";
 import { axiosClient, getAccessToken } from "../api";
+import { getAppraisalCouncilByProjectId } from "./appraisal-council";
+import { getProjectDetail } from "./project";
+import { ProjectFilterResponse } from "@/types/project";
 
 export const getMyAccountInfo = async () => {
   try {
@@ -617,4 +620,61 @@ export const getPIUserRoleByProjectId = async (projectId: string) => {
     "page-size": 1,
   };
   return await getUserRoleByFilter(request);
+};
+
+export const getAppraisalCouncilUserRoleByProjectId = async (
+  projectId: string
+) => {
+  const allRoles = await getAllRoles();
+  const RoleIdAppraisalCouncil = allRoles.find(
+    (role) => role.name === "Appraisal Council"
+  )?.id;
+
+  const appraisalCouncil = await getAppraisalCouncilByProjectId(projectId);
+  const appraisalCouncilId = appraisalCouncil.id;
+
+  const request = {
+    "appraisal-council-id": appraisalCouncilId,
+    "role-id": RoleIdAppraisalCouncil,
+    "page-index": 1,
+    "page-size": 100,
+  };
+  return await getUserRoleByFilter(request);
+};
+
+export const getAllUserRoleAdmin = async () => {
+  const allRoles = await getAllRoles();
+  const RoleIdAdmin = allRoles.find((role) => role.name === "Admin")?.id;
+
+  const request = {
+    "role-id": RoleIdAdmin,
+    "page-index": 1,
+    "page-size": 100,
+  };
+  return await getUserRoleByFilter(request);
+};
+
+export const getCreatorByProposalProjectId = async (proposalId: string) => {
+  const proposalData = await getProjectDetail(proposalId);
+  const projectCode = proposalData.data["project-detail"].code;
+  const accessToken = getAccessToken();
+  const request = {
+    code: projectCode,
+    genres: ["normal", "propose"],
+    "include-creator": true,
+    "page-index": 1,
+    "page-size": 1,
+  };
+  const sourceProject = await axiosClient.post<ProjectFilterResponse>(
+    `/project/filter`,
+    request,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  const creatorProject = sourceProject.data["data-list"]?.[0]?.creator;
+  return creatorProject;
 };
