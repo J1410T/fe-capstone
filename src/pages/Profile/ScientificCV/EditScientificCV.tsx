@@ -497,7 +497,6 @@ const EditScientificCV: React.FC = () => {
                   // Update previous images for next comparison
                   previousImages = new Set(currentImages);
 
-                  // Khi chèn hình xong, resize nếu không phải ảnh khung
                   const imgs =
                     e.element?.tagName === "IMG"
                       ? [e.element as HTMLImageElement]
@@ -505,16 +504,20 @@ const EditScientificCV: React.FC = () => {
 
                   imgs.forEach((img) => {
                     const isFrameImg = img.classList.contains("frame-image");
-                    const alreadySized =
-                      img.style.width === "113px" &&
-                      img.style.height === "151px";
 
-                    if (!alreadySized && !isFrameImg) {
-                      img.setAttribute("width", "113");
-                      img.setAttribute("height", "151");
-                      img.style.width = "113px";
-                      img.style.height = "151px";
-                      img.style.objectFit = "cover";
+                    // Chỉ resize ảnh frame-image (placeholder 3x4)
+                    if (isFrameImg) {
+                      const alreadySized =
+                        img.style.width === "113px" &&
+                        img.style.height === "151px";
+
+                      if (!alreadySized) {
+                        img.setAttribute("width", "113");
+                        img.setAttribute("height", "151");
+                        img.style.width = "113px";
+                        img.style.height = "151px";
+                        img.style.objectFit = "cover";
+                      }
                     }
                   });
                 });
