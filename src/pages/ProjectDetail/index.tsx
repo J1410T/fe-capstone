@@ -297,7 +297,11 @@ function ProjectDetail() {
 
         {visibleTabs.includes("budget") && (
           <TabsContent value="budget" className="space-y-4">
-            <BudgetTab transactions={project.transactions || []} />
+            <BudgetTab
+              projectId={project.id}
+              category={project.category}
+              transactions={project.transactions || []}
+            />
           </TabsContent>
         )}
 

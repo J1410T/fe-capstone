@@ -211,3 +211,32 @@ export const deleteTransaction = async (
     throw error;
   }
 };
+
+export const createTransaction = async (transactionData: {
+  title: string;
+  type: string;
+  "receiver-account": string;
+  "receiver-name": string;
+  "receiver-bank-name": string;
+  "transfer-content": string;
+  "total-money": number;
+  "pay-method": string;
+  status: string;
+  "project-id"?: string;
+  "evaluation-stage-id"?: string;
+}): Promise<{ id: string }> => {
+  try {
+    const accessToken = getAccessToken();
+    const response = await axiosClient.post("/transaction", transactionData, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.error("createTransaction error:", error);
+    throw error;
+  }
+};

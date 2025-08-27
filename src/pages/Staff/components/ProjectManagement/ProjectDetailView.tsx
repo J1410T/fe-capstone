@@ -10,6 +10,7 @@ import {
   Tag,
   Clock,
   Hash,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +24,11 @@ import {
   useAssignAppraisalCouncilToProject,
 } from "@/hooks/queries/appraisal-council";
 import { filterMembersForDisplay } from "@/utils/appraisal-council-roles";
+import {
+  useProjectResult,
+  type ResultPublish,
+} from "@/hooks/queries/projectResult";
+import { formatDateTime } from "@/utils";
 
 interface ProjectDetailViewProps {
   selectedProject: LegacyProject | null;
@@ -40,6 +46,143 @@ interface ProjectDetailViewProps {
   ) => void;
   onAssignCouncil?: (project: LegacyProject, council: Council) => void;
 }
+
+// Read-only Project Results Component for Staff
+const StaffProjectResults: React.FC<{
+  projectId: string;
+  category: string;
+}> = ({ projectId, category }) => {
+  const { data: projectResultResponse } = useProjectResult(projectId);
+  const projectResult = projectResultResponse?.success
+    ? projectResultResponse.data
+    : null;
+
+  const categoryLower = category?.toLowerCase() || "";
+  const isBasicCategory = categoryLower === "basic";
+  const isApplicationCategory =
+    categoryLower === "application" ||
+    categoryLower === "implementation" ||
+    categoryLower.includes("application") ||
+    categoryLower.includes("implementation");
+
+  if (!projectResult) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <FileText className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+        <p className="text-lg font-medium mb-2">No project results found</p>
+        <p className="text-sm text-muted-foreground">
+          This project doesn't have any results or deliverables yet.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Project Result */}
+      <div className="space-y-4">
+        <div className="flex items-start justify-between p-4 border rounded-lg bg-green-50">
+          <div className="flex items-start gap-3">
+            {isApplicationCategory ? (
+              <FileText className="h-5 w-5 text-green-600 mt-0.5" />
+            ) : (
+              <ExternalLink className="h-5 w-5 text-green-600 mt-0.5" />
+            )}
+            <div>
+              <h3 className="font-medium text-gray-900">
+                {projectResult.name}
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Added: {formatDateTime(projectResult["added-date"])}
+              </p>
+              <div className="flex items-center gap-2 mt-2">
+                {projectResult.url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(projectResult.url!, "_blank")}
+                  >
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    {isApplicationCategory ? "Download" : "View"}
+                  </Button>
+                )}
+                {!projectResult.url && isBasicCategory && (
+                  <p className="text-sm text-amber-600">
+                    No URL provided for this result
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Publications (Only for Basic category) */}
+      {isBasicCategory &&
+        projectResult["result-publishs"] &&
+        projectResult["result-publishs"].length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Publications</h3>
+            <div className="space-y-3">
+              {projectResult["result-publishs"]?.map(
+                (publish: ResultPublish, index: number) => (
+                  <div
+                    key={publish.id || index}
+                    className="p-4 border rounded-lg bg-blue-50"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 mb-1">
+                          {publish.title}
+                        </h4>
+                        {publish.description && (
+                          <p className="text-sm text-gray-600 mb-2">
+                            {publish.description}
+                          </p>
+                        )}
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>Publisher: {publish.publisher}</span>
+                          <span>
+                            Date:{" "}
+                            {new Date(
+                              publish["publication-date"] || ""
+                            ).toLocaleDateString()}
+                          </span>
+                          <Badge variant="outline" className="text-xs">
+                            {publish["access-type"]}
+                          </Badge>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(publish.url || "", "_blank")}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          </div>
+        )}
+
+      {/* No Publications for Basic category */}
+      {isBasicCategory &&
+        (!projectResult["result-publishs"] ||
+          projectResult["result-publishs"].length === 0) && (
+          <div className="text-center py-6 text-gray-500">
+            <FileText className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+            <p className="text-sm font-medium mb-1">No publications found</p>
+            <p className="text-xs text-muted-foreground">
+              This project result doesn't have any publications yet.
+            </p>
+          </div>
+        )}
+    </div>
+  );
+};
 
 export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   selectedProject,
@@ -62,6 +205,10 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   const assignCouncilMutation = useAssignAppraisalCouncilToProject();
 
   if (!selectedProject) return null;
+
+  // Check if creator is staff
+  const isCreatorStaff =
+    selectedProject.creator?.["full-name"]?.toLowerCase() === "staff";
 
   const handleAssignCouncil = (project: LegacyProject, council: Council) => {
     // Use the API to assign council
@@ -165,6 +312,11 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                     <p className="text-sm text-gray-500">
                       {selectedProject.creator.email}
                     </p>
+                    {isCreatorStaff && (
+                      <Badge className="bg-blue-100 text-blue-800 text-xs mt-1">
+                        Staff Creator
+                      </Badge>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -439,6 +591,30 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           </div>
         )}
       </div>
+
+      {/* Project Results Section - Only show if creator is staff (Read-only) */}
+      {isCreatorStaff && (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="p-2 bg-green-100 rounded-lg">
+              <FileText className="w-6 h-6 text-green-600" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-gray-900">
+                Project Results (Read-only)
+              </h2>
+              <p className="text-gray-600">
+                Project deliverables and publications - Staff view only
+              </p>
+            </div>
+          </div>
+
+          <StaffProjectResults
+            projectId={selectedProject.id}
+            category={selectedProject.category}
+          />
+        </div>
+      )}
 
       {/* Council Assignment Modal */}
       <CouncilAssignmentModal

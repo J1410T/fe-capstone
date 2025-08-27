@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -41,16 +42,27 @@ import { Transaction } from "@/types/transaction";
 import { UserRole } from "@/contexts/auth-types";
 import { useAuth } from "@/contexts";
 import { toast } from "sonner";
+import { useCreateTransaction } from "@/hooks/queries/transaction";
+import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
 
 interface BudgetTabProps {
+  projectId: string;
+  category: string;
   transactions: Transaction[];
 }
 
 // Transaction request form interface
 interface TransactionRequest {
-  name: string;
+  title: string;
   type: string;
-  amount: string;
+  "receiver-account": string;
+  "receiver-name": string;
+  "receiver-bank-name": string;
+  "transfer-content": string;
+  "total-money": number;
+  "pay-method": string;
+  status: string;
+  "evaluation-stage-id"?: string;
 }
 
 // Transaction types available for request
@@ -59,18 +71,45 @@ const TRANSACTION_TYPES = [
   { value: "evaluationstage", label: "Evaluation Stage" },
 ];
 
-const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
+const BudgetTab: React.FC<BudgetTabProps> = ({
+  projectId,
+  category,
+  transactions,
+}) => {
   const [isLoading] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requestForm, setRequestForm] = useState<TransactionRequest>({
-    name: "",
+    title: "",
     type: "",
-    amount: "",
+    "receiver-account": "",
+    "receiver-name": "",
+    "receiver-bank-name": "",
+    "transfer-content": "",
+    "total-money": 0,
+    "pay-method": "bank_transfer", // Default payment method
+    status: "created",
   });
 
   // Auth hook to check user role
   const { user } = useAuth();
+
+  // API hooks
+  const createTransaction = useCreateTransaction();
+  const { data: evaluationsResponse } = useGetEvaluationsByProjectId(projectId);
+
+  // Determine project type
+  const categoryLower = category?.toLowerCase() || "";
+  const isBasicCategory = categoryLower === "basic";
+  const isApplicationCategory =
+    categoryLower === "application" ||
+    categoryLower === "implementation" ||
+    categoryLower.includes("application") ||
+    categoryLower.includes("implementation");
+
+  // Get evaluation stages for application projects
+  const evaluationStages =
+    evaluationsResponse?.["data-list"]?.[0]?.["evaluation-stages"] || [];
 
   const handleRequestTransaction = () => {
     setShowRequestDialog(true);
@@ -79,22 +118,29 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
   const handleCloseDialog = () => {
     setShowRequestDialog(false);
     setRequestForm({
-      name: "",
+      title: "",
       type: "",
-      amount: "",
+      "receiver-account": "",
+      "receiver-name": "",
+      "receiver-bank-name": "",
+      "transfer-content": "",
+      "total-money": 0,
+      "pay-method": "bank_transfer", // Default payment method
+      status: "created",
     });
   };
 
   const handleInputChange = (
     field: keyof TransactionRequest,
-    value: string
+    value: string | number
   ) => {
-    if (field === "amount") {
+    if (field === "total-money") {
       // Remove non-numeric characters except decimal point
-      const numericValue = value.replace(/[^0-9]/g, "");
+      const numericValue =
+        typeof value === "string" ? value.replace(/[^0-9]/g, "") : value;
       setRequestForm((prev) => ({
         ...prev,
-        [field]: numericValue,
+        [field]: Number(numericValue) || 0,
       }));
     } else {
       setRequestForm((prev) => ({
@@ -106,8 +152,8 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
 
   const handleSubmitRequest = async () => {
     // Validation
-    if (!requestForm.name.trim()) {
-      toast.error("Please enter a request name");
+    if (!requestForm.title.trim()) {
+      toast.error("Please enter a request title");
       return;
     }
 
@@ -116,30 +162,79 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
       return;
     }
 
-    if (!requestForm.amount.trim() || isNaN(Number(requestForm.amount))) {
+    if (!requestForm["receiver-account"].trim()) {
+      toast.error("Please enter receiver account");
+      return;
+    }
+
+    if (!requestForm["receiver-name"].trim()) {
+      toast.error("Please enter receiver name");
+      return;
+    }
+
+    if (!requestForm["receiver-bank-name"].trim()) {
+      toast.error("Please enter receiver bank name");
+      return;
+    }
+
+    if (!requestForm["transfer-content"].trim()) {
+      toast.error("Please enter transfer content");
+      return;
+    }
+
+    if (!requestForm["total-money"] || requestForm["total-money"] <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
 
-    if (Number(requestForm.amount) <= 0) {
-      toast.error("Amount must be greater than 0");
-      return;
+    // For application projects, validate evaluation stage selection
+    if (isApplicationCategory && requestForm.type === "evaluationstage") {
+      if (!requestForm["evaluation-stage-id"]) {
+        toast.error("Please select an evaluation stage");
+        return;
+      }
     }
 
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement API call to submit transaction request
-      // await submitTransactionRequest(requestForm);
+      // Prepare transaction data - always include project-id
+      const transactionData: {
+        title: string;
+        type: string;
+        "receiver-account": string;
+        "receiver-name": string;
+        "receiver-bank-name": string;
+        "transfer-content": string;
+        "total-money": number;
+        "pay-method": string;
+        status: string;
+        "project-id": string;
+        "evaluation-stage-id"?: string;
+      } = {
+        title: requestForm.title,
+        type: requestForm.type,
+        "receiver-account": requestForm["receiver-account"],
+        "receiver-name": requestForm["receiver-name"],
+        "receiver-bank-name": requestForm["receiver-bank-name"],
+        "transfer-content": requestForm["transfer-content"],
+        "total-money": requestForm["total-money"],
+        "pay-method": requestForm["pay-method"],
+        status: requestForm.status,
+        "project-id": projectId, // Always include project-id
+      };
 
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Add evaluation-stage-id for application projects
+      if (isApplicationCategory && requestForm["evaluation-stage-id"]) {
+        transactionData["evaluation-stage-id"] =
+          requestForm["evaluation-stage-id"];
+      }
 
-      toast.success("Transaction request submitted successfully!");
+      await createTransaction.mutateAsync(transactionData);
       handleCloseDialog();
     } catch (error) {
       console.error("Failed to submit transaction request:", error);
-      toast.error("Failed to submit transaction request");
+      // Error is already handled by the mutation
     } finally {
       setIsSubmitting(false);
     }
@@ -162,7 +257,9 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
               Budget Overview
             </CardTitle>
             <CardDescription className="text-sm sm:text-base mt-1">
-              Project budget allocation and expense tracking
+              {isBasicCategory
+                ? "Project budget allocation and expense tracking for basic research"
+                : "Project budget allocation and expense tracking for application projects"}
             </CardDescription>
           </div>
           {user?.role === UserRole.PRINCIPAL_INVESTIGATOR && (
@@ -260,28 +357,29 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
 
       {/* Request Transaction Dialog */}
       <Dialog open={showRequestDialog} onOpenChange={handleCloseDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Wallet className="w-5 h-5 text-blue-600" />
               Request Transaction
             </DialogTitle>
             <DialogDescription>
-              Submit a new transaction request for this project. Please provide
+              Submit a new transaction request for this{" "}
+              {isBasicCategory ? "project" : "evaluation stage"}. Please provide
               the details below.
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div>
-              <Label htmlFor="request-name" className="text-sm font-medium">
-                Request Name <span className="text-red-500">*</span>
+              <Label htmlFor="request-title" className="text-sm font-medium">
+                Request Title <span className="text-red-500">*</span>
               </Label>
               <Input
-                id="request-name"
-                value={requestForm.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="Enter request name"
+                id="request-title"
+                value={requestForm.title}
+                onChange={(e) => handleInputChange("title", e.target.value)}
+                placeholder="Enter request title"
                 className="mt-1"
               />
             </div>
@@ -307,6 +405,104 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
               </Select>
             </div>
 
+            {/* Evaluation Stage Selection for Application Projects */}
+            {isApplicationCategory &&
+              requestForm.type === "evaluationstage" && (
+                <div>
+                  <Label
+                    htmlFor="evaluation-stage"
+                    className="text-sm font-medium"
+                  >
+                    Evaluation Stage <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    onValueChange={(value) =>
+                      handleInputChange("evaluation-stage-id", value)
+                    }
+                    value={requestForm["evaluation-stage-id"] || ""}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="Select evaluation stage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {evaluationStages.map((stage) => (
+                        <SelectItem key={stage.id} value={stage.id}>
+                          {stage.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label
+                  htmlFor="receiver-account"
+                  className="text-sm font-medium"
+                >
+                  Receiver Account <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="receiver-account"
+                  value={requestForm["receiver-account"]}
+                  onChange={(e) =>
+                    handleInputChange("receiver-account", e.target.value)
+                  }
+                  placeholder="Enter receiver account number"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="receiver-name" className="text-sm font-medium">
+                  Receiver Name <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="receiver-name"
+                  value={requestForm["receiver-name"]}
+                  onChange={(e) =>
+                    handleInputChange("receiver-name", e.target.value)
+                  }
+                  placeholder="Enter receiver name"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label
+                htmlFor="receiver-bank-name"
+                className="text-sm font-medium"
+              >
+                Receiver Bank Name <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="receiver-bank-name"
+                value={requestForm["receiver-bank-name"]}
+                onChange={(e) =>
+                  handleInputChange("receiver-bank-name", e.target.value)
+                }
+                placeholder="Enter receiver bank name"
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="transfer-content" className="text-sm font-medium">
+                Transfer Content <span className="text-red-500">*</span>
+              </Label>
+              <Textarea
+                id="transfer-content"
+                value={requestForm["transfer-content"]}
+                onChange={(e) =>
+                  handleInputChange("transfer-content", e.target.value)
+                }
+                placeholder="Enter transfer content/description"
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+
             <div>
               <Label htmlFor="amount" className="text-sm font-medium">
                 Amount (VND) <span className="text-red-500">*</span>
@@ -315,8 +511,10 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
                 <Input
                   id="amount"
                   type="text"
-                  value={requestForm.amount}
-                  onChange={(e) => handleInputChange("amount", e.target.value)}
+                  value={requestForm["total-money"] || ""}
+                  onChange={(e) =>
+                    handleInputChange("total-money", e.target.value)
+                  }
                   placeholder="Enter amount"
                   className="pr-12"
                 />
@@ -324,9 +522,9 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
                   <span className="text-gray-500 text-sm">VND</span>
                 </div>
               </div>
-              {requestForm.amount && (
+              {requestForm["total-money"] && (
                 <p className="text-xs text-gray-500 mt-1">
-                  Amount: {formatVND(Number(requestForm.amount) || 0)}
+                  Amount: {formatVND(requestForm["total-money"])}
                 </p>
               )}
             </div>
@@ -344,9 +542,16 @@ const BudgetTab: React.FC<BudgetTabProps> = ({ transactions }) => {
               onClick={handleSubmitRequest}
               disabled={
                 isSubmitting ||
-                !requestForm.name.trim() ||
+                !requestForm.title.trim() ||
                 !requestForm.type ||
-                !requestForm.amount.trim()
+                !requestForm["receiver-account"].trim() ||
+                !requestForm["receiver-name"].trim() ||
+                !requestForm["receiver-bank-name"].trim() ||
+                !requestForm["transfer-content"].trim() ||
+                !requestForm["total-money"] ||
+                (isApplicationCategory &&
+                  requestForm.type === "evaluationstage" &&
+                  !requestForm["evaluation-stage-id"])
               }
               className="bg-blue-600 hover:bg-blue-700"
             >
