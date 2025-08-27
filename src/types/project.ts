@@ -460,7 +460,9 @@ export interface ProjectWithProposals {
   status: string;
   "creator-id": string;
   "project-tags": ProjectTagItem[] | null;
-  proposals: Proposal[];
+  proposals: Proposal[] | null;
+  milestoneId?: string;
+  tasks?: ProjectTask[] | null;
 }
 
 export interface RolePrincipalInvestigatorInfo extends Proposal {
