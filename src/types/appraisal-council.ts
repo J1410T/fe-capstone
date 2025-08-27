@@ -1,4 +1,5 @@
 import { UserRole } from "./auth";
+import { ProjectWithProposals } from "./project";
 
 // Base AppraisalCouncil interface matching API response
 export interface AppraisalCouncil {
@@ -9,6 +10,7 @@ export interface AppraisalCouncil {
   "updated-at": string;
   status: "created" | "deleted";
   member?: UserRole[];
+  proposal?: ProjectWithProposals[];
 }
 
 // Extended AppraisalCouncil with members for UI display

@@ -13,7 +13,6 @@ import {
   UpdateAppraisalCouncilRequest,
 } from "@/types/appraisal-council";
 import { getUserRolesByAppraisalCouncil } from "./auth";
-
 /**
  * Get list of appraisal councils with pagination and search
  */

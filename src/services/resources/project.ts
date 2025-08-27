@@ -417,51 +417,64 @@ export const getProjecList = async (
   }
 };
 
+const processProjectWithMeetingTasks = async (project: ProjectItem) => {
+  // 3. Lấy milestones của project
+  const milestoneRes = await getMilestonesByProjectId(project.id).catch(() => ({
+    data: [],
+  }));
+  const milestones = milestoneRes.data;
+
+  // 4. Tìm milestone có title = "meeting"
+  const meetingMilestone = milestones.find(
+    (m) => m.title?.trim().toLowerCase() === "meeting"
+  );
+
+  if (!meetingMilestone) {
+    return { ...project, tasks: null, milestoneID: "" };
+  }
+
+  // 5. Lấy danh sách tasks theo milestone
+  const tasksRes = await getTasksByMilestoneId(meetingMilestone.id).catch(
+    () => ({ data: { "data-list": [] } })
+  );
+  const tasks = tasksRes.data["data-list"];
+
+  return { ...project, tasks, milestoneID: meetingMilestone.id };
+};
+
 export const getProjecListWithMeetingsTask = async (
   request: ProjectListWithMeetingTaskRequest
 ): Promise<ProjectFilterMeetingTaskResponse> => {
-  try {
-    // 1. Lấy danh sách project
-    const projectResponse = await getProjecList(request);
+  // 1. Lấy danh sách project
+  const projectResponse = await getProjecList(request);
 
-    // 2. Duyệt qua từng project
-    const updatedProjects = await Promise.all(
-      projectResponse["data-list"].map(async (project) => {
-        try {
-          // 3. Lấy milestones của project
-          const milestoneRes = await getMilestonesByProjectId(project.id);
-          const milestones = milestoneRes.data;
+  // 2. Duyệt qua từng project với error handling tách biệt
+  const updatedProjects = await Promise.allSettled(
+    projectResponse["data-list"].map(processProjectWithMeetingTasks)
+  );
 
-          // 4. Tìm milestone có title = "meeting"
-          const meetingMilestone = milestones.find(
-            (m) => m.title?.trim().toLowerCase() === "meeting"
-          );
+  // 3. Xử lý kết quả và fallback cho các project bị lỗi
+  const finalProjects = updatedProjects.map((result, index) => {
+    if (result.status === "fulfilled") {
+      return result.value;
+    } else {
+      console.error(
+        `Error processing project ${projectResponse["data-list"][index].id}:`,
+        result.reason
+      );
+      return {
+        ...projectResponse["data-list"][index],
+        tasks: null,
+        milestoneID: "",
+      };
+    }
+  });
 
-          if (!meetingMilestone) {
-            return { ...project, tasks: null, milestoneID: "" };
-          }
-
-          // 5. Lấy danh sách tasks theo milestone
-          const tasksRes = await getTasksByMilestoneId(meetingMilestone.id);
-          const tasks = tasksRes.data["data-list"];
-
-          return { ...project, tasks, milestoneID: meetingMilestone.id };
-        } catch (err) {
-          console.error(`Error when processing project ${project.id}:`, err);
-          return { ...project, tasks: null, milestoneID: "" };
-        }
-      })
-    );
-
-    // 6. Trả kết quả cuối
-    return {
-      ...projectResponse,
-      "data-list": updatedProjects,
-    };
-  } catch (error) {
-    console.error("getProjecListWithMeetingsTask error:", error);
-    throw error;
-  }
+  // 4. Trả kết quả cuối
+  return {
+    ...projectResponse,
+    "data-list": finalProjects,
+  };
 };
 
 export const getProjectsByCouncilId = async (
@@ -474,9 +487,14 @@ export const getProjectsByCouncilId = async (
       throw new Error("Access token not found");
     }
 
+    const requestBody = {
+      "council-id": councilId,
+      statuses: statuses,
+    };
+
     const res = await axiosClient.post<ProjectWithProposals[]>(
-      `/appraisal-council/list-project/${councilId}`,
-      statuses, // body
+      `/appraisal-council/list-project`,
+      requestBody, // body
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -551,7 +569,7 @@ export const getProjectsByCouncilIdWithPI = async (
       projectResponse.map(async (project) => {
         // Với mỗi proposal trong project → gắn thêm thông tin PI
         const proposalsWithPI = await Promise.all(
-          project.proposals.map(async (proposal) => {
+          (project.proposals ?? []).map(async (proposal) => {
             try {
               const piResponse = await getUserRoleByProjectIdAndRoleId(
                 proposal.id,
@@ -592,87 +610,6 @@ export const getProjectsByCouncilIdWithPI = async (
     return [];
   }
 };
-
-// export const getProjectsByCouncilIdWithPI = async (
-//   councilId: string,
-//   statuses: string[] = []
-// ): Promise<RolePrincipalInvestigatorInfo[]> => {
-//   try {
-//     // 1. Lấy danh sách project theo councilId
-//     const projectResponse = await getProjectsByCouncilId(councilId, statuses);
-
-//     // 2. Lấy roleId của Principal Investigator
-//     const allRoles = await getAllRoles();
-//     const RoleIdPI = allRoles.find(
-//       (role) => role.name === "Principal Investigator"
-//     )?.id;
-
-//     if (!RoleIdPI) {
-//       throw new Error("Role Principal Investigator not found");
-//     }
-
-//     // 3. Map qua từng project
-//     const projectsWithPI: RolePrincipalInvestigatorInfo[] = await Promise.all(
-//       projectResponse.map(async (project) => {
-//         const proposalsWithPI = await Promise.all(
-//           project.proposals.map(async (proposal) => {
-//             try {
-//               // Lấy thông tin PI
-//               const piResponse = await getUserRoleByProjectIdAndRoleId(
-//                 proposal.id,
-//                 RoleIdPI
-//               );
-//               const piInfo = piResponse.data["data-list"]?.[0];
-
-//               // Lấy project-tags
-//               let projectTags = null;
-//               try {
-//                 const tagsRes = await getProjectTagsByProjectId(proposal.id);
-//                 projectTags = tagsRes.data ?? tagsRes; // tuỳ axiosClient return data
-//               } catch (err) {
-//                 console.warn("getProjectTagsByProjectId error:", err);
-//               }
-
-//               // Lấy majors
-//               let majors = null;
-//               try {
-//                 const majorsRes = await getProjectMajors(proposal.id);
-//                 majors = majorsRes?.["data-list"] ?? majorsRes;
-//               } catch (err) {
-//                 console.warn("getProjectMajors error:", err);
-//               }
-
-//               return {
-//                 ...proposal,
-//                 ...(piInfo && {
-//                   "pi-account-id": piInfo["account-id"],
-//                   "pi-full-name": piInfo["full-name"],
-//                   "pi-avatar-url": piInfo["avatar-url"],
-//                   "pi-email": piInfo["email"],
-//                 }),
-//                 "project-tags": projectTags,
-//                 majors: majors,
-//               };
-//             } catch (err) {
-//               console.error(`Error processing proposal ${proposal.id}:`, err);
-//               return proposal;
-//             }
-//           })
-//         );
-
-//         return {
-//           ...project,
-//           proposals: proposalsWithPI,
-//         };
-//       })
-//     );
-
-//     return projectsWithPI;
-//   } catch (err) {
-//     console.error("Error in getProjectsByCouncilIdWithPI:", err);
-//     return [];
-//   }
-// };
 
 export const getProjectById = async (
   projectId: string
