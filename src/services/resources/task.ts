@@ -3,6 +3,7 @@ import {
   MemberTaskResponse,
   MemberTaskFilterRequest,
   UpdateTaskRequest,
+  ProjectTask,
 } from "@/types/task";
 import { axiosClient, getAccessToken } from "../api";
 import {
@@ -11,6 +12,12 @@ import {
   CreateTaskRequest,
   CreateTaskResponse,
 } from "@/types/auth";
+import { AppraisalCouncilListResponse } from "@/types/appraisal-council";
+import { getMyAppraisalCouncils } from "./appraisal-council";
+import { getProjectsByCouncilIdWithProposal } from "./project";
+import { getMilestonesByProjectId } from "./milestone";
+import { Milestone } from "@/types/milestone";
+import { ProjectWithProposals } from "@/types/project";
 
 export const getTasksByMilestoneId = async (
   milestoneId: string,
@@ -342,6 +349,71 @@ export const updateTaskStatusKanban = async (
     );
   } catch (error) {
     console.error("updateTaskStatusKanban error:", error);
+    throw error;
+  }
+};
+
+export const getAllMeetingTaskByCouncil = async (
+  pageIndex: number = 1,
+  pageSize: number = 10
+): Promise<AppraisalCouncilListResponse> => {
+  try {
+    // 1. Lấy danh sách council
+    const councils = await getMyAppraisalCouncils({
+      "page-index": pageIndex,
+      "page-size": pageSize,
+    });
+
+    // 2. Duyệt council
+    const councilWithProjects = await Promise.all(
+      councils["data-list"].map(async (council) => {
+        // 2.1 Lấy projects - include more statuses to show more data
+        const projects = await getProjectsByCouncilIdWithProposal(
+          council.id,
+          true,
+          ["inprogress", "created", "approved"]
+        ).catch(() => [] as ProjectWithProposals[]); // fallback nếu lỗi
+
+        // 2.2 Duyệt projects
+        const projectsWithTasks = await Promise.all(
+          projects.map(async (project) => {
+            // 2.2.1 Lấy milestones
+            const milestonesRes = await getMilestonesByProjectId(
+              project.id
+            ).catch(() => ({ data: [] as Milestone[] }));
+
+            const milestones = milestonesRes.data ?? [];
+
+            // 2.2.2 Tìm milestone = 'meeting'
+            const meetingMilestone = milestones.find(
+              (m) => m.title?.trim().toLowerCase() === "meeting"
+            );
+
+            if (!meetingMilestone) {
+              return { ...project, milestoneId: undefined, tasks: [] };
+            }
+
+            // 2.2.3 Lấy tasks
+            const taskRes = await getTasksByMilestoneId(
+              meetingMilestone.id
+            ).catch(() => ({ data: { "data-list": [] as ProjectTask[] } }));
+
+            return {
+              ...project,
+              milestoneId: meetingMilestone.id,
+              tasks: taskRes.data["data-list"],
+            };
+          })
+        );
+
+        return { ...council, proposal: projectsWithTasks };
+      })
+    );
+
+    // 3. Return kết quả cuối
+    return { ...councils, "data-list": councilWithProjects };
+  } catch (error) {
+    console.error("getAllMeetingTaskByCouncil error:", error);
     throw error;
   }
 };

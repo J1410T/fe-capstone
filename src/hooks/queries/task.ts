@@ -8,6 +8,7 @@ import {
   deleteMemberTask,
   getMemberTasksByTaskId,
   updateTaskStatusKanban,
+  getAllMeetingTaskByCouncil,
 } from "@/services/resources/task";
 import { CreateMemberTaskRequest, CreateTaskRequest } from "@/types/auth";
 import { UpdateTaskRequest } from "@/types/task";
@@ -200,5 +201,12 @@ export function useUpdateTaskStatusKanban() {
         toast.error("Failed to update task status");
       }
     },
+  });
+}
+
+export function useAllMeetingTaskByCouncil() {
+  return useQuery({
+    queryKey: ["all-meeting-task-by-council"],
+    queryFn: () => getAllMeetingTaskByCouncil(),
   });
 }
