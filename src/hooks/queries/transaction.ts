@@ -4,6 +4,7 @@ import {
   getTransactionList,
   updateTransaction,
   deleteTransaction,
+  createTransaction,
 } from "@/services/resources/transaction";
 import {
   TransactionListRequest,
@@ -57,6 +58,23 @@ export function useDeleteTransaction() {
     onError: (error) => {
       console.error("Delete transaction error:", error);
       toast.error("Failed to delete transaction");
+    },
+  });
+}
+
+export function useCreateTransaction() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: createTransaction,
+    onSuccess: () => {
+      // Invalidate and refetch transaction list
+      queryClient.invalidateQueries({ queryKey: ["transaction-list"] });
+      toast.success("Transaction request created successfully!");
+    },
+    onError: (error) => {
+      console.error("Create transaction error:", error);
+      toast.error("Failed to create transaction request");
     },
   });
 }
