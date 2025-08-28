@@ -10,6 +10,7 @@ import {
   updateProject,
   enrollProjectAsPrincipal,
   getProjectByHostInstitution,
+  getProjectByStaff,
   getStaffProjectFilter,
   getProjectsByCouncilId,
   getProjectsByCouncilIdWithProposal,
@@ -250,5 +251,16 @@ export function useProjectListWithMeetingTask(
     enabled: !!request,
     staleTime: 1000 * 60 * 5, // 5 minutes
     gcTime: 1000 * 60 * 10, // 10 minutes
+  });
+}
+
+export function useProjectByStaff() {
+  return useQuery({
+    queryKey: ["project-by-staff"],
+    queryFn: getProjectByStaff,
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    gcTime: 1000 * 60 * 10, // 10 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 }

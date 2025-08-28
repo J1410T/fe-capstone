@@ -76,6 +76,11 @@ const data = {
           icon: LayoutDashboard,
         },
         {
+          title: "My Projects",
+          url: "/staff/my-projects",
+          icon: FolderOpen,
+        },
+        {
           title: "Project Registration",
           url: "/staff/projects/register",
           icon: FolderOpen,

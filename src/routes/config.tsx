@@ -33,6 +33,7 @@ import {
   StaffMeetings,
   DocumentManagement,
   ConfigSystemManagement,
+  MyProjects,
 } from "@/pages/Staff";
 
 // General Pages
@@ -161,6 +162,10 @@ export const routes: RouteObject[] = [
                 element: <ProjectManagementOverview />,
               },
             ],
+          },
+          {
+            path: "my-projects",
+            element: <MyProjects />,
           },
           {
             path: "payments",

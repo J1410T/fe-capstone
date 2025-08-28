@@ -11,6 +11,7 @@ export { default as DocumentFormsManagement } from "./components/DocumentFormsMa
 
 // Project Management
 export { default as ProjectManagementOverview } from "./components/ProjectManagementOverview";
+export { default as MyProjects } from "./MyProjects";
 
 // Approvals
 

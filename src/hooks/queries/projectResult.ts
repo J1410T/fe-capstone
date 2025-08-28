@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   getProjectResult,
+  getAllProjectResults,
   createProjectResult,
   updateProjectResult,
   deleteProjectResult,
@@ -21,6 +22,15 @@ export const useProjectResult = (
     queryKey: ["project-result", projectId],
     queryFn: () => getProjectResult(projectId),
     enabled: enabled && !!projectId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
+  });
+};
+
+export const useAllProjectResults = () => {
+  return useQuery({
+    queryKey: ["all-project-results"],
+    queryFn: getAllProjectResults,
     staleTime: 5 * 60 * 1000, // 5 minutes
     retry: 2,
   });
