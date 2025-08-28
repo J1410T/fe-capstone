@@ -11,6 +11,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff, Shield } from "lucide-react";
 import StripeCanvas from "../StripeCanvas";
+import { useNavigate } from "react-router-dom";
+import {
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+  useVerifyOtpMutation,
+} from "@/hooks/queries";
+import { AxiosError } from "axios";
 
 interface FormData {
   email: string;
@@ -19,7 +26,29 @@ interface FormData {
   confirm: string;
 }
 
+interface ApiErrorResponse {
+  message: string;
+}
+
+// Helper function để extract error message từ API response
+const getErrorMessage = (error: unknown): string => {
+  if (error instanceof AxiosError) {
+    const apiError = error.response?.data as ApiErrorResponse | undefined;
+    if (apiError?.message) {
+      return apiError.message;
+    }
+    if (error.message) {
+      return error.message;
+    }
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return "An unexpected error occurred";
+};
+
 export default function ForgotPassword() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -30,51 +59,112 @@ export default function ForgotPassword() {
     password: "",
     confirm: "",
   });
+  const [passwordError, setPasswordError] = useState("");
+
+  const forgotPasswordMutation = useForgotPasswordMutation();
+  const verifyOtpMutation = useVerifyOtpMutation();
+  const resetPasswordMutation = useResetPasswordMutation();
+
+  // loading riêng cho từng step
+  const isSendingEmail = forgotPasswordMutation.isPending;
+  const isVerifyingOtp = verifyOtpMutation.isPending;
+  const isResettingPassword = resetPasswordMutation.isPending;
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSendEmail = () => {
+  // validate password rule
+  const validatePassword = (pwd: string): string => {
+    if (pwd.length < 8) {
+      return "Password must be at least 8 characters long!";
+    }
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(pwd)) {
+      return "Password must contain at least one special character!";
+    }
+    if (/\s/.test(pwd)) {
+      return "Password must not contain spaces!";
+    }
+    return "";
+  };
+
+  const handleSendEmail = async () => {
     if (!formData.email.trim()) {
       toast.error("Please enter your email!");
       return;
     }
-    setEmail(formData.email);
-    toast.success("Verification code sent to your email.");
-    setStep(2);
+
+    try {
+      const response = await forgotPasswordMutation.mutateAsync(formData.email);
+      setEmail(formData.email);
+      toast.success(response.message);
+      setStep(2);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   };
 
-  const handleVerifyOTP = () => {
+  const handleVerifyOTP = async () => {
     if (!formData.otp.trim()) {
       toast.error("Please enter the OTP code!");
       return;
     }
-    toast.success("OTP verified successfully.");
-    setStep(3);
+
+    try {
+      const response = await verifyOtpMutation.mutateAsync({
+        email: formData.email,
+        otp: formData.otp,
+      });
+      toast.success(response.message);
+      setStep(3);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   };
 
-  const handleResetPassword = () => {
-    if (!formData.password.trim() || !formData.confirm.trim()) {
-      toast.error("Please fill in all password fields!");
+  const handleResetPassword = async () => {
+    const pwdError = validatePassword(formData.password);
+    if (pwdError) {
+      setPasswordError(pwdError);
+      toast.error(pwdError);
       return;
     }
-    if (formData.password.length < 8) {
-      toast.error("Password must be at least 8 characters long!");
+
+    if (!formData.confirm.trim()) {
+      toast.error("Please confirm your password!");
       return;
     }
+
     if (formData.password !== formData.confirm) {
       toast.error("Passwords do not match!");
       return;
     }
-    toast.success("Password reset successfully!");
-    setStep(1);
-    setFormData({ email: "", otp: "", password: "", confirm: "" });
+
+    try {
+      const response = await resetPasswordMutation.mutateAsync({
+        email: formData.email,
+        otp: formData.otp,
+        "new-password": formData.password,
+        "confirm-password": formData.confirm,
+      });
+      toast.success(response.message);
+      setStep(1);
+      setFormData({ email: "", otp: "", password: "", confirm: "" });
+      navigate("/auth/login-staff");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   };
 
-  const handleResendEmail = () => {
+  const handleResendEmail = async () => {
     if (!email) return;
-    toast.success(`Verification code resent to ${email}`);
+
+    try {
+      await forgotPasswordMutation.mutateAsync(email);
+      toast.success(`Verification code resent to ${email}`);
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
   };
 
   return (
@@ -124,13 +214,15 @@ export default function ForgotPassword() {
                     placeholder="Email"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
+                    disabled={isSendingEmail}
                   />
                   <Button
                     variant="default"
                     className="w-full h-12 text-base bg-emerald-700 hover:bg-emerald-600 text-white"
                     onClick={handleSendEmail}
+                    disabled={isSendingEmail}
                   >
-                    Send Verification Code
+                    {isSendingEmail ? "Sending..." : "Send Verification Code"}
                   </Button>
                 </div>
               )}
@@ -143,22 +235,25 @@ export default function ForgotPassword() {
                     placeholder="Enter OTP"
                     value={formData.otp}
                     onChange={(e) => handleInputChange("otp", e.target.value)}
-                    maxLength={5}
+                    maxLength={6}
+                    disabled={isVerifyingOtp}
                   />
                   <Button
                     variant="default"
                     className="w-full h-12 text-base bg-emerald-700 hover:bg-emerald-600 text-white"
                     onClick={handleVerifyOTP}
+                    disabled={isVerifyingOtp}
                   >
-                    Verify OTP
+                    {isVerifyingOtp ? "Verifying..." : "Verify OTP"}
                   </Button>
                   <p className="text-center text-sm text-gray-600 mt-2">
-                    Didn’t get the email?{" "}
+                    Didn't get the email?{" "}
                     <button
                       onClick={handleResendEmail}
-                      className="text-emerald-700 hover:underline font-medium"
+                      className="text-emerald-700 hover:underline font-medium disabled:opacity-50"
+                      disabled={isSendingEmail}
                     >
-                      Resend
+                      {isSendingEmail ? "Sending..." : "Resend"}
                     </button>
                   </p>
                 </div>
@@ -172,18 +267,25 @@ export default function ForgotPassword() {
                       type={showPassword ? "text" : "password"}
                       placeholder="Enter new password"
                       value={formData.password}
-                      onChange={(e) =>
-                        handleInputChange("password", e.target.value)
-                      }
+                      onChange={(e) => {
+                        handleInputChange("password", e.target.value);
+                        const err = validatePassword(e.target.value);
+                        setPasswordError(err);
+                      }}
+                      disabled={isResettingPassword}
                     />
                     <button
                       type="button"
                       className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
                       onClick={() => setShowPassword((prev) => !prev)}
+                      disabled={isResettingPassword}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
+                  {passwordError && (
+                    <p className="text-sm text-red-600">{passwordError}</p>
+                  )}
 
                   <div className="relative">
                     <Input
@@ -193,11 +295,13 @@ export default function ForgotPassword() {
                       onChange={(e) =>
                         handleInputChange("confirm", e.target.value)
                       }
+                      disabled={isResettingPassword}
                     />
                     <button
                       type="button"
                       className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
                       onClick={() => setShowConfirm((prev) => !prev)}
+                      disabled={isResettingPassword}
                     >
                       {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
@@ -207,8 +311,9 @@ export default function ForgotPassword() {
                     variant="default"
                     className="w-full h-12 text-base bg-emerald-700 hover:bg-emerald-600 text-white"
                     onClick={handleResetPassword}
+                    disabled={isResettingPassword}
                   >
-                    Update Password
+                    {isResettingPassword ? "Updating..." : "Update Password"}
                   </Button>
                 </div>
               )}

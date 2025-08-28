@@ -1,5 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { AuthResponse, SearchAccountsParams } from "@/types/auth";
+import {
+  AuthResponse,
+  ResetPasswordRequest,
+  SearchAccountsParams,
+} from "@/types/auth";
 
 import {
   getAuthResponse,
@@ -32,6 +36,9 @@ import {
   getAppraisalCouncilUserRoleByProjectId,
   getCreatorByProposalProjectId,
   getAllUserRoleAdmin,
+  forgotPassword,
+  verifyOtp,
+  resetPassword,
 } from "@/services/resources/auth";
 import {
   UserRole,
@@ -539,3 +546,22 @@ export function useAllUserRoleAdmin() {
     staleTime: 30000,
   });
 }
+
+export const useForgotPasswordMutation = () => {
+  return useMutation({
+    mutationFn: (email: string) => forgotPassword(email),
+  });
+};
+
+export const useVerifyOtpMutation = () => {
+  return useMutation({
+    mutationFn: ({ email, otp }: { email: string; otp: string }) =>
+      verifyOtp(email, otp),
+  });
+};
+
+export const useResetPasswordMutation = () => {
+  return useMutation({
+    mutationFn: (data: ResetPasswordRequest) => resetPassword(data),
+  });
+};

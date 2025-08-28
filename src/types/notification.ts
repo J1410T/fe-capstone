@@ -3,7 +3,7 @@
 export interface NotificationRequest {
   title: string;
   type: "project";
-  status: "pending" | "create";
+  status: "pending" | "created";
   "objec-notification-id": string;
   "list-account-id": string[];
 }
@@ -37,7 +37,7 @@ export interface NotificationItem {
   "account-id": string;
   "is-read": boolean;
   "is-global-send": boolean;
-  status: "pending" | "approved" | "rejected" | "create";
+  status: "pending" | "approved" | "rejected" | "created";
 }
 
 export interface NotificationListResponse {

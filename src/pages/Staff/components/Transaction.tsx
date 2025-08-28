@@ -39,6 +39,9 @@ const TransactionManagement: React.FC = () => {
   // State for tabs and filtering
   const [activeTab, setActiveTab] = useState("pending");
 
+  // State for tabs and filtering
+  const [activeTab, setActiveTab] = useState("pending");
+
   // State for search and pagination
   const [searchKeyword, setSearchKeyword] = useState("");
   const [sortBy, setSortBy] = useState(0); // 0 = RequestDate, 2 = Title
@@ -67,6 +70,7 @@ const TransactionManagement: React.FC = () => {
     type: "",
     "fee-cost": 0,
     "total-money": 0,
+    "pay-method": "transfer",
     "pay-method": "transfer",
     status: "",
     "project-id": "",
@@ -105,6 +109,15 @@ const TransactionManagement: React.FC = () => {
   const columns = useMemo<ColumnDef<TransactionDetail>[]>(
     () => [
       {
+        accessorKey: "code",
+        header: "Transaction Code",
+        cell: ({ row }) => (
+          <div className="font-mono text-sm font-medium">
+            {row.getValue("code")}
+          </div>
+        ),
+      },
+      {
         accessorKey: "title",
         header: "Title",
         cell: ({ row }) => (
@@ -129,6 +142,19 @@ const TransactionManagement: React.FC = () => {
         cell: ({ row }) => {
           const amount = row.getValue("total-money") as number;
           return (
+            <div className="flex items-center gap-1 font-semibold text-green-600">
+              <DollarSign className="w-4 h-4" />
+              <span>{amount.toLocaleString()} VND</span>
+            </div>
+          );
+        },
+      },
+      {
+        accessorKey: "total-money",
+        header: "Amount",
+        cell: ({ row }) => {
+          const amount = row.getValue("total-money") as number;
+          return (
             <div className="font-semibold text-green-600">
               {amount.toLocaleString()} VND
             </div>
@@ -136,11 +162,17 @@ const TransactionManagement: React.FC = () => {
         },
       },
       {
-        accessorKey: "status",
-        header: "Status",
-        cell: ({ row }) => (
-          <StatusBadge status={row.getValue("status")} size="sm" />
-        ),
+        accessorKey: "request-date",
+        header: "Request Date",
+        cell: ({ row }) => {
+          const date = row.getValue("request-date") as string;
+          return (
+            <div className="flex items-center gap-1 text-sm">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <span>{new Date(date).toLocaleDateString("vi-VN")}</span>
+            </div>
+          );
+        },
       },
       {
         accessorKey: "request-date",
@@ -153,6 +185,13 @@ const TransactionManagement: React.FC = () => {
             </div>
           );
         },
+      },
+      {
+        accessorKey: "status",
+        header: "Status",
+        cell: ({ row }) => (
+          <StatusBadge status={row.getValue("status")} size="sm" />
+        ),
       },
       {
         id: "actions",
@@ -426,6 +465,7 @@ const TransactionManagement: React.FC = () => {
         "fee-cost": formData["fee-cost"],
         "total-money": formData["total-money"],
         "pay-method": "transfer",
+        "pay-method": "transfer",
         status: formData.status,
         "project-id": formData["project-id"] || null,
         "evaluation-stage-id": formData["evaluation-stage-id"] || null,
@@ -441,6 +481,7 @@ const TransactionManagement: React.FC = () => {
         type: "",
         "fee-cost": 0,
         "total-money": 0,
+        "pay-method": "transfer",
         "pay-method": "transfer",
         status: "",
         "project-id": "",
@@ -511,6 +552,31 @@ const TransactionManagement: React.FC = () => {
     setActiveTab(tabValue);
     setCurrentPage(1); // Reset to first page when changing tab
   };
+  // Get transactions from API and filter by active tab
+  const allTransactions = transactionData?.["data-list"] || [];
+  const currentTabStatus = TRANSACTION_TABS.find(
+    (tab) => tab.value === activeTab
+  )?.status;
+
+  // Filter transactions based on active tab
+  const transactions = allTransactions.filter((transaction) => {
+    if (currentTabStatus === "rejected") {
+      // Include both rejected and cancelled statuses
+      return (
+        transaction.status === "rejected" || transaction.status === "cancelled"
+      );
+    }
+    return transaction.status === currentTabStatus;
+  });
+
+  const totalCount = transactions.length;
+  const allTotalCount = transactionData?.["total-count"] || 0;
+
+  // Handle tab change
+  const handleTabChange = (tabValue: string) => {
+    setActiveTab(tabValue);
+    setCurrentPage(1); // Reset to first page when changing tab
+  };
 
   // Handle search
   const handleSearch = (keyword: string) => {
@@ -531,6 +597,7 @@ const TransactionManagement: React.FC = () => {
         title="Transaction Management"
         description="Manage financial transactions and payment requests"
         badge={{
+          text: `${allTotalCount} total transactions`,
           text: `${allTotalCount} total transactions`,
           variant: "secondary",
         }}
@@ -566,6 +633,61 @@ const TransactionManagement: React.FC = () => {
               </div>
             </div>
 
+      {/* Transaction Status Tabs */}
+      <Tabs
+        value={activeTab}
+        onValueChange={handleTabChange}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-5 lg:w-fit">
+          {TRANSACTION_TABS.map((tab) => (
+            <TabsTrigger
+              key={tab.value}
+              value={tab.value}
+              className="text-xs sm:text-sm"
+            >
+              {tab.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {TRANSACTION_TABS.map((tab) => (
+          <TabsContent key={tab.value} value={tab.value} className="space-y-4">
+            {/* Tab Header with Count */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-semibold">{tab.label}</h3>
+                <Badge variant="secondary" className="text-xs">
+                  {totalCount} transactions
+                </Badge>
+              </div>
+            </div>
+
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+              <div className="flex-1 min-w-0">
+                <Input
+                  placeholder="Search transactions..."
+                  value={searchKeyword}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="w-full max-w-none sm:max-w-sm"
+                />
+              </div>
+              <div className="flex-shrink-0">
+                <Select
+                  value={sortBy === 2 ? "title" : "date"}
+                  onValueChange={handleSortChange}
+                >
+                  <SelectTrigger className="w-full sm:w-[160px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Request Date</SelectItem>
+                    <SelectItem value="title">Title</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             {/* Search and Filter Bar */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
               <div className="flex-1 min-w-0">

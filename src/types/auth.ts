@@ -283,3 +283,35 @@ export interface TeamMember {
   status: string;
   scientificCV?: string;
 }
+
+// Auth API Types
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ForgotPasswordResponse {
+  message: string;
+  ttl: number;
+}
+
+export interface VerifyOtpRequest {
+  email: string;
+  otp: string;
+}
+
+export interface VerifyOtpResponse {
+  message: string;
+  attempt: number;
+  "expiration-time": string;
+}
+
+export interface ResetPasswordRequest {
+  email: string;
+  otp: string;
+  "new-password": string;
+  "confirm-password": string;
+}
+
+export interface ResetPasswordResponse {
+  message: string;
+}

@@ -343,7 +343,7 @@ const DocumentTab: React.FC<DocumentTabProps> = ({
       const notificationRequest: NotificationRequest = {
         title: `Check and Sign Contract project: ${projectData?.data["project-detail"]["english-title"]}`,
         type: "project",
-        status: "create",
+        status: "created",
         "objec-notification-id": projectId || "",
         "list-account-id": staffAccountId,
       };
