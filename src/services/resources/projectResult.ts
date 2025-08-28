@@ -81,6 +81,33 @@ export const getProjectResult = async (
   }
 };
 
+export const getAllProjectResults =
+  async (): Promise<ProjectResultListResponse> => {
+    try {
+      const accessToken = getAccessToken();
+
+      // Gọi API list để lấy tất cả project results
+      const response = await axiosClient.post<ProjectResultListResponse>(
+        "/project-result/list",
+        {
+          "page-index": 0,
+          "page-size": 0, // 0 để lấy tất cả
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("getAllProjectResults error:", error);
+      throw error;
+    }
+  };
+
 export const createProjectResult = async (
   data: Record<string, unknown> // Flexible payload cho basic vs application
 ): Promise<ProjectResultResponse> => {

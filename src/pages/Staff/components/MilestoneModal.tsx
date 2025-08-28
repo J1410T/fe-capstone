@@ -15,6 +15,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
 import {
   CheckCircle,
   Clock,
@@ -28,6 +30,8 @@ import {
   Edit2,
   Trash2,
   Save,
+  FileText,
+  Info,
 } from "lucide-react";
 import {
   useMilestonesByProjectId,
@@ -41,9 +45,11 @@ import {
   useUpdateTask,
   useDeleteTask,
 } from "@/hooks/queries/task";
+import { useProject, useUpdateProject } from "@/hooks/queries/project";
 import { format } from "date-fns";
 import { ProjectTask } from "@/types/task";
 import { Milestone } from "@/types/milestone";
+import { Proposal } from "@/types/project";
 import { toast } from "sonner";
 import { useBaseUserRoleId } from "@/hooks/queries";
 import { Loading } from "@/components";
@@ -174,6 +180,404 @@ const formatDateTimeLocal = (dateString: string): string => {
   }
 };
 
+// Proposal Form Component
+const ProposalForm: React.FC<{
+  proposal?: Proposal;
+  projectId: string;
+  onSave: () => void;
+  onCancel: () => void;
+}> = ({ proposal, projectId, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    "english-title": proposal?.["english-title"] || "",
+    "vietnamese-title": proposal?.["vietnamese-title"] || "",
+    description: proposal?.description || "",
+    "requirement-note": proposal?.["requirement-note"] || "",
+    budget: proposal?.budget || 0,
+    duration: proposal?.duration || 0,
+    "maximum-member": proposal?.["maximum-member"] || 1,
+    language: proposal?.language || "",
+    category: proposal?.category || "",
+    type: proposal?.type || "",
+    genre: proposal?.genre || "",
+    abbreviations: proposal?.abbreviations || "",
+    "start-date": proposal?.["start-date"]
+      ? proposal["start-date"].split("T")[0]
+      : "",
+    "end-date": proposal?.["end-date"]
+      ? proposal["end-date"].split("T")[0]
+      : "",
+  });
+
+  const [validationErrors, setValidationErrors] = useState<{
+    startDate?: string;
+    endDate?: string;
+  }>({});
+
+  const updateProjectMutation = useUpdateProject();
+
+  // Validation function for proposal dates
+  const validateProposalDates = useCallback(
+    (startDate: string, endDate: string) => {
+      const errors: { startDate?: string; endDate?: string } = {};
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      if (startDate) {
+        const startDateTime = new Date(startDate);
+        if (startDateTime < today) {
+          errors.startDate = "Start date cannot be in the past";
+        }
+      }
+
+      if (endDate) {
+        const endDateTime = new Date(endDate);
+        if (endDateTime < today) {
+          errors.endDate = "End date cannot be in the past";
+        }
+      }
+
+      if (startDate && endDate) {
+        const startDateTime = new Date(startDate);
+        const endDateTime = new Date(endDate);
+
+        if (endDateTime <= startDateTime) {
+          errors.endDate = "End date must be after start date";
+        }
+      }
+
+      return errors;
+    },
+    []
+  );
+
+  // Real-time validation when dates change
+  const startDate = formData["start-date"];
+  const endDate = formData["end-date"];
+
+  useEffect(() => {
+    const errors = validateProposalDates(startDate, endDate);
+    setValidationErrors(errors);
+  }, [startDate, endDate, validateProposalDates]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Final validation before submit
+    const errors = validateProposalDates(
+      formData["start-date"],
+      formData["end-date"]
+    );
+    if (Object.keys(errors).length > 0) {
+      toast.error("Please fix validation errors before submitting");
+      return;
+    }
+
+    try {
+      const submitData = {
+        ...formData,
+        "start-date": formData["start-date"]
+          ? new Date(formData["start-date"]).toISOString()
+          : null,
+        "end-date": formData["end-date"]
+          ? new Date(formData["end-date"]).toISOString()
+          : null,
+      };
+
+      await updateProjectMutation.mutateAsync({
+        projectId: projectId,
+        data: submitData,
+      });
+
+      toast.success("Proposal updated successfully");
+      onSave();
+    } catch (error) {
+      console.error("Error updating proposal:", error);
+      toast.error("Failed to update proposal");
+    }
+  };
+
+  const isFormValid = Object.keys(validationErrors).length === 0;
+
+  return (
+    <div className="max-h-[60vh] overflow-y-auto">
+      <form onSubmit={handleSubmit} className="space-y-4 pr-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              English Title
+            </label>
+            <Input
+              type="text"
+              value={formData["english-title"]}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  "english-title": e.target.value,
+                }))
+              }
+              required
+              placeholder="Enter English title"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Vietnamese Title
+            </label>
+            <Input
+              type="text"
+              value={formData["vietnamese-title"]}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  "vietnamese-title": e.target.value,
+                }))
+              }
+              required
+              placeholder="Enter Vietnamese title"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Description
+          </label>
+          <Textarea
+            value={formData.description}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, description: e.target.value }))
+            }
+            placeholder="Enter project description"
+            rows={4}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Requirement Note
+          </label>
+          <Textarea
+            value={formData["requirement-note"]}
+            onChange={(e) =>
+              setFormData((prev) => ({
+                ...prev,
+                "requirement-note": e.target.value,
+              }))
+            }
+            placeholder="Enter requirement notes"
+            rows={3}
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Budget (VND)
+            </label>
+            <Input
+              type="number"
+              value={formData.budget}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  budget: Number(e.target.value),
+                }))
+              }
+              min="0"
+              placeholder="Enter budget"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Duration (months)
+            </label>
+            <Input
+              type="number"
+              value={formData.duration}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  duration: Number(e.target.value),
+                }))
+              }
+              min="1"
+              placeholder="Enter duration"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Maximum Members
+            </label>
+            <Input
+              type="number"
+              value={formData["maximum-member"]}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  "maximum-member": Number(e.target.value),
+                }))
+              }
+              min="1"
+              placeholder="Enter max members"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Language
+            </label>
+            <Select
+              value={formData.language}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, language: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select language" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="vietnamese">Vietnamese</SelectItem>
+                <SelectItem value="english">English</SelectItem>
+                <SelectItem value="both">Both</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <Input
+              type="text"
+              value={formData.category}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, category: e.target.value }))
+              }
+              placeholder="Enter category"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Type
+            </label>
+            <Input
+              type="text"
+              value={formData.type}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, type: e.target.value }))
+              }
+              placeholder="Enter type"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Genre
+            </label>
+            <Input
+              type="text"
+              value={formData.genre}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, genre: e.target.value }))
+              }
+              placeholder="Enter genre"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Abbreviations
+            </label>
+            <Input
+              type="text"
+              value={formData.abbreviations}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  abbreviations: e.target.value,
+                }))
+              }
+              placeholder="Enter abbreviations"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Start Date
+            </label>
+            <Input
+              type="date"
+              value={formData["start-date"]}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  "start-date": e.target.value,
+                }))
+              }
+              className={validationErrors.startDate ? "border-red-500" : ""}
+            />
+            {validationErrors.startDate && (
+              <p className="text-red-500 text-xs mt-1">
+                {validationErrors.startDate}
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              End Date
+            </label>
+            <Input
+              type="date"
+              value={formData["end-date"]}
+              onChange={(e) =>
+                setFormData((prev) => ({ ...prev, "end-date": e.target.value }))
+              }
+              className={validationErrors.endDate ? "border-red-500" : ""}
+            />
+            {validationErrors.endDate && (
+              <p className="text-red-500 text-xs mt-1">
+                {validationErrors.endDate}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex justify-end gap-2 pt-4 border-t">
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            disabled={updateProjectMutation.isPending || !isFormValid}
+          >
+            {updateProjectMutation.isPending ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Updating...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4 mr-2" />
+                Update Proposal
+              </>
+            )}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
 // Milestone Form Component with updated validation
 const MilestoneForm: React.FC<{
   milestone?: Milestone;
@@ -244,13 +648,13 @@ const MilestoneForm: React.FC<{
   );
 
   // Real-time validation when dates change
+  const milestoneStartDate = formData["start-date"];
+  const milestoneEndDate = formData["end-date"];
+
   useEffect(() => {
-    const errors = validateMilestoneDates(
-      formData["start-date"],
-      formData["end-date"]
-    );
+    const errors = validateMilestoneDates(milestoneStartDate, milestoneEndDate);
     setValidationErrors(errors);
-  }, [formData["start-date"], formData["end-date"], validateMilestoneDates]);
+  }, [milestoneStartDate, milestoneEndDate, validateMilestoneDates]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -481,13 +885,13 @@ const TaskForm: React.FC<{
   );
 
   // Real-time validation when dates change
+  const taskStartDate = formData["start-date"];
+  const taskEndDate = formData["end-date"];
+
   useEffect(() => {
-    const errors = validateTaskDates(
-      formData["start-date"],
-      formData["end-date"]
-    );
+    const errors = validateTaskDates(taskStartDate, taskEndDate);
     setValidationErrors(errors);
-  }, [formData["start-date"], formData["end-date"], validateTaskDates]);
+  }, [taskStartDate, taskEndDate, validateTaskDates]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1011,6 +1415,10 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
   projectId,
   projectName,
 }) => {
+  // Tab state
+  const [activeTab, setActiveTab] = useState("milestones");
+
+  // Milestone states
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(
     null
   );
@@ -1022,10 +1430,15 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
   const [creatingTask, setCreatingTask] = useState<string | null>(null);
   const [hasCreatedMeetingMilestone, setHasCreatedMeetingMilestone] =
     useState(false);
+
+  // Proposal states
+  const [editingProposal, setEditingProposal] = useState(false);
+
   const queryClient = useQueryClient();
 
   // API hooks
   const { data: milestonesData } = useMilestonesByProjectId(projectId);
+  const { data: projectData } = useProject(projectId);
   const { data: userRoleData } = useBaseUserRoleId();
   const createMilestoneMutation = useCreateMilestone();
   const deleteMilestoneMutation = useDeleteMilestone();
@@ -1133,8 +1546,9 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
     milestonesData?.data,
     userRoleData?.data,
     projectId,
-    hasCreatedMeetingMilestone, // Thêm dependency này
-    // Bỏ createMilestoneMutation khỏi dependencies để tránh re-run
+    hasCreatedMeetingMilestone,
+    createMilestoneMutation,
+    queryClient,
   ]);
   const apiMilestones = useMemo(
     () => milestonesData?.data || [],
@@ -1238,6 +1652,11 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
     }
   };
 
+  // Handle proposal operations
+  const handleEditProposal = () => {
+    setEditingProposal(true);
+  };
+
   // Handle form submissions
   const handleMilestoneFormSave = () => {
     setEditingMilestone(null);
@@ -1249,19 +1668,29 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
     setCreatingTask(null);
   };
 
+  const handleProposalFormSave = () => {
+    setEditingProposal(false);
+  };
+
   // Reset forms when modal closes
   const handleClose = () => {
+    setActiveTab("milestones");
     setEditingMilestone(null);
     setCreatingMilestone(false);
     setEditingTask(null);
     setCreatingTask(null);
+    setEditingProposal(false);
     setHasCreatedMeetingMilestone(false); // Reset flag khi đóng modal
     onClose();
   };
 
   // Check if any form is open
   const isFormOpen =
-    creatingMilestone || editingMilestone || creatingTask || editingTask;
+    creatingMilestone ||
+    editingMilestone ||
+    creatingTask ||
+    editingTask ||
+    editingProposal;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -1272,31 +1701,29 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
               <Target className="h-6 w-6 text-blue-600" />
               <div>
                 <DialogTitle className="text-xl font-bold">
-                  Project Milestones
+                  Project Management
                 </DialogTitle>
                 <p className="text-sm text-gray-600 mt-1">{projectName}</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
-              {!isFormOpen && (
+              {!isFormOpen && activeTab === "milestones" && (
                 <Button onClick={handleCreateMilestone} size="sm">
                   <Plus className="w-4 h-4 mr-2" />
                   Add Milestone
                 </Button>
               )}
-              {/* <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClose}
-                className="h-8 w-8 p-0"
-              >
-                <X className="h-4 w-4" />
-              </Button> */}
+              {!isFormOpen && activeTab === "proposal" && (
+                <Button onClick={handleEditProposal} size="sm">
+                  <Edit2 className="w-4 h-4 mr-2" />
+                  Edit Proposal
+                </Button>
+              )}
             </div>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 flex flex-col gap-4 overflow-hidden min-h-0">
+        <div className="flex-1 flex flex-col gap-4 min-h-0">
           {/* Task fetchers - invisible components that handle data fetching */}
           {milestoneIds.map((milestoneId) => (
             <MilestoneTaskFetcher
@@ -1305,6 +1732,343 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
               onTasksLoaded={handleTasksLoaded}
             />
           ))}
+
+          {/* Tabs */}
+          {!isFormOpen && (
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="flex-1 flex flex-col min-h-0"
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger
+                  value="milestones"
+                  className="flex items-center gap-2"
+                >
+                  <Target className="w-4 h-4" />
+                  Milestones & Tasks
+                </TabsTrigger>
+                <TabsTrigger
+                  value="proposal"
+                  className="flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Proposal Information
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent
+                value="milestones"
+                className="flex-1 flex flex-col mt-4 min-h-0"
+              >
+                {/* Milestones Content */}
+                {/* Statistics Cards */}
+                <div className="flex-shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                  <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-600" />
+                      <div>
+                        <p className="text-xl font-bold text-green-900">
+                          {completedMilestones}
+                        </p>
+                        <p className="text-xs text-green-700">Completed</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      <div>
+                        <p className="text-xl font-bold text-blue-900">
+                          {inProgressMilestones}
+                        </p>
+                        <p className="text-xs text-blue-700">In Progress</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-orange-600" />
+                      <div>
+                        <p className="text-xl font-bold text-orange-900">
+                          {notStartedMilestones}
+                        </p>
+                        <p className="text-xs text-orange-700">Not Started</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
+                    <div className="flex items-center gap-2">
+                      <Target className="w-4 h-4 text-purple-600" />
+                      <div>
+                        <p className="text-xl font-bold text-purple-900">
+                          {totalTasks}
+                        </p>
+                        <p className="text-xs text-purple-700">Total Tasks</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Milestones List */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="space-y-3 pr-2">
+                    {milestones.length > 0 ? (
+                      milestones.map((milestone) => {
+                        const tasks = milestoneTasksMap[milestone.id] || [];
+                        const isLoading = loadingMap[milestone.id] ?? true;
+                        const progress =
+                          tasks.length > 0
+                            ? Math.round(
+                                (tasks.filter((t) => t.status === "Completed")
+                                  .length /
+                                  tasks.length) *
+                                  100
+                              )
+                            : 0;
+
+                        return (
+                          <MilestoneCard
+                            key={milestone.id}
+                            milestone={milestone}
+                            tasks={tasks}
+                            progress={progress}
+                            isLoading={isLoading}
+                            onEdit={() => handleEditMilestone(milestone)}
+                            onDelete={() => handleDeleteMilestone(milestone)}
+                            onAddTask={() => handleCreateTask(milestone.id)}
+                            onEditTask={(task) =>
+                              handleEditTask(task, milestone.id)
+                            }
+                            onDeleteTask={handleDeleteTask}
+                          />
+                        );
+                      })
+                    ) : (
+                      <div className="text-center py-12 bg-gray-50 rounded-lg">
+                        <div className="max-w-md mx-auto">
+                          <div className="p-3 bg-gray-200 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
+                            <Clock className="w-6 h-6 text-gray-400" />
+                          </div>
+                          <h3 className="text-base font-semibold text-gray-900 mb-2">
+                            No milestones found
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-4">
+                            Milestones will appear here once they are created
+                            for this project.
+                          </p>
+                          <Button onClick={handleCreateMilestone}>
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create First Milestone
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent
+                value="proposal"
+                className="flex-1 flex flex-col mt-4 min-h-0"
+              >
+                {/* Proposal Content */}
+                {projectData?.data ? (
+                  <div className="flex-1 overflow-y-auto pr-2 min-h-0">
+                    <div className="bg-white rounded-lg border p-6 space-y-6">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Info className="w-5 h-5 text-blue-600" />
+                          <h3 className="text-lg font-semibold">
+                            Proposal Details
+                          </h3>
+                        </div>
+                        <Badge variant="secondary">
+                          Status: {projectData.data["project-detail"].status}
+                        </Badge>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              English Title
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {
+                                projectData.data["project-detail"][
+                                  "english-title"
+                                ]
+                              }
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Vietnamese Title
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {
+                                projectData.data["project-detail"][
+                                  "vietnamese-title"
+                                ]
+                              }
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Category
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {projectData.data["project-detail"].category}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Type
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {projectData.data["project-detail"].type}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Genre
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {projectData.data["project-detail"].genre}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Budget
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {projectData.data[
+                                "project-detail"
+                              ].budget?.toLocaleString()}{" "}
+                              VND
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Duration
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {projectData.data["project-detail"].duration}{" "}
+                              months
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Maximum Members
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {
+                                projectData.data["project-detail"][
+                                  "maximum-member"
+                                ]
+                              }
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Language
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900 capitalize">
+                              {projectData.data["project-detail"].language}
+                            </p>
+                          </div>
+                          <div>
+                            <label className="text-sm font-medium text-gray-700">
+                              Progress
+                            </label>
+                            <p className="mt-1 text-sm text-gray-900">
+                              {projectData.data["project-detail"].progress}%
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {projectData.data["project-detail"].description && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">
+                            Description
+                          </label>
+                          <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
+                            {projectData.data["project-detail"].description}
+                          </p>
+                        </div>
+                      )}
+
+                      {projectData.data["project-detail"][
+                        "requirement-note"
+                      ] && (
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">
+                            Requirement Note
+                          </label>
+                          <p className="mt-1 text-sm text-gray-900 whitespace-pre-wrap">
+                            {
+                              projectData.data["project-detail"][
+                                "requirement-note"
+                              ]
+                            }
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">
+                            Start Date
+                          </label>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {projectData.data["project-detail"]["start-date"]
+                              ? format(
+                                  new Date(
+                                    projectData.data["project-detail"][
+                                      "start-date"
+                                    ]
+                                  ),
+                                  "MMM dd, yyyy"
+                                )
+                              : "Not set"}
+                          </p>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">
+                            End Date
+                          </label>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {projectData.data["project-detail"]["end-date"]
+                              ? format(
+                                  new Date(
+                                    projectData.data["project-detail"][
+                                      "end-date"
+                                    ]
+                                  ),
+                                  "MMM dd, yyyy"
+                                )
+                              : "Not set"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex-1 flex items-center justify-center">
+                    <Loading />
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          )}
 
           {/* Forms */}
           {creatingMilestone && (
@@ -1355,115 +2119,15 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
             </div>
           )}
 
-          {/* Statistics Cards */}
-          {!isFormOpen && (
-            <div className="flex-shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <div>
-                    <p className="text-xl font-bold text-green-900">
-                      {completedMilestones}
-                    </p>
-                    <p className="text-xs text-green-700">Completed</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-blue-600" />
-                  <div>
-                    <p className="text-xl font-bold text-blue-900">
-                      {inProgressMilestones}
-                    </p>
-                    <p className="text-xs text-blue-700">In Progress</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
-                <div className="flex items-center gap-2">
-                  <AlertTriangle className="w-4 h-4 text-orange-600" />
-                  <div>
-                    <p className="text-xl font-bold text-orange-900">
-                      {notStartedMilestones}
-                    </p>
-                    <p className="text-xs text-orange-700">Not Started</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-purple-600" />
-                  <div>
-                    <p className="text-xl font-bold text-purple-900">
-                      {totalTasks}
-                    </p>
-                    <p className="text-xs text-purple-700">Total Tasks</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Milestones List */}
-          {!isFormOpen && (
-            <div className="flex-1 overflow-y-auto">
-              <div className="space-y-3 pr-2">
-                {milestones.length > 0 ? (
-                  milestones.map((milestone) => {
-                    const tasks = milestoneTasksMap[milestone.id] || [];
-                    const isLoading = loadingMap[milestone.id] ?? true;
-                    const progress =
-                      tasks.length > 0
-                        ? Math.round(
-                            (tasks.filter((t) => t.status === "Completed")
-                              .length /
-                              tasks.length) *
-                              100
-                          )
-                        : 0;
-
-                    return (
-                      <MilestoneCard
-                        key={milestone.id}
-                        milestone={milestone}
-                        tasks={tasks}
-                        progress={progress}
-                        isLoading={isLoading}
-                        onEdit={() => handleEditMilestone(milestone)}
-                        onDelete={() => handleDeleteMilestone(milestone)}
-                        onAddTask={() => handleCreateTask(milestone.id)}
-                        onEditTask={(task) =>
-                          handleEditTask(task, milestone.id)
-                        }
-                        onDeleteTask={handleDeleteTask}
-                      />
-                    );
-                  })
-                ) : (
-                  <div className="text-center py-12 bg-gray-50 rounded-lg">
-                    <div className="max-w-md mx-auto">
-                      <div className="p-3 bg-gray-200 rounded-full w-12 h-12 mx-auto mb-4 flex items-center justify-center">
-                        <Clock className="w-6 h-6 text-gray-400" />
-                      </div>
-                      <h3 className="text-base font-semibold text-gray-900 mb-2">
-                        No milestones found
-                      </h3>
-                      <p className="text-sm text-gray-600 mb-4">
-                        Milestones will appear here once they are created for
-                        this project.
-                      </p>
-                      <Button onClick={handleCreateMilestone}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Create First Milestone
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
+          {editingProposal && (
+            <div className="flex-shrink-0 bg-gray-50 rounded-lg p-4 border">
+              <h3 className="text-lg font-semibold mb-4">Edit Proposal</h3>
+              <ProposalForm
+                proposal={projectData?.data?.["project-detail"] as Proposal}
+                projectId={projectId}
+                onSave={handleProposalFormSave}
+                onCancel={() => setEditingProposal(false)}
+              />
             </div>
           )}
         </div>
