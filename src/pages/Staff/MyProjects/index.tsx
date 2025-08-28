@@ -89,7 +89,9 @@ const MyProjects: React.FC = () => {
   };
 
   // Ensure projects is always an array
-  const safeProjects = Array.isArray(projects) ? projects : [];
+  const safeProjects = useMemo(() => {
+    return Array.isArray(projects) ? projects : [];
+  }, [projects]);
 
   const filteredProjects = safeProjects.filter((project) => {
     if (!project || typeof project !== "object") return false;

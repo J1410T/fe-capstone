@@ -67,12 +67,6 @@ interface TransactionRequest {
   "evaluation-stage-id"?: string;
 }
 
-// Transaction types available for request
-const TRANSACTION_TYPES = [
-  { value: "project", label: "Project" },
-  { value: "evaluationstage", label: "Evaluation Stage" },
-];
-
 const BudgetTab: React.FC<BudgetTabProps> = ({
   projectId,
   category,

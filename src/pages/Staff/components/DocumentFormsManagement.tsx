@@ -213,19 +213,19 @@ const DocumentFormsManagement: React.FC = () => {
 
     return { data: { "data-list": allTemplates } };
   }, [
-    bm1Query.data,
-    bm2Query.data,
-    bm3Query.data,
-    bm4Query.data,
-    bm5Query.data,
-    bm6Query.data,
-    bm7Query.data,
-    bm8Query.data,
-    bm9Query.data,
-    bm10Query.data,
-    bm11Query.data,
-    bm12Query.data,
-    bm13Query.data,
+    bm1Query,
+    bm2Query,
+    bm3Query,
+    bm4Query,
+    bm5Query,
+    bm6Query,
+    bm7Query,
+    bm8Query,
+    bm9Query,
+    bm10Query,
+    bm11Query,
+    bm12Query,
+    bm13Query,
   ]);
 
   // Loading and error states
