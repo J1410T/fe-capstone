@@ -592,6 +592,31 @@ const TransactionManagement: React.FC = () => {
                 </Select>
               </div>
             </div>
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+              <div className="flex-1 min-w-0">
+                <Input
+                  placeholder="Search transactions..."
+                  value={searchKeyword}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="w-full max-w-none sm:max-w-sm"
+                />
+              </div>
+              <div className="flex-shrink-0">
+                <Select
+                  value={sortBy === 2 ? "title" : "date"}
+                  onValueChange={handleSortChange}
+                >
+                  <SelectTrigger className="w-full sm:w-[160px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Request Date</SelectItem>
+                    <SelectItem value="title">Title</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             {/* Data Table */}
             <div className="w-full">
