@@ -7,6 +7,8 @@ import {
   UserRolesResponse,
   MajorDistributionResponse,
   DateRangeParams,
+  TimeSeriesParams,
+  TimeSeriesResponse,
 } from "@/types/dashboard";
 import { axiosClient, getAccessToken } from "../api";
 
@@ -87,6 +89,22 @@ export const getMajorDistribution = async (params?: DateRangeParams) => {
   }`;
 
   return await axiosClient.get<MajorDistributionResponse>(url, {
+    headers: getAuthHeaders(),
+  });
+};
+
+export const getTimeSeries = async (params?: TimeSeriesParams) => {
+  const queryParams = new URLSearchParams();
+  if (params?.from) queryParams.append("from", params.from);
+  if (params?.to) queryParams.append("to", params.to);
+  if (params?.granularity)
+    queryParams.append("granularity", params.granularity);
+
+  const url = `/dashboard/timeseries${
+    queryParams.toString() ? `?${queryParams.toString()}` : ""
+  }`;
+
+  return await axiosClient.get<TimeSeriesResponse>(url, {
     headers: getAuthHeaders(),
   });
 };

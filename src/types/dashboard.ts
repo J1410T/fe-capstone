@@ -56,3 +56,19 @@ export interface DateRangeParams {
   from?: string | null;
   to?: string | null;
 }
+
+export interface TimeSeriesDataPoint {
+  projects: number;
+  evaluations: number;
+  milestones: number;
+  users: number;
+  transactions: number;
+}
+
+export interface TimeSeriesResponse {
+  [date: string]: TimeSeriesDataPoint;
+}
+
+export interface TimeSeriesParams extends DateRangeParams {
+  granularity?: "daily" | "weekly" | "monthly";
+}
