@@ -2178,67 +2178,6 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
               />
             </div>
           )}
-
-          {/* Forms */}
-          {creatingMilestone && (
-            <div className="flex-shrink-0 bg-gray-50 rounded-lg p-4 border">
-              <h3 className="text-lg font-semibold mb-4">
-                Create New Milestone
-              </h3>
-              <MilestoneForm
-                projectId={projectId}
-                onSave={handleMilestoneFormSave}
-                onCancel={() => setCreatingMilestone(false)}
-              />
-            </div>
-          )}
-
-          {editingMilestone && (
-            <div className="flex-shrink-0 bg-gray-50 rounded-lg p-4 border">
-              <h3 className="text-lg font-semibold mb-4">Edit Milestone</h3>
-              <MilestoneForm
-                milestone={editingMilestone}
-                projectId={projectId}
-                onSave={handleMilestoneFormSave}
-                onCancel={() => setEditingMilestone(null)}
-              />
-            </div>
-          )}
-
-          {creatingTask && (
-            <div className="flex-shrink-0 bg-gray-50 rounded-lg p-4 border">
-              <h3 className="text-lg font-semibold mb-4">Create New Task</h3>
-              <TaskForm
-                milestoneId={creatingTask}
-                onSave={handleTaskFormSave}
-                onCancel={() => setCreatingTask(null)}
-              />
-            </div>
-          )}
-
-          {editingTask && (
-            <div className="flex-shrink-0 bg-gray-50 rounded-lg p-4 border">
-              <h3 className="text-lg font-semibold mb-4">Edit Task</h3>
-              <TaskForm
-                task={editingTask.task ?? undefined}
-                milestoneId={editingTask.milestoneId}
-                onSave={handleTaskFormSave}
-                onCancel={() => setEditingTask(null)}
-              />
-            </div>
-          )}
-
-          {editingProposal && (
-            <div className="flex-shrink-0 bg-gray-50 rounded-lg p-4 border">
-              <h3 className="text-lg font-semibold mb-4">Edit Proposal</h3>
-              <ProposalForm
-                proposal={projectData?.data?.["project-detail"] as Proposal}
-                projectId={projectId}
-                onSave={handleProposalFormSave}
-                onCancel={() => setEditingProposal(false)}
-              />
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>

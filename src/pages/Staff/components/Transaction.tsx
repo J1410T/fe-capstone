@@ -105,15 +105,6 @@ const TransactionManagement: React.FC = () => {
   const columns = useMemo<ColumnDef<TransactionDetail>[]>(
     () => [
       {
-        accessorKey: "code",
-        header: "Transaction Code",
-        cell: ({ row }) => (
-          <div className="font-mono text-sm font-medium">
-            {row.getValue("code")}
-          </div>
-        ),
-      },
-      {
         accessorKey: "title",
         header: "Title",
         cell: ({ row }) => (
@@ -145,18 +136,6 @@ const TransactionManagement: React.FC = () => {
         },
       },
       {
-        accessorKey: "total-money",
-        header: "Amount",
-        cell: ({ row }) => {
-          const amount = row.getValue("total-money") as number;
-          return (
-            <div className="font-semibold text-green-600">
-              {amount.toLocaleString()} VND
-            </div>
-          );
-        },
-      },
-      {
         accessorKey: "request-date",
         header: "Request Date",
         cell: ({ row }) => {
@@ -165,18 +144,6 @@ const TransactionManagement: React.FC = () => {
             <div className="flex items-center gap-1 text-sm">
               <Calendar className="w-4 h-4 text-muted-foreground" />
               <span>{new Date(date).toLocaleDateString("vi-VN")}</span>
-            </div>
-          );
-        },
-      },
-      {
-        accessorKey: "request-date",
-        header: "Date",
-        cell: ({ row }) => {
-          const date = row.getValue("request-date") as string;
-          return (
-            <div className="text-sm">
-              {new Date(date).toLocaleDateString("vi-VN")}
             </div>
           );
         },
@@ -600,31 +567,6 @@ const TransactionManagement: React.FC = () => {
               </div>
             </div>
 
-            {/* Search and Filter Bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
-              <div className="flex-1 min-w-0">
-                <Input
-                  placeholder="Search transactions..."
-                  value={searchKeyword}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="w-full max-w-none sm:max-w-sm"
-                />
-              </div>
-              <div className="flex-shrink-0">
-                <Select
-                  value={sortBy === 2 ? "title" : "date"}
-                  onValueChange={handleSortChange}
-                >
-                  <SelectTrigger className="w-full sm:w-[160px]">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date">Request Date</SelectItem>
-                    <SelectItem value="title">Title</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
             {/* Search and Filter Bar */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
               <div className="flex-1 min-w-0">
