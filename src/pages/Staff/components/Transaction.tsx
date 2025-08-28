@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -12,72 +11,20 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import {
-  Eye,
-  Edit,
-  Trash2,
-  Calendar,
-  DollarSign,
-  CreditCard,
-} from "lucide-react";
-import {
-  DataTable,
-  StatusBadge,
-  PageHeader,
-  FormDialog,
-  ConfirmDialog,
-} from "../shared";
-import {
-  TransactionDetail,
-  TransactionListRequest,
-  TransactionPerson,
-  TransactionProject,
-} from "@/types/transaction";
+import { Eye, Edit, Trash2, Calendar, CreditCard, Upload } from "lucide-react";
+import { DataTable, StatusBadge, PageHeader, ConfirmDialog } from "../shared";
+import { TransactionDetail, TransactionListRequest } from "@/types/transaction";
 import {
   useDeleteTransaction,
   useTransactionList,
   useUpdateTransaction,
 } from "@/hooks/queries/transaction";
-
-const DEFAULT_IMAGE_URL =
-  "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
-
-// Helper component for user avatar display
-const UserAvatar: React.FC<{
-  person: TransactionPerson | null;
-  size?: string;
-}> = ({ person, size = "h-7 w-7" }) => {
-  if (!person) return <span className="text-muted-foreground">-</span>;
-
-  const avatarUrl = person["avatar-url"] || DEFAULT_IMAGE_URL;
-  const fullName = person["full-name"] || "";
-
-  return (
-    <div className="flex items-center space-x-2 min-w-0">
-      <Avatar className={`${size} flex-shrink-0`}>
-        <AvatarImage
-          src={avatarUrl}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = DEFAULT_IMAGE_URL;
-          }}
-        />
-        <AvatarFallback className="text-xs">
-          {fullName
-            .split(" ")
-            .map((n: string) => n[0])
-            .join("")
-            .toUpperCase()}
-        </AvatarFallback>
-      </Avatar>
-      <span
-        className="font-medium text-sm truncate max-w-[80px]"
-        title={fullName}
-      >
-        {fullName}
-      </span>
-    </div>
-  );
-};
+import { useAuth } from "@/contexts";
+import {
+  uploadImageToAzure,
+  getImageUrlFromAzure,
+} from "@/services/resources/azure-image";
+import { toast } from "sonner";
 
 // Define transaction status tabs
 const TRANSACTION_TABS = [
@@ -106,6 +53,10 @@ const TransactionManagement: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmSaveDialogOpen, setIsConfirmSaveDialogOpen] = useState(false);
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [evidenceImage, setEvidenceImage] = useState<File | null>(null);
+  const [evidenceImageUrl, setEvidenceImageUrl] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -121,6 +72,13 @@ const TransactionManagement: React.FC = () => {
     "project-id": "",
     "evaluation-stage-id": "",
   });
+
+  // Approve form data state
+  const [approveFormData, setApproveFormData] = useState({
+    "sender-account": "",
+    "sender-name": "",
+    "sender-bank-name": "",
+  });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // API request parameters
@@ -131,11 +89,15 @@ const TransactionManagement: React.FC = () => {
     "page-size": pageSize,
   };
 
+  // Auth hook
+  const { user } = useAuth();
+
   // API hooks
-  const { data: transactionData, isLoading } = useTransactionList(
-    transactionRequest,
-    { enableClientEnrichment: true }
-  );
+  const {
+    data: transactionData,
+    isLoading,
+    refetch,
+  } = useTransactionList(transactionRequest, { enableClientEnrichment: true });
   const updateTransactionMutation = useUpdateTransaction();
   const deleteTransactionMutation = useDeleteTransaction();
 
@@ -156,7 +118,7 @@ const TransactionManagement: React.FC = () => {
         header: "Title",
         cell: ({ row }) => (
           <div
-            className="font-medium max-w-[150px] truncate"
+            className="font-medium max-w-[200px] truncate"
             title={row.getValue("title") as string}
           >
             {row.getValue("title")}
@@ -177,23 +139,19 @@ const TransactionManagement: React.FC = () => {
           const amount = row.getValue("total-money") as number;
           return (
             <div className="flex items-center gap-1 font-semibold text-green-600">
-              <DollarSign className="w-4 h-4" />
               <span>{amount.toLocaleString()} VND</span>
             </div>
           );
         },
       },
       {
-        accessorKey: "pay-method",
-        header: "Payment Method",
+        accessorKey: "total-money",
+        header: "Amount",
         cell: ({ row }) => {
-          const method = row.getValue("pay-method") as string;
-          const displayMethod =
-            method === "transfer" ? "Bank Transfer" : method;
+          const amount = row.getValue("total-money") as number;
           return (
-            <div className="flex items-center gap-1">
-              <CreditCard className="w-4 h-4 text-muted-foreground" />
-              <span className="text-sm capitalize">{displayMethod}</span>
+            <div className="font-semibold text-green-600">
+              {amount.toLocaleString()} VND
             </div>
           );
         },
@@ -212,46 +170,14 @@ const TransactionManagement: React.FC = () => {
         },
       },
       {
-        accessorKey: "request-person",
-        header: "Requester",
-        cell: ({ row }) => (
-          <div className="min-w-[120px]">
-            <UserAvatar person={row.getValue("request-person")} />
-          </div>
-        ),
-      },
-      {
-        accessorKey: "receiver-name",
-        header: "Receiver",
+        accessorKey: "request-date",
+        header: "Date",
         cell: ({ row }) => {
-          const receiverName = row.getValue("receiver-name") as string;
-          const receiverAccount = row.original["receiver-account"];
-          const receiverBank = row.original["receiver-bank-name"];
-
+          const date = row.getValue("request-date") as string;
           return (
-            <div className="min-w-[150px]">
-              <div className="font-medium text-sm">{receiverName}</div>
-              <div className="text-xs text-muted-foreground">
-                {receiverAccount} - {receiverBank}
-              </div>
+            <div className="text-sm">
+              {new Date(date).toLocaleDateString("vi-VN")}
             </div>
-          );
-        },
-      },
-      {
-        accessorKey: "project",
-        header: "Project",
-        cell: ({ row }) => {
-          const project = row.getValue("project") as TransactionProject | null;
-          return project ? (
-            <span
-              className="text-sm font-medium max-w-[150px] truncate block"
-              title={project["english-title"]}
-            >
-              {project["english-title"]}
-            </span>
-          ) : (
-            <span className="text-muted-foreground">-</span>
           );
         },
       },
@@ -268,33 +194,44 @@ const TransactionManagement: React.FC = () => {
         cell: ({ row }) => {
           const transaction = row.original;
           return (
-            <div className="flex items-center gap-1 min-w-[140px]">
+            <div className="flex items-center gap-1">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleView(transaction)}
                 className="px-2 h-8"
+                title="View details"
               >
                 <Eye className="w-4 h-4" />
-                <span className="hidden lg:inline ml-1">View</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => handleEdit(transaction)}
                 className="px-2 h-8"
+                title="Edit"
               >
                 <Edit className="w-4 h-4" />
-                <span className="hidden lg:inline ml-1">Edit</span>
               </Button>
+              {transaction.status === "pending" && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleApprove(transaction)}
+                  className="px-2 h-8 bg-green-600 hover:bg-green-700"
+                  title="Approve"
+                >
+                  <Upload className="w-4 h-4" />
+                </Button>
+              )}
               <Button
                 variant="destructive"
                 size="sm"
                 onClick={() => handleDelete(transaction)}
                 className="px-2 h-8"
+                title="Delete"
               >
                 <Trash2 className="w-4 h-4" />
-                <span className="hidden lg:inline ml-1">Delete</span>
               </Button>
             </div>
           );
@@ -332,6 +269,122 @@ const TransactionManagement: React.FC = () => {
   const handleDelete = (transaction: TransactionDetail) => {
     setSelectedTransaction(transaction);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleApprove = (transaction: TransactionDetail) => {
+    setSelectedTransaction(transaction);
+    setEvidenceImage(null);
+    setEvidenceImageUrl("");
+    setApproveFormData({
+      "sender-account": "",
+      "sender-name": "",
+      "sender-bank-name": "",
+    });
+    setIsApproveDialogOpen(true);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setEvidenceImage(file);
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setEvidenceImageUrl(url);
+    }
+  };
+
+  const handleApproveTransaction = async () => {
+    if (!selectedTransaction || !evidenceImage || !user) {
+      return;
+    }
+
+    // Validate sender information
+    if (!approveFormData["sender-account"].trim()) {
+      toast.error("Please enter sender account");
+      return;
+    }
+
+    if (!approveFormData["sender-name"].trim()) {
+      toast.error("Please enter sender name");
+      return;
+    }
+
+    if (!approveFormData["sender-bank-name"].trim()) {
+      toast.error("Please enter sender bank name");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Upload evidence image to Azure first
+      const uploadResponse = await uploadImageToAzure(evidenceImage);
+
+      // Get the blob name from the upload response
+      const blobName = uploadResponse.url.split("/").pop(); // Extract blob name from URL
+
+      if (!blobName) {
+        throw new Error("Failed to get blob name from upload response");
+      }
+
+      // Get the actual image URL using getImageUrlFromAzure
+      const evidenceImageUrl = await getImageUrlFromAzure(blobName);
+
+      // Update transaction with approved status using PUT /transaction
+      const response = await fetch("https://localhost:7157/api/transaction", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.accessToken}`,
+        },
+        body: JSON.stringify({
+          id: selectedTransaction.id,
+          "evidence-image": evidenceImageUrl,
+          code: selectedTransaction.code || "",
+          title: selectedTransaction.title,
+          type: selectedTransaction.type,
+          "sender-account": approveFormData["sender-account"],
+          "sender-name": approveFormData["sender-name"],
+          "sender-bank-name": approveFormData["sender-bank-name"],
+          "receiver-account": selectedTransaction["receiver-account"],
+          "receiver-name": selectedTransaction["receiver-name"],
+          "receiver-bank-name": selectedTransaction["receiver-bank-name"],
+          "transfer-content": selectedTransaction["transfer-content"] || "",
+          "request-date": selectedTransaction["request-date"],
+          "handle-date": new Date().toISOString(),
+          "fee-cost": selectedTransaction["fee-cost"],
+          "total-money": selectedTransaction["total-money"],
+          "pay-method": selectedTransaction["pay-method"],
+          status: "approved",
+          "request-person-id": selectedTransaction["request-person-id"] || "",
+          "handle-person-id": user.id,
+          "project-id": selectedTransaction["project-id"] || "",
+          "evaluation-stage-id":
+            selectedTransaction["evaluation-stage-id"] || "",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to approve transaction");
+      }
+
+      toast.success("Transaction approved successfully!");
+      setIsApproveDialogOpen(false);
+      setSelectedTransaction(null);
+      setEvidenceImage(null);
+      setEvidenceImageUrl("");
+      setApproveFormData({
+        "sender-account": "",
+        "sender-name": "",
+        "sender-bank-name": "",
+      });
+      // Reload the transaction list
+      refetch();
+    } catch (error) {
+      console.error("Approve transaction error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const validateForm = () => {
@@ -572,20 +625,41 @@ const TransactionManagement: React.FC = () => {
                 </Select>
               </div>
             </div>
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
+              <div className="flex-1 min-w-0">
+                <Input
+                  placeholder="Search transactions..."
+                  value={searchKeyword}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  className="w-full max-w-none sm:max-w-sm"
+                />
+              </div>
+              <div className="flex-shrink-0">
+                <Select
+                  value={sortBy === 2 ? "title" : "date"}
+                  onValueChange={handleSortChange}
+                >
+                  <SelectTrigger className="w-full sm:w-[160px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="date">Request Date</SelectItem>
+                    <SelectItem value="title">Title</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
             {/* Data Table */}
-            <div className="w-full overflow-hidden">
-              <div className="overflow-x-auto">
-                <div className="min-w-[1200px] transaction-table">
-                  <DataTable
-                    data={transactions}
-                    columns={columns}
-                    searchable={false}
-                    emptyMessage={`No ${tab.label.toLowerCase()} transactions found.`}
-                    loading={isLoading}
-                  />
-                </div>
-              </div>
+            <div className="w-full">
+              <DataTable
+                data={transactions}
+                columns={columns}
+                searchable={false}
+                emptyMessage={`No ${tab.label.toLowerCase()} transactions found.`}
+                loading={isLoading}
+              />
             </div>
           </TabsContent>
         ))}
@@ -593,220 +667,566 @@ const TransactionManagement: React.FC = () => {
 
       {/* View Transaction Dialog */}
       {selectedTransaction && (
-        <FormDialog
-          open={isViewDialogOpen}
-          onOpenChange={setIsViewDialogOpen}
-          config={{
-            title: "View Transaction Details",
-            description: "Complete transaction information (Read-only)",
-            fields: [
-              {
-                name: "code",
-                label: "Transaction Code",
-                type: "text",
-                required: false,
-              },
-              { name: "title", label: "Title", type: "text", required: false },
-              { name: "type", label: "Type", type: "text", required: false },
-              {
-                name: "pay-method",
-                label: "Payment Method",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "status",
-                label: "Status",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "total-money",
-                label: "Total Amount (VND)",
-                type: "number",
-                required: false,
-              },
-              {
-                name: "fee-cost",
-                label: "Fee Cost (VND)",
-                type: "number",
-                required: false,
-              },
-              {
-                name: "request-date",
-                label: "Request Date",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "handle-date",
-                label: "Handle Date",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "receiver-name",
-                label: "Receiver Name",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "receiver-account",
-                label: "Receiver Account",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "receiver-bank-name",
-                label: "Receiver Bank",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "sender-name",
-                label: "Sender Name",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "sender-account",
-                label: "Sender Account",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "sender-bank-name",
-                label: "Sender Bank",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "transfer-content",
-                label: "Transfer Content",
-                type: "text",
-                required: false,
-              },
-            ],
-          }}
-          data={{
-            code: selectedTransaction.code,
-            title: selectedTransaction.title,
-            type: selectedTransaction.type,
-            "pay-method":
-              selectedTransaction["pay-method"] === "transfer"
-                ? "Bank Transfer"
-                : selectedTransaction["pay-method"],
-            status: selectedTransaction.status,
-            "total-money": selectedTransaction["total-money"],
-            "fee-cost": selectedTransaction["fee-cost"],
-            "request-date": selectedTransaction["request-date"]
-              ? new Date(
-                  selectedTransaction["request-date"]
-                ).toLocaleDateString("vi-VN")
-              : "-",
-            "handle-date": selectedTransaction["handle-date"]
-              ? new Date(selectedTransaction["handle-date"]).toLocaleDateString(
-                  "vi-VN"
-                )
-              : "-",
-            "receiver-name": selectedTransaction["receiver-name"],
-            "receiver-account": selectedTransaction["receiver-account"],
-            "receiver-bank-name": selectedTransaction["receiver-bank-name"],
-            "sender-name": selectedTransaction["sender-name"] || "-",
-            "sender-account": selectedTransaction["sender-account"] || "-",
-            "sender-bank-name": selectedTransaction["sender-bank-name"] || "-",
-            "transfer-content": selectedTransaction["transfer-content"] || "-",
-          }}
-          errors={{}}
-          loading={true}
-          onSubmit={() => {}}
-          onCancel={() => setIsViewDialogOpen(false)}
-          onChange={() => {}}
-          mode="create"
-        />
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center ${
+            isViewDialogOpen ? "block" : "hidden"
+          }`}
+        >
+          <div
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setIsViewDialogOpen(false)}
+          />
+          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h2 className="text-xl font-semibold">Transaction Details</h2>
+                <p className="text-sm text-muted-foreground">
+                  Complete transaction information (Read-only)
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsViewDialogOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <span className="sr-only">Close</span>×
+              </Button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                    Basic Information
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Title
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1">
+                        {selectedTransaction.title}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Type
+                      </label>
+                      <div className="mt-1">
+                        <StatusBadge
+                          status={selectedTransaction.type}
+                          variant="type"
+                          size="sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Status
+                      </label>
+                      <div className="mt-1">
+                        <StatusBadge
+                          status={selectedTransaction.status}
+                          size="sm"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Payment Method
+                      </label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <CreditCard className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-gray-900">
+                          {selectedTransaction["pay-method"] === "transfer"
+                            ? "Bank Transfer"
+                            : selectedTransaction["pay-method"]}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Financial Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                    Financial Information
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Total Amount
+                      </label>
+                      <p className="text-lg font-semibold text-green-600 mt-1">
+                        {selectedTransaction["total-money"].toLocaleString()}{" "}
+                        VND
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Fee Cost
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1">
+                        {selectedTransaction["fee-cost"].toLocaleString()} VND
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Request Date
+                      </label>
+                      <div className="flex items-center gap-2 mt-1">
+                        <Calendar className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm text-gray-900">
+                          {selectedTransaction["request-date"]
+                            ? new Date(
+                                selectedTransaction["request-date"]
+                              ).toLocaleDateString("vi-VN")
+                            : "Not specified"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {selectedTransaction["handle-date"] && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          Handle Date
+                        </label>
+                        <div className="flex items-center gap-2 mt-1">
+                          <Calendar className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-gray-900">
+                            {new Date(
+                              selectedTransaction["handle-date"]
+                            ).toLocaleDateString("vi-VN")}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Receiver Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                    Receiver Information
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Name
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1">
+                        {selectedTransaction["receiver-name"]}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Account Number
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1 font-mono">
+                        {selectedTransaction["receiver-account"]}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Bank Name
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1">
+                        {selectedTransaction["receiver-bank-name"]}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sender Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                    Sender Information
+                  </h3>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Name
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1">
+                        {selectedTransaction["sender-name"] || "Not specified"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Account Number
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1 font-mono">
+                        {selectedTransaction["sender-account"] ||
+                          "Not specified"}
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Bank Name
+                      </label>
+                      <p className="text-sm text-gray-900 mt-1">
+                        {selectedTransaction["sender-bank-name"] ||
+                          "Not specified"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Transfer Content */}
+              {selectedTransaction["transfer-content"] && (
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-4">
+                    Transfer Content
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                      {selectedTransaction["transfer-content"]}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Project Information */}
+              {selectedTransaction.project && (
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-4">
+                    Related Project
+                  </h3>
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <p className="text-sm font-medium text-blue-900">
+                      {selectedTransaction.project["english-title"]}
+                    </p>
+                    {selectedTransaction.project["vietnamese-title"] && (
+                      <p className="text-sm text-blue-700 mt-1">
+                        {selectedTransaction.project["vietnamese-title"]}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-gray-50">
+              <Button
+                variant="outline"
+                onClick={() => setIsViewDialogOpen(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Edit Transaction Dialog */}
       {selectedTransaction && (
-        <FormDialog
-          open={isEditDialogOpen}
-          onOpenChange={setIsEditDialogOpen}
-          config={{
-            title: "Edit Transaction",
-            description: "Update transaction information",
-            fields: [
-              { name: "title", label: "Title", type: "text", required: true },
-              {
-                name: "type",
-                label: "Type",
-                type: "select",
-                required: true,
-                options: [
-                  { value: "project", label: "Project" },
-                  { value: "evaluation", label: "Evaluation" },
-                ],
-              },
-              {
-                name: "pay-method",
-                label: "Payment Method",
-                type: "text",
-                required: false,
-              },
-              {
-                name: "status",
-                label: "Status",
-                type: "select",
-                required: true,
-                options: [
-                  { value: "pending", label: "Pending" },
-                  { value: "approved", label: "Approved" },
-                  { value: "rejected", label: "Rejected" },
-                ],
-              },
-              {
-                name: "receiver-account",
-                label: "Receiver Account",
-                type: "text",
-                required: true,
-              },
-              {
-                name: "receiver-name",
-                label: "Receiver Name",
-                type: "text",
-                required: true,
-              },
-              {
-                name: "receiver-bank-name",
-                label: "Receiver Bank",
-                type: "text",
-                required: true,
-              },
-              {
-                name: "total-money",
-                label: "Total Money",
-                type: "number",
-                required: true,
-              },
-              {
-                name: "fee-cost",
-                label: "Fee Cost",
-                type: "number",
-                required: true,
-              },
-            ],
-          }}
-          data={formData}
-          errors={formErrors}
-          loading={isSubmitting}
-          onSubmit={handleFormSubmit}
-          onCancel={() => {
-            setIsEditDialogOpen(false);
-            setSelectedTransaction(null);
-            setFormErrors({});
-          }}
-          onChange={handleFormChange}
-          mode="edit"
-        />
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center ${
+            isEditDialogOpen ? "block" : "hidden"
+          }`}
+        >
+          <div
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setIsEditDialogOpen(false)}
+          />
+          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h2 className="text-xl font-semibold">Edit Transaction</h2>
+                <p className="text-sm text-muted-foreground">
+                  Update transaction information
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsEditDialogOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <span className="sr-only">Close</span>×
+              </Button>
+            </div>
+
+            {/* Content */}
+            <form
+              onSubmit={handleFormSubmit}
+              className="p-6 overflow-y-auto flex-1 min-h-0"
+            >
+              <div className="space-y-6">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                    Basic Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Title *
+                      </label>
+                      <Input
+                        value={formData.title}
+                        onChange={(e) =>
+                          handleFormChange("title", e.target.value)
+                        }
+                        className={`mt-1 ${
+                          formErrors.title ? "border-red-500" : ""
+                        }`}
+                        placeholder="Enter transaction title"
+                      />
+                      {formErrors.title && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {formErrors.title}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Type *
+                      </label>
+                      <Select
+                        value={formData.type}
+                        onValueChange={(value) =>
+                          handleFormChange("type", value)
+                        }
+                      >
+                        <SelectTrigger
+                          className={`mt-1 ${
+                            formErrors.type ? "border-red-500" : ""
+                          }`}
+                        >
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="project">Project</SelectItem>
+                          <SelectItem value="evaluation">Evaluation</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {formErrors.type && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {formErrors.type}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Status *
+                      </label>
+                      <Select
+                        value={formData.status}
+                        onValueChange={(value) =>
+                          handleFormChange("status", value)
+                        }
+                      >
+                        <SelectTrigger
+                          className={`mt-1 ${
+                            formErrors.status ? "border-red-500" : ""
+                          }`}
+                        >
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="approved">Approved</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {formErrors.status && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {formErrors.status}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Payment Method
+                      </label>
+                      <Input
+                        value="Bank Transfer"
+                        disabled
+                        className="mt-1 bg-gray-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Financial Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                    Financial Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Total Amount (VND) *
+                      </label>
+                      <Input
+                        type="number"
+                        value={formData["total-money"]}
+                        onChange={(e) =>
+                          handleFormChange("total-money", e.target.value)
+                        }
+                        className={`mt-1 ${
+                          formErrors["total-money"] ? "border-red-500" : ""
+                        }`}
+                        placeholder="0"
+                        min="0"
+                      />
+                      {formErrors["total-money"] && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {formErrors["total-money"]}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Fee Cost (VND) *
+                      </label>
+                      <Input
+                        type="number"
+                        value={formData["fee-cost"]}
+                        onChange={(e) =>
+                          handleFormChange("fee-cost", e.target.value)
+                        }
+                        className={`mt-1 ${
+                          formErrors["fee-cost"] ? "border-red-500" : ""
+                        }`}
+                        placeholder="0"
+                        min="0"
+                      />
+                      {formErrors["fee-cost"] && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {formErrors["fee-cost"]}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Receiver Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2">
+                    Receiver Information
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Name *
+                      </label>
+                      <Input
+                        value={formData["receiver-name"]}
+                        onChange={(e) =>
+                          handleFormChange("receiver-name", e.target.value)
+                        }
+                        className={`mt-1 ${
+                          formErrors["receiver-name"] ? "border-red-500" : ""
+                        }`}
+                        placeholder="Enter receiver name"
+                      />
+                      {formErrors["receiver-name"] && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {formErrors["receiver-name"]}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Account Number *
+                      </label>
+                      <Input
+                        value={formData["receiver-account"]}
+                        onChange={(e) =>
+                          handleFormChange("receiver-account", e.target.value)
+                        }
+                        className={`mt-1 ${
+                          formErrors["receiver-account"] ? "border-red-500" : ""
+                        }`}
+                        placeholder="Enter account number"
+                      />
+                      {formErrors["receiver-account"] && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {formErrors["receiver-account"]}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="text-sm font-medium text-gray-700">
+                        Bank Name *
+                      </label>
+                      <Input
+                        value={formData["receiver-bank-name"]}
+                        onChange={(e) =>
+                          handleFormChange("receiver-bank-name", e.target.value)
+                        }
+                        className={`mt-1 ${
+                          formErrors["receiver-bank-name"]
+                            ? "border-red-500"
+                            : ""
+                        }`}
+                        placeholder="Enter bank name"
+                      />
+                      {formErrors["receiver-bank-name"] && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {formErrors["receiver-bank-name"]}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </form>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-gray-50 flex-shrink-0">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setSelectedTransaction(null);
+                  setFormErrors({});
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleFormSubmit}
+                disabled={isSubmitting}
+                className="min-w-[100px]"
+              >
+                {isSubmitting ? "Saving..." : "Save Changes"}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Delete Confirmation Dialog */}
@@ -841,6 +1261,186 @@ const TransactionManagement: React.FC = () => {
           setIsConfirmSaveDialogOpen(false);
         }}
       />
+
+      {/* Approve Transaction Dialog */}
+      {selectedTransaction && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center ${
+            isApproveDialogOpen ? "block" : "hidden"
+          }`}
+        >
+          <div
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setIsApproveDialogOpen(false)}
+          />
+          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h2 className="text-xl font-semibold">Approve Transaction</h2>
+                <p className="text-sm text-muted-foreground">
+                  Upload evidence and approve transaction
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsApproveDialogOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <span className="sr-only">Close</span>×
+              </Button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Evidence Image <span className="text-red-500">*</span>
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Choose Image
+                    </Button>
+                  </div>
+                  {evidenceImage && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">
+                        Selected: {evidenceImage.name}
+                      </p>
+                      {evidenceImageUrl && (
+                        <img
+                          src={evidenceImageUrl}
+                          alt="Preview"
+                          className="mt-2 max-w-full h-32 object-cover rounded"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Sender Information */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-gray-700">
+                    Sender Information <span className="text-red-500">*</span>
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Sender Account <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        value={approveFormData["sender-account"]}
+                        onChange={(e) =>
+                          setApproveFormData((prev) => ({
+                            ...prev,
+                            "sender-account": e.target.value,
+                          }))
+                        }
+                        placeholder="Enter sender account number"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Sender Name <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        value={approveFormData["sender-name"]}
+                        onChange={(e) =>
+                          setApproveFormData((prev) => ({
+                            ...prev,
+                            "sender-name": e.target.value,
+                          }))
+                        }
+                        placeholder="Enter sender name"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Sender Bank Name <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={approveFormData["sender-bank-name"]}
+                      onChange={(e) =>
+                        setApproveFormData((prev) => ({
+                          ...prev,
+                          "sender-bank-name": e.target.value,
+                        }))
+                      }
+                      placeholder="Enter sender bank name"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-blue-900 mb-2">
+                    Transaction Details
+                  </h3>
+                  <p className="text-sm text-blue-700">
+                    <strong>Title:</strong> {selectedTransaction.title}
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    <strong>Amount:</strong>{" "}
+                    {selectedTransaction["total-money"].toLocaleString()} VND
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    <strong>Receiver:</strong>{" "}
+                    {selectedTransaction["receiver-name"]}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-gray-50">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsApproveDialogOpen(false);
+                  setSelectedTransaction(null);
+                  setEvidenceImage(null);
+                  setEvidenceImageUrl("");
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleApproveTransaction}
+                disabled={
+                  isSubmitting ||
+                  !evidenceImage ||
+                  !approveFormData["sender-account"].trim() ||
+                  !approveFormData["sender-name"].trim() ||
+                  !approveFormData["sender-bank-name"].trim()
+                }
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isSubmitting ? "Approving..." : "Approve Transaction"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

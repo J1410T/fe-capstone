@@ -34,21 +34,23 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Wallet, Plus, Loader2 } from "lucide-react";
+import { Wallet, Plus, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { formatDate } from "@/utils";
 import { getStatusColor, formatVND } from "../shared/utils";
-import { Transaction } from "@/types/transaction";
-import { UserRole } from "@/contexts/auth-types";
-import { useAuth } from "@/contexts";
 import { toast } from "sonner";
-import { useCreateTransaction } from "@/hooks/queries/transaction";
+import {
+  useCreateTransaction,
+  useTransactionList,
+} from "@/hooks/queries/transaction";
 import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
+import { useAuth } from "@/contexts";
 
 interface BudgetTabProps {
   projectId: string;
   category: string;
-  transactions: Transaction[];
+  isMember?: boolean;
+  roleInProject?: string[];
 }
 
 // Transaction request form interface
@@ -65,18 +67,12 @@ interface TransactionRequest {
   "evaluation-stage-id"?: string;
 }
 
-// Transaction types available for request
-const TRANSACTION_TYPES = [
-  { value: "project", label: "Project" },
-  { value: "evaluationstage", label: "Evaluation Stage" },
-];
-
 const BudgetTab: React.FC<BudgetTabProps> = ({
   projectId,
   category,
-  transactions,
+  isMember = false,
+  roleInProject = [],
 }) => {
-  const [isLoading] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requestForm, setRequestForm] = useState<TransactionRequest>({
@@ -87,16 +83,52 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
     "receiver-bank-name": "",
     "transfer-content": "",
     "total-money": 0,
-    "pay-method": "bank_transfer", // Default payment method
-    status: "created",
+    "pay-method": "transfer", // Default payment method
+    status: "pending",
   });
 
-  // Auth hook to check user role
+  // Auth hook
   const { user } = useAuth();
+
+  // Check if user can create transactions (must be member and Principal Investigator)
+  const canCreateTransaction =
+    isMember && roleInProject.includes("Principal Investigator");
+
+  // Check if user can create transactions based on project type
+  const canCreateTransactionForProject = () => {
+    if (!canCreateTransaction) return false;
+
+    // For basic projects: always allow
+    if (isBasicCategory) return true;
+
+    // For application projects: allow if there are evaluation stages
+    if (isApplicationCategory) {
+      return evaluationStages.length > 0;
+    }
+
+    return false;
+  };
 
   // API hooks
   const createTransaction = useCreateTransaction();
   const { data: evaluationsResponse } = useGetEvaluationsByProjectId(projectId);
+
+  // Fetch transactions for this project
+  const {
+    data: transactionData,
+    isLoading,
+    refetch,
+  } = useTransactionList({
+    "key-word": "",
+    "sort-by": 0,
+    "page-index": 1,
+    "page-size": 20,
+  });
+
+  // Filter transactions by project-id
+  const transactions = (transactionData?.["data-list"] || []).filter(
+    (transaction) => transaction["project-id"] === projectId
+  );
 
   // Determine project type
   const categoryLower = category?.toLowerCase() || "";
@@ -112,6 +144,11 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
     evaluationsResponse?.["data-list"]?.[0]?.["evaluation-stages"] || [];
 
   const handleRequestTransaction = () => {
+    // Set default type based on project category
+    setRequestForm((prev) => ({
+      ...prev,
+      type: isBasicCategory ? "project" : "evaluationstage",
+    }));
     setShowRequestDialog(true);
   };
 
@@ -125,8 +162,8 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
       "receiver-bank-name": "",
       "transfer-content": "",
       "total-money": 0,
-      "pay-method": "bank_transfer", // Default payment method
-      status: "created",
+      "pay-method": "transfer", // Default payment method
+      status: "pending",
     });
   };
 
@@ -232,9 +269,73 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
 
       await createTransaction.mutateAsync(transactionData);
       handleCloseDialog();
+      // Reload transaction list
+      refetch();
     } catch (error) {
       console.error("Failed to submit transaction request:", error);
       // Error is already handled by the mutation
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleReceived = async (transactionId: string) => {
+    if (!user) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(
+        `https://localhost:7157/api/transaction/${transactionId}?status=completed`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update transaction status");
+      }
+
+      toast.success("Transaction marked as received");
+      // Reload transaction list
+      refetch();
+    } catch (error) {
+      console.error("Failed to mark transaction as received:", error);
+      toast.error("Failed to update transaction status");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDisputed = async (transactionId: string) => {
+    if (!user) return;
+
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(
+        `https://localhost:7157/api/transaction/${transactionId}?status=disputed`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to update transaction status");
+      }
+
+      toast.success("Transaction marked as disputed");
+      // Reload transaction list
+      refetch();
+    } catch (error) {
+      console.error("Failed to mark transaction as disputed:", error);
+      toast.error("Failed to update transaction status");
     } finally {
       setIsSubmitting(false);
     }
@@ -262,7 +363,7 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
                 : "Project budget allocation and expense tracking for application projects"}
             </CardDescription>
           </div>
-          {user?.role === UserRole.PRINCIPAL_INVESTIGATOR && (
+          {canCreateTransactionForProject() && (
             <Button
               onClick={handleRequestTransaction}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -292,18 +393,16 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
               </TableHeader>
               <TableBody>
                 {transactions.slice(0, 5).map((transaction) => (
-                  <TableRow key={transaction.code}>
+                  <TableRow key={transaction.id}>
                     <TableCell>
                       <div>
                         <p className="font-medium text-sm sm:text-base break-words">
                           {transaction.title}
                         </p>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          {transaction.code}
-                        </p>
-                        {transaction.description && (
+
+                        {transaction["transfer-content"] && (
                           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            {transaction.description}
+                            {transaction["transfer-content"]}
                           </p>
                         )}
                       </div>
@@ -314,10 +413,10 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {formatVND(transaction.amount)}
+                      {formatVND(transaction["total-money"])}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {formatDate(transaction.createdAt)}
+                      {formatDate(transaction["request-date"])}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -330,9 +429,38 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Badge variant="outline" className="text-xs">
-                        {transaction.paymentMethod}
-                      </Badge>
+                      <div className="flex flex-col gap-1">
+                        <Badge variant="outline" className="text-xs">
+                          {transaction["pay-method"] === "transfer"
+                            ? "Bank Transfer"
+                            : transaction["pay-method"]}
+                        </Badge>
+                        {transaction.status === "approved" &&
+                          canCreateTransactionForProject() && (
+                            <div className="flex gap-1 mt-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleReceived(transaction.id)}
+                                disabled={isSubmitting}
+                                className="h-6 px-2 text-xs bg-green-50 hover:bg-green-100 border-green-200"
+                              >
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Received
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDisputed(transaction.id)}
+                                disabled={isSubmitting}
+                                className="h-6 px-2 text-xs bg-red-50 hover:bg-red-100 border-red-200"
+                              >
+                                <AlertCircle className="w-3 h-3 mr-1" />
+                                Disputed
+                              </Button>
+                            </div>
+                          )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -391,18 +519,26 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
               <Select
                 onValueChange={(value) => handleInputChange("type", value)}
                 value={requestForm.type}
+                disabled={true} // Disable selection based on project type
               >
                 <SelectTrigger className="mt-1">
                   <SelectValue placeholder="Select transaction type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {TRANSACTION_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
+                  {isBasicCategory ? (
+                    <SelectItem value="project">Project</SelectItem>
+                  ) : (
+                    <SelectItem value="evaluationstage">
+                      Evaluation Stage
                     </SelectItem>
-                  ))}
+                  )}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                {isBasicCategory
+                  ? "Project type is automatically set for basic research projects"
+                  : "Evaluation Stage type is automatically set for application projects"}
+              </p>
             </div>
 
             {/* Evaluation Stage Selection for Application Projects */}

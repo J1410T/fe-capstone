@@ -66,12 +66,6 @@ function ProjectDetail() {
     const isMember = projectResponse?.data["is-member"];
     const projectStatus = project?.status;
 
-    // Debug logging
-    console.log("ProjectDetail - project:", project);
-    console.log("ProjectDetail - isProposal:", isProposal);
-    console.log("ProjectDetail - isMember:", isMember);
-    console.log("ProjectDetail - projectStatus:", projectStatus);
-
     // Show all tabs if project is approved or inprogress
     if (projectStatus === "inprogress") {
       baseTabs.push(
@@ -103,8 +97,6 @@ function ProjectDetail() {
   };
 
   const visibleTabs = getVisibleTabs();
-  console.log("ProjectDetail - visibleTabs:", visibleTabs);
-
   const isMember = projectResponse?.data["is-member"] || false;
   const shouldShowEnrollButton = Boolean(
     user &&
@@ -230,7 +222,6 @@ function ProjectDetail() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex flex-wrap justify-center gap-1 w-full">
           {visibleTabs.map((tab) => {
-            console.log("Rendering tab:", tab);
             return (
               <TabsTrigger key={tab} value={tab} className="text-xs sm:text-sm">
                 {tab === "overview" ? (
@@ -300,14 +291,20 @@ function ProjectDetail() {
             <BudgetTab
               projectId={project.id}
               category={project.category}
-              transactions={project.transactions || []}
+              isMember={projectResponse?.data["is-member"]}
+              roleInProject={projectResponse?.data["role-in-project"]}
             />
           </TabsContent>
         )}
 
         {visibleTabs.includes("results") && (
           <TabsContent value="results" className="space-y-4">
-            <ResultTab projectId={project.id} category={project.category} />
+            <ResultTab
+              projectId={project.id}
+              category={project.category}
+              isMember={projectResponse?.data["is-member"]}
+              roleInProject={projectResponse?.data["role-in-project"]}
+            />
           </TabsContent>
         )}
 
