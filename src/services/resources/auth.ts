@@ -12,6 +12,10 @@ import {
   UserFilterResponse,
   CreateUserRequest,
   SearchAccountsParams,
+  ForgotPasswordResponse,
+  VerifyOtpResponse,
+  ResetPasswordRequest,
+  ResetPasswordResponse,
 } from "@/types/auth";
 import { axiosClient, getAccessToken } from "../api";
 import { getAppraisalCouncilByProjectId } from "./appraisal-council";
@@ -677,4 +681,53 @@ export const getCreatorByProposalProjectId = async (proposalId: string) => {
   );
   const creatorProject = sourceProject.data["data-list"]?.[0]?.creator;
   return creatorProject;
+};
+
+export const forgotPassword = async (
+  email: string
+): Promise<ForgotPasswordResponse> => {
+  try {
+    const res = await axiosClient.post<ForgotPasswordResponse>(
+      "/auth/forgot-password",
+      email
+    );
+    console.log("forgotPassword response:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("forgotPassword error:", error);
+    throw error;
+  }
+};
+
+export const verifyOtp = async (
+  email: string,
+  otp: string
+): Promise<VerifyOtpResponse> => {
+  try {
+    const res = await axiosClient.post<VerifyOtpResponse>(
+      `/auth/verify-otp?Otp=${otp}`,
+      email
+    );
+    console.log("verifyOtp response:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("verifyOtp error:", error);
+    throw error;
+  }
+};
+
+export const resetPassword = async (
+  data: ResetPasswordRequest
+): Promise<ResetPasswordResponse> => {
+  try {
+    const res = await axiosClient.post<ResetPasswordResponse>(
+      "/auth/reset-password",
+      data
+    );
+    console.log("resetPassword response:", res.data);
+    return res.data;
+  } catch (error) {
+    console.error("resetPassword error:", error);
+    throw error;
+  }
 };

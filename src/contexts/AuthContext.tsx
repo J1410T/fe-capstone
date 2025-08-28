@@ -280,16 +280,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         logout();
       },
       onAuthResponseLost: () => {
-        console.log("Auth-response lost - redirecting to login");
-        setUser(null);
-        navigate("/auth/login");
+        // Only redirect if user was previously authenticated
+        // Don't redirect during unauthenticated flows like forgot password
+        if (isAuthenticated) {
+          console.log("Auth-response lost - redirecting to login");
+          setUser(null);
+          navigate("/auth/login");
+        }
       },
     });
 
     return () => {
       simpleSessionManager.cleanup();
     };
-  }, [navigate, logout]);
+  }, [navigate, logout, isAuthenticated]);
 
   // Note: Query cache monitoring removed since we're using cookies now
 

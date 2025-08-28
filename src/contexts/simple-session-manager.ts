@@ -211,24 +211,33 @@ export class SimpleSessionManager {
     this.checkTimer = setInterval(() => {
       if (!this.isActive) return;
 
-      // Check if auth-response still exists
-      if (!this.isAuthResponseValid()) {
+      // Only run session checks if we have both auth-response and access token
+      // This prevents interference with unauthenticated flows like forgot password
+      const hasAuthResponse = this.isAuthResponseValid();
+      const hasAccessToken = !!this.getAccessToken();
+
+      if (!hasAuthResponse && !hasAccessToken) {
+        // No auth data at all - this is normal for unauthenticated flows
+        return;
+      }
+
+      // Check if auth-response still exists when we expect it to
+      if (hasAccessToken && !hasAuthResponse) {
         console.log("Auth-response no longer valid during session check");
         this.handleAuthResponseLoss();
         return;
       }
 
-      // Check if access token still exists
-      const token = this.getAccessToken();
-      if (!token) {
+      // Check if access token still exists when we expect it to
+      if (hasAuthResponse && !hasAccessToken) {
         console.log("Access token no longer exists during session check");
         this.clearSession();
         this.onLogoutCallback?.();
         return;
       }
 
-      // Check for inactivity
-      if (this.checkInactivity()) {
+      // Check for inactivity only if user is authenticated
+      if (hasAuthResponse && hasAccessToken && this.checkInactivity()) {
         console.log("User inactive for 90 minutes - triggering auto-logout");
         this.clearSession();
         this.onLogoutCallback?.();
