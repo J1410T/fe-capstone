@@ -443,7 +443,7 @@ const DocumentManagement: React.FC = () => {
       const notificationRequest: NotificationRequest = {
         title: `Successfully signed the project contract: ${selectedProject?.["english-title"]}`,
         type: "project",
-        status: "create",
+        status: "created",
         "objec-notification-id": selectedProjectId || "",
         "list-account-id": [piAccountId || ""],
       };
