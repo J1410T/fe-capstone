@@ -372,6 +372,45 @@ export const getProjectByHostInstitution = async (): Promise<ProjectItem[]> => {
   }
 };
 
+export const getProjectByStaff = async (): Promise<ProjectItem[]> => {
+  try {
+    const accessToken = getAccessToken();
+    const res = await axiosClient.post(
+      `/project/filter`,
+      {
+        genres: ["proposal"],
+        "page-index": 1,
+        "page-size": 100,
+        "sort-by": "createdate",
+        desc: true,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log("getProjectByStaff full response:", res);
+    console.log("getProjectByStaff response data:", res.data);
+
+    // Handle different possible response structures
+    if (res.data && Array.isArray(res.data["data-list"])) {
+      return res.data["data-list"];
+    } else if (Array.isArray(res.data)) {
+      return res.data;
+    } else if (res.data && Array.isArray(res.data.data)) {
+      return res.data.data;
+    } else {
+      console.warn("Unexpected response structure:", res.data);
+      return [];
+    }
+  } catch (error) {
+    console.error("getProjectByStaff error:", error);
+    throw error;
+  }
+};
+
 // New API function for project filtering (Staff Management)
 export const getStaffProjectFilter = async (
   request: StaffProjectFilterRequest
