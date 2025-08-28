@@ -120,7 +120,11 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
   const { data: evaluationsResponse } = useGetEvaluationsByProjectId(projectId);
 
   // Fetch transactions for this project
-  const { data: transactionData, isLoading, refetch } = useTransactionList({
+  const {
+    data: transactionData,
+    isLoading,
+    refetch,
+  } = useTransactionList({
     "key-word": "",
     "sort-by": 0,
     "page-index": 1,

@@ -93,10 +93,11 @@ const TransactionManagement: React.FC = () => {
   const { user } = useAuth();
 
   // API hooks
-  const { data: transactionData, isLoading, refetch } = useTransactionList(
-    transactionRequest,
-    { enableClientEnrichment: true }
-  );
+  const {
+    data: transactionData,
+    isLoading,
+    refetch,
+  } = useTransactionList(transactionRequest, { enableClientEnrichment: true });
   const updateTransactionMutation = useUpdateTransaction();
   const deleteTransactionMutation = useDeleteTransaction();
 
