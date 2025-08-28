@@ -120,7 +120,7 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
           </div>
 
           {/* Scroll content */}
-          <ScrollArea className="flex-1 pr-4">
+          <ScrollArea className="flex-1 pr-4 overflow-y-auto">
             {isLoadingCouncils ? (
               <div className="text-center py-8 text-gray-500">
                 Loading councils...
