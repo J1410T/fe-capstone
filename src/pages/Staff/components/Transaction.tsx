@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Eye, Edit, Trash2, Calendar, CreditCard } from "lucide-react";
+import { Eye, Edit, Trash2, Calendar, CreditCard, Upload } from "lucide-react";
 import { DataTable, StatusBadge, PageHeader, ConfirmDialog } from "../shared";
 import { TransactionDetail, TransactionListRequest } from "@/types/transaction";
 import {
@@ -19,6 +19,12 @@ import {
   useTransactionList,
   useUpdateTransaction,
 } from "@/hooks/queries/transaction";
+import { useAuth } from "@/contexts";
+import {
+  uploadImageToAzure,
+  getImageUrlFromAzure,
+} from "@/services/resources/azure-image";
+import { toast } from "sonner";
 
 // Define transaction status tabs
 const TRANSACTION_TABS = [
@@ -47,6 +53,10 @@ const TransactionManagement: React.FC = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConfirmSaveDialogOpen, setIsConfirmSaveDialogOpen] = useState(false);
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [evidenceImage, setEvidenceImage] = useState<File | null>(null);
+  const [evidenceImageUrl, setEvidenceImageUrl] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form data state
   const [formData, setFormData] = useState({
@@ -62,6 +72,13 @@ const TransactionManagement: React.FC = () => {
     "project-id": "",
     "evaluation-stage-id": "",
   });
+
+  // Approve form data state
+  const [approveFormData, setApproveFormData] = useState({
+    "sender-account": "",
+    "sender-name": "",
+    "sender-bank-name": "",
+  });
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // API request parameters
@@ -72,8 +89,11 @@ const TransactionManagement: React.FC = () => {
     "page-size": pageSize,
   };
 
+  // Auth hook
+  const { user } = useAuth();
+
   // API hooks
-  const { data: transactionData, isLoading } = useTransactionList(
+  const { data: transactionData, isLoading, refetch } = useTransactionList(
     transactionRequest,
     { enableClientEnrichment: true }
   );
@@ -158,6 +178,17 @@ const TransactionManagement: React.FC = () => {
               >
                 <Edit className="w-4 h-4" />
               </Button>
+              {transaction.status === "pending" && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={() => handleApprove(transaction)}
+                  className="px-2 h-8 bg-green-600 hover:bg-green-700"
+                  title="Approve"
+                >
+                  <Upload className="w-4 h-4" />
+                </Button>
+              )}
               <Button
                 variant="destructive"
                 size="sm"
@@ -203,6 +234,122 @@ const TransactionManagement: React.FC = () => {
   const handleDelete = (transaction: TransactionDetail) => {
     setSelectedTransaction(transaction);
     setIsDeleteDialogOpen(true);
+  };
+
+  const handleApprove = (transaction: TransactionDetail) => {
+    setSelectedTransaction(transaction);
+    setEvidenceImage(null);
+    setEvidenceImageUrl("");
+    setApproveFormData({
+      "sender-account": "",
+      "sender-name": "",
+      "sender-bank-name": "",
+    });
+    setIsApproveDialogOpen(true);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setEvidenceImage(file);
+      // Create preview URL
+      const url = URL.createObjectURL(file);
+      setEvidenceImageUrl(url);
+    }
+  };
+
+  const handleApproveTransaction = async () => {
+    if (!selectedTransaction || !evidenceImage || !user) {
+      return;
+    }
+
+    // Validate sender information
+    if (!approveFormData["sender-account"].trim()) {
+      toast.error("Please enter sender account");
+      return;
+    }
+
+    if (!approveFormData["sender-name"].trim()) {
+      toast.error("Please enter sender name");
+      return;
+    }
+
+    if (!approveFormData["sender-bank-name"].trim()) {
+      toast.error("Please enter sender bank name");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Upload evidence image to Azure first
+      const uploadResponse = await uploadImageToAzure(evidenceImage);
+
+      // Get the blob name from the upload response
+      const blobName = uploadResponse.url.split("/").pop(); // Extract blob name from URL
+
+      if (!blobName) {
+        throw new Error("Failed to get blob name from upload response");
+      }
+
+      // Get the actual image URL using getImageUrlFromAzure
+      const evidenceImageUrl = await getImageUrlFromAzure(blobName);
+
+      // Update transaction with approved status using PUT /transaction
+      const response = await fetch("https://localhost:7157/api/transaction", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user.accessToken}`,
+        },
+        body: JSON.stringify({
+          id: selectedTransaction.id,
+          "evidence-image": evidenceImageUrl,
+          code: selectedTransaction.code || "",
+          title: selectedTransaction.title,
+          type: selectedTransaction.type,
+          "sender-account": approveFormData["sender-account"],
+          "sender-name": approveFormData["sender-name"],
+          "sender-bank-name": approveFormData["sender-bank-name"],
+          "receiver-account": selectedTransaction["receiver-account"],
+          "receiver-name": selectedTransaction["receiver-name"],
+          "receiver-bank-name": selectedTransaction["receiver-bank-name"],
+          "transfer-content": selectedTransaction["transfer-content"] || "",
+          "request-date": selectedTransaction["request-date"],
+          "handle-date": new Date().toISOString(),
+          "fee-cost": selectedTransaction["fee-cost"],
+          "total-money": selectedTransaction["total-money"],
+          "pay-method": selectedTransaction["pay-method"],
+          status: "approved",
+          "request-person-id": selectedTransaction["request-person-id"] || "",
+          "handle-person-id": user.id,
+          "project-id": selectedTransaction["project-id"] || "",
+          "evaluation-stage-id":
+            selectedTransaction["evaluation-stage-id"] || "",
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to approve transaction");
+      }
+
+      toast.success("Transaction approved successfully!");
+      setIsApproveDialogOpen(false);
+      setSelectedTransaction(null);
+      setEvidenceImage(null);
+      setEvidenceImageUrl("");
+      setApproveFormData({
+        "sender-account": "",
+        "sender-name": "",
+        "sender-bank-name": "",
+      });
+      // Reload the transaction list
+      refetch();
+    } catch (error) {
+      console.error("Approve transaction error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const validateForm = () => {
@@ -741,7 +888,7 @@ const TransactionManagement: React.FC = () => {
             className="fixed inset-0 bg-black/50"
             onClick={() => setIsEditDialogOpen(false)}
           />
-          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden">
+          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b">
               <div>
@@ -763,7 +910,7 @@ const TransactionManagement: React.FC = () => {
             {/* Content */}
             <form
               onSubmit={handleFormSubmit}
-              className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]"
+              className="p-6 overflow-y-auto flex-1 min-h-0"
             >
               <div className="space-y-6">
                 {/* Basic Information */}
@@ -998,7 +1145,7 @@ const TransactionManagement: React.FC = () => {
             </form>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 p-6 border-t bg-gray-50">
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-gray-50 flex-shrink-0">
               <Button
                 variant="outline"
                 onClick={() => {
@@ -1054,6 +1201,186 @@ const TransactionManagement: React.FC = () => {
           setIsConfirmSaveDialogOpen(false);
         }}
       />
+
+      {/* Approve Transaction Dialog */}
+      {selectedTransaction && (
+        <div
+          className={`fixed inset-0 z-50 flex items-center justify-center ${
+            isApproveDialogOpen ? "block" : "hidden"
+          }`}
+        >
+          <div
+            className="fixed inset-0 bg-black/50"
+            onClick={() => setIsApproveDialogOpen(false)}
+          />
+          <div className="relative bg-white rounded-lg shadow-lg w-full max-w-md">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b">
+              <div>
+                <h2 className="text-xl font-semibold">Approve Transaction</h2>
+                <p className="text-sm text-muted-foreground">
+                  Upload evidence and approve transaction
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsApproveDialogOpen(false)}
+                className="h-8 w-8 p-0"
+              >
+                <span className="sr-only">Close</span>×
+              </Button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">
+                    Evidence Image <span className="text-red-500">*</span>
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <Button
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="w-full"
+                    >
+                      <Upload className="w-4 h-4 mr-2" />
+                      Choose Image
+                    </Button>
+                  </div>
+                  {evidenceImage && (
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-600">
+                        Selected: {evidenceImage.name}
+                      </p>
+                      {evidenceImageUrl && (
+                        <img
+                          src={evidenceImageUrl}
+                          alt="Preview"
+                          className="mt-2 max-w-full h-32 object-cover rounded"
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Sender Information */}
+                <div className="space-y-4">
+                  <h3 className="text-sm font-medium text-gray-700">
+                    Sender Information <span className="text-red-500">*</span>
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Sender Account <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        value={approveFormData["sender-account"]}
+                        onChange={(e) =>
+                          setApproveFormData((prev) => ({
+                            ...prev,
+                            "sender-account": e.target.value,
+                          }))
+                        }
+                        placeholder="Enter sender account number"
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">
+                        Sender Name <span className="text-red-500">*</span>
+                      </label>
+                      <Input
+                        value={approveFormData["sender-name"]}
+                        onChange={(e) =>
+                          setApproveFormData((prev) => ({
+                            ...prev,
+                            "sender-name": e.target.value,
+                          }))
+                        }
+                        placeholder="Enter sender name"
+                        className="mt-1"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">
+                      Sender Bank Name <span className="text-red-500">*</span>
+                    </label>
+                    <Input
+                      value={approveFormData["sender-bank-name"]}
+                      onChange={(e) =>
+                        setApproveFormData((prev) => ({
+                          ...prev,
+                          "sender-bank-name": e.target.value,
+                        }))
+                      }
+                      placeholder="Enter sender bank name"
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-blue-900 mb-2">
+                    Transaction Details
+                  </h3>
+                  <p className="text-sm text-blue-700">
+                    <strong>Title:</strong> {selectedTransaction.title}
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    <strong>Amount:</strong>{" "}
+                    {selectedTransaction["total-money"].toLocaleString()} VND
+                  </p>
+                  <p className="text-sm text-blue-700">
+                    <strong>Receiver:</strong>{" "}
+                    {selectedTransaction["receiver-name"]}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t bg-gray-50">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsApproveDialogOpen(false);
+                  setSelectedTransaction(null);
+                  setEvidenceImage(null);
+                  setEvidenceImageUrl("");
+                }}
+                disabled={isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleApproveTransaction}
+                disabled={
+                  isSubmitting ||
+                  !evidenceImage ||
+                  !approveFormData["sender-account"].trim() ||
+                  !approveFormData["sender-name"].trim() ||
+                  !approveFormData["sender-bank-name"].trim()
+                }
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {isSubmitting ? "Approving..." : "Approve Transaction"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -590,6 +590,7 @@ const MilestoneForm: React.FC<{
     description: milestone?.description || "",
     objective: milestone?.objective || "",
     type: milestone?.type || "milestone",
+    cost: milestone?.cost || 0,
     "start-date": milestone?.["start-date"]
       ? milestone["start-date"].split("T")[0]
       : "",
@@ -748,6 +749,24 @@ const MilestoneForm: React.FC<{
           }
           placeholder="Enter milestone objective"
           rows={2}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Cost (VND)
+        </label>
+        <Input
+          type="number"
+          value={formData.cost}
+          onChange={(e) =>
+            setFormData((prev) => ({
+              ...prev,
+              cost: Number(e.target.value) || 0,
+            }))
+          }
+          min="0"
+          placeholder="Enter milestone cost"
         />
       </div>
 
@@ -1286,6 +1305,13 @@ const MilestoneCard: React.FC<{
                 <Target className="w-3 h-3" />
                 <span>{tasks.length} tasks</span>
               </div>
+              {milestone.cost && (
+                <div className="flex items-center gap-1">
+                  <span className="font-medium text-green-600">
+                    {milestone.cost.toLocaleString()} VND
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1416,7 +1442,7 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
   projectName,
 }) => {
   // Tab state
-  const [activeTab, setActiveTab] = useState("milestones");
+  const [activeTab, setActiveTab] = useState("proposal");
 
   // Milestone states
   const [editingMilestone, setEditingMilestone] = useState<Milestone | null>(
@@ -1604,6 +1630,13 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
     (total, m) => total + (m.tasks?.length || 0),
     0
   );
+  const totalCost = milestonesWithTasks.reduce((total, m) => {
+    // Exclude Meeting milestone from cost calculation
+    if (m.title?.toLowerCase().trim() === "meeting") {
+      return total;
+    }
+    return total + (m.cost || 0);
+  }, 0);
 
   // Handle milestone operations
   const handleCreateMilestone = () => {
@@ -1674,7 +1707,7 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
 
   // Reset forms when modal closes
   const handleClose = () => {
-    setActiveTab("milestones");
+    setActiveTab("proposal");
     setEditingMilestone(null);
     setCreatingMilestone(false);
     setEditingTask(null);
@@ -1742,18 +1775,18 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
             >
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger
-                  value="milestones"
-                  className="flex items-center gap-2"
-                >
-                  <Target className="w-4 h-4" />
-                  Milestones & Tasks
-                </TabsTrigger>
-                <TabsTrigger
                   value="proposal"
                   className="flex items-center gap-2"
                 >
                   <FileText className="w-4 h-4" />
                   Proposal Information
+                </TabsTrigger>
+                <TabsTrigger
+                  value="milestones"
+                  className="flex items-center gap-2"
+                >
+                  <Target className="w-4 h-4" />
+                  Milestones & Tasks
                 </TabsTrigger>
               </TabsList>
 
@@ -1763,7 +1796,7 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
               >
                 {/* Milestones Content */}
                 {/* Statistics Cards */}
-                <div className="flex-shrink-0 grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+                <div className="flex-shrink-0 grid grid-cols-2 lg:grid-cols-5 gap-3 mb-4">
                   <div className="bg-green-50 rounded-lg p-4 border border-green-200">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-green-600" />
@@ -1808,6 +1841,18 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
                           {totalTasks}
                         </p>
                         <p className="text-xs text-purple-700">Total Tasks</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-600 font-bold">₫</span>
+                      <div>
+                        <p className="text-xl font-bold text-emerald-900">
+                          {(totalCost / 1000000).toFixed(1)}M
+                        </p>
+                        <p className="text-xs text-emerald-700">Total Cost</p>
                       </div>
                     </div>
                   </div>
