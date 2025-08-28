@@ -38,17 +38,18 @@ import { Wallet, Plus, Loader2 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { formatDate } from "@/utils";
 import { getStatusColor, formatVND } from "../shared/utils";
-import { Transaction } from "@/types/transaction";
-import { UserRole } from "@/contexts/auth-types";
-import { useAuth } from "@/contexts";
 import { toast } from "sonner";
-import { useCreateTransaction } from "@/hooks/queries/transaction";
+import {
+  useCreateTransaction,
+  useTransactionList,
+} from "@/hooks/queries/transaction";
 import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
 
 interface BudgetTabProps {
   projectId: string;
   category: string;
-  transactions: Transaction[];
+  isMember?: boolean;
+  roleInProject?: string[];
 }
 
 // Transaction request form interface
@@ -74,9 +75,9 @@ const TRANSACTION_TYPES = [
 const BudgetTab: React.FC<BudgetTabProps> = ({
   projectId,
   category,
-  transactions,
+  isMember = false,
+  roleInProject = [],
 }) => {
-  const [isLoading] = useState(false);
   const [showRequestDialog, setShowRequestDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [requestForm, setRequestForm] = useState<TransactionRequest>({
@@ -87,16 +88,30 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
     "receiver-bank-name": "",
     "transfer-content": "",
     "total-money": 0,
-    "pay-method": "bank_transfer", // Default payment method
-    status: "created",
+    "pay-method": "transfer", // Default payment method
+    status: "pending",
   });
 
-  // Auth hook to check user role
-  const { user } = useAuth();
+  // Check if user can create transactions (must be member and Principal Investigator)
+  const canCreateTransaction =
+    isMember && roleInProject.includes("Principal Investigator");
 
   // API hooks
   const createTransaction = useCreateTransaction();
   const { data: evaluationsResponse } = useGetEvaluationsByProjectId(projectId);
+
+  // Fetch transactions for this project
+  const { data: transactionData, isLoading } = useTransactionList({
+    "key-word": "",
+    "sort-by": 0,
+    "page-index": 1,
+    "page-size": 20,
+  });
+
+  // Filter transactions by project-id
+  const transactions = (transactionData?.["data-list"] || []).filter(
+    (transaction) => transaction["project-id"] === projectId
+  );
 
   // Determine project type
   const categoryLower = category?.toLowerCase() || "";
@@ -125,8 +140,8 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
       "receiver-bank-name": "",
       "transfer-content": "",
       "total-money": 0,
-      "pay-method": "bank_transfer", // Default payment method
-      status: "created",
+      "pay-method": "transfer", // Default payment method
+      status: "pending",
     });
   };
 
@@ -262,7 +277,7 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
                 : "Project budget allocation and expense tracking for application projects"}
             </CardDescription>
           </div>
-          {user?.role === UserRole.PRINCIPAL_INVESTIGATOR && (
+          {canCreateTransaction && (
             <Button
               onClick={handleRequestTransaction}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -292,18 +307,16 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
               </TableHeader>
               <TableBody>
                 {transactions.slice(0, 5).map((transaction) => (
-                  <TableRow key={transaction.code}>
+                  <TableRow key={transaction.id}>
                     <TableCell>
                       <div>
                         <p className="font-medium text-sm sm:text-base break-words">
                           {transaction.title}
                         </p>
-                        <p className="text-xs sm:text-sm text-muted-foreground">
-                          {transaction.code}
-                        </p>
-                        {transaction.description && (
+
+                        {transaction["transfer-content"] && (
                           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                            {transaction.description}
+                            {transaction["transfer-content"]}
                           </p>
                         )}
                       </div>
@@ -314,10 +327,10 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm">
-                      {formatVND(transaction.amount)}
+                      {formatVND(transaction["total-money"])}
                     </TableCell>
                     <TableCell className="text-sm">
-                      {formatDate(transaction.createdAt)}
+                      {formatDate(transaction["request-date"])}
                     </TableCell>
                     <TableCell>
                       <Badge
@@ -331,7 +344,9 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
                     </TableCell>
                     <TableCell className="text-right">
                       <Badge variant="outline" className="text-xs">
-                        {transaction.paymentMethod}
+                        {transaction["pay-method"] === "transfer"
+                          ? "Bank Transfer"
+                          : transaction["pay-method"]}
                       </Badge>
                     </TableCell>
                   </TableRow>

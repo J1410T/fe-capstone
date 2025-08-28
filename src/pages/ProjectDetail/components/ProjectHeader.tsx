@@ -20,8 +20,6 @@ interface ProjectHeaderProps {
 
 export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   status,
-  isMember,
-  roleInProject,
   pictureUrl,
   englishTitle,
   code,
@@ -32,9 +30,6 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   const handleBack = () => {
     navigate("/pi/my-projects");
   };
-
-  // Props are available for future use
-  console.log("isMember:", isMember, "roleInProject:", roleInProject);
 
   return (
     <div className="relative">

@@ -53,9 +53,16 @@ import {
 interface ResultTabProps {
   projectId: string;
   category: string; // "basic" or "application"
+  isMember?: boolean;
+  roleInProject?: string[];
 }
 
-const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
+const ResultTab: React.FC<ResultTabProps> = ({
+  projectId,
+  category,
+  isMember = false,
+  roleInProject = [],
+}) => {
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const [editingPublish, setEditingPublish] = useState<ResultPublish | null>(
@@ -71,11 +78,6 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
   const projectResult = projectResultResponse?.success
     ? projectResultResponse.data
     : null;
-
-  // Debug logging
-  console.log("ResultTab - projectResultResponse:", projectResultResponse);
-  console.log("ResultTab - projectResult:", projectResult);
-  console.log("ResultTab - projectId:", projectId);
 
   // Form states
   const [resultName, setResultName] = useState("");
@@ -99,6 +101,10 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
     categoryLower === "implementation" ||
     categoryLower.includes("application") ||
     categoryLower.includes("implementation");
+
+  // Check if user can create results (must be member and Principal Investigator)
+  const canCreateResult =
+    isMember && roleInProject.includes("Principal Investigator");
 
   // Data is automatically loaded via useProjectResult hook
 
@@ -318,15 +324,19 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
             <CardTitle className="text-lg font-semibold">
               {isApplicationCategory ? "Project Deliverable" : "Project Result"}
             </CardTitle>
-            <Button
-              onClick={
-                projectResult ? openEditResult : () => setShowResultDialog(true)
-              }
-              className="bg-emerald-600 hover:bg-emerald-700 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {projectResult ? "Edit Result" : "Add Result"}
-            </Button>
+            {canCreateResult && (
+              <Button
+                onClick={
+                  projectResult
+                    ? openEditResult
+                    : () => setShowResultDialog(true)
+                }
+                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {projectResult ? "Edit Result" : "Add Result"}
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -367,10 +377,12 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
                     </div>
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={openEditResult}>
-                  <Edit className="h-3 w-3 mr-1" />
-                  Edit
-                </Button>
+                {canCreateResult && (
+                  <Button variant="outline" size="sm" onClick={openEditResult}>
+                    <Edit className="h-3 w-3 mr-1" />
+                    Edit
+                  </Button>
+                )}
               </div>
             </div>
           ) : (
@@ -395,14 +407,16 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
               <CardTitle className="text-lg font-semibold">
                 Publications
               </CardTitle>
-              <Button
-                onClick={openAddPublish}
-                variant="outline"
-                className="bg-blue-50 hover:bg-blue-100 border-blue-200"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Publication
-              </Button>
+              {canCreateResult && (
+                <Button
+                  onClick={openAddPublish}
+                  variant="outline"
+                  className="bg-blue-50 hover:bg-blue-100 border-blue-200"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Publication
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -448,21 +462,25 @@ const ResultTab: React.FC<ResultTabProps> = ({ projectId, category }) => {
                           >
                             <ExternalLink className="h-3 w-3" />
                           </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => openEditPublish(publish)}
-                          >
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDeletePublish(publish.id!)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
+                          {canCreateResult && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => openEditPublish(publish)}
+                              >
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleDeletePublish(publish.id!)}
+                                className="text-red-600 hover:text-red-700"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
