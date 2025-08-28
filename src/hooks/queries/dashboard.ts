@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
-import { DateRangeParams } from "@/types/dashboard";
+import { DateRangeParams, TimeSeriesParams } from "@/types/dashboard";
 import {
   getCouncils,
   getMajorDistribution,
   getMilestonesProgress,
   getProjectStatus,
   getSystemStats,
+  getTimeSeries,
   getTransactions,
   getUserRoles,
 } from "@/services/resources/dashboard";
@@ -63,5 +64,19 @@ export const useDashboardMajorDistribution = (params?: DateRangeParams) => {
     queryKey: ["dashboard", "major-distribution", params?.from, params?.to],
     queryFn: () => getMajorDistribution(params),
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useDashboardTimeSeries = (params?: TimeSeriesParams) => {
+  return useQuery({
+    queryKey: [
+      "dashboard",
+      "timeseries",
+      params?.from,
+      params?.to,
+      params?.granularity,
+    ],
+    queryFn: () => getTimeSeries(params),
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };

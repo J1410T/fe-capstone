@@ -183,7 +183,7 @@ const CreateDocument: React.FC = () => {
         const notificationRequest: NotificationRequest = {
           title: `Project progress report: ${projectDetail?.["english-title"]}`,
           type: "project",
-          status: "create",
+          status: "created",
           "objec-notification-id": projectId || "",
           "list-account-id": appraisalCouncilAccountIdList,
         };
@@ -203,7 +203,7 @@ const CreateDocument: React.FC = () => {
         const notificationRequest: NotificationRequest = {
           title: `Requesting Change Requests During Project Execution: ${projectDetail?.["english-title"]}`,
           type: "project",
-          status: "create",
+          status: "created",
           "objec-notification-id": projectId || "",
           "list-account-id": accountIdList,
         };
@@ -225,7 +225,7 @@ const CreateDocument: React.FC = () => {
         const notificationRequest: NotificationRequest = {
           title: `Register seminar for the project: ${projectDetail?.["english-title"]}`,
           type: "project",
-          status: "create",
+          status: "created",
           "objec-notification-id": projectId || "",
           "list-account-id": accountIdList,
         };
@@ -241,7 +241,7 @@ const CreateDocument: React.FC = () => {
         const notificationRequest: NotificationRequest = {
           title: `Project summary report: ${projectDetail?.["english-title"]}`,
           type: "project",
-          status: "create",
+          status: "created",
           "objec-notification-id": projectId || "",
           "list-account-id": appraisalCouncilAccountIdList,
         };
@@ -255,7 +255,7 @@ const CreateDocument: React.FC = () => {
         const notificationRequest: NotificationRequest = {
           title: `Project Contract Termination Request: ${projectDetail?.["english-title"]}`,
           type: "project",
-          status: "create",
+          status: "created",
           "objec-notification-id": projectId || "",
           "list-account-id": staffAccountIdList,
         };

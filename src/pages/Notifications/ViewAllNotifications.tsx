@@ -222,7 +222,7 @@ const ViewAllNotifications: React.FC = () => {
         const notificationRequest: NotificationRequest = {
           title: `Please submit your Science CV in Project Detail `,
           type: "project",
-          status: "create",
+          status: "created",
           "objec-notification-id": typeObjectId,
           "list-account-id": [accountId],
         };
@@ -321,7 +321,7 @@ const ViewAllNotifications: React.FC = () => {
       "account-id": string;
       "is-read": boolean;
       "is-global-send": boolean;
-      status: "pending" | "approved" | "rejected" | "create";
+      status: "pending" | "approved" | "rejected" | "created";
     }>
   ) =>
     list.length === 0 ? (
@@ -380,7 +380,7 @@ const ViewAllNotifications: React.FC = () => {
                       </div>
                     </div>
                     {/* Read button for 'create' status notifications */}
-                    {n.status === "create" && !n["is-read"] && (
+                    {n.status === "created" && !n["is-read"] && (
                       <Button
                         size="sm"
                         variant="outline"
