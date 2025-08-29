@@ -1,6 +1,7 @@
 import {
   CreateFirstEvaluationResponse,
   EvaluationApiResponse,
+  EvaluationStageApi,
   EvaluationStageApiResponse,
   GetEvaluationsByProjectIdRequest,
   GetEvaluationStagesByEvaluationIdRequest,
@@ -8,6 +9,8 @@ import {
   GetIndividualEvaluationsByStageIdRequest,
   IndividualEvaluationApi,
   IndividualEvaluationApiResponse,
+  UpdateEvaluationStageRequest,
+  UpdateEvaluationStageResponse,
 } from "@/types/evaluation";
 import { axiosClient, getAccessToken } from "../api";
 
@@ -63,6 +66,26 @@ export const getEvaluationStagesByEvaluationId = async (
     const response = await axiosClient.post<EvaluationStageApiResponse>(
       "/evaluation-stage/list",
       request,
+      {
+        headers: {
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching evaluation stages by evaluation ID:", error);
+    throw error;
+  }
+};
+
+export const getEvaluationStagesById = async (
+  stageId: string
+): Promise<EvaluationStageApi> => {
+  try {
+    const response = await axiosClient.get<EvaluationStageApi>(
+      `/evaluation-stage/${stageId}`,
       {
         headers: {
           "Content-Type": "application/json-patch+json",
@@ -276,6 +299,28 @@ export const updateIndividualEvaluation = async (
     return response.data;
   } catch (error) {
     console.error("Error updating individual evaluation:", error);
+    throw error;
+  }
+};
+
+export const updateEvaluationStage = async (
+  stageData: UpdateEvaluationStageRequest
+): Promise<UpdateEvaluationStageResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    const response = await axiosClient.put<UpdateEvaluationStageResponse>(
+      "/evaluation-stage",
+      stageData,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating evaluation stage:", error);
     throw error;
   }
 };

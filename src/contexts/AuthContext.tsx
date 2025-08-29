@@ -52,16 +52,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         clearTimeout(activityTimeout);
       }
 
-      // Set new timeout for 10 minutes
+      // Set new timeout for 90 minutes
       activityTimeout = setTimeout(() => {
         const timeSinceActivity = Date.now() - lastActivityTime;
-        if (timeSinceActivity >= 10 * 60 * 1000) {
-          // 10 minutes
+        if (timeSinceActivity >= 90 * 60 * 1000) {
+          // 90 minutes
           console.log("User idle - triggering automatic logout");
           toast.info("You have been logged out due to inactivity");
           logout();
         }
-      }, 10 * 60 * 1000); // 10 minutes
+      }, 90 * 60 * 1000); // 90 minutes
     };
 
     // Activity events

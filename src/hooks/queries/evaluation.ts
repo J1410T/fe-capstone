@@ -3,13 +3,17 @@ import {
   createIndividualEvaluation,
   getEvaluationsByProjectId,
   getEvaluationStagesByEvaluationId,
+  getEvaluationStagesById,
   getIndividualEvaluationById,
   getIndividualEvaluationsByStageId,
+  updateEvaluationStage,
 } from "@/services/resources/evaluation";
 import {
   CreateFirstEvaluationResponse,
   CreateIndividualEvaluationRequest,
   CreateIndividualEvaluationResponse,
+  UpdateEvaluationStageRequest,
+  UpdateEvaluationStageResponse,
 } from "@/types/evaluation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -48,6 +52,14 @@ export const useGetEvaluationStagesByEvaluationId = (evaluationId: string) => {
         "page-size": 100,
       }),
     enabled: !!evaluationId,
+  });
+};
+
+export const useGetEvaluationStagesById = (stageId: string) => {
+  return useQuery({
+    queryKey: ["evaluation-stages-by-id", stageId],
+    queryFn: () => getEvaluationStagesById(stageId),
+    enabled: !!stageId,
   });
 };
 
@@ -90,6 +102,23 @@ export const useCreateIndividualEvaluation = () => {
     },
     onError: (error) => {
       console.error("Failed to create individual evaluation:", error);
+    },
+  });
+};
+
+export const useUpdateEvaluationStage = () => {
+  return useMutation<
+    UpdateEvaluationStageResponse,
+    Error,
+    UpdateEvaluationStageRequest
+  >({
+    mutationFn: (request: UpdateEvaluationStageRequest) =>
+      updateEvaluationStage(request),
+    onSuccess: (data) => {
+      console.log("Evaluation stage updated successfully:", data.message);
+    },
+    onError: (error) => {
+      console.error("Failed to update evaluation stage:", error);
     },
   });
 };
