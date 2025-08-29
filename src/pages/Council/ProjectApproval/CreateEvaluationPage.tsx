@@ -120,7 +120,7 @@ export const CreateEvaluationPage: React.FC = () => {
         await createIndividualEvaluationMutation.mutateAsync({
           ...evaluationForm,
           "total-rate": evaluationForm["total-rate"] || 0,
-          comment: evaluationForm.comment || "No evaluation comment provided",
+          comment: evaluationForm.comment || "",
           "evaluation-stage-id": evaluationStageId,
           "reviewer-id": user?.id || "",
         });
