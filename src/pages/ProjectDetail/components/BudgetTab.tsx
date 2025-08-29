@@ -511,7 +511,7 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
                 className="mt-1"
               />
             </div>
-
+            {/* 
             <div>
               <Label htmlFor="transaction-type" className="text-sm font-medium">
                 Transaction Type <span className="text-red-500">*</span>
@@ -539,7 +539,7 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
                   ? "Project type is automatically set for basic research projects"
                   : "Evaluation Stage type is automatically set for application projects"}
               </p>
-            </div>
+            </div> */}
 
             {/* Evaluation Stage Selection for Application Projects */}
             {isApplicationCategory &&

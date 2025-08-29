@@ -171,15 +171,17 @@ const TransactionManagement: React.FC = () => {
               >
                 <Eye className="w-4 h-4" />
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleEdit(transaction)}
-                className="px-2 h-8"
-                title="Edit"
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
+              {transaction.status !== "completed" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEdit(transaction)}
+                  className="px-2 h-8"
+                  title="Edit"
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+              )}
               {transaction.status === "pending" && (
                 <Button
                   variant="default"
@@ -592,31 +594,6 @@ const TransactionManagement: React.FC = () => {
                 </Select>
               </div>
             </div>
-            {/* Search and Filter Bar */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full">
-              <div className="flex-1 min-w-0">
-                <Input
-                  placeholder="Search transactions..."
-                  value={searchKeyword}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="w-full max-w-none sm:max-w-sm"
-                />
-              </div>
-              <div className="flex-shrink-0">
-                <Select
-                  value={sortBy === 2 ? "title" : "date"}
-                  onValueChange={handleSortChange}
-                >
-                  <SelectTrigger className="w-full sm:w-[160px]">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="date">Request Date</SelectItem>
-                    <SelectItem value="title">Title</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
 
             {/* Data Table */}
             <div className="w-full">
@@ -856,6 +833,30 @@ const TransactionManagement: React.FC = () => {
                   </div>
                 </div>
               </div>
+
+              {/* Evidence Image */}
+              {selectedTransaction["evidence-image"] && (
+                <div className="mt-6 pt-6 border-t">
+                  <h3 className="text-lg font-medium text-gray-900 border-b pb-2 mb-4">
+                    Evidence Image
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <img
+                      src={selectedTransaction["evidence-image"]}
+                      alt="Transaction Evidence"
+                      className="max-w-md h-auto rounded-lg shadow-sm"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        target.nextElementSibling?.classList.remove("hidden");
+                      }}
+                    />
+                    <p className="text-sm text-gray-500 mt-2 hidden">
+                      Unable to load evidence image
+                    </p>
+                  </div>
+                </div>
+              )}
 
               {/* Transfer Content */}
               {selectedTransaction["transfer-content"] && (
