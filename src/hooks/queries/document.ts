@@ -4,6 +4,7 @@ import {
   createDocument,
   deleteDocumentById,
   getDocumentsByFilter,
+  getAllDocumentTemplates,
   getScientificCVByEmail,
   updateDocument,
   getDocumentByProjectId,
@@ -20,6 +21,26 @@ import {
   CreateMilestoneByDocumentProjectRequest,
   CreateMilestoneByDocumentProjectResponse,
 } from "@/types/document";
+
+// Hook mới để lấy tất cả document templates trong 1 lần gọi
+export function useAllDocumentTemplates(
+  pageIndex: number = 1,
+  pageSize: number = 50,
+  status?: string
+) {
+  return useQuery({
+    queryKey: ["all-document-templates", pageIndex, pageSize, status],
+    queryFn: () => getAllDocumentTemplates(pageIndex, pageSize, status),
+    enabled: true,
+    staleTime: Infinity, // Không bao giờ stale
+    gcTime: Infinity, // Không bao giờ garbage collect
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchInterval: false, // Không refetch theo interval
+    retry: false, // Không retry khi fail
+  });
+}
 
 export function useDocumentsByFilter(
   type: string,

@@ -41,6 +41,30 @@ export const getDocumentsByFilter = async (
   );
 };
 
+// Function mới để lấy tất cả document templates
+export const getAllDocumentTemplates = async (
+  pageIndex: number = 1,
+  pageSize: number = 50,
+  status?: string
+) => {
+  const accessToken = getAccessToken();
+
+  return await axiosClient.post<DocumentListResponse>(
+    "/document/list",
+    {
+      status,
+      "is-template": true,
+      "page-index": pageIndex,
+      "page-size": pageSize,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    }
+  );
+};
+
 export const createDocument = async (data: CreateDocumentRequest) => {
   const accessToken = getAccessToken();
 
