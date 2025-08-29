@@ -120,7 +120,7 @@ export const CreateEvaluationPage: React.FC = () => {
         await createIndividualEvaluationMutation.mutateAsync({
           ...evaluationForm,
           "total-rate": evaluationForm["total-rate"] || 0,
-          comment: evaluationContent || "No evaluation content provided", // Sử dụng TinyMCE content làm comment
+          comment: evaluationForm.comment || "No evaluation comment provided",
           "evaluation-stage-id": evaluationStageId,
           "reviewer-id": user?.id || "",
         });
@@ -217,6 +217,7 @@ export const CreateEvaluationPage: React.FC = () => {
               </div>
 
               <div className="space-y-4">
+                {/* Evaluation Name */}
                 <div>
                   <Label className="text-sm font-medium text-gray-700">
                     Evaluation Name *
@@ -229,6 +230,7 @@ export const CreateEvaluationPage: React.FC = () => {
                   />
                 </div>
 
+                {/* Total Rate */}
                 <div>
                   <Label className="text-sm font-medium text-gray-700">
                     Total Rate (0-100) *
@@ -275,6 +277,7 @@ export const CreateEvaluationPage: React.FC = () => {
                   />
                 </div>
 
+                {/* Reviewer Result */}
                 <div>
                   <Label className="text-sm font-medium text-gray-700">
                     Reviewer Result *
@@ -293,6 +296,22 @@ export const CreateEvaluationPage: React.FC = () => {
                       <SelectItem value="false">Reject</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* New Comment Field */}
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">
+                    Short Comment *
+                  </Label>
+                  <textarea
+                    value={evaluationForm.comment}
+                    onChange={(e) =>
+                      handleInputChange("comment", e.target.value)
+                    }
+                    placeholder="Enter short comment (about 2–3 sentences)"
+                    rows={3}
+                    className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm"
+                  />
                 </div>
               </div>
             </div>
