@@ -14,7 +14,10 @@ import { TinyMCEViewer } from "@/components/ui/TinyMCE";
 import { AIEvaluationDisplay } from "@/components/ui/ai-evaluation-display";
 import { getIndividualEvaluationById } from "@/services/resources/evaluation";
 import { IndividualEvaluationApi } from "@/types/evaluation";
-import { useGetIndividualEvaluationById } from "@/hooks/queries/evaluation";
+import {
+  useGetEvaluationStagesById,
+  useGetIndividualEvaluationById,
+} from "@/hooks/queries/evaluation";
 
 const IndividualEvaluationViewPage: React.FC = () => {
   const { evaluationId, stageId, individualId } = useParams<{
@@ -32,6 +35,7 @@ const IndividualEvaluationViewPage: React.FC = () => {
   // Query hooks
   const { data: individualEvaluationData, isLoading: isLoadingQuery } =
     useGetIndividualEvaluationById(individualId || "");
+  const { data: stageData } = useGetEvaluationStagesById(stageId || "");
 
   // Load individual evaluation details
   useEffect(() => {
@@ -140,7 +144,7 @@ const IndividualEvaluationViewPage: React.FC = () => {
             </div>
           </div>
         </div>
-        {!isAIGenerated && (
+        {!isAIGenerated && stageData?.status === "created" && (
           <Button onClick={handleEdit}>
             <Edit className="h-4 w-4 mr-2" />
             Edit

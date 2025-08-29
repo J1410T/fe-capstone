@@ -39,6 +39,9 @@ import {
   IndividualEvaluationApi,
 } from "@/types/evaluation";
 import { useGetUserRoleById } from "@/hooks/queries/useAuth";
+import { checkIsChaimainInCouncil } from "@/services/resources/auth";
+import { getAppraisalCouncilByProjectId } from "@/services/resources/appraisal-council";
+import UpdateEvaluationStageModal from "./UpdateEvaluationStageModal";
 
 // Component to display reviewer name from reviewer ID
 const ReviewerName: React.FC<{ reviewerId: string | null }> = ({
@@ -78,11 +81,44 @@ const EvaluationStageDetailPage: React.FC = () => {
   const [loadTimestamp, setLoadTimestamp] = useState<number>(Date.now());
   const [projectData, setProjectData] = useState<any>(null);
   const [projectId, setProjectId] = useState<string | null>(null);
+  const [isChairman, setIsChairman] = useState(false);
+  const [isUpdateStageModalOpen, setIsUpdateStageModalOpen] = useState(false);
 
   // Query hooks
   const { data: individualEvaluationsData } =
     useGetIndividualEvaluationsByStageId(stageId || "");
   const { data: projectQueryData } = useProject(projectId || "");
+
+  // Chairman Role Check Function (from TopicDetailPage)
+  const checkChairmanRole = React.useCallback(
+    async (projectId: string | null) => {
+      try {
+        if (!projectId) {
+          console.log("No project ID available");
+          setIsChairman(false);
+          return;
+        }
+
+        // Get appraisal council by project ID
+        const appraisalCouncilProjectMain =
+          await getAppraisalCouncilByProjectId(projectId);
+
+        // Check if current user is chairman in this council
+        const responseAppraisalCouncilProjectMain =
+          await checkIsChaimainInCouncil(appraisalCouncilProjectMain.id);
+
+        if (responseAppraisalCouncilProjectMain["total-count"] === 1) {
+          setIsChairman(true);
+        } else {
+          setIsChairman(false);
+        }
+      } catch (error) {
+        console.error("Chairman role check error:", error);
+        setIsChairman(false);
+      }
+    },
+    []
+  );
 
   // Load stage details and individual evaluations
   useEffect(() => {
@@ -132,6 +168,8 @@ const EvaluationStageDetailPage: React.FC = () => {
                 // Set project ID for query hook
                 if (evaluationData["project-id"]) {
                   setProjectId(evaluationData["project-id"]);
+                  // Check chairman role
+                  await checkChairmanRole(evaluationData["project-id"]);
                 }
               }
             } catch (evalError) {
@@ -199,7 +237,7 @@ const EvaluationStageDetailPage: React.FC = () => {
     };
 
     loadStageDetails();
-  }, [stageId, evaluationId]);
+  }, [stageId, evaluationId, checkChairmanRole]);
 
   // Handle individual evaluations data from query hooks
   useEffect(() => {
@@ -248,6 +286,17 @@ const EvaluationStageDetailPage: React.FC = () => {
     navigate(
       `/council/edit-individual-evaluation/${evaluationId}/${stageId}/${individualId}`
     );
+  };
+
+  const handleUpdateStage = () => {
+    setIsUpdateStageModalOpen(true);
+  };
+
+  const handleStageUpdated = () => {
+    // Reload stage data to get updated information
+    if (stageId) {
+      window.location.reload();
+    }
   };
 
   if (isLoading) {
@@ -400,9 +449,18 @@ const EvaluationStageDetailPage: React.FC = () => {
                 Phrase: {stage.phrase} • Type: {stage.type}
               </CardDescription>
             </div>
-            <Badge variant={getStatusBadgeVariant(stage.status)}>
-              {stage.status}
-            </Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant={getStatusBadgeVariant(stage.status)}>
+                {stage.status}
+              </Badge>
+              {/* Show Update Stage button if user is chairman and stage status is created */}
+              {isChairman && stage.status === "created" && (
+                <Button onClick={handleUpdateStage} size="sm">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Update Stage
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -435,10 +493,12 @@ const EvaluationStageDetailPage: React.FC = () => {
                 Individual evaluations in this stage
               </CardDescription>
             </div>
-            <Button onClick={handleCreateIndividualEvaluation}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Individual Evaluation
-            </Button>
+            {stage.status == "created" && (
+              <Button onClick={handleCreateIndividualEvaluation}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Individual Evaluation
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -586,6 +646,14 @@ const EvaluationStageDetailPage: React.FC = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Update Stage Modal */}
+      <UpdateEvaluationStageModal
+        isOpen={isUpdateStageModalOpen}
+        onClose={() => setIsUpdateStageModalOpen(false)}
+        stage={stage}
+        onStageUpdated={handleStageUpdated}
+      />
     </div>
   );
 };
