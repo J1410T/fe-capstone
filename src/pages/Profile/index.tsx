@@ -32,9 +32,12 @@ import { validateEmail, validateRequired } from "@/utils";
 import { useMyAccountInfo } from "@/hooks/queries";
 import { ScientificCV } from "@/components/profile/ScientificCV";
 import { Loading } from "@/components";
+import { getAuthResponse } from "@/utils/cookie-manager";
 
 const Profile: React.FC = () => {
   const { data: accountInfo } = useMyAccountInfo();
+  const authResponse = getAuthResponse<{ "selected-role": string }>();
+  const userRole = authResponse?.["selected-role"] || "";
 
   // Initialize state with empty values that will be populated when accountInfo loads
   const [user, setUser] = useState({
@@ -331,20 +334,12 @@ const Profile: React.FC = () => {
                 </div> */}
 
                 {/* PI Request */}
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-600 font-medium">
-                      PI Request
-                    </span>
-                    {/* {user.roleRequestStatus === "approved" ? (
-                      <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200">
-                        Approved
-                      </Badge>
-                    ) : user.roleRequestStatus === "pending" ? (
-                      <Badge className="bg-yellow-100 text-yellow-700 border border-yellow-200">
-                        Pending
-                      </Badge>
-                    ) : (
+                {userRole == "Researcher" && (
+                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-600 font-medium">
+                        PI Request
+                      </span>
                       <Button
                         size="sm"
                         onClick={() => {
@@ -354,20 +349,19 @@ const Profile: React.FC = () => {
                       >
                         Request PI
                       </Button>
-                    )} */}
+                    </div>
+                    {/* Instruction */}
+                    <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                      <span className="mt-0.5">
+                        <Lightbulb className="w-4 h-4 text-yellow-500" />
+                      </span>
+                      <p className="text-sm text-yellow-800">
+                        If you want to enroll in any project, you must request
+                        PI first. Only PI members can enroll in projects.
+                      </p>
+                    </div>
                   </div>
-
-                  {/* Instruction */}
-                  <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <span className="mt-0.5">
-                      <Lightbulb className="w-4 h-4 text-yellow-500" />
-                    </span>
-                    <p className="text-sm text-yellow-800">
-                      If you want to enroll in any project, you must request PI
-                      first. Only PI members can enroll in projects.
-                    </p>
-                  </div>
-                </div>
+                )}
 
                 {/* Info when approved */}
                 {/* {user.roleRequestStatus === "approved" && (
@@ -476,7 +470,11 @@ const Profile: React.FC = () => {
           {/* Right Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Scientific CV Section */}
-            <ScientificCV className="border-0 shadow-lg bg-white" />
+            {(userRole === "Principal Investigator" ||
+              userRole === "Researcher") && (
+              <ScientificCV className="border-0 shadow-lg bg-white" />
+            )}
+            {/* <ScientificCV className="border-0 shadow-lg bg-white" /> */}
 
             {/* Personal Information */}
             <Card className="border-0 shadow-lg bg-white">

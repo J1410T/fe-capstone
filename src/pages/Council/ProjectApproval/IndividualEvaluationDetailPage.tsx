@@ -274,6 +274,7 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
           )}
 
           {/* Comments Section */}
+          {/* Comments Section */}
           {evaluation.comment && (
             <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20">
               <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 border-b border-gray-100">
@@ -293,11 +294,17 @@ export const IndividualEvaluationDetailPage: React.FC = () => {
               </div>
 
               <div className="p-4">
-                <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
-                  <TinyMCEViewerComponent
-                    content={evaluation.comment}
-                    height={400}
-                  />
+                <div className="bg-gray-50 rounded-xl border border-gray-100 p-4">
+                  {evaluation.comment.startsWith("<") ? (
+                    <TinyMCEViewerComponent
+                      content={evaluation.comment}
+                      height={300}
+                    />
+                  ) : (
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+                      {evaluation.comment}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
