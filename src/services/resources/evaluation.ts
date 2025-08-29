@@ -239,7 +239,7 @@ export const createIndividualEvaluation = async (evaluationData: {
       }
     );
 
-    return response.data;
+    return { id: response.data };
   } catch (error) {
     console.error("Error creating individual evaluation:", error);
     throw error;
