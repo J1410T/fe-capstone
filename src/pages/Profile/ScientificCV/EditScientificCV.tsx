@@ -127,17 +127,19 @@ const EditScientificCV: React.FC = () => {
       return;
     }
 
-    // Parse và chỉnh sửa ảnh
+    // Parse và chỉnh sửa ảnh - chỉ resize ảnh frame-image (placeholder 3x4)
     const doc = new DOMParser().parseFromString(rawContent, "text/html");
     doc.querySelectorAll("img").forEach((img) => {
       const isFrame = img.classList.contains("frame-image");
-      if (!isFrame) {
+      if (isFrame) {
+        // Chỉ resize ảnh frame-image (placeholder 3x4)
         img.setAttribute("width", "113");
         img.setAttribute("height", "151");
         img.style.width = "113px";
         img.style.height = "151px";
         img.style.objectFit = "cover";
       }
+      // Các ảnh khác giữ nguyên kích thước tự nhiên
     });
 
     const content = doc.body.innerHTML;
@@ -264,7 +266,6 @@ const EditScientificCV: React.FC = () => {
   .image-frame {
     width: 150px;
     height: 180px;
-    border: 2px dashed #999;
     display: flex;
     align-items: center;
     justify-content: center;
