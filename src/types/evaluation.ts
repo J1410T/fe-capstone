@@ -184,3 +184,19 @@ export interface CreateIndividualEvaluationRequest {
 export interface CreateIndividualEvaluationResponse {
   id: string;
 }
+
+export interface UpdateEvaluationStageRequest {
+  id: string;
+  name: string;
+  "stage-order": number;
+  phrase: string;
+  type: string;
+  status: string;
+  "evaluation-id": string;
+  "milestone-id": string | null;
+  "appraisal-council-id": string | null;
+}
+
+export interface UpdateEvaluationStageResponse {
+  message: string;
+}

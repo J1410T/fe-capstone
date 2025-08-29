@@ -17,8 +17,8 @@ import {
 
 // Session configuration
 const SESSION_CONFIG = {
-  INACTIVITY_TIMEOUT: 90 * 60 * 1000,
-  CHECK_INTERVAL: 60 * 1000,
+  INACTIVITY_TIMEOUT: 90 * 60 * 1000, // 90 minutes in milliseconds
+  CHECK_INTERVAL: 60 * 1000, // Check every minute
 } as const;
 
 export class SimpleSessionManager {
