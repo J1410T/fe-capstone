@@ -117,13 +117,30 @@ const CreateScientificCV: React.FC = () => {
         </div>`;
       const finalContent = hasFrame ? templateContent : frame + templateContent;
 
+      // Parse và chỉnh sửa ảnh - chỉ resize ảnh frame-image (placeholder 3x4)
+      const doc = new DOMParser().parseFromString(finalContent, "text/html");
+      doc.querySelectorAll("img").forEach((img) => {
+        const isFrame = img.classList.contains("frame-image");
+        if (isFrame) {
+          // Chỉ resize ảnh frame-image (placeholder 3x4)
+          img.setAttribute("width", "113");
+          img.setAttribute("height", "151");
+          img.style.width = "113px";
+          img.style.height = "151px";
+          img.style.objectFit = "cover";
+        }
+        // Các ảnh khác giữ nguyên kích thước tự nhiên
+      });
+
+      const processedContent = doc.body.innerHTML;
+
       createDocument.mutate(
         {
           name: "CV",
           type: "ScienceCV",
           status: "created",
           "is-template": false,
-          "content-html": finalContent,
+          "content-html": processedContent,
           "project-id": null,
         },
         {
@@ -148,11 +165,28 @@ const CreateScientificCV: React.FC = () => {
   };
 
   const handleSave = async () => {
-    const content = editorRef.current?.getContent() ?? "";
-    if (!content.trim()) {
+    const rawContent = editorRef.current?.getContent() ?? "";
+    if (!rawContent.trim()) {
       toast.error("Please add content to your Scientific CV");
       return;
     }
+
+    // Parse và chỉnh sửa ảnh - chỉ resize ảnh frame-image (placeholder 3x4)
+    const doc = new DOMParser().parseFromString(rawContent, "text/html");
+    doc.querySelectorAll("img").forEach((img) => {
+      const isFrame = img.classList.contains("frame-image");
+      if (isFrame) {
+        // Chỉ resize ảnh frame-image (placeholder 3x4)
+        img.setAttribute("width", "113");
+        img.setAttribute("height", "151");
+        img.style.width = "113px";
+        img.style.height = "151px";
+        img.style.objectFit = "cover";
+      }
+      // Các ảnh khác giữ nguyên kích thước tự nhiên
+    });
+
+    const content = doc.body.innerHTML;
 
     setIsLoading(true);
 
@@ -192,7 +226,6 @@ const CreateScientificCV: React.FC = () => {
   .image-frame {
     width: 150px;
     height: 180px;
-    border: 2px dashed #999;
     display: flex;
     align-items: center;
     justify-content: center;
