@@ -126,7 +126,7 @@ const StaffDashboard: React.FC = () => {
   // Project status pie chart data
   const projectStatusPieData = useMemo(() => {
     if (!projectStatus) return [];
-    return [
+    const data = [
       { name: "Created", value: projectStatus.created, color: "#3b82f6" },
       {
         name: "In Progress",
@@ -136,6 +136,9 @@ const StaffDashboard: React.FC = () => {
       { name: "Completed", value: projectStatus.completed, color: "#10b981" },
       { name: "Cancelled", value: projectStatus.cancelled, color: "#ef4444" },
     ];
+
+    // Filter out items with 0 value
+    return data.filter((item) => item.value > 0);
   }, [projectStatus]);
 
   // Major distribution bar chart data
@@ -602,6 +605,30 @@ const StaffDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <ProjectStatusPieChart />
+              {/* Color Legend */}
+              <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm font-medium text-gray-700 mb-2">
+                  Color Legend:
+                </p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span>Created</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <span>In Progress</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span>Completed</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <span>Cancelled</span>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 
