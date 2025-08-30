@@ -347,7 +347,7 @@ export const enrollProjectAsPrincipal = async (
 export const getProjectByHostInstitution = async (): Promise<ProjectItem[]> => {
   try {
     const accessToken = getAccessToken();
-    const res = await axiosClient.get(`/project/host`, {
+    const res = await axiosClient.get(`/project/my-project`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
       },

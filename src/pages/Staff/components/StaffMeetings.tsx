@@ -220,13 +220,13 @@ const StaffMeetings: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">
               Staff Meetings
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm text-gray-600">
               Manage project meetings and tasks across all projects
             </p>
           </div>
@@ -240,35 +240,28 @@ const StaffMeetings: React.FC = () => {
               placeholder="Search projects by title..."
               value={searchTitle}
               onChange={(e) => setSearchTitle(e.target.value)}
-              className="pl-10 w-full"
+              className="pl-10 w-full h-9"
             />
           </div>
-
-          {/* Loading indicator under search when refetching */}
-          {/* {isRefetching && (
-            <div className="flex items-center justify-center py-3">
-              <Loading />
-            </div>
-          )} */}
         </div>
       </div>
 
       {/* Projects with Meeting Tasks */}
-      <div className="space-y-4 relative">
+      <div className="space-y-3 relative">
         {/* Loading overlay for project list when refetching */}
         {isRefetching && (
           <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] z-10 flex items-center justify-center rounded-lg">
-            <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="bg-white rounded-lg shadow-md p-3">
               <Loading />
             </div>
           </div>
         )}
         {projects.length === 0 ? (
           <Card>
-            <CardContent className="p-8 text-center">
-              <div className="text-gray-500 mb-2">No projects found</div>
+            <CardContent className="p-6 text-center">
+              <div className="text-gray-500 mb-1">No projects found</div>
               <p className="text-sm text-gray-400">
-                No projects with meeting tasks available
+                No projects with meeting available
               </p>
             </CardContent>
           </Card>
@@ -292,7 +285,7 @@ const StaffMeetings: React.FC = () => {
 
       {/* Pagination - Always show */}
       {projectsData && (
-        <div className="flex justify-center items-center gap-2 mt-6">
+        <div className="flex justify-center items-center gap-2 mt-4">
           <Button
             variant="outline"
             size="sm"
@@ -320,7 +313,7 @@ const StaffMeetings: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center">
           <div className="bg-white rounded-lg shadow-lg p-6 flex flex-col items-center gap-4">
             <Loading />
-            <p className="text-gray-700 font-medium">Deleting task...</p>
+            <p className="text-gray-700 font-medium">Deleting meeting...</p>
           </div>
         </div>
       )}
@@ -374,16 +367,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
       <CardContent className="p-0">
         {/* Project Header */}
         <div
-          className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
+          className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
           onClick={onToggleExpansion}
         >
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3">
             {/* Project Logo */}
             <div className="flex-shrink-0">
               <img
                 src={getImageSrc(project["logo-url"])}
                 alt={project["english-title"]}
-                className="w-16 h-16 rounded-lg object-cover border shadow-sm"
+                className="w-12 h-12 rounded-lg object-cover border shadow-sm"
                 onError={handleImageError}
               />
             </div>
@@ -392,17 +385,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-lg font-semibold text-gray-900 truncate">
+                  <h3 className="text-base font-semibold text-gray-900 truncate">
                     {project["english-title"]}
                   </h3>
-                  <p className="text-sm text-gray-600 truncate mt-1">
+                  <p className="text-xs text-gray-600 truncate mt-1">
                     {project["vietnamese-title"]}
                   </p>
-                  <div className="flex items-center gap-3 mt-3">
-                    <Badge variant="outline" className="text-xs">
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge variant="outline" className="text-xs px-2 py-0.5">
                       {project.type}
                     </Badge>
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs px-2 py-0.5">
                       {project.category}
                     </Badge>
                     {project.duration && (
@@ -413,9 +406,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-3 ml-4">
+                <div className="flex items-center gap-2 ml-3">
                   {project.tasks && project.tasks.length > 0 && (
-                    <Badge className="bg-blue-100 text-blue-800">
+                    <Badge className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5">
                       {project.tasks.length} meeting
                       {project.tasks.length !== 1 ? "s" : ""}
                     </Badge>
@@ -427,7 +420,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                         e.stopPropagation();
                         onCreateTask(project);
                       }}
-                      className="flex items-center gap-2"
+                      className="flex items-center gap-1 h-8 px-3"
                     >
                       <Plus className="w-3 h-3" />
                       Create Meeting
@@ -435,9 +428,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                   )}
 
                   {isExpanded ? (
-                    <ChevronUp className="w-5 h-5 text-gray-400" />
+                    <ChevronUp className="w-4 h-4 text-gray-400" />
                   ) : (
-                    <ChevronDown className="w-5 h-5 text-gray-400" />
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
                   )}
                 </div>
               </div>
@@ -448,25 +441,25 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         {/* Meeting Tasks (Expanded) */}
         {isExpanded && project.tasks && project.tasks.length > 0 && (
           <div className="border-t bg-gradient-to-br from-gray-50 to-gray-100">
-            <div className="p-6">
-              <h4 className="text-sm font-medium text-gray-900 mb-4 flex items-center gap-2">
+            <div className="p-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center gap-2">
                 <Users className="w-4 h-4" />
-                Meeting Tasks
+                Meeting
               </h4>
-              <div className="grid gap-4">
+              <div className="grid gap-3">
                 {project.tasks.map((task) => (
                   <div
                     key={task.id}
-                    className="bg-white rounded-lg border shadow-sm p-5 hover:shadow-md transition-all duration-200"
+                    className="bg-white rounded-lg border shadow-sm p-4 hover:shadow-md transition-all duration-200"
                   >
-                    <div className="grid grid-cols-12 gap-4 mb-3">
+                    <div className="grid grid-cols-12 gap-3 mb-3">
                       {/* Title + Description + Note */}
                       <div className="col-span-5 flex flex-col min-w-0">
-                        <h5 className="font-semibold text-gray-900 text-base truncate">
+                        <h5 className="font-semibold text-gray-900 text-sm truncate">
                           {task.name}
                         </h5>
                         {task.description && (
-                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                          <p className="text-xs text-gray-600 mt-1 line-clamp-2">
                             {task.description}
                           </p>
                         )}
@@ -479,8 +472,8 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
                       {/* DateTime */}
                       <div className="col-span-4 flex flex-col items-center justify-center">
-                        <div className="flex items-center gap-1 text-sm font-medium text-gray-800 bg-gray-100 rounded-md px-3 py-1">
-                          <Calendar className="w-4 h-4 text-blue-600" />
+                        <div className="flex items-center gap-1 text-xs font-medium text-gray-800 bg-gray-100 rounded-md px-2 py-1">
+                          <Calendar className="w-3 h-3 text-blue-600" />
                           <span>
                             {formatDateTime(task["start-date"])}
                             <span className="mx-1 text-gray-500">→</span>
@@ -490,16 +483,16 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                       </div>
 
                       {/* Priority + Status */}
-                      <div className="col-span-3 flex items-start justify-end gap-2">
+                      <div className="col-span-3 flex items-start justify-end gap-1">
                         <Badge
-                          className={`text-xs px-2 py-1 ${getPriorityColor(
+                          className={`text-xs px-2 py-0.5 ${getPriorityColor(
                             task.priority
                           )}`}
                         >
                           {task.priority}
                         </Badge>
                         <Badge
-                          className={`text-xs px-2 py-1 ${getStatusColor(
+                          className={`text-xs px-2 py-0.5 ${getStatusColor(
                             task.status
                           )}`}
                         >
@@ -509,13 +502,13 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                       <div>
                         {task["meeting-url"] ? (
                           <Button
                             variant="outline"
                             size="sm"
-                            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            className="flex items-center gap-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 h-7 px-2"
                             onClick={() => onJoinMeeting(task["meeting-url"]!)}
                           >
                             <Video className="w-3 h-3" />
@@ -528,12 +521,12 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => onUpdateTask(task)}
-                          className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50"
+                          className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50 h-7 px-2"
                         >
                           <Edit className="w-3 h-3" />
                           Edit
@@ -543,7 +536,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="flex items-center gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 h-7 px-2"
                             >
                               <Trash2 className="w-3 h-3" />
                               Delete
@@ -567,22 +560,22 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
         {/* No Tasks Message */}
         {isExpanded && (!project.tasks || project.tasks.length === 0) && (
-          <div className="border-t bg-gray-50 p-6 text-center flex flex-col items-center">
-            <div className="text-gray-400 mb-2">
-              <Users className="w-8 h-8 mx-auto mb-2" />
+          <div className="border-t bg-gray-50 p-4 text-center flex flex-col items-center">
+            <div className="text-gray-400 mb-1">
+              <Users className="w-6 h-6 mx-auto mb-1" />
             </div>
-            <p className="text-sm text-gray-500 mb-3">
-              No meeting tasks found for this project
+            <p className="text-sm text-gray-500 mb-2">
+              No meeting found for this project
             </p>
             {project.milestoneID && (
               <Button
                 size="sm"
                 variant="default"
                 onClick={() => onCreateTask(project)}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 h-8 px-3"
               >
                 <Plus className="w-3 h-3" />
-                Create First Task
+                Create First Meeting
               </Button>
             )}
           </div>

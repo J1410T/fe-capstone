@@ -332,7 +332,12 @@ const PImeetings: React.FC = () => {
                   <SelectItem value="All">All Projects</SelectItem>
                   {projects.map((project) => (
                     <SelectItem key={project.id} value={project.id}>
-                      {project["english-title"]}
+                      <div
+                        className="truncate max-w-[200px]"
+                        title={project["english-title"]}
+                      >
+                        {project["english-title"]}
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -378,24 +383,22 @@ const PImeetings: React.FC = () => {
               <span className="ml-2 text-gray-500">Loading meetings...</span>
             </div>
           ) : sortedMeetings.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[250px]">Meeting Title</TableHead>
-                    <TableHead className="w-[200px]">Project</TableHead>
-                    <TableHead className="w-[150px]">Date & Time</TableHead>
-                    <TableHead className="w-[120px]">Status</TableHead>
-                    <TableHead className="w-[120px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedMeetings.map((meeting) => (
-                    <MeetingTableRow key={meeting.id} meeting={meeting} />
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Meeting Title</TableHead>
+                  <TableHead>Project</TableHead>
+                  <TableHead>Date & Time</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sortedMeetings.map((meeting) => (
+                  <MeetingTableRow key={meeting.id} meeting={meeting} />
+                ))}
+              </TableBody>
+            </Table>
           ) : (
             <div className="text-center py-12">
               <div className="p-4 bg-gray-100 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
@@ -474,21 +477,37 @@ const MeetingTableRow: React.FC<{ meeting: Meeting }> = ({ meeting }) => {
   return (
     <TableRow className="hover:bg-gray-50">
       <TableCell>
-        <div className="space-y-1">
-          <div className="font-medium text-gray-900">{meeting.title}</div>
+        <div className="space-y-1 max-w-[300px]">
+          <div
+            className="font-medium text-gray-900 truncate"
+            title={meeting.title}
+          >
+            {meeting.title}
+          </div>
           {meeting.description && (
-            <div className="text-sm text-gray-600 line-clamp-1">
+            <div
+              className="text-sm text-gray-600 truncate"
+              title={meeting.description}
+            >
               {meeting.description}
             </div>
           )}
-          <div className="text-xs text-gray-500">
+          <div
+            className="text-xs text-gray-500 truncate"
+            title={`Milestone: ${meeting.milestoneName}`}
+          >
             Milestone: {meeting.milestoneName}
           </div>
         </div>
       </TableCell>
 
       <TableCell>
-        <div className="font-medium text-gray-900">{meeting.projectName}</div>
+        <div
+          className="font-medium text-gray-900 truncate max-w-[200px]"
+          title={meeting.projectName}
+        >
+          {meeting.projectName}
+        </div>
       </TableCell>
 
       <TableCell>
