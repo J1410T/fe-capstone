@@ -7,11 +7,13 @@ import {
   getIndividualEvaluationById,
   getIndividualEvaluationsByStageId,
   updateEvaluationStage,
+  updateIndividualEvaluation,
 } from "@/services/resources/evaluation";
 import {
   CreateFirstEvaluationResponse,
   CreateIndividualEvaluationRequest,
   CreateIndividualEvaluationResponse,
+  IndividualEvaluationApi,
   UpdateEvaluationStageRequest,
   UpdateEvaluationStageResponse,
 } from "@/types/evaluation";
@@ -102,6 +104,31 @@ export const useCreateIndividualEvaluation = () => {
     },
     onError: (error) => {
       console.error("Failed to create individual evaluation:", error);
+    },
+  });
+};
+
+export const useUpdateIndividualEvaluation = () => {
+  return useMutation<
+    IndividualEvaluationApi,
+    Error,
+    {
+      individualId: string;
+      evaluationData: {
+        name: string;
+        "total-rate": number;
+        comment: string;
+        "reviewer-result": boolean;
+      };
+    }
+  >({
+    mutationFn: ({ individualId, evaluationData }) =>
+      updateIndividualEvaluation(individualId, evaluationData),
+    onSuccess: (data) => {
+      console.log("Individual evaluation updated successfully:", data);
+    },
+    onError: (error) => {
+      console.error("Failed to update individual evaluation:", error);
     },
   });
 };

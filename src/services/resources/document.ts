@@ -82,7 +82,7 @@ export const updateDocument = async (data: UpdateDocumentRequest) => {
   return await axiosClient.put<string>("/document", data, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json-patch+json",
+      "Content-Type": "application/json",
     },
   });
 };

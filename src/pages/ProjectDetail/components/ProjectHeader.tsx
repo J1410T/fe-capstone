@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getStatusColor } from "../utils/statusHelpers";
 import { ArrowLeft, User } from "lucide-react";
+import { useAuth, UserRole } from "@/contexts/AuthContext";
 
 interface ProjectHeaderProps {
   title: string;
@@ -26,9 +27,18 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   creator,
 }) => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleBack = () => {
-    navigate("/pi/my-projects");
+    if (user?.role === UserRole.PRINCIPAL_INVESTIGATOR) {
+      navigate("/pi/my-projects");
+    } else if (user?.role === UserRole.HOST_INSTITUTION) {
+      navigate("/host/my-projects");
+    } else if (user?.role === UserRole.RESEARCHER) {
+      navigate("/researcher/projects");
+    } else {
+      navigate("/projects");
+    }
   };
 
   return (
@@ -38,7 +48,7 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         <img
           src={
             pictureUrl ||
-            "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSC_XtryB5OYUluF6iPg1reZRvaoFczfSOtog&s"
+            "https://images.wallpaperscraft.com/image/single/project_model_structure_177208_1920x1080.jpg"
           }
           alt={englishTitle}
           className="h-full w-full object-cover"

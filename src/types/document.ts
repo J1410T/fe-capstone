@@ -137,6 +137,7 @@ export interface UpdateDocumentRequest {
   "content-html": string;
   status?: string;
   "project-id"?: string | null;
+  "individual-evaluation-id"?: string | null;
 }
 export interface UpdateDocumentResponse {
   message: string;
