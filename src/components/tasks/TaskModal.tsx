@@ -449,13 +449,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
     // Date validations
     if (selectedStartDate && selectedEndDate) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      if (mode === "create" && selectedStartDate < today) {
-        newErrors.startDate = "Start date cannot be in the past";
-      }
-
       if (selectedEndDate <= selectedStartDate) {
         newErrors.endDate = "End date must be after start date";
       }
@@ -891,7 +884,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 date={selectedStartDate}
                 onDateChange={isReadOnly ? undefined : setSelectedStartDate}
                 placeholder="Select start date"
-                disablePastDates={mode === "create" || mode === "update"}
                 disabled={isReadOnly}
               />
               {errors.startDate && (
@@ -909,7 +901,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 date={selectedEndDate}
                 onDateChange={isReadOnly ? undefined : setSelectedEndDate}
                 placeholder="Select end date"
-                disablePastDates={mode === "create" || mode === "update"}
                 disabled={isReadOnly}
               />
               {errors.endDate && (

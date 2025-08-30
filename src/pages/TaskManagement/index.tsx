@@ -314,13 +314,51 @@ const UserTaskManagement: React.FC = () => {
 
   React.useEffect(() => {
     if (milestones.length > 0) {
-      // Always set to first milestone when milestones change (e.g., project change)
+      // Sort milestones by start date and end date, excluding meeting milestones from first position
+      const sortedMilestones = [...milestones].sort((a, b) => {
+        // Move meeting milestones to the end
+        const aIsMeeting = a.title?.toLowerCase().includes("meeting");
+        const bIsMeeting = b.title?.toLowerCase().includes("meeting");
+
+        if (aIsMeeting && !bIsMeeting) return 1;
+        if (!aIsMeeting && bIsMeeting) return -1;
+
+        // For non-meeting milestones, sort by start date first, then end date
+        const aStartDate = a["start-date"]
+          ? new Date(a["start-date"]).getTime()
+          : 0;
+        const bStartDate = b["start-date"]
+          ? new Date(b["start-date"]).getTime()
+          : 0;
+
+        if (aStartDate !== bStartDate) {
+          return aStartDate - bStartDate;
+        }
+
+        // If start dates are equal, sort by end date
+        const aEndDate = a["end-date"] ? new Date(a["end-date"]).getTime() : 0;
+        const bEndDate = b["end-date"] ? new Date(b["end-date"]).getTime() : 0;
+
+        return aEndDate - bEndDate;
+      });
+
+      // Always set to first non-meeting milestone when milestones change
       if (!selectedMilestoneId || selectedMilestoneId === "no-milestones") {
-        setSelectedMilestoneId(milestones[0].id);
+        const firstNonMeetingMilestone = sortedMilestones.find(
+          (m) => !m.title?.toLowerCase().includes("meeting")
+        );
+        setSelectedMilestoneId(
+          firstNonMeetingMilestone?.id || sortedMilestones[0].id
+        );
       }
       // Check if current selected milestone still exists in the new list
       else if (!milestones.find((m) => m.id === selectedMilestoneId)) {
-        setSelectedMilestoneId(milestones[0].id);
+        const firstNonMeetingMilestone = sortedMilestones.find(
+          (m) => !m.title?.toLowerCase().includes("meeting")
+        );
+        setSelectedMilestoneId(
+          firstNonMeetingMilestone?.id || sortedMilestones[0].id
+        );
       }
     } else if (
       milestones.length === 0 &&
@@ -788,11 +826,47 @@ const UserTaskManagement: React.FC = () => {
                         No milestones available
                       </SelectItem>
                     ) : (
-                      milestones.map((milestone) => (
-                        <SelectItem key={milestone.id} value={milestone.id}>
-                          {milestone.title}
-                        </SelectItem>
-                      ))
+                      // Sort milestones by start date and end date, excluding meeting milestones from first position
+                      [...milestones]
+                        .sort((a, b) => {
+                          // Move meeting milestones to the end
+                          const aIsMeeting = a.title
+                            ?.toLowerCase()
+                            .includes("meeting");
+                          const bIsMeeting = b.title
+                            ?.toLowerCase()
+                            .includes("meeting");
+
+                          if (aIsMeeting && !bIsMeeting) return 1;
+                          if (!aIsMeeting && bIsMeeting) return -1;
+
+                          // For non-meeting milestones, sort by start date first, then end date
+                          const aStartDate = a["start-date"]
+                            ? new Date(a["start-date"]).getTime()
+                            : 0;
+                          const bStartDate = b["start-date"]
+                            ? new Date(b["start-date"]).getTime()
+                            : 0;
+
+                          if (aStartDate !== bStartDate) {
+                            return aStartDate - bStartDate;
+                          }
+
+                          // If start dates are equal, sort by end date
+                          const aEndDate = a["end-date"]
+                            ? new Date(a["end-date"]).getTime()
+                            : 0;
+                          const bEndDate = b["end-date"]
+                            ? new Date(b["end-date"]).getTime()
+                            : 0;
+
+                          return aEndDate - bEndDate;
+                        })
+                        .map((milestone) => (
+                          <SelectItem key={milestone.id} value={milestone.id}>
+                            {milestone.title}
+                          </SelectItem>
+                        ))
                     )}
                   </SelectContent>
                 </Select>

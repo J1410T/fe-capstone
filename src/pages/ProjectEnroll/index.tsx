@@ -172,17 +172,6 @@ const ProjectEnroll: React.FC = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {currentStep === 1 && (
-          <ProjectSummaryStep
-            onContentChange={(content) =>
-              updateEnrollmentData({ bm1Content: content })
-            }
-            onNext={handleNext}
-            projectDocuments={project?.["project-detail"]?.documents}
-            onDocumentCreated={handleDocumentCreated}
-          />
-        )}
-
-        {currentStep === 2 && (
           <InviteMembersStep
             projectName={project["project-detail"]["english-title"]}
             collaborators={collaborators}
@@ -193,6 +182,17 @@ const ProjectEnroll: React.FC = () => {
             onNext={handleNext}
             onPrevious={handlePrevious}
             mode="detailed"
+          />
+        )}
+
+        {currentStep === 2 && (
+          <ProjectSummaryStep
+            onContentChange={(content) =>
+              updateEnrollmentData({ bm1Content: content })
+            }
+            onNext={handleNext}
+            projectDocuments={project?.["project-detail"]?.documents}
+            onDocumentCreated={handleDocumentCreated}
           />
         )}
 
