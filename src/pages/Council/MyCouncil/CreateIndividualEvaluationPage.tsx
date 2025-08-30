@@ -1,12 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,21 +10,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, FileText } from "lucide-react";
+import { ArrowLeft, Save, FileText, Star } from "lucide-react";
+import { useCreateIndividualEvaluation } from "@/hooks/queries/evaluation";
 import {
-  ScientificCVEditor,
-  ScientificCVEditorRef,
-} from "@/components/ui/TinyMCE";
+  useCreateDocumentByIndividualEvaluation,
+  useUpdateDocument,
+} from "@/hooks/queries/document";
 import { useDocumentsByFilter } from "@/hooks/queries/document";
 import {
-  createIndividualEvaluation,
-  getIndividualEvaluationById,
-  updateIndividualEvaluation,
-} from "@/services/resources/evaluation";
+  useGetIndividualEvaluationById,
+  useGetIndividualEvaluationsByStageId,
+} from "@/hooks/queries/evaluation";
+import { useAuth } from "@/contexts";
+import { TinyMCEEditor } from "@/components/ui/TinyMCE";
+import { AIEvaluationDisplay } from "@/components/ui/ai-evaluation-display";
 import { toast } from "sonner";
-import { useAuth } from "@/contexts/auth-hooks";
-import { getMyAccountInfo } from "@/services/resources/auth";
-import { Loading } from "@/components";
 
 // Document types available for individual evaluation
 const EVALUATION_DOCUMENT_TYPES = [
@@ -41,517 +34,515 @@ const EVALUATION_DOCUMENT_TYPES = [
   { value: "BM12", label: "Final Assessment Report (BM12)" },
 ];
 
+interface EvaluationForm {
+  name: string;
+  "total-rate": number | null;
+  comment: string;
+  "reviewer-result": boolean;
+  "is-ai-report": boolean;
+  status: string;
+  "evaluation-stage-id": string;
+  "document-type": string;
+}
+
 const CreateIndividualEvaluationPage: React.FC = () => {
   const { evaluationId, stageId, individualId } = useParams<{
     evaluationId: string;
     stageId: string;
-    individualId?: string; // Present in edit mode
+    individualId?: string;
   }>();
   const navigate = useNavigate();
-  const editorRef = useRef<ScientificCVEditorRef>(null);
   const { user } = useAuth();
 
   // Determine if this is edit mode
   const isEditMode = Boolean(individualId);
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "",
-    content: "",
-    rate: "",
-    comment: "",
-    status: "created",
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Get template for selected document type
-  const {
-    data: templateData,
-    isLoading: isTemplateLoading,
-    refetch: refetchTemplate,
-  } = useDocumentsByFilter(
-    formData.type,
-    true, // is-template
-    1,
-    1,
-    !!formData.type // Only fetch when type is selected
+  // Get individual evaluation data if in edit mode
+  const { data: existingEvaluation } = useGetIndividualEvaluationById(
+    individualId || ""
   );
 
-  // Load existing individual evaluation data in edit mode
+  // Get AI evaluations for reference in create mode
+  const { data: aiEvaluationsData } = useGetIndividualEvaluationsByStageId(
+    stageId || ""
+  );
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [evaluationContent, setEvaluationContent] = useState("");
+  const [evaluationForm, setEvaluationForm] = useState<EvaluationForm>({
+    name: "",
+    "total-rate": null,
+    comment: "",
+    "reviewer-result": false,
+    "is-ai-report": false,
+    status: "created",
+    "evaluation-stage-id": stageId || "",
+    "document-type": "BM4",
+  });
+
+  // Get template data for evaluation document type
+  const { data: templateData } = useDocumentsByFilter(
+    evaluationForm["document-type"] || "BM4", // evaluation document type
+    true, // is template
+    1, // page index
+    10, // page size
+    true, // enabled
+    "created" // status
+  );
+
+  const createIndividualEvaluationMutation = useCreateIndividualEvaluation();
+  const createDocumentMutation = useCreateDocumentByIndividualEvaluation();
+  const updateDocumentMutation = useUpdateDocument();
+
+  // Load existing evaluation data if in edit mode
   useEffect(() => {
-    const loadExistingData = async () => {
-      if (!isEditMode || !individualId) return;
+    if (isEditMode && existingEvaluation) {
+      const data = existingEvaluation;
+      setEvaluationForm({
+        name: data.name || "",
+        "total-rate": data["total-rate"] || null,
+        comment: data.comment || "",
+        "reviewer-result": Boolean(data["reviewer-result"]) || false,
+        "is-ai-report": data["is-ai-report"] || false,
+        status: data.status || "created",
+        "evaluation-stage-id": data["evaluation-stage-id"] || stageId || "",
+        "document-type": "BM4", // Default to BM4 for edit mode
+      });
 
-      try {
-        setIsLoading(true);
-        const existingData = await getIndividualEvaluationById({
-          id: individualId,
-        });
-
-        setFormData({
-          name: existingData.name || "",
-          type: "", // Type will need to be selected manually in edit mode
-          content: existingData.comment || "",
-          rate: existingData["total-rate"]?.toString() || "",
-          comment: existingData.comment || "",
-          status: existingData.status || "created",
-        });
-
-        // Set content in editor if available - with delay to ensure editor is ready
-        if (existingData.comment) {
-          setTimeout(() => {
-            if (editorRef.current && existingData.comment) {
-              editorRef.current.setContent(existingData.comment);
-            }
-          }, 500); // Wait for editor to be fully initialized
+      // Load existing document content if available
+      if (data.documents && data.documents.length > 0) {
+        const firstDocument = data.documents[0];
+        if (firstDocument["content-html"]) {
+          setEvaluationContent(firstDocument["content-html"]);
         }
-      } catch (error) {
-        console.error("Failed to load existing individual evaluation:", error);
-        toast.error("Failed to load existing evaluation data");
-      } finally {
-        setIsLoading(false);
       }
-    };
+    }
+  }, [existingEvaluation, isEditMode, stageId]);
 
-    loadExistingData();
-  }, [isEditMode, individualId]);
-
-  // Load template content when available (only for Create mode)
+  // Load template content when templateData is available (only in create mode)
   useEffect(() => {
     if (
-      !isEditMode && // Only load template in create mode
-      !isTemplateLoading &&
-      templateData?.data?.["data-list"]?.[0]?.["content-html"] &&
-      formData.type // Only load when type is selected
+      !isEditMode &&
+      templateData?.data?.["data-list"]?.[0]?.["content-html"]
     ) {
       const templateContent = templateData.data["data-list"][0]["content-html"];
-      setFormData((prev) => ({
-        ...prev,
-        content: templateContent,
-      }));
-
-      // Update the editor content with a small delay to ensure editor is ready
-      setTimeout(() => {
-        if (editorRef.current) {
-          editorRef.current.setContent(templateContent);
-        }
-      }, 100);
+      setEvaluationContent(templateContent);
     }
-  }, [templateData, isTemplateLoading, isEditMode, formData.type]);
+  }, [templateData, isEditMode]);
 
-  const handleTypeChange = (value: string) => {
-    setFormData((prev) => ({
+  // Update evaluation stage id when available
+  useEffect(() => {
+    if (stageId) {
+      setEvaluationForm((prev) => ({
+        ...prev,
+        "evaluation-stage-id": stageId,
+      }));
+    }
+  }, [stageId]);
+
+  const handleInputChange = (
+    field: keyof EvaluationForm,
+    value: string | number | boolean | null
+  ) => {
+    setEvaluationForm((prev) => ({
       ...prev,
-      type: value,
+      [field]: value,
+    }));
+  };
+
+  const handleDocumentTypeChange = (value: string) => {
+    setEvaluationForm((prev) => ({
+      ...prev,
+      "document-type": value,
       name:
         EVALUATION_DOCUMENT_TYPES.find((type) => type.value === value)?.label ||
         "",
-      content: "", // Reset content when changing type
     }));
-
-    // Refetch template when type changes
-    refetchTemplate();
   };
 
-  const handleInputChange = (field: string, value: string) => {
-    // Special handling for rating field
-    if (field === "rate") {
-      // Allow empty string for clearing the field
-      if (value === "") {
-        setFormData((prev) => ({
-          ...prev,
-          [field]: value,
-        }));
-        return;
-      }
-
-      // Parse and validate numeric input
-      const numValue = parseInt(value);
-      if (isNaN(numValue)) {
-        toast.error("Rating must be a valid number");
-        return;
-      }
-
-      if (numValue < 0) {
-        toast.error("Rating cannot be less than 0");
-        return;
-      }
-
-      if (numValue > 100) {
-        toast.error("Rating cannot exceed 100");
-        return;
-      }
-
-      // Update with validated value
-      setFormData((prev) => ({
-        ...prev,
-        [field]: numValue.toString(),
-      }));
-    } else {
-      // Normal handling for other fields
-      setFormData((prev) => ({
-        ...prev,
-        [field]: value,
-      }));
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name.trim()) {
-      toast.error("Please enter evaluation name");
-      return;
-    }
-
-    if (!formData.type) {
-      toast.error("Please select document type");
-      return;
-    }
-
-    if (!formData.content.trim()) {
-      toast.error("Please enter evaluation content");
-      return;
-    }
-
+  const handleSubmit = async () => {
     if (!stageId) {
-      toast.error("Stage ID is required");
+      console.error("Evaluation stage ID not found");
       return;
     }
 
+    // Validation cho total rate
+    if (evaluationForm["total-rate"] !== null) {
+      if (
+        evaluationForm["total-rate"] < 0 ||
+        evaluationForm["total-rate"] > 100
+      ) {
+        toast.error("Score must be between 0 and 100!");
+        return;
+      }
+    }
+
+    setIsLoading(true);
     try {
-      setIsSubmitting(true);
-
-      // Get reviewer ID with fallback mechanism
-      let reviewerId = user?.id;
-      if (!reviewerId) {
-        try {
-          const accountInfo = await getMyAccountInfo();
-          reviewerId = accountInfo?.id;
-        } catch (error) {
-          console.error("Failed to get account info:", error);
-        }
-      }
-
-      // Prepare API request data according to the required format
-      const rate = formData.rate ? parseInt(formData.rate) : 0;
-
-      // Additional validation for rating
-      if (formData.rate && (rate < 0 || rate > 100)) {
-        toast.error("Rating must be between 0 and 100");
-        return;
-      }
-
-      // Base data for both create and update
-      const baseData = {
-        name: formData.name.trim(),
-        "total-rate": rate,
-        comment: formData.content.trim() || formData.name.trim(),
-        "reviewer-result": true,
-        "is-ai-report": false,
-      };
-
-      // For create: include foreign keys
-      const createData = {
-        ...baseData,
-        "evaluation-stage-id": stageId,
-        "reviewer-id": reviewerId || "",
-      };
-
-      // For update: only base data (no foreign keys)
-      const updateData = baseData;
-
-      // Additional validation
-      if (!baseData.name) {
-        toast.error("Name cannot be empty");
-        return;
-      }
-      // This validation is now handled above, but keep as backup
-      if (rate < 0 || rate > 100) {
-        toast.error("Rating must be between 0 and 100");
-        return;
-      }
-
-      // Validation for create mode only
-      if (!isEditMode) {
-        if (!stageId) {
-          toast.error("Stage ID is missing");
-          return;
-        }
-        if (!reviewerId) {
-          toast.error("Unable to identify user - please login again");
-          return;
-        }
-      }
-
-      const currentData = isEditMode ? updateData : createData;
-
-      console.log("Mode:", isEditMode ? "Edit" : "Create");
-      console.log("API data:", currentData);
-      console.log("Data types:", {
-        name: typeof currentData.name,
-        "total-rate": typeof currentData["total-rate"],
-        comment: typeof currentData.comment,
-        "reviewer-result": typeof currentData["reviewer-result"],
-        "is-ai-report": typeof currentData["is-ai-report"],
-      });
-
-      // Check if content contains images (base64)
-      const hasImages = currentData.comment.includes("data:image/");
-      const imageCount = (currentData.comment.match(/data:image\//g) || [])
-        .length;
-      console.log("Content analysis:", {
-        hasImages,
-        imageCount,
-        contentSizeKB: Math.round(currentData.comment.length / 1024),
-        contentPreview: currentData.comment.substring(0, 200) + "...",
-      });
-
-      // Real API call - Create or Update based on mode
-      let response;
       if (isEditMode && individualId) {
-        response = await updateIndividualEvaluation(individualId, updateData);
-        console.log("Individual evaluation updated successfully:", response);
-        toast.success("Individual evaluation updated successfully!");
+        // Edit mode: Only update document content, keep evaluation unchanged
+        if (
+          existingEvaluation?.documents &&
+          existingEvaluation.documents.length > 0
+        ) {
+          const firstDocument = existingEvaluation.documents[0];
+          await updateDocumentMutation.mutateAsync({
+            id: firstDocument.id,
+            name: firstDocument.name, // Keep original name
+            type: firstDocument.type, // Keep original type
+            "is-template": firstDocument["is-template"], // Keep original template status
+            status: firstDocument.status, // Keep original status
+            "content-html": evaluationContent || firstDocument["content-html"], // Only update content
+            "project-id": firstDocument["project-id"], // Keep original project link if any
+            "individual-evaluation-id":
+              firstDocument["individual-evaluation-id"], // Keep original evaluation link
+          });
+
+          console.log("Document content updated:", firstDocument.id);
+          toast.success("Evaluation document updated successfully!");
+        } else {
+          toast.error("No document found to update");
+        }
       } else {
-        response = await createIndividualEvaluation(createData);
-        console.log("Individual evaluation created successfully:", response);
+        // Create mode: Create new evaluation
+        // Step 1: Create Individual Evaluation
+        const individualEvaluationResponse =
+          await createIndividualEvaluationMutation.mutateAsync({
+            ...evaluationForm,
+            "total-rate": evaluationForm["total-rate"] || 0,
+            comment: evaluationForm.comment || "",
+            "evaluation-stage-id": stageId,
+            "reviewer-id": user?.id || "",
+          });
+
+        // Step 2: Create Document by Individual Evaluation ID with content from TinyMCE
+        const documentResponse = await createDocumentMutation.mutateAsync({
+          name: evaluationForm.name || "Individual Evaluation Document",
+          type: evaluationForm["document-type"],
+          "is-template": false,
+          status: "created",
+          "content-html":
+            evaluationContent ||
+            `<html lang="en"><head><meta charset="UTF-8" /></head><body><p>Default evaluation content</p></body></html>`,
+          "individual-evaluation-id": individualEvaluationResponse.id,
+        });
+
+        console.log(
+          "Individual Evaluation created:",
+          individualEvaluationResponse.id
+        );
+        console.log("Document created:", documentResponse.id);
+
         toast.success("Individual evaluation created successfully!");
       }
 
+      // Navigate back to evaluation stage
       navigate(`/council/evaluation-stages/${evaluationId}/${stageId}`);
     } catch (error) {
-      console.error(
-        `Failed to ${isEditMode ? "update" : "create"} individual evaluation:`,
-        error
+      console.error("Error processing evaluation:", error);
+      toast.error(
+        isEditMode ? "Failed to update document" : "Failed to create evaluation"
       );
-      console.error(
-        "Error details:",
-        (error as Error & { response?: { data?: unknown } })?.response?.data
-      );
-      console.error(
-        "Error status:",
-        (error as Error & { response?: { status?: number } })?.response?.status
-      );
-
-      const axiosError = error as Error & {
-        response?: {
-          data?: { message?: string; error?: string };
-        };
-      };
-
-      const errorMessage =
-        axiosError?.response?.data?.message ||
-        axiosError?.response?.data?.error ||
-        `An error occurred while ${
-          isEditMode ? "updating" : "creating"
-        } the evaluation`;
-      toast.error(errorMessage);
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    navigate(`/council/evaluation-stages/${evaluationId}/${stageId}`);
-  };
-
-  // Show loading spinner
-  if (isTemplateLoading || isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <Loading />
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={handleCancel}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Stage
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">
-            {isEditMode
-              ? "Edit Individual Evaluation"
-              : "Create Individual Evaluation"}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {isEditMode
-              ? "Edit the individual evaluation for this stage"
-              : "Create a new individual evaluation for this stage"}
-          </p>
+    <div className="min-h-screen">
+      <div className="container mx-auto py-4 px-4">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <Button
+            variant="outline"
+            onClick={() =>
+              navigate(`/council/evaluation-stages/${evaluationId}/${stageId}`)
+            }
+            className="flex items-center gap-2 hover:bg-gray-50"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Stage
+          </Button>
+          <div className="flex-1">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              {isEditMode
+                ? "Edit Individual Evaluation"
+                : "Create Individual Evaluation"}
+            </h1>
+            <p className="text-gray-600 mt-1">
+              {isEditMode
+                ? "View detailed evaluation for this stage"
+                : "Create a detailed evaluation for this stage"}
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Basic Information
-            </CardTitle>
-            <CardDescription>
-              Basic information about the evaluation
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Document Type */}
-            <div className="space-y-2">
-              <Label htmlFor="type">Document Type *</Label>
-              <Select onValueChange={handleTypeChange} value={formData.type}>
-                <SelectTrigger
-                  className={`${!formData.type ? "border-red-200" : ""}`}
+        {/* Form Fields */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6 mb-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-emerald-100 rounded-xl">
+              <Star className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Evaluation Details
+              </h3>
+              <p className="text-sm text-gray-500">
+                {isEditMode
+                  ? "Evaluation information"
+                  : "Provide evaluation information"}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Document Type - Only show in create mode */}
+            {!isEditMode && (
+              <div>
+                <Label className="text-sm font-medium text-gray-700">
+                  Document Type *
+                </Label>
+                <Select
+                  value={evaluationForm["document-type"]}
+                  onValueChange={handleDocumentTypeChange}
                 >
-                  <SelectValue placeholder="Select document type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EVALUATION_DOCUMENT_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {!formData.type && (
-                <p className="text-xs text-red-500 mt-1">
-                  Please select a document type
-                </p>
-              )}
-            </div>
-
-            {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Evaluation Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="Enter evaluation name..."
-                required
-              />
-            </div>
-
-            {/* Rating */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="rate">Rating (0-100)</Label>
-                <Input
-                  id="rate"
-                  type="number"
-                  min="0"
-                  max="100"
-                  value={formData.rate}
-                  onChange={(e) => handleInputChange("rate", e.target.value)}
-                  placeholder="Enter rating (0-100)..."
-                />
-              </div>
-            </div>
-
-            {/* Template Status */}
-            {formData.type && (
-              <div className="pt-2 border-t">
-                {isTemplateLoading ? (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
-                    <p className="text-sm text-blue-700">
-                      🔄 Loading template for {formData.type}...
-                    </p>
-                  </div>
-                ) : templateData?.data?.["data-list"]?.length ? (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-md">
-                    <p className="text-sm text-green-700">
-                      ✓ Template loaded for {formData.type}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                    <p className="text-sm text-yellow-700">
-                      ⚠️ No template available for {formData.type}
-                    </p>
-                  </div>
-                )}
+                  <SelectTrigger className="mt-1 w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {EVALUATION_DOCUMENT_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
-          </CardContent>
-        </Card>
 
-        {/* Content Editor */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Evaluation Content *</CardTitle>
-            <CardDescription>
-              Write detailed evaluation content using the editor
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {!formData.type && (
-                <div className="mb-4 p-4 bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg text-center">
-                  <FileText className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                  <p className="text-gray-600 font-medium">
-                    Select Document Type First
-                  </p>
-                  <p className="text-sm text-gray-500">
-                    Choose a document type to load the appropriate template
-                  </p>
-                </div>
-              )}
-              <ScientificCVEditor
-                ref={editorRef}
-                value={formData.content}
-                onChange={(content: string) =>
-                  handleInputChange("content", content)
-                }
-                height={500}
-                placeholder={
-                  formData.type
-                    ? "Enter detailed evaluation content..."
-                    : "Please select document type first..."
-                }
-                readOnly={!formData.type || isTemplateLoading}
+            {/* Evaluation Name */}
+            <div>
+              <Label className="text-sm font-medium text-gray-700">
+                Evaluation Name *
+              </Label>
+              <Input
+                value={evaluationForm.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                placeholder="Enter evaluation name"
+                className="mt-1"
+                readOnly={isEditMode}
               />
             </div>
-          </CardContent>
-        </Card>
 
-        {/* Actions */}
-        <Card>
-          <CardContent className="flex justify-end gap-4 pt-6">
+            {/* Total Rate */}
+            <div>
+              <Label className="text-sm font-medium text-gray-700">
+                Total Rate (0-100) *
+              </Label>
+              <Input
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                value={
+                  evaluationForm["total-rate"] !== null &&
+                  evaluationForm["total-rate"] !== undefined
+                    ? evaluationForm["total-rate"]
+                    : ""
+                }
+                onChange={(e) => {
+                  if (isEditMode) return; // Disable editing in view mode
+
+                  const value = e.target.value;
+
+                  if (value === "") {
+                    handleInputChange("total-rate", null);
+                    return;
+                  }
+
+                  const numValue = parseInt(value, 10);
+
+                  if (isNaN(numValue)) {
+                    return;
+                  }
+
+                  if (numValue > 100) {
+                    toast.error("Score cannot exceed 100!");
+                    return;
+                  }
+                  if (numValue < 0) {
+                    toast.error("Score must be greater than or equal to 0!");
+                    return;
+                  }
+
+                  handleInputChange("total-rate", numValue);
+                }}
+                onKeyDown={(e) => {
+                  if (isEditMode) return;
+
+                  // Prevent typing if current value would exceed 100
+                  if (e.key >= "0" && e.key <= "9") {
+                    const currentValue = evaluationForm["total-rate"] || 0;
+                    const newValue = parseInt(
+                      currentValue.toString() + e.key,
+                      10
+                    );
+                    if (newValue > 100) {
+                      e.preventDefault();
+                      toast.error("Score cannot exceed 100!");
+                    }
+                  }
+                }}
+                placeholder="Enter total rate (e.g., 85)"
+                className="mt-1"
+                readOnly={isEditMode}
+              />
+            </div>
+
+            {/* Reviewer Result */}
+            <div>
+              <Label className="text-sm font-medium text-gray-700">
+                Reviewer Result *
+              </Label>
+              <Select
+                value={evaluationForm["reviewer-result"] ? "true" : "false"}
+                onValueChange={(value) =>
+                  handleInputChange("reviewer-result", value === "true")
+                }
+                disabled={isEditMode}
+              >
+                <SelectTrigger className="mt-1 w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Approve</SelectItem>
+                  <SelectItem value="false">Reject</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Short Comment Field - Full width */}
+          <div className="mt-4">
+            <Label className="text-sm font-medium text-gray-700">
+              Short Comment *
+            </Label>
+            <textarea
+              value={evaluationForm.comment}
+              onChange={(e) => handleInputChange("comment", e.target.value)}
+              placeholder="Enter short comment (about 2–3 sentences)"
+              rows={3}
+              className="mt-1 w-full border border-gray-300 rounded-md p-2 text-sm"
+              readOnly={isEditMode}
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="mt-6 flex justify-end">
             <Button
-              type="button"
-              variant="outline"
-              onClick={handleCancel}
-              disabled={isSubmitting}
+              onClick={handleSubmit}
+              disabled={
+                isLoading ||
+                !evaluationForm.name ||
+                evaluationForm["total-rate"] === null ||
+                evaluationForm["total-rate"] === undefined ||
+                !stageId
+              }
+              className="bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white font-medium rounded-xl px-6"
             >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting || !formData.type || !formData.name.trim()}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   {isEditMode ? "Updating..." : "Creating..."}
-                </>
+                </div>
               ) : (
                 <>
                   <Save className="h-4 w-4 mr-2" />
-                  {isEditMode ? "Update Evaluation" : "Create Evaluation"}
+                  {isEditMode ? "Update Evaluation" : "Submit Evaluation"}
                 </>
               )}
             </Button>
-          </CardContent>
-        </Card>
-      </form>
+          </div>
+        </div>
+
+        {/* Evaluation Content - Full width */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-emerald-100 rounded-xl">
+              <FileText className="h-5 w-5 text-emerald-600" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Detailed Evaluation
+              </h3>
+              <p className="text-sm text-gray-500">
+                {isEditMode
+                  ? "Evaluation content"
+                  : "Provide comprehensive evaluation using the rich text editor"}
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <Label className="text-sm font-medium text-gray-700">
+              Evaluation Document *
+            </Label>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <TinyMCEEditor
+                value={evaluationContent}
+                onChange={setEvaluationContent}
+                height={400}
+                placeholder="Create your comprehensive evaluation document. Include analysis, findings, recommendations, and detailed feedback..."
+                readOnly={isEditMode}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* AI Evaluations Reference - Only show in create mode */}
+        {!isEditMode &&
+          aiEvaluationsData?.["data-list"] &&
+          aiEvaluationsData["data-list"].length > 0 && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-purple-100 rounded-xl">
+                  <FileText className="h-5 w-5 text-purple-600" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    AI Generated Evaluations Reference
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Review AI-generated evaluations for this stage to help guide
+                    your assessment
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {aiEvaluationsData["data-list"]
+                  .filter((evaluation) => evaluation["is-ai-report"] === true)
+                  .map((aiEvaluation) => (
+                    <div
+                      key={aiEvaluation.id}
+                      className="border border-purple-200 rounded-lg overflow-hidden"
+                    >
+                      <AIEvaluationDisplay
+                        content={
+                          aiEvaluation.comment || "No AI analysis available"
+                        }
+                        title={aiEvaluation.name}
+                        score={aiEvaluation["total-rate"]}
+                        status={aiEvaluation.status}
+                        submittedAt={aiEvaluation["submitted-at"]}
+                        compact={true}
+                      />
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+      </div>
     </div>
   );
 };

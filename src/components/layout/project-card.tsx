@@ -1,15 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { useAuth, UserRole } from "@/contexts/AuthContext";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, CheckCircle } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle,
+  GraduationCap,
+  Lightbulb,
+} from "lucide-react";
 import { ProjectCardProps } from "@/types/project";
 
 const ProjectCard: React.FC<ProjectCardProps> = ({
@@ -85,52 +85,88 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     );
   };
 
-  const fallbackLogo =
-    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSC_XtryB5OYUluF6iPg1reZRvaoFczfSOtog&s";
+  // Array of available icons from public/images
+  const availableIcons = [
+    "/images/Icon 1.png",
+    "/images/Icon 3.png",
+    "/images/Icon 4.png",
+    "/images/Icon 5.png",
+    "/images/Icon 7.png",
+    "/images/Icon 8.png",
+    "/images/Icon 9.png",
+    "/images/Icon 11.png",
+    "/images/Icon 12.png",
+    "/images/Icon 14.png",
+    "/images/Icon 16.png",
+    "/images/Icon 17.png",
+    "/images/Icon 20.png",
+    "/images/Icon 21.png",
+    "/images/Icon 22.png",
+    "/images/Icon 23.png",
+    "/images/Icon 24.png",
+    "/images/Icon 28.png",
+    "/images/Icon 29.png",
+    "/images/Icon 30.png",
+    "/images/Icon 31.png",
+  ];
+
+  // Generate consistent random icon based on project ID
+  const getRandomIcon = (projectId: string) => {
+    const hash = projectId.split("").reduce((a, b) => {
+      a = (a << 5) - a + b.charCodeAt(0);
+      return a & a;
+    }, 0);
+    const index = Math.abs(hash) % availableIcons.length;
+    return availableIcons[index];
+  };
+
+  const fallbackLogo = getRandomIcon(id);
 
   return (
-    <Card className="p-0 relative group w-full max-w-sm flex-col bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
-      <CardHeader className="p-0">
-        <div className="relative h-48 w-full overflow-hidden">
-          <img
-            src={logoUrl || fallbackLogo}
-            alt={title}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-            onError={(e) => {
-              const fallback = fallbackLogo;
-              if (e.currentTarget.src !== fallback) {
-                e.currentTarget.src = fallback;
-              }
-            }}
-          />
-
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
+    <Card className="py-0 gap-1 relative group w-full max-w-sm flex-col bg-white border border-gray-200 shadow-sm hover:shadow-xl hover:border-emerald-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+      {/* Header Section */}
+      <div className="p-4">
+        {/* Top Row: Logo and Status */}
+        <div className="flex items-center justify-between mb-3">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-50 via-blue-50 to-purple-50 border border-emerald-100 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 overflow-hidden">
+              <img
+                src={logoUrl || fallbackLogo}
+                alt={title}
+                className="w-10 h-10 object-cover rounded-lg"
+                onError={(e) => {
+                  const fallback = fallbackLogo;
+                  if (e.currentTarget.src !== fallback) {
+                    e.currentTarget.src = fallback;
+                  }
+                }}
+              />
+            </div>
+          </div>
 
           {/* Status Badge */}
-          <div className="absolute top-3 right-3">
-            <Badge
-              className={`${statusColorClass} font-medium text-xs px-2 py-0.5`}
-            >
-              {getDisplayStatus(status)}
-            </Badge>
-          </div>
-
-          {/* Title & Subtitle */}
-          <div className="absolute bottom-0 left-0 right-0 p-3">
-            <h3 className="text-base font-semibold text-white leading-tight line-clamp-2">
-              {title}
-            </h3>
-            {vietnameseTitle && (
-              <p className="text-xs text-gray-200 line-clamp-1">
-                {vietnameseTitle}
-              </p>
-            )}
-          </div>
+          <Badge
+            className={`${statusColorClass} font-semibold text-xs px-2 py-0.5 rounded-full`}
+          >
+            {getDisplayStatus(status)}
+          </Badge>
         </div>
-      </CardHeader>
 
-      <CardContent className="p-4 pt-0 flex-1 space-y-3">
+        {/* Title Section */}
+        <div className="space-y-1">
+          <h3 className="text-base font-bold text-gray-900 leading-tight line-clamp-2">
+            {title}
+          </h3>
+          {vietnameseTitle && (
+            <p className="text-xs text-gray-500 line-clamp-1">
+              {vietnameseTitle}
+            </p>
+          )}
+        </div>
+      </div>
+
+      <CardContent className="px-4 pb-3 flex-1 space-y-3">
         {/* Type & Category */}
         <div className="flex justify-between items-center flex-wrap gap-2">
           {/* Left side: type + category */}
@@ -138,7 +174,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             {type && (
               <Badge
                 variant="outline"
-                className="bg-blue-50 text-blue-700 border-blue-200"
+                className="bg-blue-50 text-blue-700 border-blue-200 font-medium px-2 py-0.5 rounded-full text-xs"
               >
                 {type}
               </Badge>
@@ -146,7 +182,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             {category && (
               <Badge
                 variant="outline"
-                className="bg-purple-50 text-purple-700 border-purple-200"
+                className="bg-purple-50 text-purple-700 border-purple-200 font-medium px-2 py-0.5 rounded-full text-xs"
               >
                 {category}
               </Badge>
@@ -155,8 +191,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
           {/* Right side: Enrolled */}
           {status.toLowerCase() === "draft" && (
-            <div className="flex items-center gap-1 text-sm text-green-700 font-medium">
-              <CheckCircle className="w-4 h-4" />
+            <div className="flex items-center gap-1 text-xs text-green-700 font-semibold">
+              <div className="w-4 h-4 rounded-full bg-green-100 flex items-center justify-center">
+                <CheckCircle className="w-2.5 h-2.5" />
+              </div>
               Enrolled
             </div>
           )}
@@ -164,29 +202,33 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
         {/* Major & Field */}
         {major && major.length > 0 && (
-          <div className="space-y-1 text-sm">
-            <div className="flex items-start gap-2">
-              <span className="font-medium text-gray-700">
-                <strong>Majors:</strong>
+          <div className="text-xs bg-gray-50 rounded-lg p-2 space-y-1">
+            {/* Majors */}
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-emerald-100 flex items-center justify-center">
+                <GraduationCap className="w-2.5 h-2.5 text-emerald-600" />
+              </div>
+              <span className="font-semibold text-gray-700 text-xs uppercase tracking-wide">
+                Majors:
               </span>
-              <span className="text-gray-600">
+              <span className="text-gray-600 text-xs">
                 {major.map((m) => m.name).join(", ")}
               </span>
             </div>
 
-            {/* Lấy distinct field names */}
-            <div className="flex items-start gap-2">
-              <span className="font-medium text-gray-700">
-                <strong>
-                  Field
-                  {Array.from(new Set(major.map((m) => m.field.name))).length >
-                  1
-                    ? "s"
-                    : ""}
-                  :
-                </strong>
+            {/* Fields */}
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded-full bg-blue-100 flex items-center justify-center">
+                <Lightbulb className="w-2.5 h-2.5 text-blue-600" />
+              </div>
+              <span className="font-semibold text-gray-700 text-xs uppercase tracking-wide">
+                Field
+                {Array.from(new Set(major.map((m) => m.field.name))).length > 1
+                  ? "s"
+                  : ""}
+                :
               </span>
-              <span className="text-gray-600">
+              <span className="text-gray-600 text-xs">
                 {[...new Set(major.map((m) => m.field.name))].join(", ")}
               </span>
             </div>
@@ -200,7 +242,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               <Badge
                 key={index}
                 variant="secondary"
-                className="text-xs px-2 py-1 bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                className="text-xs px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 transition-colors rounded-full font-medium"
               >
                 {tag}
               </Badge>
@@ -208,7 +250,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
             {tags.length > 3 && (
               <Badge
                 variant="secondary"
-                className="text-xs px-2 py-1 bg-gray-100 text-gray-600"
+                className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full font-medium"
               >
                 +{tags.length - 3} more
               </Badge>
@@ -217,7 +259,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         )}
       </CardContent>
 
-      <CardFooter className="p-4 pt-0">{renderActionButton()}</CardFooter>
+      <CardFooter className="px-4 pb-4 pt-0">{renderActionButton()}</CardFooter>
 
       {/* Hover accent line */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-blue-500 scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
