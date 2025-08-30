@@ -66,6 +66,12 @@ function ProjectDetail() {
     const isMember = projectResponse?.data["is-member"];
     const projectStatus = project?.status;
 
+    // If user is HOST_INSTITUTION, only show overview and results
+    if (user?.role === UserRole.HOST_INSTITUTION) {
+      baseTabs.push("results");
+      return baseTabs;
+    }
+
     // Show all tabs if project is approved or inprogress
     if (projectStatus === "inprogress" || projectStatus === "completed") {
       baseTabs.push(
