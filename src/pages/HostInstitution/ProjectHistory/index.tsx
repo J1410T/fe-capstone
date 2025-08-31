@@ -48,6 +48,20 @@ const ProjectHistory: React.FC = () => {
     refetch,
   } = useProjectByHostInstitution();
 
+  // Debug: Log projects data to check logo URL
+  React.useEffect(() => {
+    if (projects && projects.length > 0) {
+      console.log("Projects data:", projects);
+      projects.forEach((project, index) => {
+        console.log(`Project ${index + 1}:`, {
+          id: project.id,
+          title: project["english-title"],
+          logoUrl: project["logo-url"],
+        });
+      });
+    }
+  }, [projects]);
+
   const handleRefresh = () => {
     refetch();
   };
@@ -292,6 +306,7 @@ const ProjectHistory: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Logo</TableHead>
                   <TableHead>
                     <Button
                       variant="ghost"
@@ -312,6 +327,30 @@ const ProjectHistory: React.FC = () => {
               <TableBody>
                 {filteredProjects.map((project) => (
                   <TableRow key={project.id}>
+                    <TableCell>
+                      <div className="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
+                        {project["logo-url"] ? (
+                          <img
+                            src={project["logo-url"]}
+                            alt={project["english-title"] || "Project Logo"}
+                            className="w-10 h-10 rounded-lg object-cover"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                              e.currentTarget.nextElementSibling?.classList.remove(
+                                "hidden"
+                              );
+                            }}
+                          />
+                        ) : null}
+                        <div
+                          className={`w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-50 to-blue-50 flex items-center justify-center ${
+                            project["logo-url"] ? "hidden" : ""
+                          }`}
+                        >
+                          <Briefcase className="w-5 h-5 text-gray-500" />
+                        </div>
+                      </div>
+                    </TableCell>
                     <TableCell className="font-medium">
                       <div className="max-w-[330px]">
                         <div className="font-semibold truncate">

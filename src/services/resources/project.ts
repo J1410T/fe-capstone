@@ -223,12 +223,14 @@ export const createProject = async (
 ): Promise<string> => {
   try {
     const accessToken = getAccessToken();
+    console.log("API createProject called with data:", data);
     const res = await axiosClient.post<string>(`/project`, data, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
     });
+    console.log("API createProject response:", res.data);
     return res.data;
   } catch (error) {
     console.error("createProject error:", error);

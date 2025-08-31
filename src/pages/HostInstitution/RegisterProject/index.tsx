@@ -38,6 +38,7 @@ const RegisterProject: React.FC = () => {
     field: [],
     major: [],
     tags: [],
+    logoUrl: "",
   });
 
   const isLoading =
@@ -144,6 +145,7 @@ const RegisterProject: React.FC = () => {
           language: formData.language,
           category: formData.category,
           type: formData.type,
+          "logo-url": formData.logoUrl || undefined,
         };
 
         const projectId = await createProjectMutation.mutateAsync(projectData);

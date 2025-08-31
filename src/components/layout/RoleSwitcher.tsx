@@ -177,7 +177,7 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
             variant="ghost"
             className={`w-full justify-start gap-2 ${className}`}
           >
-            <ArrowRightLeft className="h-4 w-4" />
+            <ArrowRightLeft className="h-4 w-4 ml-1" />
             <span>Switch Role</span>
           </Button>
         </DropdownMenuTrigger>
@@ -278,7 +278,7 @@ const RoleSwitcher: React.FC<RoleSwitcherProps> = ({
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <DropdownMenuItem className="cursor-pointer">
-          <ArrowRightLeft className="mr-2 h-4 w-4" />
+          <ArrowRightLeft className="ml-1 mr-2 h-4 w-4" />
           <span>Switch Role</span>
         </DropdownMenuItem>
       </DropdownMenuTrigger>

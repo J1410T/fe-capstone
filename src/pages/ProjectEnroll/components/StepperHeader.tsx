@@ -16,15 +16,15 @@ interface Step {
 const steps: Step[] = [
   {
     number: 1,
-    title: "Project Registration",
-    description: "Register Form",
-    icon: FileText,
-  },
-  {
-    number: 2,
     title: "Invite Members",
     description: "Add Members",
     icon: Users,
+  },
+  {
+    number: 2,
+    title: "Project Summary",
+    description: "Register Form",
+    icon: FileText,
   },
   {
     number: 3,

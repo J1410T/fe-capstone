@@ -1086,8 +1086,8 @@ export const InviteMembersStep: React.FC<InviteMembersStepProps> = ({
 
       {/* Main Card */}
       <Card className="border-0 shadow-lg">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100">
-          <CardTitle className="text-xl font-bold text-gray-800 flex items-center justify-between">
+        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-100 flex items-center justify-center min-h-[80px]">
+          <CardTitle className="text-xl font-bold text-gray-800 flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-blue-600" />
               Team Members

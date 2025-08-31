@@ -153,6 +153,39 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="logoUrl">Image URL</Label>
+            <Textarea
+              id="logoUrl"
+              name="logoUrl"
+              placeholder="Provide image URL (is not required)"
+              rows={1}
+              value={formData.logoUrl}
+              onChange={onInputChange}
+            />
+            {formData.logoUrl && (
+              <div className="mt-2">
+                <Label className="text-sm">Preview</Label>
+                <div className="w-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center mt-1">
+                  <img
+                    src={formData.logoUrl}
+                    alt="Logo Preview"
+                    className="w-24 h-24 rounded-lg object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.nextElementSibling?.classList.remove(
+                        "hidden"
+                      );
+                    }}
+                  />
+                  <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-emerald-50 to-blue-50 flex items-center justify-center hidden">
+                    <span className="text-xs text-gray-500">Invalid URL</span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="maximumMember">Maximum Members</Label>

@@ -152,6 +152,30 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                 </p>
               </div>
             )}
+            {formData.logoUrl && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Image URL
+                </p>
+                <p className="text-base mb-2">{formData.logoUrl}</p>
+                <div className="w-32 h-32 rounded-lg bg-gray-100 flex items-center justify-center">
+                  <img
+                    src={formData.logoUrl}
+                    alt="Logo Preview"
+                    className="w-24 h-24 rounded-lg object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                      e.currentTarget.nextElementSibling?.classList.remove(
+                        "hidden"
+                      );
+                    }}
+                  />
+                  <div className="w-24 h-24 rounded-lg bg-gradient-to-br from-emerald-50 to-blue-50 flex items-center justify-center hidden">
+                    <span className="text-xs text-gray-500">Invalid URL</span>
+                  </div>
+                </div>
+              </div>
+            )}
             {formData.tags.length > 0 && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-2">

@@ -87,6 +87,9 @@ export function useCreateProject() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["project-list-filter"] });
       queryClient.invalidateQueries({ queryKey: ["my-projects"] });
+      queryClient.invalidateQueries({
+        queryKey: ["project-by-host-institution"],
+      });
     },
   });
 }

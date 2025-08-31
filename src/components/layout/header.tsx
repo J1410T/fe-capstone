@@ -222,7 +222,7 @@ function Header() {
     <header className="w-full border-b border-gray-200/70 bg-white/95 backdrop-blur-sm fixed top-0 left-0 right-0 z-20 h-16 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-full flex items-center justify-between">
         {/* Left: Logo + Menu */}
-        <div className="flex items-center space-x-12 h-full">
+        <div className="flex items-center space-x-8 h-full">
           {/* Logo */}
           <Link
             to="/home"
@@ -258,7 +258,20 @@ function Header() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-3">
+          {/* Role Badge */}
+          <div className="hidden md:flex items-center">
+            <Badge
+              variant="secondary"
+              className="bg-gradient-to-r from-emerald-50 to-blue-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 text-xs font-semibold rounded-full shadow-sm"
+            >
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                {displayUser.role}
+              </div>
+            </Badge>
+          </div>
+
           {/* Notifications Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
