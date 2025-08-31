@@ -152,6 +152,14 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
                 </p>
               </div>
             )}
+            {formData.logoUrl && (
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">
+                  Image URL
+                </p>
+                <p className="text-base">{formData.logoUrl}</p>
+              </div>
+            )}
             {formData.tags.length > 0 && (
               <div>
                 <p className="text-sm font-medium text-muted-foreground mb-2">

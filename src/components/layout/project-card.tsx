@@ -90,15 +90,10 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
     "/images/Icon 1.png",
     "/images/Icon 3.png",
     "/images/Icon 4.png",
-    "/images/Icon 5.png",
-    "/images/Icon 7.png",
-    "/images/Icon 8.png",
     "/images/Icon 9.png",
     "/images/Icon 11.png",
-    "/images/Icon 12.png",
     "/images/Icon 14.png",
     "/images/Icon 16.png",
-    "/images/Icon 17.png",
     "/images/Icon 20.png",
     "/images/Icon 21.png",
     "/images/Icon 22.png",
@@ -134,7 +129,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               <img
                 src={logoUrl || fallbackLogo}
                 alt={title}
-                className="w-10 h-10 object-cover rounded-lg"
+                className="w-10 h-10 object-contain rounded-lg"
                 onError={(e) => {
                   const fallback = fallbackLogo;
                   if (e.currentTarget.src !== fallback) {

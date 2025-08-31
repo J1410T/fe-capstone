@@ -153,6 +153,18 @@ export const ProjectInfoForm: React.FC<ProjectInfoFormProps> = ({
             />
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="logoUrl">Image URL</Label>
+            <Textarea
+              id="logoUrl"
+              name="logoUrl"
+              placeholder="Provide image URL (is not required)"
+              rows={1}
+              value={formData.logoUrl}
+              onChange={onInputChange}
+            />
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="maximumMember">Maximum Members</Label>

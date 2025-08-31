@@ -12,6 +12,7 @@ export interface FormHostRegister {
   field: string[];
   major: string[];
   tags: string[];
+  logoUrl: string;
 }
 
 // Form types and interfaces

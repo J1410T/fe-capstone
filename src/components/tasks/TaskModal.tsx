@@ -1037,7 +1037,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             {/* Display current members for view/update modes */}
             {(mode === "view" || mode === "update") &&
               currentMemberTasks.length > 0 && (
-                <div className="mb-3">
+                <div className="mb-3 h-full">
                   <Label className="text-sm font-medium text-slate-700 mb-2 block">
                     Current Members:
                   </Label>
@@ -1051,11 +1051,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                       return (
                         <div
                           key={memberTask.id || memberId}
-                          className="p-3 bg-slate-50 rounded-md"
+                          className="p-3 bg-slate-50 rounded-md flex flex-col gap-1"
                         >
                           {memberData ? (
                             // Display member data directly from member-tasks
-                            <div className="flex items-center space-x-3">
+                            <div className="flex items-start gap-3 flex-wrap">
                               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center overflow-hidden">
                                 {memberData.avatarUrl ? (
                                   <img
@@ -1096,46 +1096,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                                   )}
                                 </p>
                               </div>
-                              {/* Delete member button - only show in update mode */}
-                              {/* {mode === "update" && (
-                                <AlertDialog>
-                                  <AlertDialogTrigger asChild>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    >
-                                      <X className="h-4 w-4" />
-                                    </Button>
-                                  </AlertDialogTrigger>
-                                  <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                      <AlertDialogTitle>
-                                        Remove Member
-                                      </AlertDialogTitle>
-                                      <AlertDialogDescription>
-                                        Are you sure you want to remove{" "}
-                                        {memberData.name || "this member"} from
-                                        this task? This action cannot be undone.
-                                      </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                      <AlertDialogCancel>
-                                        Cancel
-                                      </AlertDialogCancel>
-                                      <AlertDialogAction
-                                        onClick={() =>
-                                          handleDeleteMemberTask(memberTask.id)
-                                        }
-                                        className="bg-red-500 hover:bg-red-600"
-                                      >
-                                        Remove
-                                      </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                  </AlertDialogContent>
-                                </AlertDialog>
-                              )} */}
                             </div>
                           ) : (
                             // Fallback to MemberInfo component for backward compatibility
