@@ -134,28 +134,6 @@ export interface ProjectCardProps {
   genres?: string;
 }
 
-export interface CreateProjectRequest {
-  "english-title": string;
-  "vietnamese-title": string;
-  abbreviations?: string;
-  duration: number;
-  description: string;
-  "requirement-note"?: string;
-  "maximum-member": number;
-  language: string;
-  category: string;
-  type: string;
-}
-export interface CreateProjectMajorRequest {
-  "project-id": string;
-  "major-id": string;
-}
-
-export interface CreateProjectMajorRequest {
-  "project-id": string;
-  "major-id": string;
-}
-
 export interface CreateProjectMajorResponse {
   "project-id": string;
   "major-id": string;
@@ -228,6 +206,7 @@ export interface CreateProjectRequest {
   language: string;
   category: string;
   type: string;
+  "logo-url"?: string;
 }
 
 // Project Filter Request for Staff Management
