@@ -15,12 +15,15 @@ import { useStaffProjectFilter } from "@/hooks/queries/project";
 import { StaffProjectFilterRequest } from "@/types/project";
 
 // Import new modular components
-import { SimpleProjectCard } from "./ProjectManagement/ProjectCard";
-import { ProjectDetailView } from "./ProjectManagement/ProjectDetailView";
-import { MilestoneDetailView } from "./ProjectManagement/MilestoneDetailView";
-import { EvaluationDetailView } from "./ProjectManagement/EvaluationDetailView";
-import { EvaluationStageDetailView } from "./ProjectManagement/EvaluationStageDetailView";
-import { DocumentDetailView } from "./ProjectManagement/DocumentDetailView";
+import {
+  SimpleProjectCard,
+  ProjectDetailView,
+  ProposalDetailView,
+  MilestoneDetailView,
+  EvaluationDetailView,
+  EvaluationStageDetailView,
+  DocumentDetailView,
+} from "./ProjectManagement";
 
 import {
   BreadcrumbItem,
@@ -62,6 +65,7 @@ const ProjectManagementOverview: React.FC = () => {
     | "evaluation-detail"
     | "evaluation-stage-detail"
     | "document-detail"
+    | "proposal-detail"
   >("overview");
   const [selectedProject, setSelectedProject] = useState<LegacyProject | null>(
     null
@@ -73,6 +77,8 @@ const ProjectManagementOverview: React.FC = () => {
     null
   );
   const [selectedDocument] = useState<SelectedDocument | null>(null);
+  const [selectedProposal, setSelectedProposal] =
+    useState<LegacyProject | null>(null);
 
   // Get breadcrumb functions from layout context
   const { setBreadcrumbItems } = useOutletContext<StaffLayoutContext>();
@@ -80,11 +86,10 @@ const ProjectManagementOverview: React.FC = () => {
   // Initialize breadcrumbs
   useEffect(() => {
     if (currentView === "overview") {
-      setBreadcrumbItems([
-        createBreadcrumbItem("overview", "Projects", "overview"),
-      ]);
+      const title = activeTab === "projects" ? "Projects" : "Proposals";
+      setBreadcrumbItems([createBreadcrumbItem("overview", title, "overview")]);
     }
-  }, [currentView, setBreadcrumbItems]);
+  }, [currentView, setBreadcrumbItems, activeTab]);
 
   // Handle breadcrumb navigation events
   useEffect(() => {
@@ -126,7 +131,7 @@ const ProjectManagementOverview: React.FC = () => {
     };
   }, [selectedProject]);
 
-  // API request parameters
+  // API request parameters for projects
   const projectFilterRequest: StaffProjectFilterRequest = useMemo(
     () => ({
       title: searchTerm,
@@ -151,12 +156,38 @@ const ProjectManagementOverview: React.FC = () => {
     [searchTerm, statusFilter, currentPage, pageSize, sortBy, sortDesc]
   );
 
+  // API request parameters for proposals
+  const proposalFilterRequest: StaffProjectFilterRequest = useMemo(
+    () => ({
+      title: searchTerm,
+      genres: ["proposal"],
+      statuses:
+        statusFilter === "all"
+          ? ["inprogress", "completed", "cancelled"]
+          : [statusFilter as "inprogress" | "completed" | "cancelled"],
+      "page-index": currentPage,
+      "page-size": pageSize,
+      "sort-by": sortBy,
+      desc: sortDesc,
+      "include-creator": true,
+      "include-members": true,
+    }),
+    [searchTerm, statusFilter, currentPage, pageSize, sortBy, sortDesc]
+  );
+
   // Fetch projects using the new API
   const {
     data: projectsData,
     isLoading,
     error,
   } = useStaffProjectFilter(projectFilterRequest);
+
+  // Fetch proposals using the new API
+  const {
+    data: proposalsData,
+    isLoading: isLoadingProposals,
+    error: proposalsError,
+  } = useStaffProjectFilter(proposalFilterRequest);
 
   // Get projects from API data and map to LegacyProject format
   const projects: LegacyProject[] = useMemo(() => {
@@ -193,13 +224,51 @@ const ProjectManagementOverview: React.FC = () => {
     }));
   }, [projectsData]);
 
+  // Get proposals from API data and map to LegacyProject format
+  const proposals: LegacyProject[] = useMemo(() => {
+    return (proposalsData?.["data-list"] || []).map((proposal) => ({
+      id: proposal.id,
+      "english-title": proposal["english-title"],
+      "vietnamese-title": proposal["vietnamese-title"],
+      status: proposal.status,
+      "created-at": proposal["created-at"],
+      "creator-id": proposal["creator-id"],
+      code: proposal.code || "",
+      language: proposal.language,
+      category: proposal.category,
+      type: proposal.type,
+      genre: proposal.genre,
+      "maximum-member": proposal["maximum-member"],
+      progress: proposal.progress || 0,
+      "updated-at": proposal["updated-at"] || undefined,
+      majors: proposal.majors || [],
+      "project-tags": proposal["project-tags"] || [],
+      // Additional fields
+      abbreviations: proposal.abbreviations || undefined,
+      duration: proposal.duration || undefined,
+      description: proposal.description || undefined,
+      "requirement-note": proposal["requirement-note"] || undefined,
+      creator: proposal.creator
+        ? {
+            id: proposal.creator.id,
+            "full-name": proposal.creator["full-name"] || "",
+            email: proposal.creator.email || "",
+            "avatar-url": proposal.creator["avatar-url"] || "",
+          }
+        : undefined,
+    }));
+  }, [proposalsData]);
+
   const totalCount = projectsData?.["total-count"] || 0;
   const totalPages = projectsData?.["total-page"] || 0;
+  const proposalsTotalCount = proposalsData?.["total-count"] || 0;
+  const proposalsTotalPages = proposalsData?.["total-page"] || 0;
 
   // Navigation function
   const navigateToPage = (
     type:
       | "project"
+      | "proposal"
       | "evaluation"
       | "evaluation-stage"
       | "milestone"
@@ -245,6 +314,23 @@ const ProjectManagementOverview: React.FC = () => {
           milestone
         ),
       ]);
+    } else if (type === "proposal" && data) {
+      const proposal = data as LegacyProject;
+      setSelectedProposal(proposal);
+      setCurrentView("proposal-detail");
+      // Clear other selections
+      setSelectedProject(null);
+      setSelectedMilestone(null);
+
+      setBreadcrumbItems([
+        createBreadcrumbItem("overview", "Proposals", "overview"),
+        createBreadcrumbItem(
+          "proposal-detail",
+          proposal["english-title"],
+          "proposal",
+          proposal
+        ),
+      ]);
     }
   };
 
@@ -280,6 +366,14 @@ const ProjectManagementOverview: React.FC = () => {
         );
       case "document-detail":
         return <DocumentDetailView selectedDocument={selectedDocument} />;
+      case "proposal-detail":
+        return (
+          <ProposalDetailView
+            selectedProposal={selectedProposal}
+            navigateToPage={navigateToPage}
+            onAssignCouncil={handleAssignCouncil}
+          />
+        );
       default:
         return null;
     }
@@ -366,8 +460,9 @@ const ProjectManagementOverview: React.FC = () => {
         onValueChange={setActiveTab}
         className="space-y-6"
       >
-        <TabsList className="grid w-full grid-cols-1">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="projects">Projects</TabsTrigger>
+          <TabsTrigger value="proposals">Proposal Management</TabsTrigger>
         </TabsList>
 
         <TabsContent value="projects" className="space-y-6">
@@ -434,6 +529,82 @@ const ProjectManagementOverview: React.FC = () => {
                       size="sm"
                       onClick={() => setCurrentPage(currentPage + 1)}
                       disabled={currentPage === totalPages}
+                      className="px-3"
+                    >
+                      <span className="hidden xs:inline">Next</span>
+                      <span className="xs:hidden">Next</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </TabsContent>
+
+        <TabsContent value="proposals" className="space-y-6">
+          {isLoadingProposals ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loading />
+            </div>
+          ) : proposalsError ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <FileText className="w-12 h-12 text-red-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                Error loading proposals
+              </h3>
+              <p className="text-base text-gray-500 text-center">
+                Please try again later
+              </p>
+            </div>
+          ) : proposals.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <FileText className="w-12 h-12 text-gray-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">
+                No proposals found
+              </h3>
+              <p className="text-base text-gray-500 text-center">
+                Try adjusting your search criteria or filters
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+                {proposals.map((proposal) => (
+                  <SimpleProjectCard
+                    key={proposal.id}
+                    project={proposal}
+                    onViewDetails={() => navigateToPage("proposal", proposal)}
+                  />
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {proposalsTotalPages > 1 && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mt-6 gap-4">
+                  <div className="text-sm text-gray-500 text-center sm:text-left">
+                    Showing {(currentPage - 1) * pageSize + 1} to{" "}
+                    {Math.min(currentPage * pageSize, proposalsTotalCount)} of{" "}
+                    {proposalsTotalCount} proposals
+                  </div>
+                  <div className="flex items-center justify-center space-x-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="px-3"
+                    >
+                      <span className="hidden xs:inline">Previous</span>
+                      <span className="xs:hidden">Prev</span>
+                    </Button>
+                    <span className="text-sm text-gray-500 px-2">
+                      {currentPage}/{proposalsTotalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                      disabled={currentPage === proposalsTotalPages}
                       className="px-3"
                     >
                       <span className="hidden xs:inline">Next</span>
