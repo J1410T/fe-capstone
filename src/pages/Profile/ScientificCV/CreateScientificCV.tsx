@@ -90,7 +90,6 @@ const CreateScientificCV: React.FC = () => {
       editorRef.current.insertContent(
         `<div class="signature-container" style="margin: 20px 0; text-align: center;">
           <img src="${signatureDataUrl}" alt="Digital Signature" style="max-width: 200px; height: auto; border: 1px solid #ccc; padding: 10px; background: white;" />
-          <p style="margin-top: 10px; font-style: italic; color: #666;">Digital Signature</p>
         </div>`
       );
       toast.success("Signature added to document!");
