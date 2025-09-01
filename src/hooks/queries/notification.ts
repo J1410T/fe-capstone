@@ -25,19 +25,6 @@ export function useCreateNotification() {
 }
 
 /**
- * Hook to send notification to users
- */
-// export function useSendNotification() {
-//   return useMutation({
-//     mutationFn: (request: SendNotificationRequest) =>
-//       sendNotificationToUsers(request),
-//     onError: (error) => {
-//       console.error("Failed to send notification:", error);
-//     },
-//   });
-// }
-
-/**
  * Hook to get notification list for current user
  */
 export function useNotificationList(
@@ -93,83 +80,6 @@ export function useMarkNotification() {
     },
   });
 }
-
-// export function useInviteMember() {
-//   const createNotificationMutation = useCreateNotification();
-//   const sendNotificationMutation = useSendNotification();
-
-//   return useMutation({
-//     mutationFn: async ({
-//       projectId,
-//       accountId,
-//     }: {
-//       projectId: string;
-//       accountId: string;
-//     }) => {
-//       // Step 1: Create notification
-//       const notificationRequest: NotificationRequest = {
-//         title: "Invite Enroll to project",
-//         type: "project",
-//         status: "pending",
-//         "objec-notification-id": projectId,
-//       };
-//       const notificationResponse = await createNotificationMutation.mutateAsync(
-//         notificationRequest
-//       );
-
-//       // Step 2: Send notification to user
-//       const sendRequest: SendNotificationRequest = {
-//         "list-account-id": [accountId],
-//         "notification-id": notificationResponse.id,
-//       };
-
-//       await sendNotificationMutation.mutateAsync(sendRequest);
-
-//       return {
-//         notificationId: notificationResponse.id,
-//         success: true,
-//       };
-//     },
-//     onError: (error) => {
-//       console.error("Failed to invite member:", error);
-//     },
-//   });
-// }
-
-// export function useInviteMember() {
-//   const createNotificationMutation = useCreateNotification();
-
-//   return useMutation({
-//     mutationFn: async ({
-//       projectId,
-//       accountId,
-//     }: {
-//       projectId: string;
-//       accountId: string;
-//     }) => {
-//       // Create notification with account ID directly in the request
-//       const notificationRequest: NotificationRequest = {
-//         title: "Invite Enroll to project",
-//         type: "project",
-//         status: "pending",
-//         "objec-notification-id": projectId,
-//         "list-account-id": [accountId], // Send to specific account
-//       };
-
-//       const notificationResponse = await createNotificationMutation.mutateAsync(
-//         notificationRequest
-//       );
-
-//       return {
-//         notificationId: notificationResponse.id,
-//         success: true,
-//       };
-//     },
-//     onError: (error) => {
-//       console.error("Failed to invite member:", error);
-//     },
-//   });
-// }
 
 // Hook chung để gửi notification
 export function useSendNotification() {
