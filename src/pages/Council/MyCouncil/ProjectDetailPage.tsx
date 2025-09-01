@@ -1,28 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   ArrowLeft,
   Calendar,
   FileText,
-  Star,
   ChevronRight,
   Users,
-  Tag,
-  Clock,
   Briefcase,
   Target,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { getEvaluationsByProjectId } from "@/services/resources/evaluation";
@@ -144,25 +131,6 @@ const ProjectDetailPage: React.FC = () => {
     }
   }, [evaluationsQueryData]);
 
-  const getStatusBadgeVariant = (status: string | undefined) => {
-    if (!status) return "secondary";
-
-    switch (status.toLowerCase()) {
-      case "created":
-        return "secondary";
-      case "submitted":
-        return "default";
-      case "approved":
-        return "default";
-      case "in_progress":
-        return "default";
-      case "completed":
-        return "default";
-      default:
-        return "secondary";
-    }
-  };
-
   const handleEvaluationClick = (evaluation: Evaluation) => {
     navigate(`/council/evaluation-detail/${evaluation.id}`);
   };
@@ -171,344 +139,243 @@ const ProjectDetailPage: React.FC = () => {
     navigate("/council/my-council");
   };
 
-  const getMilestoneStatusIcon = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "completed":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case "inprogress":
-        return <AlertCircle className="h-4 w-4 text-yellow-500" />;
-      case "pending":
-        return <Clock className="h-4 w-4 text-gray-500" />;
-      case "cancelled":
-        return <XCircle className="h-4 w-4 text-red-500" />;
-      default:
-        return <Target className="h-4 w-4 text-gray-400" />;
-    }
-  };
-
-  const getMilestoneStatusBadge = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "completed":
-        return "default";
-      case "inprogress":
-        return "secondary";
-      case "pending":
-        return "outline";
-      case "cancelled":
-        return "destructive";
-      default:
-        return "secondary";
-    }
-  };
-
   return (
     <div className="container mx-auto p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" onClick={handleBackToMyCouncil}>
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to My Council
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Project Details</h1>
-          <p className="text-gray-600 mt-1">
-            Project information and evaluation details
-          </p>
+      {projectData && (
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" onClick={handleBackToMyCouncil}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+          </Button>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">
+              {projectData["english-title"]}
+            </h1>
+            <p className="text-gray-600 mt-1">
+              {projectData["vietnamese-title"]}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Project Information */}
+
       {projectData && (
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-blue-600" />
-                  {projectData.code}
-                </CardTitle>
-                <CardDescription className="mt-2 max-w-4xl">
-                  <div className="space-y-1">
-                    <p className="font-medium text-blue-600">
-                      {projectData["english-title"]}
-                    </p>
-                    {projectData["vietnamese-title"] && (
-                      <p className="text-gray-600">
-                        {projectData["vietnamese-title"]}
-                      </p>
-                    )}
-                  </div>
-                </CardDescription>
-              </div>
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200/50 mb-8 overflow-hidden">
+          {/* Content */}
+          <div className="p-8 bg-white">
+            <div className="flex items-center gap-3 mb-4">
               <Badge
-                variant="outline"
-                className="bg-blue-50 text-blue-700 border-blue-200"
+                variant="secondary"
+                className="bg-slate-100 text-slate-700 border-slate-300"
               >
+                {projectData.code}
+              </Badge>
+              <Badge className="bg-green-100 text-green-700 border-green-300">
                 {projectData.status}
               </Badge>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-6">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="h-4 w-4" />
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center">
+                  <Calendar className="w-6 h-6 text-indigo-400" />
+                </div>
                 <div>
-                  <p className="font-medium">Created</p>
-                  <p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    Created
+                  </p>
+                  <p className="text-sm font-bold text-slate-800">
                     {new Date(projectData["created-at"]).toLocaleDateString(
                       "vi-VN"
                     )}
                   </p>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Tag className="h-4 w-4" />
-                <div>
-                  <p className="font-medium">Type</p>
-                  <p>{projectData.type}</p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+                  <FileText className="w-6 h-6 text-blue-400" />
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Briefcase className="h-4 w-4" />
                 <div>
-                  <p className="font-medium">Category</p>
-                  <p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    Category
+                  </p>
+                  <p className="text-sm font-bold text-slate-800">
                     {projectData.category === "application/implementation"
                       ? "Basic - School Level"
                       : projectData.category || "Basic - School Level"}
                   </p>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Clock className="h-4 w-4" />
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
+                  <Users className="w-6 h-6 text-green-400" />
+                </div>
                 <div>
-                  <p className="font-medium">Duration</p>
-                  <p>{projectData.duration} months</p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    Language
+                  </p>
+                  <p className="text-sm font-bold text-slate-800">
+                    {projectData.language || "English"}
+                  </p>
                 </div>
               </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <FileText className="h-4 w-4" />
-                <div>
-                  <p className="font-medium">Language</p>
-                  <p>{projectData.language || "English"}</p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center">
+                  <Briefcase className="w-6 h-6 text-orange-400" />
                 </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Star className="h-4 w-4" />
                 <div>
-                  <p className="font-medium">Milestones</p>
-                  <p>{milestonesData?.data?.length || "0"} milestones</p>
+                  <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                    Type
+                  </p>
+                  <p className="text-sm font-bold text-slate-800">
+                    {projectData.type}
+                  </p>
                 </div>
               </div>
             </div>
 
             {projectData.description && (
-              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                <h4 className="font-medium text-sm text-gray-700 mb-2 flex items-center gap-2">
+              <div className="mt-4 p-4 bg-slate-50 rounded-lg">
+                <h4 className="font-medium text-sm text-slate-700 mb-2 flex items-center gap-2">
                   <FileText className="h-4 w-4" />
                   Project Description:
                 </h4>
-                <p className="text-sm text-gray-600 leading-relaxed">
+                <p className="text-sm text-slate-600 leading-relaxed">
                   {projectData.description}
                 </p>
               </div>
             )}
-
-            {projectData["requirement-note"] && (
-              <div className="mt-3 p-4 bg-blue-50 rounded-lg">
-                <h4 className="font-medium text-sm text-blue-700 mb-2 flex items-center gap-2">
-                  <Users className="h-4 w-4" />
-                  Requirements:
-                </h4>
-                <p className="text-sm text-blue-600 leading-relaxed">
-                  {projectData["requirement-note"]}
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Evaluations */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            Evaluation {evaluations.length > 0 ? `(1)` : `(0)`}
-          </CardTitle>
-          <CardDescription>Main evaluation of this project</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoadingEvaluations || isLoadingEvaluationsQuery ? (
-            <div className="flex justify-center py-8">
-              <Loading />
-            </div>
-          ) : evaluations.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>This project has no evaluations</p>
-            </div>
-          ) : (
-            <div className="grid gap-4">
-              {evaluations.map((evaluation) => (
-                <Card
-                  key={evaluation.id}
-                  className="hover:shadow-md transition-shadow cursor-pointer"
-                  onClick={() => handleEvaluationClick(evaluation)}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2 flex-1">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-semibold">{evaluation.code}</h3>
-                          <Badge
-                            variant={getStatusBadgeVariant(evaluation.status)}
-                          >
-                            {evaluation.status}
-                          </Badge>
-                        </div>
-
-                        <p className="text-gray-600">{evaluation.title}</p>
-
-                        <div className="flex items-center gap-4 text-sm text-gray-500">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(
-                              evaluation["create-date"]
-                            ).toLocaleDateString("vi-VN")}
-                          </span>
-                          {evaluation["total-rate"] && (
-                            <span className="flex items-center gap-1">
-                              <Star className="h-4 w-4" />
-                              {evaluation["total-rate"]}/100
-                            </span>
-                          )}
-                          {evaluation["evaluation-stages"] && (
-                            <span>
-                              Stages: {evaluation["evaluation-stages"].length}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <ChevronRight className="h-5 w-5 text-gray-400" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200/50">
+        <div className="p-8 border-b border-slate-100">
+          <h2 className="text-xl font-bold text-slate-900 font-montserrat">
+            Project Evaluations
+          </h2>
+          <p className="text-slate-600 mt-2 font-open-sans">
+            Main evaluation of this project
+          </p>
+        </div>
+        {isLoadingEvaluations || isLoadingEvaluationsQuery ? (
+          <div className="flex justify-center py-8">
+            <Loading />
+          </div>
+        ) : evaluations.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>This project has no evaluations</p>
+          </div>
+        ) : (
+          <div className="p-8">
+            {evaluations.map((evaluation) => (
+              <div
+                key={evaluation.id}
+                className="group flex items-center justify-between p-6 rounded-2xl bg-gradient-to-r from-slate-50 to-green-50 hover:from-green-50 hover:to-emerald-100 transition-all duration-300 cursor-pointer border border-slate-200/50 hover:border-green-200"
+                onClick={() => handleEvaluationClick(evaluation)}
+              >
+                <div className="flex items-center gap-6">
+                  <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                    <FileText className="w-7 h-7 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 font-montserrat group-hover:text-green-700 transition-colors">
+                      {evaluation.title}
+                    </h3>
+                    <p className="text-slate-600 font-open-sans">
+                      {evaluation.code}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Badge
+                    variant="outline"
+                    className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2"
+                  >
+                    {evaluation.status}
+                  </Badge>
+                  <ChevronRight className="w-6 h-6 text-slate-400 group-hover:text-green-600 transition-colors" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Milestones */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5" />
-            Milestones{" "}
-            {milestonesData?.data ? `(${milestonesData.data.length})` : `(0)`}
-          </CardTitle>
-          <CardDescription>
-            Project milestones and their current status
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoadingMilestones ? (
-            <div className="flex justify-center py-8">
-              <Loading />
-            </div>
-          ) : milestonesData?.data && milestonesData.data.length > 0 ? (
-            <div className="grid gap-3">
-              {milestonesData.data.map((milestone: any, index: number) => (
-                <div
-                  key={milestone.id || index}
-                  className="border rounded-lg p-3 bg-white hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-2 min-w-0 flex-1">
-                      {getMilestoneStatusIcon(milestone.status)}
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-sm truncate">
-                            {milestone.title}
-                          </h3>
-                          <Badge
-                            variant={getMilestoneStatusBadge(milestone.status)}
-                            className="text-xs shrink-0"
-                          >
-                            {milestone.status || "created"}
-                          </Badge>
-                        </div>
-
-                        <div className="flex items-center gap-3 text-xs text-gray-500">
-                          {milestone.code && (
-                            <span className="font-mono">{milestone.code}</span>
-                          )}
-                          {milestone.type && (
-                            <span className="px-1.5 py-0.5 bg-gray-100 rounded text-xs">
-                              {milestone.type}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-right text-xs text-gray-500 shrink-0 space-y-1">
-                      {milestone["start-date"] && milestone["end-date"] ? (
-                        <>
-                          <div className="flex items-center gap-1 justify-end">
-                            <Calendar className="h-3 w-3" />
-                            <span>Duration</span>
-                          </div>
-                          <div className="font-mono text-right">
-                            {new Date(
-                              milestone["start-date"]
-                            ).toLocaleDateString("vi-VN", {
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200/50 h-fit">
+        <div className="p-8 border-b border-slate-100">
+          <h2 className="text-xl font-bold text-slate-900 font-montserrat">
+            Milestones
+          </h2>
+          <p className="text-slate-600 mt-2 font-open-sans">
+            Project milestones
+          </p>
+        </div>
+        {isLoadingMilestones ? (
+          <div className="flex justify-center py-8">
+            <Loading />
+          </div>
+        ) : milestonesData?.data && milestonesData.data.length > 0 ? (
+          <div className="p-8 space-y-6">
+            {milestonesData.data.map((milestone: any, index: number) => (
+              <div
+                key={milestone.id || index}
+                className="p-6 rounded-xl border border-slate-200 hover:border-indigo-200 hover:bg-indigo-50/30 transition-all duration-300"
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-3 h-3 rounded-full bg-indigo-500"></div>
+                    <h3 className="font-bold text-slate-900 font-montserrat">
+                      {milestone.title}
+                    </h3>
+                  </div>
+                  <Badge variant="outline" className="text-xs bg-slate-50">
+                    {milestone.status}
+                  </Badge>
+                </div>
+                <div className="ml-7">
+                  <div className="text-sm font-medium text-indigo-600 mb-2">
+                    {milestone["start-date"] && milestone["end-date"] ? (
+                      <>
+                        <div className="font-mono">
+                          {new Date(milestone["start-date"]).toLocaleDateString(
+                            "vi-VN",
+                            {
                               day: "2-digit",
                               month: "2-digit",
-                            })}
-                            {" → "}
-                            {new Date(milestone["end-date"]).toLocaleDateString(
-                              "vi-VN",
-                              {
-                                day: "2-digit",
-                                month: "2-digit",
-                              }
-                            )}
-                          </div>
-                        </>
-                      ) : milestone["created-at"] ? (
-                        <>
-                          <div className="flex items-center gap-1 justify-end">
-                            <Clock className="h-3 w-3" />
-                            <span>Created</span>
-                          </div>
-                          <div className="font-mono text-right">
-                            {new Date(
-                              milestone["created-at"]
-                            ).toLocaleDateString("vi-VN", {
+                            }
+                          )}
+                          {" → "}
+                          {new Date(milestone["end-date"]).toLocaleDateString(
+                            "vi-VN",
+                            {
+                              day: "2-digit",
+                              month: "2-digit",
+                            }
+                          )}
+                        </div>
+                      </>
+                    ) : milestone["created-at"] ? (
+                      <>
+                        <div className="font-mono">
+                          {new Date(milestone["created-at"]).toLocaleDateString(
+                            "vi-VN",
+                            {
                               day: "2-digit",
                               month: "2-digit",
                               year: "2-digit",
-                            })}
-                          </div>
-                        </>
-                      ) : null}
-                    </div>
+                            }
+                          )}
+                        </div>
+                      </>
+                    ) : null}
                   </div>
-
-                  {milestone.description && (
-                    <p className="text-xs text-gray-600 mt-2 line-clamp-2">
-                      {milestone.description}
-                    </p>
-                  )}
-
+                  <div className="text-sm text-slate-700 whitespace-pre-line font-open-sans">
+                    {milestone.description}
+                  </div>
                   {milestone.objective && (
                     <div className="mt-2 text-xs">
                       <span className="text-blue-600 font-medium">
@@ -520,17 +387,17 @@ const ProjectDetailPage: React.FC = () => {
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-8 text-gray-500">
-              <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-              <p>This project has no milestones</p>
-              <p className="text-sm text-gray-400 mt-1">0 milestones</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <Target className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+            <p>This project has no milestones</p>
+            <p className="text-sm text-gray-400 mt-1">0 milestones</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
