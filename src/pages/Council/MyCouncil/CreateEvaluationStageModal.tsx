@@ -50,12 +50,15 @@ const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
   loading = false,
   projectId,
 }) => {
-  // Calculate next stage order
-  const nextStageOrder = (existingStages.length || 0) + 1;
-
   // Fetch milestones if projectId is available
   const { data: milestonesData, isLoading: isLoadingMilestones } =
     useMilestonesByProjectId(projectId || "");
+
+  // Calculate next stage order - always start from 1, then 2, 3, 4...
+  const nextStageOrder =
+    existingStages.length > 0
+      ? Math.max(...existingStages.map((stage) => stage["stage-order"])) + 1
+      : 1;
 
   // Form state
   const [formData, setFormData] = useState<StageFormData>({
@@ -64,6 +67,14 @@ const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
     phrase: "Approval",
     type: "project",
   });
+
+  // Update stage order when existingStages changes
+  React.useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      "stage-order": nextStageOrder,
+    }));
+  }, [nextStageOrder]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -110,6 +121,20 @@ const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
       return;
     }
 
+    // Check if milestone already has a stage
+    if (formData.type === "milestone" && formData["milestone-id"]) {
+      const milestoneHasStage = existingStages.some(
+        (stage: any) => stage["milestone-id"] === formData["milestone-id"]
+      );
+
+      if (milestoneHasStage) {
+        toast.error(
+          "This milestone already has an evaluation stage. Please select a different milestone."
+        );
+        return;
+      }
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -135,8 +160,15 @@ const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
       // Close modal and refresh data
       onOpenChange(false);
       onStageCreated();
-    } catch {
-      toast.error("Failed to create evaluation stage. Please try again.");
+    } catch (error: any) {
+      console.error("Create stage error:", error);
+
+      // Handle specific API errors
+      if (error.response?.data?.ErrorMessage) {
+        toast.error(error.response.data.ErrorMessage);
+      } else {
+        toast.error("Failed to create evaluation stage. Please try again.");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -204,11 +236,18 @@ const CreateEvaluationStageModal: React.FC<CreateEvaluationStageModalProps> = ({
                   </SelectItem>
                 ) : Array.isArray(milestonesData?.data) &&
                   milestonesData.data.length > 0 ? (
-                  milestonesData.data.map((milestone: any) => (
-                    <SelectItem key={milestone.id} value={milestone.id}>
-                      {milestone.title}
-                    </SelectItem>
-                  ))
+                  milestonesData.data
+                    .filter((milestone: any) => {
+                      // Only show milestones that don't have stages yet
+                      return !existingStages.some(
+                        (stage: any) => stage["milestone-id"] === milestone.id
+                      );
+                    })
+                    .map((milestone: any) => (
+                      <SelectItem key={milestone.id} value={milestone.id}>
+                        {milestone.title}
+                      </SelectItem>
+                    ))
                 ) : null}
               </SelectContent>
             </Select>

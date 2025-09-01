@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, Save, FileText, Star } from "lucide-react";
+import { ArrowLeft, Save, FileText, Star, Bot } from "lucide-react";
 import { useCreateIndividualEvaluation } from "@/hooks/queries/evaluation";
 import {
   useCreateDocumentByIndividualEvaluation,
@@ -24,6 +24,12 @@ import {
 import { useAuth } from "@/contexts";
 import { TinyMCEEditor } from "@/components/ui/TinyMCE";
 import { AIEvaluationDisplay } from "@/components/ui/ai-evaluation-display";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 // Document types available for individual evaluation
@@ -69,6 +75,7 @@ const CreateIndividualEvaluationPage: React.FC = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [evaluationContent, setEvaluationContent] = useState("");
+  const [showAIPopup, setShowAIPopup] = useState(false);
   const [evaluationForm, setEvaluationForm] = useState<EvaluationForm>({
     name: "",
     "total-rate": null,
@@ -261,7 +268,6 @@ const CreateIndividualEvaluationPage: React.FC = () => {
             className="flex items-center gap-2 hover:bg-gray-50"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back to Stage
           </Button>
           <div className="flex-1">
             <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
@@ -467,20 +473,46 @@ const CreateIndividualEvaluationPage: React.FC = () => {
 
         {/* Evaluation Content - Full width */}
         <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6 mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-2 bg-emerald-100 rounded-xl">
-              <FileText className="h-5 w-5 text-emerald-600" />
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-emerald-100 rounded-xl">
+                <FileText className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Detailed Evaluation
+                </h3>
+                <p className="text-sm text-gray-500">
+                  {isEditMode
+                    ? "Evaluation content"
+                    : "Create your comprehensive evaluation"}
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                Detailed Evaluation
-              </h3>
-              <p className="text-sm text-gray-500">
-                {isEditMode
-                  ? "Evaluation content"
-                  : "Provide comprehensive evaluation using the rich text editor"}
-              </p>
-            </div>
+
+            {/* AI Reference Button - Only show in create mode */}
+            {!isEditMode &&
+              aiEvaluationsData?.["data-list"] &&
+              aiEvaluationsData["data-list"].filter(
+                (evaluation) => evaluation["is-ai-report"] === true
+              ).length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAIPopup(true)}
+                  className="bg-gradient-to-r from-purple-50 to-indigo-50 border-purple-200 text-purple-700 hover:from-purple-100 hover:to-indigo-100 hover:border-purple-300 transition-all duration-200 shadow-sm hover:shadow-md"
+                >
+                  <Bot className="h-4 w-4 mr-2" />
+                  <span className="font-medium">AI Reference</span>
+                  <span className="ml-2 bg-purple-200 text-purple-800 px-2 py-0.5 rounded-full text-xs font-semibold">
+                    {
+                      aiEvaluationsData["data-list"].filter(
+                        (evaluation) => evaluation["is-ai-report"] === true
+                      ).length
+                    }
+                  </span>
+                </Button>
+              )}
           </div>
 
           <div className="space-y-4">
@@ -491,7 +523,7 @@ const CreateIndividualEvaluationPage: React.FC = () => {
               <TinyMCEEditor
                 value={evaluationContent}
                 onChange={setEvaluationContent}
-                height={400}
+                height={600}
                 placeholder="Create your comprehensive evaluation document. Include analysis, findings, recommendations, and detailed feedback..."
                 readOnly={isEditMode}
               />
@@ -499,49 +531,48 @@ const CreateIndividualEvaluationPage: React.FC = () => {
           </div>
         </div>
 
-        {/* AI Evaluations Reference - Only show in create mode */}
-        {!isEditMode &&
-          aiEvaluationsData?.["data-list"] &&
-          aiEvaluationsData["data-list"].length > 0 && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/20 p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 bg-purple-100 rounded-xl">
-                  <FileText className="h-5 w-5 text-purple-600" />
+        {/* AI Reference Dialog */}
+        <Dialog open={showAIPopup} onOpenChange={setShowAIPopup}>
+          <DialogContent className="max-w-6xl max-h-[90vh]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-xl">
+                  <Bot className="h-5 w-5 text-purple-600" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    AI Generated Evaluations Reference
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    AI Reference
                   </h3>
-                  <p className="text-sm text-gray-500">
-                    Review AI-generated evaluations for this stage to help guide
-                    your assessment
+                  <p className="text-sm text-gray-500 font-normal">
+                    AI-generated evaluations to guide your assessment
                   </p>
                 </div>
-              </div>
+              </DialogTitle>
+            </DialogHeader>
 
-              <div className="space-y-4">
-                {aiEvaluationsData["data-list"]
-                  .filter((evaluation) => evaluation["is-ai-report"] === true)
-                  .map((aiEvaluation) => (
-                    <div
-                      key={aiEvaluation.id}
-                      className="border border-purple-200 rounded-lg overflow-hidden"
-                    >
-                      <AIEvaluationDisplay
-                        content={
-                          aiEvaluation.comment || "No AI analysis available"
-                        }
-                        title={aiEvaluation.name}
-                        score={aiEvaluation["total-rate"]}
-                        status={aiEvaluation.status}
-                        submittedAt={aiEvaluation["submitted-at"]}
-                        compact={true}
-                      />
-                    </div>
-                  ))}
-              </div>
+            <div className="space-y-6 overflow-y-auto max-h-[70vh]">
+              {aiEvaluationsData?.["data-list"]
+                ?.filter((evaluation) => evaluation["is-ai-report"] === true)
+                .map((aiEvaluation) => (
+                  <div
+                    key={aiEvaluation.id}
+                    className="border border-purple-200 rounded-lg overflow-hidden bg-gradient-to-r from-purple-50/50 to-indigo-50/50 hover:from-purple-100/50 hover:to-indigo-100/50 transition-all duration-200"
+                  >
+                    <AIEvaluationDisplay
+                      content={
+                        aiEvaluation.comment || "No AI analysis available"
+                      }
+                      title={aiEvaluation.name}
+                      score={aiEvaluation["total-rate"]}
+                      status={aiEvaluation.status}
+                      submittedAt={aiEvaluation["submitted-at"]}
+                      compact={false}
+                    />
+                  </div>
+                ))}
             </div>
-          )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

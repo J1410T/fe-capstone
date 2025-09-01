@@ -81,7 +81,6 @@ import { IndividualEvaluationDetailPage } from "@/pages/Council/ProjectApproval/
 import { AIEvaluationDetailPage } from "@/pages/Council/ProjectApproval/AIEvaluationDetailPage";
 import MyProject from "@/pages/PrincipalInvestigator";
 import MyCouncil from "@/pages/Council/MyCouncil";
-import MyCouncilEvaluationDetailPage from "@/pages/Council/MyCouncil/EvaluationDetailPage";
 import MyCouncilEvaluationStageDetailPage from "@/pages/Council/MyCouncil/EvaluationStageDetailPage";
 import MyCouncilCreateIndividualEvaluationPage from "@/pages/Council/MyCouncil/CreateIndividualEvaluationPage";
 import MyCouncilIndividualEvaluationViewPage from "@/pages/Council/MyCouncil/IndividualEvaluationViewPage";
@@ -425,10 +424,6 @@ export const routes: RouteObject[] = [
           {
             path: "project/:projectId",
             element: <MyCouncilProjectDetailPage />,
-          },
-          {
-            path: "evaluation-detail/:evaluationId",
-            element: <MyCouncilEvaluationDetailPage />,
           },
           {
             path: "evaluation-stages/:evaluationId/:stageId",
