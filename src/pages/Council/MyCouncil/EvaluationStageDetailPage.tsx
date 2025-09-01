@@ -1,12 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -19,12 +13,8 @@ import {
   Users,
   Edit,
   User,
-  Briefcase,
-  Tag,
-  Clock,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
-import { AIEvaluationDisplay } from "@/components/ui/ai-evaluation-display";
 import {
   getIndividualEvaluationsByStageId,
   getEvaluationStageById,
@@ -33,7 +23,6 @@ import {
 } from "@/services/resources/evaluation";
 import { useAuth } from "@/contexts";
 import { useGetIndividualEvaluationsByStageId } from "@/hooks/queries/evaluation";
-import { useProject } from "@/hooks/queries/project";
 import {
   EvaluationStageApi,
   IndividualEvaluationApi,
@@ -79,7 +68,7 @@ const EvaluationStageDetailPage: React.FC = () => {
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadTimestamp, setLoadTimestamp] = useState<number>(Date.now());
-  const [projectData, setProjectData] = useState<any>(null);
+
   const [projectId, setProjectId] = useState<string | null>(null);
   const [isChairman, setIsChairman] = useState(false);
   const [isUpdateStageModalOpen, setIsUpdateStageModalOpen] = useState(false);
@@ -87,7 +76,6 @@ const EvaluationStageDetailPage: React.FC = () => {
   // Query hooks
   const { data: individualEvaluationsData } =
     useGetIndividualEvaluationsByStageId(stageId || "");
-  const { data: projectQueryData } = useProject(projectId || "");
 
   // Chairman Role Check Function (from TopicDetailPage)
   const checkChairmanRole = React.useCallback(
@@ -159,7 +147,6 @@ const EvaluationStageDetailPage: React.FC = () => {
                       "✅ Found project data for stage:",
                       parsedProjectData
                     );
-                    setProjectData(parsedProjectData);
                   } catch (parseError) {
                     console.error("Error parsing project data:", parseError);
                   }
@@ -245,13 +232,6 @@ const EvaluationStageDetailPage: React.FC = () => {
       setIndividualEvaluations(individualEvaluationsData["data-list"]);
     }
   }, [individualEvaluationsData]);
-
-  // Handle project data from query hooks
-  useEffect(() => {
-    if (projectQueryData?.data?.["project-detail"]) {
-      setProjectData(projectQueryData.data["project-detail"]);
-    }
-  }, [projectQueryData]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status.toLowerCase()) {
@@ -344,164 +324,115 @@ const EvaluationStageDetailPage: React.FC = () => {
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
-          onClick={() => navigate(`/council/evaluation-detail/${evaluationId}`)}
+          onClick={() => navigate(`/council/project/${projectId}`)}
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Evaluation
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Evaluation Stage</h1>
-          <p className="text-gray-600 mt-1">
-            Project information, stage details and individual evaluations
+          <h1 className="text-3xl font-bold text-gray-900 font-montserrat">
+            {stage.name}
+          </h1>
+          <p className="text-gray-600 mt-1 font-open-sans">
+            Phrase: {stage.phrase} • Type: {stage.type}
           </p>
         </div>
       </div>
 
-      {/* Project Information */}
-      {projectData && (
-        <Card>
-          <CardHeader>
-            <div className="flex justify-between items-start">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5 text-blue-600" />
-                  Project: {projectData.code}
-                </CardTitle>
-                <CardDescription className="mt-2 max-w-4xl">
-                  <div className="space-y-1">
-                    <p className="font-medium text-blue-600">
-                      {projectData["english-title"]}
-                    </p>
-                    {projectData["vietnamese-title"] && (
-                      <p className="text-gray-600">
-                        {projectData["vietnamese-title"]}
-                      </p>
-                    )}
-                  </div>
-                </CardDescription>
-              </div>
-              <Badge
-                variant="outline"
-                className="bg-blue-50 text-blue-700 border-blue-200"
-              >
-                {projectData.status}
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Calendar className="h-4 w-4" />
-                <div>
-                  <p className="font-medium">Created</p>
-                  <p>
-                    {new Date(projectData["created-at"]).toLocaleDateString(
-                      "vi-VN"
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Tag className="h-4 w-4" />
-                <div>
-                  <p className="font-medium">Category</p>
-                  <p>
-                    {projectData.category === "application/implementation"
-                      ? "Application"
-                      : projectData.category}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <FileText className="h-4 w-4" />
-                <div>
-                  <p className="font-medium">Type</p>
-                  <p>{projectData.type}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2 text-sm text-gray-600">
-                <Clock className="h-4 w-4" />
-                <div>
-                  <p className="font-medium">Duration</p>
-                  <p>{projectData.duration} months</p>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Stage Info */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-start">
+      {/* Stage Info Card */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200/50">
+        <div className="p-8 border-b border-slate-100">
+          <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2">
-                <span className="bg-blue-100 text-blue-800 text-sm font-medium px-3 py-1 rounded">
-                  Stage {stage["stage-order"]}
-                </span>
-                {stage.name}
-              </CardTitle>
-              <CardDescription className="mt-2">
-                Phrase: {stage.phrase} • Type: {stage.type}
-              </CardDescription>
+              <h2 className="text-xl font-bold text-slate-900 font-montserrat">
+                Stage Information
+              </h2>
+              <p className="text-slate-600 mt-2 font-open-sans">
+                Overview of this evaluation stage
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant={getStatusBadgeVariant(stage.status)}>
-                {stage.status}
-              </Badge>
-              {/* Show Update Stage button if user is chairman and stage status is created */}
-              {isChairman && stage.status === "created" && (
-                <Button onClick={handleUpdateStage} size="sm">
-                  <Edit className="h-4 w-4 mr-2" />
-                  Update Stage
-                </Button>
-              )}
-            </div>
+            {/* Show Update Stage button if user is chairman and stage status is created */}
+            {isChairman && stage.status === "created" && (
+              <Button
+                onClick={handleUpdateStage}
+                className="bg-purple-500 hover:bg-purple-600 text-white border-0 shadow-sm"
+              >
+                <Edit className="h-4 w-4 mr-2" />
+                Update Stage
+              </Button>
+            )}
           </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Users className="h-4 w-4" />
-              Individual Evaluations: {individualEvaluations.length}
+        </div>
+        <div className="p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-indigo-100 rounded-2xl flex items-center justify-center">
+                <Users className="w-6 h-6 text-indigo-400" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  Total Evaluations
+                </p>
+                <p className="text-lg font-bold text-slate-800">
+                  {individualEvaluations.length}
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <User className="h-4 w-4" />
-              User Evaluations: {userEvaluations.length}
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
+                <User className="w-6 h-6 text-green-400" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  User Evaluations
+                </p>
+                <p className="text-lg font-bold text-slate-800">
+                  {userEvaluations.length}
+                </p>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <FileText className="h-4 w-4" />
-              AI Evaluations: {aiEvaluations.length}
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+                <FileText className="w-6 h-6 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">
+                  AI Evaluations
+                </p>
+                <p className="text-lg font-bold text-slate-800">
+                  {aiEvaluations.length}
+                </p>
+              </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Individual Evaluations */}
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200/50">
+        <div className="p-8 border-b border-slate-100">
+          <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Individual Evaluations</CardTitle>
-              <CardDescription>
+              <h2 className="text-xl font-bold text-slate-900 font-montserrat">
+                Individual Evaluations
+              </h2>
+              <p className="text-slate-600 mt-2 font-open-sans">
                 Individual evaluations in this stage
-              </CardDescription>
+              </p>
             </div>
             {stage.status == "created" && (
-              <Button onClick={handleCreateIndividualEvaluation}>
+              <Button
+                onClick={handleCreateIndividualEvaluation}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-sm"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Create Individual Evaluation
               </Button>
             )}
           </div>
-        </CardHeader>
-        <CardContent>
+        </div>
+        <div className="p-8">
           {individualEvaluations.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
@@ -520,90 +451,90 @@ const EvaluationStageDetailPage: React.FC = () => {
               {/* User Evaluations */}
               {userEvaluations.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <User className="h-5 w-5" />
+                  <h3 className="text-lg font-semibold mb-6 flex items-center gap-3 text-slate-900 font-montserrat">
+                    <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                      <User className="h-4 w-4 text-green-600" />
+                    </div>
                     Individual Evaluations ({userEvaluations.length})
                   </h3>
-                  <div className="grid gap-4">
+                  <div className="space-y-4">
                     {userEvaluations.map((evaluation) => (
-                      <Card
+                      <div
                         key={evaluation.id}
-                        className="hover:shadow-md transition-shadow cursor-pointer"
+                        className="group flex items-center justify-between p-6 rounded-2xl bg-gradient-to-r from-slate-50 to-green-50 hover:from-green-50 hover:to-emerald-100 transition-all duration-300 cursor-pointer border border-slate-200/50 hover:border-green-200"
                         onClick={() =>
                           handleIndividualEvaluationClick(evaluation.id)
                         }
                       >
-                        <CardContent className="p-4">
-                          <div className="flex justify-between items-start">
-                            <div className="space-y-2 flex-1">
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-semibold">
-                                  {evaluation.name}
-                                </h4>
-                                <Badge
-                                  variant={getStatusBadgeVariant(
-                                    evaluation.status
-                                  )}
-                                >
-                                  {evaluation.status}
-                                </Badge>
-                              </div>
-
-                              <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-6">
+                          <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                            <User className="w-7 h-7 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-bold text-slate-900 font-montserrat group-hover:text-green-700 transition-colors">
+                              {evaluation.name}
+                            </h4>
+                            <div className="flex items-center gap-4 text-sm text-slate-600 font-open-sans mt-1">
+                              <span className="flex items-center gap-1">
+                                <Calendar className="h-4 w-4" />
+                                {new Date(
+                                  (evaluation as any)["created-date"] ||
+                                    (evaluation as any)["create-date"] ||
+                                    Date.now()
+                                ).toLocaleDateString("vi-VN")}
+                              </span>
+                              {(evaluation as any).rate && (
                                 <span className="flex items-center gap-1">
-                                  <Calendar className="h-4 w-4" />
-                                  {new Date(
-                                    (evaluation as any)["created-date"] ||
-                                      (evaluation as any)["create-date"] ||
-                                      Date.now()
-                                  ).toLocaleDateString("vi-VN")}
+                                  <Star className="h-4 w-4" />
+                                  {(evaluation as any).rate}/100
                                 </span>
-                                {(evaluation as any).rate && (
-                                  <span className="flex items-center gap-1">
-                                    <Star className="h-4 w-4" />
-                                    {(evaluation as any).rate}/100
-                                  </span>
-                                )}
-                                <ReviewerName
-                                  reviewerId={evaluation["reviewer-id"]}
-                                />
-                              </div>
-                            </div>
-
-                            <div className="flex gap-2">
-                              {/* Only show Edit button if this evaluation belongs to current user */}
-                              {user &&
-                                (evaluation as any)["reviewer-id"] ===
-                                  user.id && (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleEditIndividualEvaluation(
-                                        evaluation.id
-                                      );
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                )}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleIndividualEvaluationClick(
-                                    evaluation.id
-                                  );
-                                }}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
+                              )}
+                              <ReviewerName
+                                reviewerId={evaluation["reviewer-id"]}
+                              />
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Badge
+                            variant={getStatusBadgeVariant(evaluation.status)}
+                            className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2"
+                          >
+                            {evaluation.status}
+                          </Badge>
+                          <div className="flex gap-2">
+                            {/* Only show Edit button if this evaluation belongs to current user */}
+                            {user &&
+                              (evaluation as any)["reviewer-id"] ===
+                                user.id && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditIndividualEvaluation(
+                                      evaluation.id
+                                    );
+                                  }}
+                                  className="hover:bg-green-50 hover:border-green-200"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleIndividualEvaluationClick(evaluation.id);
+                              }}
+                              className="hover:bg-green-50 hover:border-green-200"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -612,31 +543,55 @@ const EvaluationStageDetailPage: React.FC = () => {
               {/* AI Evaluations */}
               {aiEvaluations.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
+                  <h3 className="text-lg font-semibold mb-6 flex items-center gap-3 text-slate-900 font-montserrat">
+                    <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <FileText className="h-4 w-4 text-blue-600" />
+                    </div>
                     AI Evaluations ({aiEvaluations.length})
                   </h3>
-                  <div className="grid gap-4">
+                  <div className="space-y-4">
                     {aiEvaluations.map((evaluation) => (
                       <div
                         key={`${stageId}-${evaluation.id}-${loadTimestamp}-${
                           evaluation.comment?.length || 0
                         }`}
-                        className="cursor-pointer"
+                        className="group flex items-center justify-between p-6 rounded-2xl bg-gradient-to-r from-slate-50 to-blue-50 hover:from-blue-50 hover:to-indigo-100 transition-all duration-300 cursor-pointer border border-slate-200/50 hover:border-blue-200"
                         onClick={() =>
                           handleIndividualEvaluationClick(evaluation.id)
                         }
                       >
-                        <AIEvaluationDisplay
-                          content={
-                            evaluation.comment || "No AI analysis available"
-                          }
-                          title={evaluation.name}
-                          score={(evaluation as any)["total-rate"]}
-                          status={evaluation.status}
-                          submittedAt={(evaluation as any)["submitted-at"]}
-                          compact={true}
-                        />
+                        <div className="flex items-center gap-6">
+                          <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                            <FileText className="w-7 h-7 text-white" />
+                          </div>
+                          <div>
+                            <h4 className="text-lg font-bold text-slate-900 font-montserrat group-hover:text-blue-700 transition-colors">
+                              {evaluation.name}
+                            </h4>
+                            <p className="text-sm text-slate-600 font-open-sans mt-1">
+                              AI-powered evaluation analysis
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Badge
+                            variant={getStatusBadgeVariant(evaluation.status)}
+                            className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2"
+                          >
+                            {evaluation.status}
+                          </Badge>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleIndividualEvaluationClick(evaluation.id);
+                            }}
+                            className="hover:bg-blue-50 hover:border-blue-200"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -644,8 +599,8 @@ const EvaluationStageDetailPage: React.FC = () => {
               )}
             </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Update Stage Modal */}
       <UpdateEvaluationStageModal

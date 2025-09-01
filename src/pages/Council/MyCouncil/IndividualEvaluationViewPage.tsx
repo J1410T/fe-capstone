@@ -95,7 +95,6 @@ const IndividualEvaluationViewPage: React.FC = () => {
               className="mt-4"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Stage
             </Button>
           </CardContent>
         </Card>
@@ -117,7 +116,6 @@ const IndividualEvaluationViewPage: React.FC = () => {
       <div className="flex items-center gap-4">
         <Button variant="ghost" onClick={handleBackToStage}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Stage
         </Button>
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-gray-900">
