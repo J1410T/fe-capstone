@@ -17,9 +17,12 @@ import {
 } from "@/services/resources/azure-image";
 import { Loading } from "@/components";
 
+import SignaturePad from "@/components/common/SignaturePad";
+
 type EditorInstance = {
   getContent: () => string;
   setContent: (content: string) => void;
+  insertContent: (content: string) => void;
 } | null;
 
 const CreateScientificCV: React.FC = () => {
@@ -28,6 +31,7 @@ const CreateScientificCV: React.FC = () => {
   const editorRef = useRef<EditorInstance>(null);
   const [formContent, setFormContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
   const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const handleBack = () => navigate(-1);
 
@@ -76,6 +80,21 @@ const CreateScientificCV: React.FC = () => {
   const handleEditorChange = () => {
     // Optional: You can add any additional logic here
     // For now, we'll just let the editor handle the content
+  };
+
+  const handleSignatureComplete = (signatureDataUrl: string) => {
+    setShowSignaturePad(false);
+
+    // Insert signature into editor
+    if (editorRef.current) {
+      editorRef.current.insertContent(
+        `<div class="signature-container" style="margin: 20px 0; text-align: center;">
+          <img src="${signatureDataUrl}" alt="Digital Signature" style="max-width: 200px; height: auto; border: 1px solid #ccc; padding: 10px; background: white;" />
+          <p style="margin-top: 10px; font-style: italic; color: #666;">Digital Signature</p>
+        </div>`
+      );
+      toast.success("Signature added to document!");
+    }
   };
 
   const getProfileRoute = () => {
@@ -290,6 +309,11 @@ const CreateScientificCV: React.FC = () => {
                 automatically uploaded to secure cloud storage.
               </li>
               <li>
+                <strong>Digital Signature Support!</strong> Use the{" "}
+                <strong>Add Signature</strong> button in the toolbar to create
+                your digital signature directly in the document.
+              </li>
+              <li>
                 To download your CV, go to <strong>File → Print</strong>, then
                 choose <strong>"Save"</strong> in the print dialog.
               </li>
@@ -359,7 +383,7 @@ const CreateScientificCV: React.FC = () => {
                 "wordcount",
               ],
               toolbar:
-                "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image uploadImage | preview code fullscreen",
+                "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image uploadImage signaturePad | preview code fullscreen",
               content_style: formStyles,
 
               setup: (editor) => {
@@ -418,6 +442,15 @@ const CreateScientificCV: React.FC = () => {
                     };
 
                     input.click();
+                  },
+                });
+
+                // Custom Signature Pad button
+                editor.ui.registry.addButton("signaturePad", {
+                  text: "Add Signature",
+                  icon: "edit-block",
+                  onAction: () => {
+                    setShowSignaturePad(true);
                   },
                 });
 
@@ -615,6 +648,14 @@ const CreateScientificCV: React.FC = () => {
           )}
         </Button>
       </div>
+
+      {/* Signature Pad Modal */}
+      {showSignaturePad && (
+        <SignaturePad
+          onComplete={handleSignatureComplete}
+          onClose={() => setShowSignaturePad(false)}
+        />
+      )}
     </div>
   );
 };

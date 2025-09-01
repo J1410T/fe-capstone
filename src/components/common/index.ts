@@ -30,3 +30,6 @@ export type { InvitedUser as SimpleInvitedUser } from "./SimpleUserSearch";
 
 export { ScrollToTopButton } from "./ScrollToTopButton";
 export { ScrollRestoration } from "./ScrollRestoration";
+
+// Signature components
+export { default as SignaturePad } from "./SignaturePad";

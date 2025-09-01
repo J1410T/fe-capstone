@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Save, Download } from "lucide-react";
 import { toast } from "sonner";
+import SignaturePad from "@/components/common/SignaturePad";
 
 interface EnhancedTinyMCEViewerProps {
   content: string;
@@ -19,7 +20,10 @@ interface EnhancedTinyMCEViewerProps {
   apiKey?: string;
 }
 
-type EditorInstance = { getContent: () => string } | null;
+type EditorInstance = {
+  getContent: () => string;
+  insertContent: (content: string) => void;
+} | null;
 
 export const EnhancedTinyMCEViewer: React.FC<EnhancedTinyMCEViewerProps> = ({
   content,
@@ -37,12 +41,28 @@ export const EnhancedTinyMCEViewer: React.FC<EnhancedTinyMCEViewerProps> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [currentContent, setCurrentContent] = useState(content);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
 
   const defaultApiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const editorApiKey = apiKey || defaultApiKey;
 
   const handleEdit = () => {
     setIsEditing(true);
+  };
+
+  // Signature handling
+  const handleSignatureComplete = (signatureDataUrl: string) => {
+    setShowSignaturePad(false);
+
+    if (editorRef.current) {
+      editorRef.current.insertContent(
+        `<div class="signature-container" style="margin: 20px 0; text-align: center;">
+          <img src="${signatureDataUrl}" alt="Digital Signature" style="max-width: 200px; height: auto; border: 1px solid #ccc; padding: 10px; background: white;" />
+          <p style="margin-top: 10px; font-style: italic; color: #666;">Digital Signature</p>
+        </div>`
+      );
+      toast.success("Signature added to document!");
+    }
   };
 
   const handleSave = async () => {
@@ -98,7 +118,7 @@ export const EnhancedTinyMCEViewer: React.FC<EnhancedTinyMCEViewerProps> = ({
     toolbar: isEditing
       ? [
           "undo redo | blocks | bold italic underline | alignleft aligncenter alignright",
-          "bullist numlist outdent indent | removeformat | table | link | help",
+          "bullist numlist outdent indent | removeformat | table | link | signaturePad | help",
         ].join(" | ")
       : false,
     statusbar: isEditing,
@@ -150,6 +170,16 @@ export const EnhancedTinyMCEViewer: React.FC<EnhancedTinyMCEViewerProps> = ({
     branding: false,
     promotion: false,
     resize: false,
+    setup: (editor: any) => {
+      // Custom Signature Pad button
+      editor.ui.registry.addButton("signaturePad", {
+        text: "Add Signature",
+        icon: "edit-block",
+        onAction: () => {
+          setShowSignaturePad(true);
+        },
+      });
+    },
   };
 
   const WrapperComponent = showHeader ? Card : "div";
@@ -244,6 +274,14 @@ export const EnhancedTinyMCEViewer: React.FC<EnhancedTinyMCEViewerProps> = ({
           />
         </div>
       </ContentComponent>
+
+      {/* Signature Pad Modal */}
+      {showSignaturePad && (
+        <SignaturePad
+          onComplete={handleSignatureComplete}
+          onClose={() => setShowSignaturePad(false)}
+        />
+      )}
     </WrapperComponent>
   );
 };

@@ -1,4 +1,4 @@
-import { useRef, forwardRef, useImperativeHandle } from "react";
+import { useRef, forwardRef, useImperativeHandle, useState } from "react";
 import { Editor } from "@tinymce/tinymce-react";
 import {
   uploadImageToAzure,
@@ -6,6 +6,8 @@ import {
   deleteImageFromAzure,
 } from "@/services/resources/azure-image";
 import type { Editor as TinyMCEEditor } from "tinymce";
+import SignaturePad from "@/components/common/SignaturePad";
+import { toast } from "sonner";
 
 export interface TinyMCERef {
   getContent: () => string;
@@ -450,8 +452,24 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
     const editorRef = useRef<TinyMCEEditor | null>(null);
     const defaultApiKey = import.meta.env.VITE_TINYMCE_API_KEY;
     const editorApiKey = apiKey || defaultApiKey;
+    const [showSignaturePad, setShowSignaturePad] = useState(false);
 
     const presetConfig = PRESETS[preset];
+
+    // Signature handling
+    const handleSignatureComplete = (signatureDataUrl: string) => {
+      setShowSignaturePad(false);
+
+      if (editorRef.current) {
+        editorRef.current.insertContent(
+          `<div class="signature-container" style="margin: 20px 0; text-align: center;">
+            <img src="${signatureDataUrl}" alt="Digital Signature" style="max-width: 200px; height: auto; border: 1px solid #ccc; padding: 10px; background: white;" />
+            <p style="margin-top: 10px; font-style: italic; color: #666;">Digital Signature</p>
+          </div>`
+        );
+        toast.success("Signature added to document!");
+      }
+    };
 
     // Helper function để extract blob name từ Azure URL
     const extractBlobNameFromUrl = (url: string): string | null => {
@@ -493,18 +511,10 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
     const setupEditor = (editor: TinyMCEEditor) => {
       // Add signature button
       editor.ui.registry.addButton("signature", {
-        text: "Signature",
+        text: "Add Signature",
+        icon: "edit-block",
         onAction: () => {
-          const signatureHtml = `
-            <div class="signature-container single">
-              <div class="signature-box">
-                <p><strong>Signature</strong></p>
-                <p>Name:</p>
-                <p>Date:</p>
-              </div>
-            </div>
-          `;
-          editor.insertContent(signatureHtml);
+          setShowSignaturePad(true);
         },
       });
 
@@ -742,64 +752,65 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
     };
 
     return (
-      <div
-        className={`border border-gray-200 rounded-lg overflow-hidden shadow-sm ${className}`}
-      >
-        <Editor
-          apiKey={editorApiKey || "no-api-key"}
-          onInit={(_, editor) => (editorRef.current = editor)}
-          value={value}
-          onEditorChange={handleEditorChange}
-          disabled={disabled}
-          init={{
-            height,
-            menubar: menubar !== undefined ? menubar : presetConfig.menubar,
-            plugins: plugins || presetConfig.plugins,
-            toolbar: toolbar !== undefined ? toolbar : presetConfig.toolbar,
-            content_style: `${presetConfig.styles}\n${customStyles}\n${formStyles}`,
-            placeholder,
-            branding: false,
-            promotion: false,
-            statusbar: !readOnly,
-            resize: !readOnly,
+      <>
+        <div
+          className={`border border-gray-200 rounded-lg overflow-hidden shadow-sm ${className}`}
+        >
+          <Editor
+            apiKey={editorApiKey || "no-api-key"}
+            onInit={(_, editor) => (editorRef.current = editor)}
+            value={value}
+            onEditorChange={handleEditorChange}
+            disabled={disabled}
+            init={{
+              height,
+              menubar: menubar !== undefined ? menubar : presetConfig.menubar,
+              plugins: plugins || presetConfig.plugins,
+              toolbar: toolbar !== undefined ? toolbar : presetConfig.toolbar,
+              content_style: `${presetConfig.styles}\n${customStyles}\n${formStyles}`,
+              placeholder,
+              branding: false,
+              promotion: false,
+              statusbar: !readOnly,
+              resize: !readOnly,
 
-            // Content handling
-            entity_encoding: "raw",
-            verify_html: false,
-            convert_urls: false,
-            relative_urls: false,
+              // Content handling
+              entity_encoding: "raw",
+              verify_html: false,
+              convert_urls: false,
+              relative_urls: false,
 
-            // Performance optimizations
-            skin: "oxide",
-            content_css: "default",
+              // Performance optimizations
+              skin: "oxide",
+              content_css: "default",
 
-            // Better UX
-            contextmenu: "link image table",
-            quickbars_selection_toolbar:
-              "bold italic | quicklink h2 h3 blockquote",
-            quickbars_insert_toolbar: "quickimage quicktable",
+              // Better UX
+              contextmenu: "link image table",
+              quickbars_selection_toolbar:
+                "bold italic | quicklink h2 h3 blockquote",
+              quickbars_insert_toolbar: "quickimage quicktable",
 
-            // Default content formatting
-            forced_root_block: "p",
-            forced_root_block_attrs: {
-              style:
-                'font-family: "Times New Roman", Times, serif; font-size: 16px; line-height: 1.8;',
-            },
+              // Default content formatting
+              forced_root_block: "p",
+              forced_root_block_attrs: {
+                style:
+                  'font-family: "Times New Roman", Times, serif; font-size: 16px; line-height: 1.8;',
+              },
 
-            // Auto-save functionality
-            autosave_ask_before_unload: false,
-            autosave_interval: "30s",
-            autosave_restore_when_empty: false,
+              // Auto-save functionality
+              autosave_ask_before_unload: false,
+              autosave_interval: "30s",
+              autosave_restore_when_empty: false,
 
-            // Z-index configuration to ensure dialogs appear above other modals
-            base_url: undefined,
-            suffix: ".min",
-            // Ensure TinyMCE dialogs have higher z-index than parent modals
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            init_instance_callback: (_editor: TinyMCEEditor) => {
-              // Set z-index for TinyMCE dialogs to be above parent modal
-              const style = document.createElement("style");
-              style.textContent = `
+              // Z-index configuration to ensure dialogs appear above other modals
+              base_url: undefined,
+              suffix: ".min",
+              // Ensure TinyMCE dialogs have higher z-index than parent modals
+              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+              init_instance_callback: (_editor: TinyMCEEditor) => {
+                // Set z-index for TinyMCE dialogs to be above parent modal
+                const style = document.createElement("style");
+                style.textContent = `
                 .tox-dialog-wrap {
                   z-index: 99999 !important;
                   position: fixed !important;
@@ -842,140 +853,152 @@ export const UnifiedTinyMCE = forwardRef<TinyMCERef, UnifiedTinyMCEProps>(
                   isolation: isolate;
                 }
               `;
-              document.head.appendChild(style);
-            },
+                document.head.appendChild(style);
+              },
 
-            // Enhanced image upload capabilities
-            image_description: false,
-            image_title: true,
-            image_caption: true,
-            file_picker_types: "image",
+              // Enhanced image upload capabilities
+              image_description: false,
+              image_title: true,
+              image_caption: true,
+              file_picker_types: "image",
 
-            // File picker callback for image uploads
-            file_picker_callback: async (
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              callback: any,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              _value: any,
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              meta: any
-            ) => {
-              if (meta.filetype === "image") {
-                const input = document.createElement("input");
-                input.setAttribute("type", "file");
-                input.setAttribute(
-                  "accept",
-                  "image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                );
-                input.setAttribute("multiple", "false");
-
-                input.onchange = async function () {
-                  const file = (this as HTMLInputElement).files?.[0];
-                  if (file) {
-                    // Validate file size (max 5MB)
-                    if (file.size > 5 * 1024 * 1024) {
-                      alert(
-                        "File size too large. Please choose an image smaller than 5MB."
-                      );
-                      return;
-                    }
-
-                    // Validate file type
-                    const allowedTypes = [
-                      "image/jpeg",
-                      "image/jpg",
-                      "image/png",
-                      "image/gif",
-                      "image/webp",
-                    ];
-                    if (!allowedTypes.includes(file.type)) {
-                      alert(
-                        "Invalid file type. Please choose a JPEG, PNG, GIF, or WebP image."
-                      );
-                      return;
-                    }
-
-                    try {
-                      // Upload ảnh lên Azure
-                      const uploadResponse = await uploadImageToAzure(file);
-                      console.log("Upload response:", uploadResponse);
-
-                      // Lấy URL đầy đủ của ảnh
-                      const imageUrl = await getImageUrlFromAzure(
-                        uploadResponse.url
-                      );
-                      console.log("Image URL:", imageUrl);
-
-                      // Trả về URL ảnh cho TinyMCE
-                      callback(imageUrl, {
-                        alt: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for alt text
-                        title: file.name,
-                      });
-                    } catch (error) {
-                      console.error("Error uploading image:", error);
-                      alert("Error uploading image. Please try again.");
-                    }
-                  }
-                };
-
-                input.click();
-              }
-            },
-
-            // Enhanced paste and drag-drop support
-
-            // Image upload settings
-            images_upload_url: "", // Sử dụng custom handler thay vì URL
-            images_reuse_filename: true,
-            images_file_types: "jpg,jpeg,png,gif,webp",
-
-            // Drag and drop support - upload lên Azure
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            images_upload_handler: (blobInfo: any) => {
-              return new Promise((resolve, reject) => {
-                // Validate file size
-                if (blobInfo.blob().size > 5 * 1024 * 1024) {
-                  reject(
-                    "File size too large. Please choose an image smaller than 5MB."
+              // File picker callback for image uploads
+              file_picker_callback: async (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                callback: any,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                _value: any,
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                meta: any
+              ) => {
+                if (meta.filetype === "image") {
+                  const input = document.createElement("input");
+                  input.setAttribute("type", "file");
+                  input.setAttribute(
+                    "accept",
+                    "image/jpeg,image/jpg,image/png,image/gif,image/webp"
                   );
-                  return;
+                  input.setAttribute("multiple", "false");
+
+                  input.onchange = async function () {
+                    const file = (this as HTMLInputElement).files?.[0];
+                    if (file) {
+                      // Validate file size (max 5MB)
+                      if (file.size > 5 * 1024 * 1024) {
+                        alert(
+                          "File size too large. Please choose an image smaller than 5MB."
+                        );
+                        return;
+                      }
+
+                      // Validate file type
+                      const allowedTypes = [
+                        "image/jpeg",
+                        "image/jpg",
+                        "image/png",
+                        "image/gif",
+                        "image/webp",
+                      ];
+                      if (!allowedTypes.includes(file.type)) {
+                        alert(
+                          "Invalid file type. Please choose a JPEG, PNG, GIF, or WebP image."
+                        );
+                        return;
+                      }
+
+                      try {
+                        // Upload ảnh lên Azure
+                        const uploadResponse = await uploadImageToAzure(file);
+                        console.log("Upload response:", uploadResponse);
+
+                        // Lấy URL đầy đủ của ảnh
+                        const imageUrl = await getImageUrlFromAzure(
+                          uploadResponse.url
+                        );
+                        console.log("Image URL:", imageUrl);
+
+                        // Trả về URL ảnh cho TinyMCE
+                        callback(imageUrl, {
+                          alt: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for alt text
+                          title: file.name,
+                        });
+                      } catch (error) {
+                        console.error("Error uploading image:", error);
+                        alert("Error uploading image. Please try again.");
+                      }
+                    }
+                  };
+
+                  input.click();
                 }
+              },
 
-                // Tạo File object từ blob
-                const file = new File(
-                  [blobInfo.blob()],
-                  blobInfo.filename() || "image.png",
-                  {
-                    type: blobInfo.blob().type,
-                  }
-                );
+              // Enhanced paste and drag-drop support
 
-                // Upload ảnh lên Azure (async operation)
-                uploadImageToAzure(file)
-                  .then((uploadResponse) => {
-                    console.log("Drag & drop upload response:", uploadResponse);
-                    // Lấy URL đầy đủ của ảnh
-                    return getImageUrlFromAzure(uploadResponse.url);
-                  })
-                  .then((imageUrl) => {
-                    console.log("Drag & drop image URL:", imageUrl);
-                    // Trả về URL ảnh cho TinyMCE
-                    resolve(imageUrl);
-                  })
-                  .catch((error) => {
-                    console.error(
-                      "Error uploading image via drag & drop:",
-                      error
+              // Image upload settings
+              images_upload_url: "", // Sử dụng custom handler thay vì URL
+              images_reuse_filename: true,
+              images_file_types: "jpg,jpeg,png,gif,webp",
+
+              // Drag and drop support - upload lên Azure
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              images_upload_handler: (blobInfo: any) => {
+                return new Promise((resolve, reject) => {
+                  // Validate file size
+                  if (blobInfo.blob().size > 5 * 1024 * 1024) {
+                    reject(
+                      "File size too large. Please choose an image smaller than 5MB."
                     );
-                    reject("Error uploading image. Please try again.");
-                  });
-              });
-            },
+                    return;
+                  }
 
-            setup: setupEditor,
-          }}
-        />
-      </div>
+                  // Tạo File object từ blob
+                  const file = new File(
+                    [blobInfo.blob()],
+                    blobInfo.filename() || "image.png",
+                    {
+                      type: blobInfo.blob().type,
+                    }
+                  );
+
+                  // Upload ảnh lên Azure (async operation)
+                  uploadImageToAzure(file)
+                    .then((uploadResponse) => {
+                      console.log(
+                        "Drag & drop upload response:",
+                        uploadResponse
+                      );
+                      // Lấy URL đầy đủ của ảnh
+                      return getImageUrlFromAzure(uploadResponse.url);
+                    })
+                    .then((imageUrl) => {
+                      console.log("Drag & drop image URL:", imageUrl);
+                      // Trả về URL ảnh cho TinyMCE
+                      resolve(imageUrl);
+                    })
+                    .catch((error) => {
+                      console.error(
+                        "Error uploading image via drag & drop:",
+                        error
+                      );
+                      reject("Error uploading image. Please try again.");
+                    });
+                });
+              },
+
+              setup: setupEditor,
+            }}
+          />
+        </div>
+
+        {/* Signature Pad Modal */}
+        {showSignaturePad && (
+          <SignaturePad
+            onComplete={handleSignatureComplete}
+            onClose={() => setShowSignaturePad(false)}
+          />
+        )}
+      </>
     );
   }
 );

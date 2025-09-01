@@ -35,10 +35,12 @@ import {
   getImageUrlFromAzure,
   deleteImageFromAzure,
 } from "@/services/resources/azure-image";
+import SignaturePad from "@/components/common/SignaturePad";
 
 type EditorInstance = {
   getContent: () => string;
   setContent: (content: string) => void;
+  insertContent: (content: string) => void;
 } | null;
 
 const EditScientificCV: React.FC = () => {
@@ -46,6 +48,7 @@ const EditScientificCV: React.FC = () => {
   const [formContent, setFormContent] = useState<string>("");
   const editorRef = useRef<EditorInstance>(null);
   const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
@@ -55,6 +58,21 @@ const EditScientificCV: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+
+  // Signature handling
+  const handleSignatureComplete = (signatureDataUrl: string) => {
+    setShowSignaturePad(false);
+
+    if (editorRef.current) {
+      editorRef.current.insertContent(
+        `<div class="signature-container" style="margin: 20px 0; text-align: center;">
+          <img src="${signatureDataUrl}" alt="Digital Signature" style="max-width: 200px; height: auto; border: 1px solid #ccc; padding: 10px; background: white;" />
+          <p style="margin-top: 10px; font-style: italic; color: #666;">Digital Signature</p>
+        </div>`
+      );
+      toast.success("Signature added to document!");
+    }
+  };
 
   // Shared set to track uploaded images for deletion
   const uploadedImagesRef = useRef(new Set<string>());
@@ -379,7 +397,7 @@ const EditScientificCV: React.FC = () => {
                 "wordcount",
               ],
               toolbar:
-                "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image uploadImage | preview code fullscreen",
+                "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image uploadImage signaturePad | preview code fullscreen",
               content_style: formStyles,
 
               setup: (editor) => {
@@ -438,6 +456,15 @@ const EditScientificCV: React.FC = () => {
                     };
 
                     input.click();
+                  },
+                });
+
+                // Custom Signature Pad button
+                editor.ui.registry.addButton("signaturePad", {
+                  text: "Add Signature",
+                  icon: "edit-block",
+                  onAction: () => {
+                    setShowSignaturePad(true);
                   },
                 });
 
@@ -756,6 +783,14 @@ const EditScientificCV: React.FC = () => {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Signature Pad Modal */}
+        {showSignaturePad && (
+          <SignaturePad
+            onComplete={handleSignatureComplete}
+            onClose={() => setShowSignaturePad(false)}
+          />
+        )}
       </div>
     </div>
   );
