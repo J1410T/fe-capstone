@@ -25,6 +25,7 @@ import {
   getImageUrlFromAzure,
   deleteImageFromAzure,
 } from "@/services/resources/azure-image";
+import SignaturePad from "@/components/common/SignaturePad";
 
 type EditorInstance = TinyMCEEditor | null;
 
@@ -47,6 +48,22 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
   const [formContent, setFormContent] = useState<string>("");
   const [isCreatingDocument, setIsCreatingDocument] = useState(false);
   const [documentCreated, setDocumentCreated] = useState(false);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
+
+  // Signature handling
+  const handleSignatureComplete = (signatureDataUrl: string) => {
+    setShowSignaturePad(false);
+
+    if (editorRef.current) {
+      editorRef.current.insertContent(
+        `<div class="signature-container" style="margin: 20px 0; text-align: center;">
+          <img src="${signatureDataUrl}" alt="Digital Signature" style="max-width: 200px; height: auto; border: 1px solid #ccc; padding: 10px; background: white;" />
+          <p style="margin-top: 10px; font-style: italic; color: #666;">Digital Signature</p>
+        </div>`
+      );
+      toast.success("Signature added to document!");
+    }
+  };
 
   // Use useDocumentByProjectIdWithUserRole to find BM1 document
   const { data: documentsWithUserRole, isLoading: isLoadingDocuments } =
@@ -359,7 +376,7 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                   "paste", // Plugin paste để xử lý copy-paste tốt hơn
                 ],
                 toolbar:
-                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table quickAddRow quickAddCol copyTable | tablerowheader tablecol tablerow tablecell | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | tableprops tablerowprops tablecellprops tabledelete | link image uploadImage | preview code codesample viewSource fullscreen | insertSignature | forecolor backcolor | fontsize | hr pagebreak | searchreplace",
+                  "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table quickAddRow quickAddCol copyTable | tablerowheader tablecol tablerow tablecell | tableinsertrowbefore tableinsertrowafter tabledeleterow | tableinsertcolbefore tableinsertcolafter tabledeletecol | tableprops tablerowprops tablecellprops tabledelete | link image uploadImage signaturePad | preview code codesample viewSource fullscreen | insertSignature | forecolor backcolor | fontsize | hr pagebreak | searchreplace",
                 setup: (editor) => {
                   // Use shared ref to track uploaded images for deletion
                   const uploadedImages = uploadedImagesRef.current;
@@ -534,6 +551,15 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
                       };
 
                       input.click();
+                    },
+                  });
+
+                  // Custom Signature Pad button
+                  editor.ui.registry.addButton("signaturePad", {
+                    text: "Add Signature",
+                    icon: "edit-block",
+                    onAction: () => {
+                      setShowSignaturePad(true);
                     },
                   });
 
@@ -884,6 +910,14 @@ export const ProjectSummaryStep: React.FC<ProjectSummaryStepProps> = ({
           Next Step <ArrowRight className="w-4 h-4 ml-2" />
         </Button>
       </div>
+
+      {/* Signature Pad Modal */}
+      {showSignaturePad && (
+        <SignaturePad
+          onComplete={handleSignatureComplete}
+          onClose={() => setShowSignaturePad(false)}
+        />
+      )}
     </div>
   );
 };

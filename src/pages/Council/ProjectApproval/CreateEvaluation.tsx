@@ -14,6 +14,7 @@ import {
 import { Editor } from "@tinymce/tinymce-react";
 import { ArrowLeft, Save, FileText, User } from "lucide-react";
 import { toast } from "sonner";
+import SignaturePad from "@/components/common/SignaturePad";
 
 interface CreateEvaluationFormData {
   evaluatorName: string;
@@ -23,7 +24,10 @@ interface CreateEvaluationFormData {
   evaluationContent: string;
 }
 
-type EditorInstance = { getContent: () => string } | null;
+type EditorInstance = {
+  getContent: () => string;
+  insertContent: (content: string) => void;
+} | null;
 
 const CreateEvaluation: React.FC = () => {
   const navigate = useNavigate();
@@ -40,6 +44,7 @@ const CreateEvaluation: React.FC = () => {
   });
 
   const [isSaving, setIsSaving] = useState(false);
+  const [showSignaturePad, setShowSignaturePad] = useState(false);
   const editorRef = useRef<EditorInstance>(null);
   const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
 
@@ -51,6 +56,21 @@ const CreateEvaluation: React.FC = () => {
       ...prev,
       [field]: value,
     }));
+  };
+
+  // Signature handling
+  const handleSignatureComplete = (signatureDataUrl: string) => {
+    setShowSignaturePad(false);
+
+    if (editorRef.current) {
+      editorRef.current.insertContent(
+        `<div class="signature-container" style="margin: 20px 0; text-align: center;">
+          <img src="${signatureDataUrl}" alt="Digital Signature" style="max-width: 200px; height: auto; border: 1px solid #ccc; padding: 10px; background: white;" />
+          <p style="margin-top: 10px; font-style: italic; color: #666;">Digital Signature</p>
+        </div>`
+      );
+      toast.success("Signature added to document!");
+    }
   };
 
   const handleEditorChange = (content: string) => {
@@ -340,7 +360,7 @@ const CreateEvaluation: React.FC = () => {
                         "undo redo | blocks | " +
                         "bold italic forecolor | alignleft aligncenter " +
                         "alignright alignjustify | bullist numlist outdent indent | " +
-                        "removeformat | help",
+                        "removeformat | signaturePad | help",
                       content_style: `
                         body { 
                           font-family: 'Merriweather', serif; 
@@ -351,6 +371,16 @@ const CreateEvaluation: React.FC = () => {
                         p { margin-bottom: 12px; }
                         h1, h2, h3, h4, h5, h6 { margin-top: 16px; margin-bottom: 8px; }
                       `,
+                      setup: (editor) => {
+                        // Custom Signature Pad button
+                        editor.ui.registry.addButton("signaturePad", {
+                          text: "Add Signature",
+                          icon: "edit-block",
+                          onAction: () => {
+                            setShowSignaturePad(true);
+                          },
+                        });
+                      },
                     }}
                     onEditorChange={handleEditorChange}
                   />
@@ -360,6 +390,14 @@ const CreateEvaluation: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Signature Pad Modal */}
+      {showSignaturePad && (
+        <SignaturePad
+          onComplete={handleSignatureComplete}
+          onClose={() => setShowSignaturePad(false)}
+        />
+      )}
     </div>
   );
 };
