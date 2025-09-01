@@ -88,8 +88,8 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({
               ) : (
                 <>
                   <UserPlus className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Enroll Project</span>
-                  <span className="sm:hidden">Enroll</span>
+                  <span className="hidden sm:inline">Request Enroll</span>
+                  <span className="sm:hidden">Request Enroll</span>
                 </>
               )}
             </Button>
