@@ -10,7 +10,11 @@ import {
   // SendNotificationRequest,
   NotificationListRequest,
   MarkNotificationRequest,
+  NotificationListResponse,
 } from "@/types/notification";
+
+import { useSignalR } from "../useSignalR";
+import { useEffect } from "react";
 
 /**
  * Hook to create a notification
@@ -32,17 +36,14 @@ export function useNotificationList(
   pageSize: number = 10,
   isRead?: boolean
 ) {
-  // const authResponse = getAuthResponse<AuthResponse>();
-  // const email = authResponse?.email;
+  const queryClient = useQueryClient();
+  const { notifications: realtimeNotifications, clearNotifications } =
+    useSignalR();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ["notifications", pageIndex, pageSize, isRead],
     queryFn: () => {
-      // if (!email) {
-      //   throw new Error("No email found in auth response");
-      // }
       const request: NotificationListRequest = {
-        // email,
         "page-index": pageIndex,
         "page-size": pageSize,
       };
@@ -53,11 +54,56 @@ export function useNotificationList(
 
       return getNotificationList(request);
     },
-    // enabled: !!email,
-    // staleTime: 60000, // Cache for 60 seconds for real-time updates
-    // refetchInterval: 60000, // Refetch every 15 seconds for real-time updates
-    refetchIntervalInBackground: true, // Continue refetching in background
+    staleTime: 5 * 60 * 1000, // 5 minutes - longer since we have real-time updates
+    refetchOnWindowFocus: false, // Disable since we have real-time updates
   });
+
+  // Update query data when receiving real-time notifications
+  useEffect(() => {
+    if (realtimeNotifications.length > 0) {
+      queryClient.setQueryData(
+        ["notifications", pageIndex, pageSize, isRead],
+        (notificationData: NotificationListResponse | undefined) => {
+          if (!notificationData) return notificationData;
+
+          // Convert real-time notifications to the format expected by the UI
+          const newNotifications = realtimeNotifications.map(
+            (notification) => ({
+              id: notification.Id,
+              title: notification.Title,
+              type: notification.Type,
+              createDate: notification.CreateDate,
+              objectId: notification.ObjectId,
+              isGlobal: notification.IsGlobal,
+              isRead: false, // New notifications are unread
+            })
+          );
+
+          return {
+            ...notificationData,
+            "data-list": [
+              ...newNotifications,
+              ...notificationData["data-list"],
+            ],
+            "total-count":
+              notificationData["total-count"] + newNotifications.length,
+          };
+        }
+      );
+
+      // Clear processed notifications
+      clearNotifications();
+    }
+  }, [
+    realtimeNotifications,
+    queryClient,
+    pageIndex,
+    pageSize,
+    isRead,
+    clearNotifications,
+  ]);
+
+  return query;
 }
 
 /**

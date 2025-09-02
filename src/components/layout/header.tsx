@@ -48,6 +48,7 @@ import {
   useMarkNotification,
   useNotificationList,
 } from "@/hooks/queries/notification";
+import { useSignalRContext } from "@/contexts/SignalRProvider";
 
 type MenuItem = {
   name: string;
@@ -110,10 +111,10 @@ function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const { data: authData } = useAuthResponse();
   const accessToken = useAccessToken();
+  const { isConnected } = useSignalRContext();
 
   // Use real notification API
-  const { data: notificationData, refetch: refetchNotifications } =
-    useNotificationList(1, 10);
+  const { data: notificationData } = useNotificationList(1, 10);
   const markNotificationMutation = useMarkNotification();
 
   console.log("token: ", accessToken);
@@ -157,17 +158,7 @@ function Header() {
 
   // Get notifications from API data
   const notifications = notificationData?.["data-list"] || [];
-
-  // const markAsRead = async (notificationId: string) => {
-  //   try {
-  //     await markNotificationMutation.mutateAsync({
-  //       notification: notificationId,
-  //     });
-  //     refetchNotifications();
-  //   } catch (error) {
-  //     console.error("Failed to mark notification as read:", error);
-  //   }
-  // };
+  const unreadCount = notifications.filter((n) => !n["is-read"]).length;
 
   // useEffect(() => {
   //   const result = getAuthResponse<AuthResponse>();
@@ -177,13 +168,10 @@ function Header() {
   const markAllAsRead = async () => {
     try {
       await markNotificationMutation.mutateAsync({});
-      refetchNotifications();
     } catch (error) {
       console.error("Failed to mark all notifications as read:", error);
     }
   };
-
-  const unreadCount = notifications.filter((n) => !n["is-read"]).length;
 
   const getNotificationTypeColor = (type: string) => {
     switch (type) {
@@ -275,6 +263,13 @@ function Header() {
           {/* Notifications Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
+              {/* Connection status indicator */}
+              <div
+                className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+                  isConnected ? "bg-green-500" : "bg-red-500"
+                }`}
+              />
+
               <Button
                 variant="ghost"
                 size="icon"
@@ -288,11 +283,15 @@ function Header() {
                 )}
               </Button>
             </DropdownMenuTrigger>
+
             <DropdownMenuContent className="w-80 p-0" align="end" forceMount>
               <DropdownMenuLabel className="flex items-center justify-between py-4 px-4 border-b bg-gray-50/50">
                 <span className="font-semibold text-gray-900">
                   Notifications
                 </span>
+                <p className="text-sm text-gray-500">
+                  Status: {isConnected ? "Connected" : "Disconnected"}
+                </p>
                 {unreadCount > 0 && (
                   <Button
                     variant="ghost"
