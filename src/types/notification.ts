@@ -56,6 +56,25 @@ export interface MarkNotificationResponse {
   message: string;
 }
 
+// SignalR types
+export interface SignalRNotificationMessage {
+  id: string;
+  title: string;
+  type: string;
+  "create-date": string;
+  "account-id": string;
+  "is-read": boolean;
+  "is-global-send": boolean;
+  status: "pending" | "approved" | "rejected" | "created";
+  "objec-notification-id": string;
+}
+
+export interface SignalRConnectionState {
+  isConnected: boolean;
+  connectionId?: string;
+  error?: string;
+}
+
 // User role status for tracking invitation status
 export type UserRoleStatus = "pending" | "approved" | "rejected" | "none";
 

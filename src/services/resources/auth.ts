@@ -613,8 +613,9 @@ export const getBaseUserRoleId = async () => {
 
 export const getPIUserRoleByProjectId = async (projectId: string) => {
   const allRoles = await getAllRoles();
+  const normalize = (str: string) => str?.trim().toLowerCase();
   const RoleIdPI = allRoles.find(
-    (role) => role.name === "Principal Investigator"
+    (role) => normalize(role.name) === normalize("Principal Investigator")
   )?.id;
 
   const request = {
@@ -622,6 +623,22 @@ export const getPIUserRoleByProjectId = async (projectId: string) => {
     "role-id": RoleIdPI,
     "page-index": 1,
     "page-size": 1,
+  };
+  return await getUserRoleByFilter(request);
+};
+
+export const getResearcherUserRoleByProjectId = async (projectId: string) => {
+  const allRoles = await getAllRoles();
+  const normalize = (str: string) => str?.trim().toLowerCase();
+  const RoleIdResearcher = allRoles.find(
+    (role) => normalize(role.name) === normalize("Researcher")
+  )?.id;
+
+  const request = {
+    "project-id": projectId,
+    "role-id": RoleIdResearcher,
+    "page-index": 1,
+    "page-size": 10,
   };
   return await getUserRoleByFilter(request);
 };
