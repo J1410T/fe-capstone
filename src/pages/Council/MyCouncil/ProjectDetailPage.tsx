@@ -309,12 +309,12 @@ const ProjectDetailPage: React.FC = () => {
           {/* Content */}
           <div className="p-8 bg-white">
             <div className="flex items-center gap-3 mb-4">
-              <Badge
+              {/* <Badge
                 variant="secondary"
                 className="bg-slate-100 text-slate-700 border-slate-300"
               >
                 {projectData.code}
-              </Badge>
+              </Badge> */}
               <Badge className="bg-green-100 text-green-700 border-green-300">
                 {projectData.status}
               </Badge>

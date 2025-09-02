@@ -30,6 +30,7 @@ interface CouncilAssignmentModalProps {
   onClose: () => void;
   project: LegacyProject;
   onAssignCouncil: (project: LegacyProject, council: Council) => void;
+  isAssigning?: boolean;
 }
 
 // Convert AppraisalCouncil to Council type for compatibility
@@ -51,9 +52,9 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
   onClose,
   project,
   onAssignCouncil,
+  isAssigning: externalIsAssigning = false,
 }) => {
   const [selectedCouncil, setSelectedCouncil] = useState<Council | null>(null);
-  const [isAssigning, setIsAssigning] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   // API call to get councils list with search
@@ -68,11 +69,8 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
   const handleAssign = async () => {
     if (!selectedCouncil) return;
 
-    setIsAssigning(true);
     onAssignCouncil(project, selectedCouncil);
-    setIsAssigning(false);
     setSelectedCouncil(null);
-    onClose();
   };
 
   const handleClose = () => {
@@ -184,10 +182,17 @@ export const CouncilAssignmentModal: React.FC<CouncilAssignmentModalProps> = ({
           </Button>
           <Button
             onClick={handleAssign}
-            disabled={!selectedCouncil || isAssigning}
+            disabled={!selectedCouncil || externalIsAssigning}
             className="min-w-[100px]"
           >
-            {isAssigning ? "Assigning..." : "Assign"}
+            {externalIsAssigning ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Assigning...
+              </>
+            ) : (
+              "Assign"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>
