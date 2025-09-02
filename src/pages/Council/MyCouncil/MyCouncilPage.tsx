@@ -21,12 +21,9 @@ import {
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { getMyAppraisalCouncils } from "@/services/resources/appraisal-council";
-import { getProjectsByCouncilIdWithProposal } from "@/services/resources/project";
 import { AppraisalCouncil } from "@/types/appraisal-council";
-import { ProjectWithProposals } from "@/types/project";
 import { useMyAppraisalCouncils } from "@/hooks/queries/appraisal-council";
-import { useProjectsByAppraisalCouncilWithProposal } from "@/hooks/queries/project";
-// import { ProjectWithProposals } from "@/types/project";
+import { useGetProposalsByCouncilId } from "@/hooks/queries/evaluation";
 
 const MyCouncilPage: React.FC = () => {
   const navigate = useNavigate();
@@ -35,7 +32,7 @@ const MyCouncilPage: React.FC = () => {
   const [councils, setCouncils] = useState<AppraisalCouncil[]>([]);
   const [selectedCouncilId, setSelectedCouncilId] = useState<string>("");
 
-  const [projects, setProjects] = useState<ProjectWithProposals[]>([]);
+  const [projects, setProjects] = useState<any[]>([]);
   const [isLoadingCouncils, setIsLoadingCouncils] = useState(true);
   const [isLoadingProjects, setIsLoadingProjects] = useState(false);
 
@@ -47,9 +44,7 @@ const MyCouncilPage: React.FC = () => {
     });
 
   const { data: projectsData, isLoading: isLoadingProjectsQuery } =
-    useProjectsByAppraisalCouncilWithProposal(selectedCouncilId, true, [
-      "inprogress",
-    ]);
+    useGetProposalsByCouncilId(selectedCouncilId);
 
   // Load user's councils on mount
   useEffect(() => {
@@ -92,37 +87,16 @@ const MyCouncilPage: React.FC = () => {
   // Handle projects data from query hooks
   useEffect(() => {
     if (projectsData) {
-      setProjects(projectsData);
+      // Filter only projects with status 'inprogress'
+      const filteredProjects = Array.isArray(projectsData)
+        ? projectsData.filter(
+            (project: any) => project.status?.toLowerCase() === "inprogress"
+          )
+        : [];
+      setProjects(filteredProjects);
       setIsLoadingProjects(false);
     }
   }, [projectsData]);
-
-  // Load projects when council is selected
-  useEffect(() => {
-    const loadProjects = async () => {
-      if (!selectedCouncilId) {
-        setProjects([]);
-        return;
-      }
-
-      try {
-        setIsLoadingProjects(true);
-        const projectsData = await getProjectsByCouncilIdWithProposal(
-          selectedCouncilId,
-          true,
-          ["inprogress"]
-        );
-        setProjects(projectsData || []);
-      } catch (error) {
-        console.error("Error loading projects:", error);
-        setProjects([]);
-      } finally {
-        setIsLoadingProjects(false);
-      }
-    };
-
-    loadProjects();
-  }, [selectedCouncilId]);
 
   const selectedCouncil = councils.find((c) => c.id === selectedCouncilId);
 
@@ -326,8 +300,6 @@ const MyCouncilPage: React.FC = () => {
               </div>
             )}
           </div>
-
-          {/* Evaluations will be shown in project detail page */}
         </div>
       )}
 

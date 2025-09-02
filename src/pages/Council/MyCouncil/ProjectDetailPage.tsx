@@ -390,7 +390,8 @@ const ProjectDetailPage: React.FC = () => {
                 Main evaluation of this project
               </p>
             </div>
-            {isChairman && evaluations.length > 0 && (
+            {/* Remove the button for now */}
+            {/* {isChairman && evaluations.length > 0 && (
               <Button
                 onClick={handleCreateStage}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-sm"
@@ -398,7 +399,7 @@ const ProjectDetailPage: React.FC = () => {
                 <Plus className="h-4 w-4 mr-2" />
                 Create Stage
               </Button>
-            )}
+            )} */}
           </div>
         </div>
         {isLoadingEvaluations || isLoadingEvaluationsQuery ? (

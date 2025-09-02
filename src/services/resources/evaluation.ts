@@ -324,3 +324,23 @@ export const updateEvaluationStage = async (
     throw error;
   }
 };
+
+export const getProposalsByCouncilId = async (councilId: string) => {
+  try {
+    const accessToken = getAccessToken();
+    const response = await axiosClient.get(
+      `/evaluation/list-proposal-by-council/${councilId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching proposals by council ID:", error);
+    throw error;
+  }
+};
