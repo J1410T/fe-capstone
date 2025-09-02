@@ -39,6 +39,7 @@ import {
   forgotPassword,
   verifyOtp,
   resetPassword,
+  getResearcherUserRoleByProjectId,
 } from "@/services/resources/auth";
 import {
   UserRole,
@@ -516,6 +517,15 @@ export function usePIUserRoleByProjectId(projectId: string) {
   return useQuery({
     queryKey: ["pi-user-role-by-project", projectId],
     queryFn: () => getPIUserRoleByProjectId(projectId),
+    enabled: !!projectId,
+    staleTime: 30000,
+  });
+}
+
+export function useResearcherUserRoleByProjectId(projectId: string) {
+  return useQuery({
+    queryKey: ["pi-user-role-by-project", projectId],
+    queryFn: () => getResearcherUserRoleByProjectId(projectId),
     enabled: !!projectId,
     staleTime: 30000,
   });
