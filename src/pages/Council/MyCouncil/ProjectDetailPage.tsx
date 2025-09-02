@@ -1,7 +1,26 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   ArrowLeft,
   Calendar,
@@ -11,12 +30,14 @@ import {
   Target,
   Plus,
   Eye,
+  Edit,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { getEvaluationsByProjectId } from "@/services/resources/evaluation";
 import {
   getEvaluationStagesByEvaluationId,
   getEvaluationById,
+  updateEvaluation,
 } from "@/services/resources/evaluation";
 import { checkIsChaimainInCouncil } from "@/services/resources/auth";
 import { getAppraisalCouncilByProjectId } from "@/services/resources/appraisal-council";
@@ -42,6 +63,16 @@ const ProjectDetailPage: React.FC = () => {
   );
   const [isCreateStageModalOpen, setIsCreateStageModalOpen] = useState(false);
   const [currentCouncilId, setCurrentCouncilId] = useState<string | null>(null);
+  const [isEditEvaluationModalOpen, setIsEditEvaluationModalOpen] =
+    useState(false);
+  const [selectedEvaluation, setSelectedEvaluation] =
+    useState<Evaluation | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    "total-rate": "" as string | number,
+    comment: "",
+    status: "",
+  });
+  const [isUpdatingEvaluation, setIsUpdatingEvaluation] = useState(false);
 
   // Query hooks
   const { data: projectQueryData } = useProject(projectId || "");
@@ -193,7 +224,7 @@ const ProjectDetailPage: React.FC = () => {
             "Evaluation endpoint not found (404) - this project may not have evaluations yet"
           );
         } else if (error.response?.status === 401) {
-          console.log("Unauthorized (401) - token may be expired");
+          console.log("Unauthorized (401)");
         }
 
         console.log("❌ API call failed, no evaluation data available");
@@ -253,6 +284,71 @@ const ProjectDetailPage: React.FC = () => {
     }
   };
 
+  const handleEditEvaluation = (evaluation: Evaluation) => {
+    setSelectedEvaluation(evaluation);
+    setEditFormData({
+      "total-rate": evaluation["total-rate"]
+        ? evaluation["total-rate"].toString()
+        : "",
+      comment: evaluation.comment || "",
+      status: evaluation.status,
+    });
+    setIsEditEvaluationModalOpen(true);
+  };
+
+  const handleSaveEvaluation = async () => {
+    if (!selectedEvaluation) return;
+
+    // Validation
+    if (!editFormData.status) {
+      toast.error("Please select a status for the evaluation.");
+      return;
+    }
+
+    const totalRateNum = parseFloat(editFormData["total-rate"] as string);
+    if (isNaN(totalRateNum) || totalRateNum < 0 || totalRateNum > 100) {
+      toast.error("Total rate must be a valid number between 0 and 10.");
+      return;
+    }
+
+    setIsUpdatingEvaluation(true);
+
+    try {
+      await updateEvaluation({
+        id: selectedEvaluation.id,
+        code: selectedEvaluation.code,
+        title: selectedEvaluation.title,
+        "total-rate": totalRateNum,
+        comment: editFormData.comment,
+        status: editFormData.status,
+        "project-id": selectedEvaluation["project-id"],
+        "appraisal-council-id": selectedEvaluation["appraisal-council-id"],
+      });
+
+      // Update the local evaluation state
+      setEvaluations((prev) =>
+        prev.map((evaluation) =>
+          evaluation.id === selectedEvaluation.id
+            ? {
+                ...evaluation,
+                "total-rate": totalRateNum,
+                comment: editFormData.comment,
+                status: editFormData.status,
+              }
+            : evaluation
+        )
+      );
+
+      setIsEditEvaluationModalOpen(false);
+      toast.success("Evaluation updated successfully!");
+    } catch (error) {
+      console.error("Error updating evaluation:", error);
+      toast.error("Failed to update evaluation. Please try again.");
+    } finally {
+      setIsUpdatingEvaluation(false);
+    }
+  };
+
   // Add loading state check like in EvaluationDetailPage
   if (isLoadingEvaluations) {
     return (
@@ -301,6 +397,8 @@ const ProjectDetailPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Council and Evaluation Information Section */}
 
       {/* Project Information */}
 
@@ -452,6 +550,17 @@ const ProjectDetailPage: React.FC = () => {
                     >
                       {evaluation.status}
                     </Badge>
+                    {isChairman && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleEditEvaluation(evaluation)}
+                        className="hover:bg-green-50 hover:border-green-200 h-8 px-3"
+                      >
+                        <Edit className="h-3 w-3 mr-1" />
+                        Edit Evaluation
+                      </Button>
+                    )}
                   </div>
                 </div>
 
@@ -658,6 +767,103 @@ const ProjectDetailPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Edit Evaluation Modal */}
+      <Dialog
+        open={isEditEvaluationModalOpen}
+        onOpenChange={setIsEditEvaluationModalOpen}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-green-500" />
+              Edit Evaluation
+            </DialogTitle>
+            <DialogDescription>
+              Update the evaluation details. Only chairmen can edit evaluations.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="total-rate">
+                Total Rate (0-100) <span className="text-red-500">*</span>
+              </Label>
+              <Input
+                id="total-rate"
+                type="number"
+                min="0"
+                max="100"
+                step="0.1"
+                value={editFormData["total-rate"]}
+                onChange={(e) =>
+                  setEditFormData((prev) => ({
+                    ...prev,
+                    "total-rate": e.target.value,
+                  }))
+                }
+                placeholder="Enter total rate (0-100)"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="comment">Comment</Label>
+              <Textarea
+                id="comment"
+                value={editFormData.comment}
+                onChange={(e) =>
+                  setEditFormData((prev) => ({
+                    ...prev,
+                    comment: e.target.value,
+                  }))
+                }
+                placeholder="Enter evaluation comment"
+                rows={4}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status">
+                Status <span className="text-red-500">*</span>
+              </Label>
+              <Select
+                value={editFormData.status}
+                onValueChange={(value) =>
+                  setEditFormData((prev) => ({
+                    ...prev,
+                    status: value,
+                  }))
+                }
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="passed">Passed</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsEditEvaluationModalOpen(false)}
+              disabled={isUpdatingEvaluation}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEvaluation}
+              disabled={isUpdatingEvaluation}
+              className="bg-green-600 hover:bg-green-700 text-white"
+            >
+              {isUpdatingEvaluation ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Create Stage Modal */}
       <CreateEvaluationStageModal

@@ -1,8 +1,8 @@
 import {
   NotificationRequest,
   NotificationResponse,
-  SendNotificationRequest,
-  SendNotificationResponse,
+  // SendNotificationRequest,
+  // SendNotificationResponse,
   NotificationListRequest,
   NotificationListResponse,
   MarkNotificationRequest,
@@ -42,33 +42,6 @@ export const createNotification = async (
   } catch (error) {
     console.error("createNotification error:", error);
     console.error("Request payload:", request);
-    throw error;
-  }
-};
-
-/**
- * Send notification to users
- */
-export const sendNotificationToUsers = async (
-  request: SendNotificationRequest
-): Promise<SendNotificationResponse> => {
-  try {
-    const accessToken = getAccessToken();
-
-    const response = await axiosClient.post<boolean>(
-      "/notification/accounts",
-      request,
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json-patch+json",
-        },
-      }
-    );
-
-    return { success: response.data };
-  } catch (error) {
-    console.error("sendNotificationToUsers error:", error);
     throw error;
   }
 };
