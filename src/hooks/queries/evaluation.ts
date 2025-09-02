@@ -6,6 +6,7 @@ import {
   getEvaluationStagesById,
   getIndividualEvaluationById,
   getIndividualEvaluationsByStageId,
+  getProposalsByCouncilId,
   updateEvaluationStage,
   updateIndividualEvaluation,
 } from "@/services/resources/evaluation";
@@ -147,5 +148,13 @@ export const useUpdateEvaluationStage = () => {
     onError: (error) => {
       console.error("Failed to update evaluation stage:", error);
     },
+  });
+};
+
+export const useGetProposalsByCouncilId = (councilId: string) => {
+  return useQuery({
+    queryKey: ["proposals", "council", councilId],
+    queryFn: () => getProposalsByCouncilId(councilId),
+    enabled: !!councilId,
   });
 };
