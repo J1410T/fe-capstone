@@ -118,13 +118,32 @@ const MyCouncilPage: React.FC = () => {
   };
 
   const handleProjectClick = (projectId: string, projectData?: any) => {
-    // Store project data for use in ProjectDetailPage
+    // Store complete project data for use in ProjectDetailPage
     if (projectData) {
       const projectDataKey = `project_${projectId}`;
-      sessionStorage.setItem(projectDataKey, JSON.stringify(projectData));
+      // Store the complete project data with evaluations and stages
+      const completeProjectData = {
+        ...projectData,
+        // Ensure we have the project data at root level for easy access
+        "english-title": projectData["english-title"],
+        "vietnamese-title": projectData["vietnamese-title"],
+        "created-at": projectData["created-at"],
+        code: projectData.code,
+        status: projectData.status,
+        category: projectData.category,
+        type: projectData.type,
+        language: projectData.language,
+        description: projectData.description,
+        // Keep evaluations with stages for ProjectDetailPage
+        evaluations: projectData.evaluations || [],
+      };
+      sessionStorage.setItem(
+        projectDataKey,
+        JSON.stringify(completeProjectData)
+      );
     }
 
-    // Store current council data for chairman check
+    // Store current council data for chairman check and stage ownership
     if (selectedCouncilId) {
       const selectedCouncil = councils.find((c) => c.id === selectedCouncilId);
       if (selectedCouncil) {

@@ -41,6 +41,7 @@ const ProjectDetailPage: React.FC = () => {
     null
   );
   const [isCreateStageModalOpen, setIsCreateStageModalOpen] = useState(false);
+  const [currentCouncilId, setCurrentCouncilId] = useState<string | null>(null);
 
   // Query hooks
   const { data: projectQueryData } = useProject(projectId || "");
@@ -86,11 +87,20 @@ const ProjectDetailPage: React.FC = () => {
       try {
         setIsLoadingEvaluations(true);
 
-        // First priority: Try to get evaluation from stored project data
+        // Try to get current council from session storage first
+        const storedCouncil = sessionStorage.getItem("current_council");
+        if (storedCouncil) {
+          try {
+            const parsedCouncil = JSON.parse(storedCouncil);
+            setCurrentCouncilId(parsedCouncil.id);
+          } catch (parseError) {
+            console.error("Error parsing stored council:", parseError);
+          }
+        }
+
+        // First priority: Try to get complete project data from session storage
         const projectDataKey = `project_${projectId}`;
-        const storedProjectData =
-          localStorage.getItem(projectDataKey) ||
-          sessionStorage.getItem(projectDataKey);
+        const storedProjectData = sessionStorage.getItem(projectDataKey);
 
         if (storedProjectData) {
           try {
@@ -99,36 +109,28 @@ const ProjectDetailPage: React.FC = () => {
             // Set project data for display
             setProjectData(parsedProjectData);
 
+            // Check if we have evaluations directly in the project data
             if (
-              parsedProjectData.proposals &&
-              parsedProjectData.proposals[0]?.evaluations?.[0]
+              parsedProjectData.evaluations &&
+              parsedProjectData.evaluations.length > 0
             ) {
-              const evaluation = parsedProjectData.proposals[0].evaluations[0];
+              const evaluation = parsedProjectData.evaluations[0];
               setEvaluations([evaluation]);
               setCurrentEvaluationId(evaluation.id);
 
-              // Load stages for this evaluation
-              try {
-                const evaluationData = await getEvaluationById(
-                  evaluation.id,
-                  true
-                );
-                setStages(evaluationData["evaluation-stages"] || []);
-              } catch {
-                // Fallback: Load stages separately
-                const stagesResponse = await getEvaluationStagesByEvaluationId({
-                  "evaluation-id": evaluation.id,
-                  "page-index": 1,
-                  "page-size": 20,
-                });
-                setStages(stagesResponse["data-list"] || []);
+              // Set stages from evaluation-stages if available
+              if (
+                evaluation["evaluation-stages"] &&
+                evaluation["evaluation-stages"].length > 0
+              ) {
+                setStages(evaluation["evaluation-stages"]);
               }
 
               // Check chairman role
               await checkChairmanRole(projectId);
               return; // Exit early, no need for API call
             } else {
-              console.log("❌ No evaluation found in stored project data");
+              console.log("❌ No evaluations found in stored project data");
             }
           } catch (parseError) {
             console.error("Error parsing stored project data:", parseError);
@@ -220,9 +222,22 @@ const ProjectDetailPage: React.FC = () => {
     }
   }, [evaluationsQueryData]);
 
-  const handleStageClick = (stageId: string) => {
+  // Check if stage belongs to current user's council
+  const isStageOwnedByCurrentCouncil = (stage: EvaluationStageApi) => {
+    if (!currentCouncilId) return true; // Default to true if no council ID available
+    return stage["appraisal-council-id"] === currentCouncilId;
+  };
+
+  const handleStageClick = (stageId: string, stage?: EvaluationStageApi) => {
     if (currentEvaluationId) {
-      navigate(`/council/evaluation-stages/${currentEvaluationId}/${stageId}`);
+      const url = `/council/evaluation-stages/${currentEvaluationId}/${stageId}`;
+
+      // Pass read-only flag if stage is not owned by current council
+      if (stage && !isStageOwnedByCurrentCouncil(stage)) {
+        navigate(`${url}?readonly=true`);
+      } else {
+        navigate(url);
+      }
     }
   };
 
@@ -454,18 +469,39 @@ const ProjectDetailPage: React.FC = () => {
                       .map((stage) => (
                         <div
                           key={stage.id}
-                          className="group flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-indigo-50 hover:to-purple-100 transition-all duration-300 cursor-pointer border border-purple-200/50 hover:border-purple-300"
-                          onClick={() => handleStageClick(stage.id)}
+                          className={`group flex items-center justify-between p-4 rounded-xl transition-all duration-300 cursor-pointer border ${
+                            isStageOwnedByCurrentCouncil(stage)
+                              ? "bg-gradient-to-r from-purple-50 to-indigo-50 hover:from-indigo-50 hover:to-purple-100 border-purple-200/50 hover:border-purple-300"
+                              : "bg-gradient-to-r from-gray-50 to-slate-50 hover:from-slate-50 hover:to-gray-100 border-gray-200/50 hover:border-gray-300"
+                          }`}
+                          onClick={() => handleStageClick(stage.id, stage)}
                         >
                           <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                            <div
+                              className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-md ${
+                                isStageOwnedByCurrentCouncil(stage)
+                                  ? "bg-gradient-to-br from-purple-500 to-indigo-600"
+                                  : "bg-gradient-to-br from-gray-400 to-slate-500"
+                              }`}
+                            >
                               <span className="text-white font-bold text-sm">
                                 {stage["stage-order"]}
                               </span>
                             </div>
                             <div>
-                              <h4 className="text-sm font-semibold text-slate-900 group-hover:text-purple-700 transition-colors">
+                              <h4
+                                className={`text-sm font-semibold transition-colors ${
+                                  isStageOwnedByCurrentCouncil(stage)
+                                    ? "text-slate-900 group-hover:text-purple-700"
+                                    : "text-slate-700 group-hover:text-gray-600"
+                                }`}
+                              >
                                 {stage.name}
+                                {!isStageOwnedByCurrentCouncil(stage) && (
+                                  <span className="ml-2 text-xs text-gray-500 font-normal">
+                                    (Other Council)
+                                  </span>
+                                )}
                               </h4>
                               <p className="text-xs text-slate-600">
                                 {stage.phrase} • {stage.type}
@@ -484,12 +520,18 @@ const ProjectDetailPage: React.FC = () => {
                               size="sm"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleStageClick(stage.id);
+                                handleStageClick(stage.id, stage);
                               }}
-                              className="hover:bg-purple-50 hover:border-purple-200 h-8 px-3"
+                              className={`h-8 px-3 ${
+                                isStageOwnedByCurrentCouncil(stage)
+                                  ? "hover:bg-purple-50 hover:border-purple-200"
+                                  : "hover:bg-gray-50 hover:border-gray-200 text-gray-600"
+                              }`}
                             >
                               <Eye className="h-3 w-3 mr-1" />
-                              View
+                              {isStageOwnedByCurrentCouncil(stage)
+                                ? "View"
+                                : "View Only"}
                             </Button>
                           </div>
                         </div>
