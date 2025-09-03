@@ -11,6 +11,7 @@ import {
   updateIndividualEvaluation,
   updateEvaluation,
 } from "@/services/resources/evaluation";
+import { checkIsChaimainInCouncil } from "@/services/resources/auth";
 import {
   CreateFirstEvaluationResponse,
   CreateIndividualEvaluationRequest,
@@ -20,8 +21,10 @@ import {
   UpdateEvaluationStageResponse,
   UpdateEvaluationRequest,
   UpdateEvaluationResponse,
+  Evaluation,
 } from "@/types/evaluation";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useCallback } from "react";
 
 export const useCreateFirstEvaluation = () => {
   return useMutation<CreateFirstEvaluationResponse, Error, string>({
@@ -177,4 +180,51 @@ export const useGetProposalsByCouncilId = (councilId: string) => {
     queryFn: () => getProposalsByCouncilId(councilId),
     enabled: !!councilId,
   });
+};
+
+export const useEvaluationChairman = (evaluation: Evaluation | null) => {
+  const [isChairman, setIsChairman] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const checkChairmanRole = useCallback(
+    async (currentEvaluation: Evaluation | null) => {
+      if (!currentEvaluation) {
+        setIsChairman(false);
+        return;
+      }
+
+      // Check if evaluation has an appraisal council
+      if (!currentEvaluation["appraisal-council-id"]) {
+        console.log("Evaluation has no appraisal council - cannot be chairman");
+        setIsChairman(false);
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        // Check if current user is chairman in the evaluation's appraisal council
+        const response = await checkIsChaimainInCouncil(
+          currentEvaluation["appraisal-council-id"]
+        );
+
+        setIsChairman(response["total-count"] === 1);
+      } catch (error) {
+        console.error("Chairman role check error:", error);
+        setIsChairman(false);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    []
+  );
+
+  useEffect(() => {
+    checkChairmanRole(evaluation);
+  }, [evaluation, checkChairmanRole]);
+
+  return {
+    isChairman,
+    isLoading,
+    recheckChairmanRole: () => checkChairmanRole(evaluation),
+  };
 };

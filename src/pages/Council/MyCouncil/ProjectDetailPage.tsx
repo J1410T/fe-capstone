@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -33,16 +32,8 @@ import {
   Edit,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
-import { getEvaluationsByProjectId } from "@/services/resources/evaluation";
-import {
-  getEvaluationStagesByEvaluationId,
-  getEvaluationById,
-  updateEvaluation,
-} from "@/services/resources/evaluation";
-import { checkIsChaimainInCouncil } from "@/services/resources/auth";
-import { getAppraisalCouncilByProjectId } from "@/services/resources/appraisal-council";
 import { useProject } from "@/hooks/queries/project";
-import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
+import { useGetEvaluationsByProjectId, useUpdateEvaluation, useEvaluationChairman } from "@/hooks/queries/evaluation";
 import { useMilestonesByProjectId } from "@/hooks/queries/milestone";
 
 import { Evaluation, EvaluationStageApi } from "@/types/evaluation";
@@ -53,14 +44,7 @@ const ProjectDetailPage: React.FC = () => {
   const navigate = useNavigate();
 
   // State management
-  const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
-  const [stages, setStages] = useState<EvaluationStageApi[]>([]);
-  const [isLoadingEvaluations, setIsLoadingEvaluations] = useState(true);
-  const [isChairman, setIsChairman] = useState(false);
   const [projectData, setProjectData] = useState<any>(null);
-  const [currentEvaluationId, setCurrentEvaluationId] = useState<string | null>(
-    null
-  );
   const [isCreateStageModalOpen, setIsCreateStageModalOpen] = useState(false);
   const [currentCouncilId, setCurrentCouncilId] = useState<string | null>(null);
   const [isEditEvaluationModalOpen, setIsEditEvaluationModalOpen] =
@@ -72,171 +56,37 @@ const ProjectDetailPage: React.FC = () => {
     comment: "",
     status: "",
   });
-  const [isUpdatingEvaluation, setIsUpdatingEvaluation] = useState(false);
 
   // Query hooks
   const { data: projectQueryData } = useProject(projectId || "");
-  const { data: evaluationsQueryData, isLoading: isLoadingEvaluationsQuery } =
-    useGetEvaluationsByProjectId(projectId || "");
+  const { data: evaluationsData, isLoading: isLoadingEvaluations } = useGetEvaluationsByProjectId(projectId || "");
   const { data: milestonesData, isLoading: isLoadingMilestones } =
     useMilestonesByProjectId(projectId || "");
 
-  // Simple Chairman Role Check Function
-  const checkChairmanRole = useCallback(async (projectId: string | null) => {
-    try {
-      if (!projectId) {
-        console.log("No project ID available");
-        setIsChairman(false);
-        return;
+  // Extract evaluations and stages from query data
+  const evaluations = evaluationsData?.["data-list"] || [];
+  const stages = evaluations.length > 0 && evaluations[0]["evaluation-stages"] 
+    ? evaluations[0]["evaluation-stages"] 
+    : [];
+  const currentEvaluationId = evaluations.length > 0 ? evaluations[0].id : null;  // Use custom hook for chairman check
+  const currentEvaluation = evaluations.length > 0 ? evaluations[0] : null;
+  const { isChairman } = useEvaluationChairman(currentEvaluation);
+
+  // Use custom hook for updating evaluation
+  const updateEvaluationMutation = useUpdateEvaluation();
+
+  // Set current council ID from session storage
+  useEffect(() => {
+    const storedCouncil = sessionStorage.getItem("current_council");
+    if (storedCouncil) {
+      try {
+        const parsedCouncil = JSON.parse(storedCouncil);
+        setCurrentCouncilId(parsedCouncil.id);
+      } catch (parseError) {
+        console.error("Error parsing stored council:", parseError);
       }
-
-      // Get appraisal council by project ID
-      const appraisalCouncilProjectMain = await getAppraisalCouncilByProjectId(
-        projectId
-      );
-
-      // Check if current user is chairman in this council
-      const responseAppraisalCouncilProjectMain =
-        await checkIsChaimainInCouncil(appraisalCouncilProjectMain.id);
-
-      if (responseAppraisalCouncilProjectMain["total-count"] === 1) {
-        setIsChairman(true);
-      } else {
-        setIsChairman(false);
-      }
-    } catch (error) {
-      console.error("Chairman role check error:", error);
-      setIsChairman(false);
     }
   }, []);
-
-  // Load evaluations and stages for this project
-  useEffect(() => {
-    const loadEvaluationsAndStages = async () => {
-      if (!projectId) return;
-
-      try {
-        setIsLoadingEvaluations(true);
-
-        // Try to get current council from session storage first
-        const storedCouncil = sessionStorage.getItem("current_council");
-        if (storedCouncil) {
-          try {
-            const parsedCouncil = JSON.parse(storedCouncil);
-            setCurrentCouncilId(parsedCouncil.id);
-          } catch (parseError) {
-            console.error("Error parsing stored council:", parseError);
-          }
-        }
-
-        // First priority: Try to get complete project data from session storage
-        const projectDataKey = `project_${projectId}`;
-        const storedProjectData = sessionStorage.getItem(projectDataKey);
-
-        if (storedProjectData) {
-          try {
-            const parsedProjectData = JSON.parse(storedProjectData);
-
-            // Set project data for display
-            setProjectData(parsedProjectData);
-
-            // Check if we have evaluations directly in the project data
-            if (
-              parsedProjectData.evaluations &&
-              parsedProjectData.evaluations.length > 0
-            ) {
-              const evaluation = parsedProjectData.evaluations[0];
-              setEvaluations([evaluation]);
-              setCurrentEvaluationId(evaluation.id);
-
-              // Set stages from evaluation-stages if available
-              if (
-                evaluation["evaluation-stages"] &&
-                evaluation["evaluation-stages"].length > 0
-              ) {
-                setStages(evaluation["evaluation-stages"]);
-              }
-
-              // Check chairman role
-              await checkChairmanRole(projectId);
-              return; // Exit early, no need for API call
-            } else {
-              console.log("❌ No evaluations found in stored project data");
-            }
-          } catch (parseError) {
-            console.error("Error parsing stored project data:", parseError);
-          }
-        }
-
-        const requestBody = {
-          "project-id": projectId,
-          "page-index": 1,
-          "page-size": 10,
-        };
-
-        const evaluationsResponse = await getEvaluationsByProjectId(
-          requestBody
-        );
-
-        const evaluationsList = evaluationsResponse["data-list"] || [];
-
-        if (evaluationsList.length > 0) {
-          // Filter evaluations that actually belong to this project
-          const projectEvaluations = evaluationsList.filter(
-            (evaluation: any) => evaluation["project-id"] === projectId
-          );
-
-          if (projectEvaluations.length > 0) {
-            const evaluation = projectEvaluations[0];
-            setEvaluations([evaluation]);
-            setCurrentEvaluationId(evaluation.id);
-
-            // Load stages for this evaluation
-            try {
-              const evaluationData = await getEvaluationById(
-                evaluation.id,
-                true
-              );
-              setStages(evaluationData["evaluation-stages"] || []);
-            } catch {
-              // Fallback: Load stages separately
-              const stagesResponse = await getEvaluationStagesByEvaluationId({
-                "evaluation-id": evaluation.id,
-                "page-index": 1,
-                "page-size": 20,
-              });
-              setStages(stagesResponse["data-list"] || []);
-            }
-
-            // Check chairman role
-            await checkChairmanRole(projectId);
-          } else {
-            setEvaluations([]);
-            setStages([]);
-          }
-        } else {
-          setEvaluations([]);
-          setStages([]);
-        }
-      } catch (error: any) {
-        if (error.response?.status === 404) {
-          console.log(
-            "Evaluation endpoint not found (404) - this project may not have evaluations yet"
-          );
-        } else if (error.response?.status === 401) {
-          console.log("Unauthorized (401)");
-        }
-
-        console.log("❌ API call failed, no evaluation data available");
-        setEvaluations([]);
-        setStages([]);
-      } finally {
-        setIsLoadingEvaluations(false);
-      }
-    };
-
-    loadEvaluationsAndStages();
-  }, [projectId, checkChairmanRole]);
 
   // Handle project data from query hooks
   useEffect(() => {
@@ -244,14 +94,6 @@ const ProjectDetailPage: React.FC = () => {
       setProjectData(projectQueryData.data["project-detail"]);
     }
   }, [projectQueryData]);
-
-  // Handle evaluations data from query hooks
-  useEffect(() => {
-    if (evaluationsQueryData?.["data-list"]) {
-      setEvaluations(evaluationsQueryData["data-list"]);
-      setIsLoadingEvaluations(false);
-    }
-  }, [evaluationsQueryData]);
 
   // Check if stage belongs to current user's council
   const isStageOwnedByCurrentCouncil = (stage: EvaluationStageApi) => {
@@ -301,20 +143,19 @@ const ProjectDetailPage: React.FC = () => {
 
     // Validation
     if (!editFormData.status) {
-      toast.error("Please select a status for the evaluation.");
+      // You might want to add toast back for validation
+      console.error("Please select a status for the evaluation.");
       return;
     }
 
     const totalRateNum = parseFloat(editFormData["total-rate"] as string);
     if (isNaN(totalRateNum) || totalRateNum < 0 || totalRateNum > 100) {
-      toast.error("Total rate must be a valid number between 0 and 10.");
+      console.error("Total rate must be a valid number between 0 and 100.");
       return;
     }
 
-    setIsUpdatingEvaluation(true);
-
     try {
-      await updateEvaluation({
+      await updateEvaluationMutation.mutateAsync({
         id: selectedEvaluation.id,
         code: selectedEvaluation.code,
         title: selectedEvaluation.title,
@@ -325,31 +166,13 @@ const ProjectDetailPage: React.FC = () => {
         "appraisal-council-id": selectedEvaluation["appraisal-council-id"],
       });
 
-      // Update the local evaluation state
-      setEvaluations((prev) =>
-        prev.map((evaluation) =>
-          evaluation.id === selectedEvaluation.id
-            ? {
-                ...evaluation,
-                "total-rate": totalRateNum,
-                comment: editFormData.comment,
-                status: editFormData.status,
-              }
-            : evaluation
-        )
-      );
-
       setIsEditEvaluationModalOpen(false);
-      toast.success("Evaluation updated successfully!");
+      // Refresh to get updated data
+      window.location.reload();
     } catch (error) {
       console.error("Error updating evaluation:", error);
-      toast.error("Failed to update evaluation. Please try again.");
-    } finally {
-      setIsUpdatingEvaluation(false);
     }
-  };
-
-  // Add loading state check like in EvaluationDetailPage
+  };  // Add loading state check like in EvaluationDetailPage
   if (isLoadingEvaluations) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -515,7 +338,7 @@ const ProjectDetailPage: React.FC = () => {
             )} */}
           </div>
         </div>
-        {isLoadingEvaluations || isLoadingEvaluationsQuery ? (
+        {isLoadingEvaluations ? (
           <div className="flex justify-center py-8">
             <Loading />
           </div>
@@ -850,16 +673,16 @@ const ProjectDetailPage: React.FC = () => {
             <Button
               variant="outline"
               onClick={() => setIsEditEvaluationModalOpen(false)}
-              disabled={isUpdatingEvaluation}
+              disabled={updateEvaluationMutation.isPending}
             >
               Cancel
             </Button>
             <Button
               onClick={handleSaveEvaluation}
-              disabled={isUpdatingEvaluation}
+              disabled={updateEvaluationMutation.isPending}
               className="bg-green-600 hover:bg-green-700 text-white"
             >
-              {isUpdatingEvaluation ? "Saving..." : "Save Changes"}
+              {updateEvaluationMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
