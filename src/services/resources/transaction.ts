@@ -3,6 +3,7 @@ import {
   TransactionListRequest,
   TransactionListResponse,
   TransactionUpdateRequest,
+  TransactionApproveRequest,
   TransactionDetail,
 } from "@/types/transaction";
 import { getUserRoleById } from "./auth";
@@ -192,6 +193,41 @@ export const updateTransaction = async (
     });
   } catch (error) {
     console.error("updateTransaction error:", error);
+    throw error;
+  }
+};
+
+export const approveTransaction = async (
+  request: TransactionApproveRequest
+): Promise<void> => {
+  try {
+    const accessToken = getAccessToken();
+    await axiosClient.put("/transaction", request, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    console.error("approveTransaction error:", error);
+    throw error;
+  }
+};
+
+export const updateTransactionStatus = async (
+  transactionId: string,
+  status: string
+): Promise<void> => {
+  try {
+    const accessToken = getAccessToken();
+    await axiosClient.put(`/transaction/${transactionId}?status=${status}`, null, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    });
+  } catch (error) {
+    console.error("updateTransactionStatus error:", error);
     throw error;
   }
 };
