@@ -43,8 +43,32 @@ const ProjectDetailPage: React.FC = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
 
-  // State management
-  const [projectData, setProjectData] = useState<any>(null);
+  // Debug log
+  console.log("🔍 ProjectDetailPage rendered with projectId:", projectId);
+
+  // Helper function to get initial project data from sessionStorage
+  const getInitialProjectData = () => {
+    if (projectId) {
+      const projectDataKey = `project_${projectId}`;
+      const storedProjectData = sessionStorage.getItem(projectDataKey);
+      
+      if (storedProjectData) {
+        try {
+          const parsedData = JSON.parse(storedProjectData);
+          console.log("🚀 Found project data in sessionStorage on initialization:", parsedData);
+          return parsedData;
+        } catch (parseError) {
+          console.error("❌ Error parsing stored project data on initialization:", parseError);
+        }
+      } else {
+        console.log("ℹ️ No project data found in sessionStorage for key:", projectDataKey);
+      }
+    }
+    return null;
+  };
+
+  // State management - initialize with sessionStorage data if available
+  const [projectData, setProjectData] = useState<any>(getInitialProjectData());
   const [isCreateStageModalOpen, setIsCreateStageModalOpen] = useState(false);
   const [currentCouncilId, setCurrentCouncilId] = useState<string | null>(null);
   const [isEditEvaluationModalOpen, setIsEditEvaluationModalOpen] =
@@ -57,15 +81,20 @@ const ProjectDetailPage: React.FC = () => {
     status: "",
   });
 
-  // Query hooks
+  // Query hooks - only use them as fallback if sessionStorage data is not available
   const { data: projectQueryData } = useProject(projectId || "");
   const { data: evaluationsData, isLoading: isLoadingEvaluations } = useGetEvaluationsByProjectId(projectId || "");
   const { data: milestonesData, isLoading: isLoadingMilestones } =
     useMilestonesByProjectId(projectId || "");
 
-  // Extract evaluations and stages from query data
-  const evaluations = evaluationsData?.["data-list"] || [];
-  const stages = evaluations.length > 0 && evaluations[0]["evaluation-stages"] 
+  // Extract evaluations and stages from both sessionStorage and query data
+  const evaluationsFromStorage = projectData?.evaluations || [];
+  const evaluationsFromAPI = evaluationsData?.["data-list"] || [];
+  
+  // Prioritize evaluations from sessionStorage if available, otherwise use API data
+  const evaluations: Evaluation[] = evaluationsFromStorage.length > 0 ? evaluationsFromStorage : evaluationsFromAPI;
+  
+  const stages: EvaluationStageApi[] = evaluations.length > 0 && evaluations[0]["evaluation-stages"] 
     ? evaluations[0]["evaluation-stages"] 
     : [];
   const currentEvaluationId = evaluations.length > 0 ? evaluations[0].id : null;  // Use custom hook for chairman check
@@ -88,12 +117,32 @@ const ProjectDetailPage: React.FC = () => {
     }
   }, []);
 
-  // Handle project data from query hooks
+  // Initialize project data immediately on mount if available in sessionStorage
   useEffect(() => {
-    if (projectQueryData?.data?.["project-detail"]) {
+    if (projectId && !projectData) {
+      const projectDataKey = `project_${projectId}`;
+      const storedProjectData = sessionStorage.getItem(projectDataKey);
+      
+      if (storedProjectData) {
+        try {
+          const parsedProjectData = JSON.parse(storedProjectData);
+          console.log("Loading project data from sessionStorage:", parsedProjectData);
+          setProjectData(parsedProjectData);
+        } catch (parseError) {
+          console.error("Error parsing stored project data:", parseError);
+        }
+      }
+    }
+  }, [projectId, projectData]); // Include dependencies
+
+  // Load project data from sessionStorage first, then from API as fallback
+  useEffect(() => {
+    // Only check API data if we don't have sessionStorage data
+    if (projectId && !projectData && projectQueryData?.data?.["project-detail"]) {
+      console.log("Using project data from API:", projectQueryData.data["project-detail"]);
       setProjectData(projectQueryData.data["project-detail"]);
     }
-  }, [projectQueryData]);
+  }, [projectId, projectQueryData, projectData]);
 
   // Check if stage belongs to current user's council
   const isStageOwnedByCurrentCouncil = (stage: EvaluationStageApi) => {
@@ -173,7 +222,11 @@ const ProjectDetailPage: React.FC = () => {
       console.error("Error updating evaluation:", error);
     }
   };  // Add loading state check like in EvaluationDetailPage
-  if (isLoadingEvaluations) {
+  // Don't show loading if we have data from sessionStorage, even if API is still loading
+  const isActuallyLoading = isLoadingEvaluations && !projectData;
+  console.log("🔄 Loading states:", { isLoadingEvaluations, hasProjectData: !!projectData, isActuallyLoading });
+  
+  if (isActuallyLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <Loading />
