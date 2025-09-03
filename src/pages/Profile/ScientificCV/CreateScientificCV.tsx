@@ -1,28 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Editor } from "@tinymce/tinymce-react";
-import "tinymce/tinymce"; // core
-import "tinymce/icons/default"; // icons
-import "tinymce/themes/silver"; // theme
-import "tinymce/models/dom"; // model
-
-// plugins bạn cần
-import "tinymce/plugins/advlist";
-import "tinymce/plugins/autolink";
-import "tinymce/plugins/lists";
-import "tinymce/plugins/link";
-import "tinymce/plugins/image";
-import "tinymce/plugins/charmap";
-import "tinymce/plugins/preview";
-import "tinymce/plugins/anchor";
-import "tinymce/plugins/searchreplace";
-import "tinymce/plugins/visualblocks";
-import "tinymce/plugins/code";
-import "tinymce/plugins/fullscreen";
-import "tinymce/plugins/insertdatetime";
-import "tinymce/plugins/media";
-import "tinymce/plugins/table";
-import "tinymce/plugins/wordcount";
 import {
   useCreateDocument,
   useDocumentsByFilter,
@@ -54,7 +32,7 @@ const CreateScientificCV: React.FC = () => {
   const [formContent, setFormContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
-  // const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
+  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const handleBack = () => navigate(-1);
 
   // Shared set to track uploaded images for deletion
@@ -377,24 +355,36 @@ const CreateScientificCV: React.FC = () => {
           </div>
         ) : (
           <Editor
+            apiKey={apiKey}
+            licenseKey="gpl"
             onInit={(_, editor) => (editorRef.current = editor)}
             initialValue={formContent}
             onEditorChange={handleEditorChange}
             init={{
-              licenseKey: "gpl",
               height: 800,
               menubar: true,
-              plugins:
-                "advlist autolink lists link image charmap preview anchor " +
-                "searchreplace visualblocks code fullscreen " +
-                "insertdatetime media table wordcount",
+              plugins: [
+                "advlist",
+                "autolink",
+                "lists",
+                "link",
+                "image",
+                "charmap",
+                "preview",
+                "anchor",
+                "searchreplace",
+                "visualblocks",
+                "code",
+                "fullscreen",
+                "insertdatetime",
+                "media",
+                "table",
+                "wordcount",
+              ],
               toolbar:
-                "undo redo | blocks | bold italic underline | " +
-                "alignleft aligncenter alignright alignjustify | " +
-                "bullist numlist outdent indent | removeformat | " +
-                "table | link image uploadImage signaturePad | " +
-                "preview code fullscreen",
+                "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image uploadImage signaturePad | preview code fullscreen",
               content_style: formStyles,
+
               setup: (editor) => {
                 // Use shared ref to track uploaded images for deletion
                 const uploadedImages = uploadedImagesRef.current;
