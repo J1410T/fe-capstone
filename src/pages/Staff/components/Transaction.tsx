@@ -18,6 +18,7 @@ import {
   useDeleteTransaction,
   useTransactionList,
   useUpdateTransaction,
+  useApproveTransaction,
 } from "@/hooks/queries/transaction";
 import { useProject } from "@/hooks/queries/project";
 import { useUserRoleById } from "@/hooks/queries/useAuth";
@@ -95,12 +96,12 @@ const TransactionManagement: React.FC = () => {
   const { user } = useAuth();
 
   // API hooks
-  const {
-    data: transactionData,
-    isLoading,
-    refetch,
-  } = useTransactionList(transactionRequest, { enableClientEnrichment: true });
+  const { data: transactionData, isLoading } = useTransactionList(
+    transactionRequest,
+    { enableClientEnrichment: true }
+  );
   const updateTransactionMutation = useUpdateTransaction();
+  const approveTransactionMutation = useApproveTransaction();
   const deleteTransactionMutation = useDeleteTransaction();
 
   // Get project details for selected transaction
@@ -314,45 +315,33 @@ const TransactionManagement: React.FC = () => {
       // Get the actual image URL using getImageUrlFromAzure
       const evidenceImageUrl = await getImageUrlFromAzure(blobName);
 
-      // Update transaction with approved status using PUT /transaction
-      const response = await fetch("https://localhost:7157/api/transaction", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.accessToken}`,
-        },
-        body: JSON.stringify({
-          id: selectedTransaction.id,
-          "evidence-image": evidenceImageUrl,
-          code: selectedTransaction.code || "",
-          title: selectedTransaction.title,
-          type: selectedTransaction.type,
-          "sender-account": approveFormData["sender-account"],
-          "sender-name": approveFormData["sender-name"],
-          "sender-bank-name": approveFormData["sender-bank-name"],
-          "receiver-account": selectedTransaction["receiver-account"],
-          "receiver-name": selectedTransaction["receiver-name"],
-          "receiver-bank-name": selectedTransaction["receiver-bank-name"],
-          "transfer-content": selectedTransaction["transfer-content"] || "",
-          "request-date": selectedTransaction["request-date"],
-          "handle-date": new Date().toISOString(),
-          "fee-cost": selectedTransaction["fee-cost"],
-          "total-money": selectedTransaction["total-money"],
-          "pay-method": selectedTransaction["pay-method"],
-          status: "approved",
-          "request-person-id": selectedTransaction["request-person-id"] || "",
-          "handle-person-id": user.id,
-          "project-id": selectedTransaction["project-id"] || "",
-          "evaluation-stage-id":
-            selectedTransaction["evaluation-stage-id"] || "",
-        }),
+      // Update transaction with approved status using the approve transaction API
+      await approveTransactionMutation.mutateAsync({
+        id: selectedTransaction.id,
+        "evidence-image": evidenceImageUrl,
+        code: selectedTransaction.code || "",
+        title: selectedTransaction.title,
+        type: selectedTransaction.type,
+        "sender-account": approveFormData["sender-account"],
+        "sender-name": approveFormData["sender-name"],
+        "sender-bank-name": approveFormData["sender-bank-name"],
+        "receiver-account": selectedTransaction["receiver-account"],
+        "receiver-name": selectedTransaction["receiver-name"],
+        "receiver-bank-name": selectedTransaction["receiver-bank-name"],
+        "transfer-content": selectedTransaction["transfer-content"] || "",
+        "request-date": selectedTransaction["request-date"],
+        "handle-date": new Date().toISOString(),
+        "fee-cost": selectedTransaction["fee-cost"],
+        "total-money": selectedTransaction["total-money"],
+        "pay-method": selectedTransaction["pay-method"],
+        status: "approved",
+        "request-person-id": selectedTransaction["request-person-id"] || "",
+        "handle-person-id": user.id,
+        "project-id": selectedTransaction["project-id"] || "",
+        "evaluation-stage-id": selectedTransaction["evaluation-stage-id"] || "",
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to approve transaction");
-      }
-
-      toast.success("Transaction approved successfully!");
+      // Clean up the form after successful approval
       setIsApproveDialogOpen(false);
       setSelectedTransaction(null);
       setEvidenceImage(null);
@@ -362,8 +351,6 @@ const TransactionManagement: React.FC = () => {
         "sender-name": "",
         "sender-bank-name": "",
       });
-      // Reload the transaction list
-      refetch();
     } catch (error) {
       console.error("Approve transaction error:", error);
     } finally {

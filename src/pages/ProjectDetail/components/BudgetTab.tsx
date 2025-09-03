@@ -42,6 +42,7 @@ import { toast } from "sonner";
 import {
   useCreateTransaction,
   useTransactionList,
+  useUpdateTransactionStatus,
 } from "@/hooks/queries/transaction";
 import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
 import { useAuth } from "@/contexts";
@@ -111,13 +112,13 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
 
   // API hooks
   const createTransaction = useCreateTransaction();
+  const updateTransactionStatusMutation = useUpdateTransactionStatus();
   const { data: evaluationsResponse } = useGetEvaluationsByProjectId(projectId);
 
   // Fetch transactions for this project
   const {
     data: transactionData,
     isLoading,
-    refetch,
   } = useTransactionList({
     "key-word": "",
     "sort-by": 0,
@@ -269,8 +270,6 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
 
       await createTransaction.mutateAsync(transactionData);
       handleCloseDialog();
-      // Reload transaction list
-      refetch();
     } catch (error) {
       console.error("Failed to submit transaction request:", error);
       // Error is already handled by the mutation
@@ -284,27 +283,13 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(
-        `https://localhost:7157/api/transaction/${transactionId}?status=completed`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.accessToken}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update transaction status");
-      }
-
-      toast.success("Transaction marked as received");
-      // Reload transaction list
-      refetch();
+      await updateTransactionStatusMutation.mutateAsync({
+        transactionId,
+        status: "completed"
+      });
     } catch (error) {
       console.error("Failed to mark transaction as received:", error);
-      toast.error("Failed to update transaction status");
+      // Error is already handled by the mutation
     } finally {
       setIsSubmitting(false);
     }
@@ -315,27 +300,13 @@ const BudgetTab: React.FC<BudgetTabProps> = ({
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(
-        `https://localhost:7157/api/transaction/${transactionId}?status=disputed`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${user.accessToken}`,
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to update transaction status");
-      }
-
-      toast.success("Transaction marked as disputed");
-      // Reload transaction list
-      refetch();
+      await updateTransactionStatusMutation.mutateAsync({
+        transactionId,
+        status: "disputed"
+      });
     } catch (error) {
       console.error("Failed to mark transaction as disputed:", error);
-      toast.error("Failed to update transaction status");
+      // Error is already handled by the mutation
     } finally {
       setIsSubmitting(false);
     }

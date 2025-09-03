@@ -21,6 +21,31 @@ export interface TransactionUpdateRequest {
   "evaluation-stage-id": string | null;
 }
 
+export interface TransactionApproveRequest {
+  id: string;
+  "evidence-image": string;
+  code: string;
+  title: string;
+  type: string;
+  "sender-account": string;
+  "sender-name": string;
+  "sender-bank-name": string;
+  "receiver-account": string;
+  "receiver-name": string;
+  "receiver-bank-name": string;
+  "transfer-content": string;
+  "request-date": string;
+  "handle-date": string;
+  "fee-cost": number;
+  "total-money": number;
+  "pay-method": string;
+  status: string;
+  "request-person-id": string;
+  "handle-person-id": string;
+  "project-id": string;
+  "evaluation-stage-id": string;
+}
+
 export interface TransactionPerson {
   "account-id": string;
   "full-name": string;

@@ -1688,9 +1688,9 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
   };
 
   // Handle proposal operations
-  const handleEditProposal = () => {
-    setEditingProposal(true);
-  };
+  // const handleEditProposal = () => {
+  //   setEditingProposal(true);
+  // };
 
   // Handle form submissions
   const handleMilestoneFormSave = () => {
@@ -1749,12 +1749,12 @@ const MilestoneModal: React.FC<MilestoneModalProps> = ({
                   Add Milestone
                 </Button>
               )}
-              {!isFormOpen && activeTab === "proposal" && (
+              {/* {!isFormOpen && activeTab === "proposal" && (
                 <Button onClick={handleEditProposal} size="sm">
                   <Edit2 className="w-4 h-4 mr-2" />
                   Edit Proposal
                 </Button>
-              )}
+              )} */}
             </div>
           </div>
         </DialogHeader>
