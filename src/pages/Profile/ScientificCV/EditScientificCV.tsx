@@ -374,6 +374,7 @@ const EditScientificCV: React.FC = () => {
             initialValue={formContent}
             onEditorChange={handleEditorChange}
             init={{
+              licenseKey: "gpl",
               height: 800,
               menubar: true,
               plugins: [

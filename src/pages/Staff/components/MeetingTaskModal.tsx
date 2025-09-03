@@ -19,15 +19,56 @@ import { Target, Save } from "lucide-react";
 import { useCreateTask, useUpdateTask } from "@/hooks/queries/task";
 import { toast } from "sonner";
 
-// Helper function to format date-time for input
-const formatDateTimeLocal = (dateString: string): string => {
-  const date = new Date(dateString);
+// Helper functions for Vietnam timezone handling
+// Vietnam is UTC+7 - all datetime handling preserves local Vietnam time
+
+// Convert datetime from database (ISO string) to datetime-local input format
+const convertToDateTimeLocal = (isoString: string): string => {
+  if (!isoString) return "";
+
+  // Parse the ISO string and get Vietnam time
+  // The Date constructor handles timezone conversion automatically
+  const date = new Date(isoString);
+
+  // Extract components in local time (Vietnam timezone if user is in Vietnam)
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   const hours = String(date.getHours()).padStart(2, "0");
   const minutes = String(date.getMinutes()).padStart(2, "0");
+
   return `${year}-${month}-${day}T${hours}:${minutes}`;
+};
+
+// Convert datetime-local input to ISO string for database (preserving Vietnam time)
+const convertToVietnamISO = (dateTimeLocal: string): string => {
+  if (!dateTimeLocal) return "";
+
+  // Parse datetime-local format: "2025-09-03T15:30"
+  // This is the key function - it preserves the exact time chosen by user
+  const [datePart, timePart] = dateTimeLocal.split("T");
+  const [year, month, day] = datePart.split("-");
+  const [hours, minutes] = timePart.split(":");
+
+  // Create ISO string with explicit Vietnam timezone (+07:00)
+  // This ensures the time is saved exactly as chosen by user in Vietnam timezone
+  // Example: User selects 15:30 → Database gets 2025-09-03T15:30:00+07:00
+  const vietnamISO = `${year}-${month}-${day}T${hours}:${minutes}:00+07:00`;
+
+  return vietnamISO;
+};
+
+// Get current time in Vietnam timezone for validation
+const getCurrentVietnamTime = (): Date => {
+  const now = new Date();
+
+  // Method 1: Using current browser time (assuming user is in Vietnam)
+  // This is the most accurate approach for validation
+  return now;
+
+  // Method 2: If we need to explicitly handle timezone conversion
+  // const vietnamTime = new Date(now.toLocaleString("en-US", {timeZone: "Asia/Ho_Chi_Minh"}));
+  // return vietnamTime;
 };
 
 // Validation functions
@@ -58,11 +99,13 @@ const validateUrl = (value: string): string => {
 const validateDateNotPast = (dateString: string, fieldName: string): string => {
   if (!dateString) return "";
 
-  const selectedDate = new Date(dateString);
-  const now = new Date();
+  // Parse the datetime-local input as Vietnam time
+  const selectedDateTime = new Date(dateString);
+  const currentVietnamTime = getCurrentVietnamTime();
 
-  if (selectedDate < now) {
-    return `${fieldName} cannot be in the past`;
+  // Compare times (both in Vietnam timezone)
+  if (selectedDateTime < currentVietnamTime) {
+    return `${fieldName} cannot be in the past (Vietnam time)`;
   }
   return "";
 };
@@ -73,9 +116,11 @@ const validateEndDateAfterStart = (
 ): string => {
   if (!startDate || !endDate) return "";
 
+  // Parse both dates as Vietnam time (datetime-local input)
   const start = new Date(startDate);
   const end = new Date(endDate);
 
+  // Compare the dates
   if (end <= start) {
     return "End date must be after start date";
   }
@@ -187,9 +232,11 @@ const TaskForm: React.FC<{
     // Mặc định Priority là "High" cho Create Modal, giữ nguyên priority cũ khi Update
     priority: (task?.priority as "Low" | "Medium" | "High") || "High",
     "start-date": task?.["start-date"]
-      ? formatDateTimeLocal(task["start-date"])
+      ? convertToDateTimeLocal(task["start-date"])
       : "",
-    "end-date": task?.["end-date"] ? formatDateTimeLocal(task["end-date"]) : "",
+    "end-date": task?.["end-date"]
+      ? convertToDateTimeLocal(task["end-date"])
+      : "",
     note: task?.note || "",
     "meeting-url": task?.["meeting-url"] || "",
   });
@@ -308,14 +355,24 @@ const TaskForm: React.FC<{
         ...formData,
         "milestone-id": milestoneId,
         "start-date": formData["start-date"]
-          ? new Date(formData["start-date"]).toISOString()
+          ? convertToVietnamISO(formData["start-date"])
           : "",
         "end-date": formData["end-date"]
-          ? new Date(formData["end-date"]).toISOString()
+          ? convertToVietnamISO(formData["end-date"])
           : "",
         progress: 0,
         overdue: 0,
       };
+
+      // Debug log để kiểm tra thời gian Vietnam
+      console.log("🇻🇳 Vietnam datetime input:", {
+        startDate: formData["start-date"],
+        endDate: formData["end-date"],
+      });
+      console.log("🇻🇳 Vietnam ISO for database:", {
+        startDate: submitData["start-date"],
+        endDate: submitData["end-date"],
+      });
 
       if (task) {
         await updateTaskMutation.mutateAsync({
