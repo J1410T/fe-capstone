@@ -67,7 +67,9 @@ const MyProjects: React.FC = () => {
   const [sortBy, setSortBy] = useState("englishTitle");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [activeTab, setActiveTab] = useState("overview");
-  const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
+  const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(
+    null
+  );
   const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
   const [selectedResult, setSelectedResult] = useState<ProjectResult | null>(
     null
@@ -481,21 +483,22 @@ const MyProjects: React.FC = () => {
             )}
 
             {/* Project Tags */}
-            {selectedProject["project-tags"] && selectedProject["project-tags"].length > 0 && (
-              <div>
-                <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
-                  <Tag className="h-4 w-4" />
-                  Tags
-                </label>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {selectedProject["project-tags"].map((tag, index) => (
-                    <Badge key={index} variant="secondary">
-                      {tag.name}
-                    </Badge>
-                  ))}
+            {selectedProject["project-tags"] &&
+              selectedProject["project-tags"].length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                    <Tag className="h-4 w-4" />
+                    Tags
+                  </label>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {selectedProject["project-tags"].map((tag, index) => (
+                      <Badge key={index} variant="secondary">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {/* Timestamps */}
             <div className="pt-4 border-t">
