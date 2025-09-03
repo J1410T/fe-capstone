@@ -51,6 +51,10 @@ import {
 import { UserRole } from "@/types/auth";
 import { toast } from "sonner";
 import { parseISO, isValid } from "date-fns";
+import { useSendNotification } from "@/hooks/queries/notification";
+import { NotificationRequest } from "@/types/notification";
+import { useResearcherUserRoleByProjectId } from "@/hooks/queries";
+import { useMyProject } from "@/hooks/queries/project";
 
 // Type for handling different member task formats
 type MemberTaskUnion = {
@@ -181,6 +185,18 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const deleteTaskMutation = useDeleteTask();
   const deleteMemberTaskMutation = useDeleteMemberTask();
   const updateTaskStatusKanbanMutation = useUpdateTaskStatusKanban();
+
+  // Notification hooks and data
+  const sendNotification = useSendNotification();
+  const { data: researcherData } =
+    useResearcherUserRoleByProjectId(selectedProjectId);
+  const { data: projectsData } = useMyProject("inprogress", "proposal");
+  const ResearcherDataIds =
+    researcherData?.["data-list"]?.map((member) => member["account-id"]) ?? [];
+  const selectedProject = projectsData?.data?.find(
+    (project: { id: string; "english-title"?: string }) =>
+      project.id === selectedProjectId
+  );
 
   // Process user roles data to filter duplicates and prioritize non-Researcher roles
   const availableMembers = React.useMemo(() => {
@@ -447,7 +463,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       newErrors.status = "Status is required";
     }
 
-    // Date validations
+    // Date validations - Allow past dates for start date, but end date must be after start date
     if (selectedStartDate && selectedEndDate) {
       if (selectedEndDate <= selectedStartDate) {
         newErrors.endDate = "End date must be after start date";
@@ -549,6 +565,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               email: selectedMembers[0]?.email || "",
             },
           });
+        }
+
+        // Send notification for task creation
+        if (ResearcherDataIds.length > 0) {
+          const notificationRequest: NotificationRequest = {
+            title: `Task created: ${formData.title} </br> Project: ${
+              selectedProject?.["english-title"] || "Unknown Project"
+            }`,
+            type: "project",
+            status: "created",
+            "objec-notification-id": selectedProjectId || "",
+            "list-account-id": ResearcherDataIds,
+          };
+          await sendNotification.mutateAsync(notificationRequest);
         }
 
         toast.success("Task created successfully");
@@ -672,6 +702,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           onUpdate(updatedTask);
         }
 
+        // Send notification for task update
+        if (ResearcherDataIds.length > 0) {
+          const notificationRequest: NotificationRequest = {
+            title: `Task updated: ${formData.title} </br> Project: ${
+              selectedProject?.["english-title"] || "Unknown Project"
+            }`,
+            type: "project",
+            status: "created",
+            "objec-notification-id": selectedProjectId || "",
+            "list-account-id": ResearcherDataIds,
+          };
+          await sendNotification.mutateAsync(notificationRequest);
+        }
+
         console.log("✅ TaskModal - Task update completed successfully");
       }
 
@@ -710,6 +754,23 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
       // Then delete the task itself
       await deleteTaskMutation.mutateAsync(task.id);
+
+      // Send notification for task deletion
+      if (ResearcherDataIds.length > 0) {
+        const notificationRequest: NotificationRequest = {
+          title: `Deleted task: ${
+            task.title || "Unknown Task"
+          } </br> Project: ${
+            selectedProject?.["english-title"] || "Unknown Project"
+          }`,
+          type: "project",
+          status: "created",
+          "objec-notification-id": selectedProjectId || "",
+          "list-account-id": ResearcherDataIds,
+        };
+        await sendNotification.mutateAsync(notificationRequest);
+      }
+
       onDelete(task.id);
       onOpenChange(false);
       toast.success("Task deleted successfully");

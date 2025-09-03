@@ -43,39 +43,6 @@ import {
 import { getUserRoleByFilter } from "@/services/resources/auth";
 import { NotificationRequest } from "@/types/notification";
 
-// Component to display project name for project notifications
-// const ProjectNotificationTitle: React.FC<{
-//   notification: {
-//     id: string;
-//     title: string;
-//     type: string;
-//     "type-object-id": string | null;
-//   };
-// }> = ({ notification }) => {
-//   const { data: project } = useProject(notification["type-object-id"] || "");
-
-//   if (notification.type === "project" && project) {
-//     return (
-//       <div>
-//         <h4 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-//           {notification.title}
-//         </h4>
-//         <p className="text-sm text-blue-600 font-medium">
-//           Project:{" "}
-//           {project.data?.["project-detail"]?.["english-title"] ||
-//             "Unknown Project"}
-//         </p>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <h4 className="text-lg font-semibold text-gray-900 mb-1 group-hover:text-blue-600 transition-colors">
-//       {notification.title}
-//     </h4>
-//   );
-// };
-
 const ViewAllNotifications: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("all");
@@ -363,7 +330,9 @@ const ViewAllNotifications: React.FC = () => {
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
-                      <h4>{n.title}</h4>
+                      <h4 className="whitespace-pre-line">
+                        {n.title.replace(/<\/br>/g, "\n")}
+                      </h4>
                       <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
                         <Clock className="w-3 h-3" />
                         <span>
