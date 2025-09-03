@@ -18,24 +18,15 @@ import {
 import { Target, Save } from "lucide-react";
 import { useCreateTask, useUpdateTask } from "@/hooks/queries/task";
 import { toast } from "sonner";
-import { useSendNotification } from "@/hooks/queries/notification";
-import { NotificationRequest } from "@/types/notification";
-import { useResearcherUserRoleByProjectId } from "@/hooks/queries";
-import { useMyProject } from "@/hooks/queries/project";
-import { useMilestone } from "@/hooks/queries/useMilestones";
 
-// Helper function to format date-time for input - handles timezone properly
+// Helper function to format date-time for input
 const formatDateTimeLocal = (dateString: string): string => {
   const date = new Date(dateString);
-  // Adjust for timezone offset to get local time
-  const offsetMs = date.getTimezoneOffset() * 60 * 1000;
-  const localDate = new Date(date.getTime() + offsetMs);
-
-  const year = localDate.getFullYear();
-  const month = String(localDate.getMonth() + 1).padStart(2, "0");
-  const day = String(localDate.getDate()).padStart(2, "0");
-  const hours = String(localDate.getHours()).padStart(2, "0");
-  const minutes = String(localDate.getMinutes()).padStart(2, "0");
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 };
 
@@ -64,7 +55,17 @@ const validateUrl = (value: string): string => {
   }
 };
 
-// Date validation now allows past dates for start date, only validates end date is after start date
+const validateDateNotPast = (dateString: string, fieldName: string): string => {
+  if (!dateString) return "";
+
+  const selectedDate = new Date(dateString);
+  const now = new Date();
+
+  if (selectedDate < now) {
+    return `${fieldName} cannot be in the past`;
+  }
+  return "";
+};
 
 const validateEndDateAfterStart = (
   startDate: string,
@@ -193,21 +194,6 @@ const TaskForm: React.FC<{
     "meeting-url": task?.["meeting-url"] || "",
   });
 
-  // Get milestone data to extract project ID
-  const { data: milestoneData } = useMilestone(milestoneId);
-  const projectId = milestoneData?.projectId || "";
-
-  // Notification hooks and data
-  const sendNotification = useSendNotification();
-  const { data: researcherData } = useResearcherUserRoleByProjectId(projectId);
-  const { data: projectsData } = useMyProject("inprogress", "proposal");
-  const ResearcherDataIds =
-    researcherData?.["data-list"]?.map((member) => member["account-id"]) ?? [];
-  const selectedProject = projectsData?.data?.find(
-    (project: { id: string; "english-title"?: string }) =>
-      project.id === projectId
-  );
-
   const [errors, setErrors] = useState<FormErrors>({
     name: "",
     description: "",
@@ -239,10 +225,14 @@ const TaskForm: React.FC<{
           error = validateRequired(value, "Priority");
           break;
         case "start-date":
-          error = validateRequired(value, "Start date");
+          error =
+            validateRequired(value, "Start date") ||
+            validateDateNotPast(value, "Start date");
           break;
         case "end-date":
-          error = validateRequired(value, "End date");
+          error =
+            validateRequired(value, "End date") ||
+            validateDateNotPast(value, "End date");
           break;
         case "meeting-url":
           error = validateUrl(value);
@@ -273,8 +263,12 @@ const TaskForm: React.FC<{
       name: validateRequired(formData.name, "Task name"),
       description: validateRequired(formData.description, "Description"),
       priority: validateRequired(formData.priority, "Priority"),
-      "start-date": validateRequired(formData["start-date"], "Start date"),
-      "end-date": validateRequired(formData["end-date"], "End date"),
+      "start-date":
+        validateRequired(formData["start-date"], "Start date") ||
+        validateDateNotPast(formData["start-date"], "Start date"),
+      "end-date":
+        validateRequired(formData["end-date"], "End date") ||
+        validateDateNotPast(formData["end-date"], "End date"),
       "meeting-url": validateUrl(formData["meeting-url"]),
       dateRange: validateEndDateAfterStart(
         formData["start-date"],
@@ -310,22 +304,15 @@ const TaskForm: React.FC<{
     }
 
     try {
-      // Fix timezone issue by preserving local time
-      const formatDateTimeForAPI = (dateTimeLocal: string): string => {
-        if (!dateTimeLocal) return "";
-        // Create date from local datetime-local input and preserve the time
-        const date = new Date(dateTimeLocal);
-        // Adjust for timezone offset to preserve local time
-        const offsetMs = date.getTimezoneOffset() * 60 * 1000;
-        const localDate = new Date(date.getTime() - offsetMs);
-        return localDate.toISOString();
-      };
-
       const submitData = {
         ...formData,
         "milestone-id": milestoneId,
-        "start-date": formatDateTimeForAPI(formData["start-date"]),
-        "end-date": formatDateTimeForAPI(formData["end-date"]),
+        "start-date": formData["start-date"]
+          ? new Date(formData["start-date"]).toISOString()
+          : "",
+        "end-date": formData["end-date"]
+          ? new Date(formData["end-date"]).toISOString()
+          : "",
         progress: 0,
         overdue: 0,
       };
@@ -335,39 +322,9 @@ const TaskForm: React.FC<{
           taskId: task.id,
           taskData: submitData,
         });
-
-        // Send notification for task update
-        if (ResearcherDataIds.length > 0) {
-          const notificationRequest: NotificationRequest = {
-            title: `Meeting updated: ${formData.name} </br> Project: ${
-              selectedProject?.["english-title"] || "Unknown Project"
-            }`,
-            type: "project",
-            status: "created",
-            "objec-notification-id": projectId || "",
-            "list-account-id": ResearcherDataIds,
-          };
-          await sendNotification.mutateAsync(notificationRequest);
-        }
-
         toast.success("Task updated successfully");
       } else {
         await createTaskMutation.mutateAsync(submitData);
-
-        // Send notification for task creation
-        if (ResearcherDataIds.length > 0) {
-          const notificationRequest: NotificationRequest = {
-            title: `Meeting created: ${formData.name} </br> Project: ${
-              selectedProject?.["english-title"] || "Unknown Project"
-            }`,
-            type: "project",
-            status: "created",
-            "objec-notification-id": projectId || "",
-            "list-account-id": ResearcherDataIds,
-          };
-          await sendNotification.mutateAsync(notificationRequest);
-        }
-
         toast.success("Task created successfully");
       }
       onSave();
