@@ -47,7 +47,7 @@ const EditScientificCV: React.FC = () => {
   const navigate = useNavigate();
   const [formContent, setFormContent] = useState<string>("");
   const editorRef = useRef<EditorInstance>(null);
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
+  // const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const [showSignaturePad, setShowSignaturePad] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -369,7 +369,7 @@ const EditScientificCV: React.FC = () => {
           </div>
         ) : (
           <Editor
-            apiKey={apiKey}
+            // apiKey={apiKey}
             onInit={(_, editor) => (editorRef.current = editor)}
             initialValue={formContent}
             onEditorChange={handleEditorChange}

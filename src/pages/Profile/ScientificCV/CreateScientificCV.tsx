@@ -32,7 +32,7 @@ const CreateScientificCV: React.FC = () => {
   const [formContent, setFormContent] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [showSignaturePad, setShowSignaturePad] = useState(false);
-  const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
+  // const apiKey = import.meta.env.VITE_TINYMCE_API_KEY;
   const handleBack = () => navigate(-1);
 
   // Shared set to track uploaded images for deletion
@@ -355,7 +355,7 @@ const CreateScientificCV: React.FC = () => {
           </div>
         ) : (
           <Editor
-            apiKey={apiKey}
+            // apiKey={apiKey}
             onInit={(_, editor) => (editorRef.current = editor)}
             initialValue={formContent}
             onEditorChange={handleEditorChange}
