@@ -158,22 +158,6 @@ function Header() {
   // Get notifications from API data
   const notifications = notificationData?.["data-list"] || [];
 
-  // const markAsRead = async (notificationId: string) => {
-  //   try {
-  //     await markNotificationMutation.mutateAsync({
-  //       notification: notificationId,
-  //     });
-  //     refetchNotifications();
-  //   } catch (error) {
-  //     console.error("Failed to mark notification as read:", error);
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   const result = getAuthResponse<AuthResponse>();
-  //   // console.log("🍪 Auth response result:", result);
-  // });
-
   const markAllAsRead = async () => {
     try {
       await markNotificationMutation.mutateAsync({});
@@ -370,13 +354,13 @@ function Header() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-start justify-between gap-2">
                                 <h4
-                                  className={`text-sm font-medium text-gray-900 ${
+                                  className={`text-sm font-medium text-gray-900 whitespace-pre-line ${
                                     !notification["is-read"]
                                       ? "font-semibold"
                                       : ""
                                   }`}
                                 >
-                                  {notification.title}
+                                  {notification.title.replace(/<\/br>/g, "\n")}
                                 </h4>
                               </div>
                               <div className="flex items-center gap-1 mt-2">
