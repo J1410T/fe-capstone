@@ -29,16 +29,13 @@ import {
   getEvaluationById,
 } from "@/services/resources/evaluation";
 
-import { 
+import {
   useGetEvaluationsByProjectId,
   useUpdateEvaluationStage,
   useUpdateEvaluation,
 } from "@/hooks/queries/evaluation";
 import { useMilestonesByProjectId } from "@/hooks/queries/milestone";
-import {
-  useAppraisalCouncilsList,
-} from "@/hooks/queries/appraisal-council";
-
+import { useAppraisalCouncilsList } from "@/hooks/queries/appraisal-council";
 
 import { getUserRolesByAppraisalCouncil } from "@/services/resources/auth";
 import { updateProject } from "@/services/resources/project";
