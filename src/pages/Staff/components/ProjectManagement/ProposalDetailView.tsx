@@ -48,6 +48,7 @@ import { UpdateProjectRequest } from "@/types/project";
 import CreateEvaluationStageModal from "../../../Council/MyCouncil/CreateEvaluationStageModal";
 import { CouncilAssignmentModal } from "./CouncilAssignmentModal";
 import { UserRole } from "@/types/auth";
+import { filterMembersForDisplay } from "@/utils/appraisal-council-roles";
 
 interface ProposalDetailViewProps {
   selectedProposal: LegacyProject | null;
@@ -158,7 +159,18 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
         1,
         100
       );
-      return membersResponse["data-list"] || [];
+      const rawMembers = membersResponse["data-list"] || [];
+
+      // Apply filtering to remove duplicates and prioritize roles
+      const filteredMembers = filterMembersForDisplay(rawMembers);
+
+      console.log(`Council ${councilId}:`, {
+        raw: rawMembers.length,
+        filtered: filteredMembers.length,
+        removed: rawMembers.length - filteredMembers.length,
+      });
+
+      return filteredMembers;
     } catch (error) {
       console.error(`Error loading members for council ${councilId}:`, error);
       return [];
@@ -877,15 +889,17 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
                 Manage evaluation stages for this proposal
               </p>
             </div>
-            {evaluations.length > 0 && (
-              <Button
-                onClick={handleCreateStage}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-sm"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Stage
-              </Button>
-            )}
+            {evaluations.length > 0 &&
+              selectedProposal.status !== "completed" &&
+              selectedProposal.status !== "cancelled" && (
+                <Button
+                  onClick={handleCreateStage}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white border-0 shadow-sm"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Stage
+                </Button>
+              )}
           </div>
         </div>
         {isLoadingEvaluations || isLoadingEvaluationsQuery ? (
@@ -961,78 +975,92 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
                       {evaluationCouncilMembers[evaluation.id] &&
                         evaluationCouncilMembers[evaluation.id].length > 0 && (
                           <div className="space-y-2">
-                            {/* Chairman */}
-                            {evaluationCouncilMembers[evaluation.id]
-                              .filter(
-                                (member: UserRole) => member.name === "Chairman"
-                              )
-                              .map((chairman: UserRole) => (
-                                <div
-                                  key={chairman.id}
-                                  className="flex items-center gap-2"
-                                >
-                                  <Crown className="h-3 w-3 text-yellow-500" />
-                                  <img
-                                    src={
-                                      chairman["avatar-url"] ||
-                                      "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg"
-                                    }
-                                    alt={chairman["full-name"]}
-                                    className="w-6 h-6 rounded-full object-cover"
-                                    onError={(e) => {
-                                      e.currentTarget.src =
-                                        "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
-                                    }}
-                                  />
-                                  <span className="text-xs font-medium text-yellow-700">
-                                    {chairman["full-name"]}
-                                  </span>
-                                </div>
-                              ))}
+                            {(() => {
+                              // Apply filtering here if not done in loadCouncilMembers
+                              const filteredMembers = filterMembersForDisplay(
+                                evaluationCouncilMembers[evaluation.id]
+                              );
 
-                            {/* Other Members */}
-                            {evaluationCouncilMembers[evaluation.id]
-                              .filter(
-                                (member: UserRole) => member.name !== "Chairman"
-                              )
-                              .slice(0, 3) // Show only first 3 members to keep it compact
-                              .map((member: UserRole) => (
-                                <div
-                                  key={member.id}
-                                  className="flex items-center gap-2"
-                                >
-                                  <Users className="h-3 w-3 text-blue-500" />
-                                  <img
-                                    src={
-                                      member["avatar-url"] ||
-                                      "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg"
-                                    }
-                                    alt={member["full-name"]}
-                                    className="w-6 h-6 rounded-full object-cover"
-                                    onError={(e) => {
-                                      e.currentTarget.src =
-                                        "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
-                                    }}
-                                  />
-                                  <span className="text-xs text-blue-700">
-                                    {member["full-name"]}
-                                  </span>
-                                </div>
-                              ))}
+                              return (
+                                <>
+                                  {/* Chairman */}
+                                  {filteredMembers
+                                    .filter(
+                                      (member: UserRole) =>
+                                        member.name === "Chairman"
+                                    )
+                                    .map((chairman: UserRole) => (
+                                      <div
+                                        key={chairman.id}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <Crown className="h-3 w-3 text-yellow-500" />
+                                        <img
+                                          src={
+                                            chairman["avatar-url"] ||
+                                            "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg"
+                                          }
+                                          alt={chairman["full-name"]}
+                                          className="w-6 h-6 rounded-full object-cover"
+                                          onError={(e) => {
+                                            e.currentTarget.src =
+                                              "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
+                                          }}
+                                        />
+                                        <span className="text-xs font-medium text-yellow-700">
+                                          {chairman["full-name"]}
+                                        </span>
+                                      </div>
+                                    ))}
 
-                            {/* Show count if there are more members */}
-                            {evaluationCouncilMembers[evaluation.id].filter(
-                              (member: UserRole) => member.name !== "Chairman"
-                            ).length > 3 && (
-                              <div className="text-xs text-blue-600">
-                                +
-                                {evaluationCouncilMembers[evaluation.id].filter(
-                                  (member: UserRole) =>
-                                    member.name !== "Chairman"
-                                ).length - 3}{" "}
-                                more members
-                              </div>
-                            )}
+                                  {/* Other Members */}
+                                  {filteredMembers
+                                    .filter(
+                                      (member: UserRole) =>
+                                        member.name !== "Chairman"
+                                    )
+                                    .slice(0, 3)
+                                    .map((member: UserRole) => (
+                                      <div
+                                        key={member.id}
+                                        className="flex items-center gap-2"
+                                      >
+                                        <Users className="h-3 w-3 text-blue-500" />
+                                        <img
+                                          src={
+                                            member["avatar-url"] ||
+                                            "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg"
+                                          }
+                                          alt={member["full-name"]}
+                                          className="w-6 h-6 rounded-full object-cover"
+                                          onError={(e) => {
+                                            e.currentTarget.src =
+                                              "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
+                                          }}
+                                        />
+                                        <span className="text-xs text-blue-700">
+                                          {member["full-name"]}
+                                        </span>
+                                      </div>
+                                    ))}
+
+                                  {/* Show count if there are more members */}
+                                  {filteredMembers.filter(
+                                    (member: UserRole) =>
+                                      member.name !== "Chairman"
+                                  ).length > 3 && (
+                                    <div className="text-xs text-blue-600">
+                                      +
+                                      {filteredMembers.filter(
+                                        (member: UserRole) =>
+                                          member.name !== "Chairman"
+                                      ).length - 3}{" "}
+                                      more members
+                                    </div>
+                                  )}
+                                </>
+                              );
+                            })()}
                           </div>
                         )}
                     </div>
