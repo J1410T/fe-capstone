@@ -177,7 +177,7 @@ export const getAppraisalCouncilByProjectId = async (
     }
 
     const res = await axiosClient.get<AppraisalCouncilByProject>(
-      `/appraisal-council/project/${projectId}`,
+      `/appraisal-council/project/${projectId}?stageOrder=1`,
       {
         headers: {
           Authorization: `Bearer ${accessToken}`,
