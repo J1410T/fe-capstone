@@ -154,7 +154,7 @@ const MyProjects: React.FC = () => {
     const staffCreatedProjectIds = safeProjects
       .filter((project) => project["creator-id"] === user.id)
       .map((project) => project.id);
-
+    
     // Filter results that belong to projects created by this staff member
     return allResults.filter(
       (result: ProjectResult) =>
