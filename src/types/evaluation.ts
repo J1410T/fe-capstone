@@ -200,3 +200,18 @@ export interface UpdateEvaluationStageRequest {
 export interface UpdateEvaluationStageResponse {
   message: string;
 }
+
+export interface UpdateEvaluationRequest {
+  id: string;
+  code: string;
+  title: string;
+  "total-rate": number | null;
+  comment: string | null;
+  status: string;
+  "project-id": string;
+  "appraisal-council-id": string | null;
+}
+
+export interface UpdateEvaluationResponse {
+  message: string;
+}

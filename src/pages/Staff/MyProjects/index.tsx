@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Card,
   CardContent,
@@ -27,6 +26,13 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Search,
   Briefcase,
   ArrowUpDown,
@@ -36,14 +42,24 @@ import {
   CheckCircle,
   Clock,
   FileText,
+  Calendar,
+  Users,
+  DollarSign,
+  Tag,
+  Globe,
+  BookOpen,
 } from "lucide-react";
 import { Loading } from "@/components/ui/loaders";
 import { useProjectByStaff } from "@/hooks/queries/project";
 import { useAllProjectResults } from "@/hooks/queries/projectResult";
-import type { ProjectResult } from "@/services/resources/projectResult";
+import type {
+  ProjectResult,
+  ResultPublish,
+} from "@/services/resources/projectResult";
+import type { ProjectItem } from "@/types/project";
+import { useAuth } from "@/contexts";
 
 const MyProjects: React.FC = () => {
-  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -51,6 +67,15 @@ const MyProjects: React.FC = () => {
   const [sortBy, setSortBy] = useState("englishTitle");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [activeTab, setActiveTab] = useState("overview");
+  const [selectedProject, setSelectedProject] = useState<ProjectItem | null>(null);
+  const [isDetailDialogOpen, setIsDetailDialogOpen] = useState(false);
+  const [selectedResult, setSelectedResult] = useState<ProjectResult | null>(
+    null
+  );
+  const [isResultDialogOpen, setIsResultDialogOpen] = useState(false);
+
+  // Get current staff user
+  const { user } = useAuth();
 
   // Fetch projects from Staff API
   const {
@@ -115,39 +140,31 @@ const MyProjects: React.FC = () => {
     return matchesSearch && matchesStatus && matchesCategory && matchesType;
   });
 
-  // Debug project results
-  useMemo(() => {
-    if (
-      !projectResultsResponse ||
-      !Array.isArray(projectResultsResponse["data-list"])
-    ) {
-      console.log("No project results response or data-list is not array");
-      return;
+  // Filter project results for current staff user
+  const staffProjectResults = useMemo(() => {
+    if (!projectResultsResponse?.["data-list"] || !user) {
+      return [];
     }
 
-    const projectResults = projectResultsResponse["data-list"];
-    console.log("Project results:", projectResults);
-    console.log("Safe projects:", safeProjects);
+    const allResults = projectResultsResponse["data-list"];
 
-    // Nếu có project-id trong result, thì match với projects
-    // Nếu không có, thì hiển thị tất cả results
-    const hasProjectId = projectResults.some(
-      (result: ProjectResult) => result["project-id"]
+    // Find projects created by the current staff user
+    const staffCreatedProjectIds = safeProjects
+      .filter((project) => project["creator-id"] === user.id)
+      .map((project) => project.id);
+
+    // Filter results that belong to projects created by this staff member
+    return allResults.filter(
+      (result: ProjectResult) =>
+        result["project-id"] &&
+        staffCreatedProjectIds.includes(result["project-id"])
     );
-    console.log("Has project-id:", hasProjectId);
+  }, [projectResultsResponse, safeProjects, user]);
 
-    if (hasProjectId) {
-      const projectIdsWithResults = new Set(
-        projectResults.map((result: ProjectResult) => result["project-id"])
-      );
-      console.log(
-        "Project IDs with results:",
-        Array.from(projectIdsWithResults)
-      );
-    } else {
-      console.log("No project-id found, showing all results directly");
-    }
-  }, [safeProjects, projectResultsResponse]);
+  const handleViewResult = (result: ProjectResult) => {
+    setSelectedResult(result);
+    setIsResultDialogOpen(true);
+  };
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -158,8 +175,9 @@ const MyProjects: React.FC = () => {
     }
   };
 
-  const handleViewProject = (id: string) => {
-    navigate(`/staff/project/${id}`);
+  const handleViewProject = (project: ProjectItem) => {
+    setSelectedProject(project);
+    setIsDetailDialogOpen(true);
   };
 
   const uniqueStatuses = Array.from(
@@ -231,8 +249,490 @@ const MyProjects: React.FC = () => {
     );
   }
 
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: "VND",
+    }).format(amount);
+  };
+
+  const ProjectDetailDialog = () => {
+    if (!selectedProject) return null;
+
+    return (
+      <Dialog open={isDetailDialogOpen} onOpenChange={setIsDetailDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Briefcase className="h-5 w-5 text-blue-500" />
+              Project Details
+            </DialogTitle>
+            <DialogDescription>
+              Complete information about the project
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Basic Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    English Title
+                  </label>
+                  <p className="font-medium">
+                    {selectedProject["english-title"] || "N/A"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Vietnamese Title
+                  </label>
+                  <p className="font-medium">
+                    {selectedProject["vietnamese-title"] || "N/A"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Abbreviations
+                  </label>
+                  <p>{selectedProject.abbreviations || "N/A"}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    Language
+                  </label>
+                  <p className="mt-1 font-medium">
+                    {selectedProject.language || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Status
+                  </label>
+                  <div className="mt-1">
+                    <Badge
+                      variant="outline"
+                      className={getStatusColor(
+                        selectedProject.status || "unknown"
+                      )}
+                    >
+                      {capitalize(selectedProject.status || "Unknown")}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Category
+                  </label>
+                  <div className="mt-1">
+                    <Badge variant="outline">
+                      {selectedProject.category?.includes("application")
+                        ? "Application"
+                        : capitalize(selectedProject.category || "Unknown")}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Type
+                  </label>
+                  <div className="mt-1">
+                    <Badge variant="outline">
+                      {capitalize(selectedProject.type || "Unknown")}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Genre
+                  </label>
+                  <div className="mt-1">
+                    <Badge variant="outline">
+                      {capitalize(selectedProject.genres || "Unknown")}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Project Details */}
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Description
+                </label>
+                <p className="mt-1 p-3 bg-gray-50 rounded-lg text-sm">
+                  {selectedProject.description || "No description provided"}
+                </p>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-500">
+                  Requirement Note
+                </label>
+                <p className="mt-1 p-3 bg-gray-50 rounded-lg text-sm">
+                  {selectedProject["requirement-note"] ||
+                    "No requirement note provided"}
+                </p>
+              </div>
+            </div>
+
+            {/* Project Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                <DollarSign className="h-5 w-5 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Budget</p>
+                  <p className="font-semibold text-blue-800">
+                    {selectedProject.budget
+                      ? formatCurrency(selectedProject.budget)
+                      : "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                <Clock className="h-5 w-5 text-green-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Duration</p>
+                  <p className="font-semibold text-green-800">
+                    {selectedProject.duration
+                      ? `${selectedProject.duration} months`
+                      : "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3 p-3 bg-purple-50 rounded-lg">
+                <Users className="h-5 w-5 text-purple-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Max Members
+                  </p>
+                  <p className="font-semibold text-purple-800">
+                    {selectedProject["maximum-member"] || "N/A"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Timeline */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center space-x-3 p-3 bg-orange-50 rounded-lg">
+                <Calendar className="h-5 w-5 text-orange-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">
+                    Start Date
+                  </p>
+                  <p className="font-semibold text-orange-800">
+                    {selectedProject["start-date"]
+                      ? formatDate(selectedProject["start-date"])
+                      : "Not set"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3 p-3 bg-red-50 rounded-lg">
+                <Calendar className="h-5 w-5 text-red-600" />
+                <div>
+                  <p className="text-sm font-medium text-gray-500">End Date</p>
+                  <p className="font-semibold text-red-800">
+                    {selectedProject["end-date"]
+                      ? formatDate(selectedProject["end-date"])
+                      : "Not set"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Majors */}
+            {selectedProject.majors && selectedProject.majors.length > 0 && (
+              <div>
+                <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Majors & Fields
+                </label>
+                <div className="mt-2 space-y-2">
+                  {selectedProject.majors.map((major, index) => (
+                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="font-medium">
+                        {major.name || "Unknown Major"}
+                      </div>
+                      {major.field && (
+                        <div className="text-sm text-gray-600">
+                          Field: {major.field.name || "Unknown Field"}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Project Tags */}
+            {selectedProject["project-tags"] && selectedProject["project-tags"].length > 0 && (
+              <div>
+                <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                  <Tag className="h-4 w-4" />
+                  Tags
+                </label>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {selectedProject["project-tags"].map((tag, index) => (
+                    <Badge key={index} variant="secondary">
+                      {tag.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Timestamps */}
+            <div className="pt-4 border-t">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-500">
+                <div>
+                  <span className="font-medium">Created:</span>{" "}
+                  {selectedProject["created-at"]
+                    ? formatDate(selectedProject["created-at"])
+                    : "N/A"}
+                </div>
+                <div>
+                  <span className="font-medium">Last Updated:</span>{" "}
+                  {selectedProject["updated-at"]
+                    ? formatDate(selectedProject["updated-at"])
+                    : "N/A"}
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
+  // Project Result Detail Dialog
+  const ProjectResultDialog = () => {
+    if (!selectedResult) return null;
+
+    return (
+      <Dialog open={isResultDialogOpen} onOpenChange={setIsResultDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-green-500" />
+              Project Result Details
+            </DialogTitle>
+            <DialogDescription>
+              Detailed information about the project result
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-6">
+            {/* Basic Result Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Result ID
+                  </label>
+                  <p className="text-sm font-mono bg-gray-50 p-2 rounded">
+                    {selectedResult.id}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Name
+                  </label>
+                  <p className="font-medium">{selectedResult.name || "N/A"}</p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Added Date
+                  </label>
+                  <p>
+                    {selectedResult["added-date"]
+                      ? formatDate(selectedResult["added-date"])
+                      : "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Project ID
+                  </label>
+                  <p className="text-sm font-mono bg-gray-50 p-2 rounded">
+                    {selectedResult["project-id"] || "N/A"}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-500">
+                    Result URL
+                  </label>
+                  {selectedResult.url ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        window.open(selectedResult.url || "#", "_blank")
+                      }
+                      className="mt-1"
+                    >
+                      <Globe className="h-4 w-4 mr-2" />
+                      Open URL
+                    </Button>
+                  ) : (
+                    <p className="text-gray-400 italic">No URL provided</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Result Publications */}
+            {selectedResult["result-publishs"] &&
+              selectedResult["result-publishs"].length > 0 && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500 flex items-center gap-2">
+                    <BookOpen className="h-4 w-4" />
+                    Publications ({selectedResult["result-publishs"].length})
+                  </label>
+                  <div className="mt-3 space-y-4">
+                    {selectedResult["result-publishs"].map(
+                      (publication: ResultPublish, index: number) => (
+                        <div
+                          key={index}
+                          className="border rounded-lg p-4 bg-gray-50"
+                        >
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                Title
+                              </label>
+                              <p className="font-medium text-lg mt-1">
+                                {publication.title}
+                              </p>
+                            </div>
+
+                            {publication.description && (
+                              <div>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                  Description
+                                </label>
+                                <p className="text-sm mt-1">
+                                  {publication.description}
+                                </p>
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                  Publisher
+                                </label>
+                                <p className="text-sm mt-1">
+                                  {publication.publisher || "N/A"}
+                                </p>
+                              </div>
+
+                              <div>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                  Publication Date
+                                </label>
+                                <p className="text-sm mt-1">
+                                  {publication["publication-date"]
+                                    ? formatDate(
+                                        publication["publication-date"]
+                                      )
+                                    : "N/A"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <div>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                  Access Type
+                                </label>
+                                <Badge
+                                  variant="outline"
+                                  className={`mt-1 ${
+                                    publication["access-type"] === "Open Access"
+                                      ? "text-green-700 border-green-200 bg-green-50"
+                                      : "text-blue-700 border-blue-200 bg-blue-50"
+                                  }`}
+                                >
+                                  {publication["access-type"] || "N/A"}
+                                </Badge>
+                              </div>
+
+                              <div>
+                                <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                                  Tags
+                                </label>
+                                <div className="mt-1">
+                                  {publication.tags ? (
+                                    <Badge variant="secondary">
+                                      {publication.tags}
+                                    </Badge>
+                                  ) : (
+                                    <span className="text-sm text-gray-400 italic">
+                                      No tags
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            {publication.url && (
+                              <div className="pt-2 border-t">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    window.open(publication.url, "_blank")
+                                  }
+                                  className="w-full"
+                                >
+                                  <Globe className="h-4 w-4 mr-2" />
+                                  View Publication
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                </div>
+              )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="space-y-6">
+      {/* Project Detail Dialog */}
+      <ProjectDetailDialog />
+
+      {/* Project Result Detail Dialog */}
+      <ProjectResultDialog />
+
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">My Projects</h1>
@@ -431,11 +931,6 @@ const MyProjects: React.FC = () => {
                               {project["vietnamese-title"] ||
                                 "No Vietnamese Title"}
                             </div>
-                            {project.description && (
-                              <div className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                {project.description}
-                              </div>
-                            )}
                           </div>
                         </TableCell>
                         <TableCell>
@@ -471,7 +966,7 @@ const MyProjects: React.FC = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleViewProject(project.id)}
+                            onClick={() => handleViewProject(project)}
                           >
                             <Eye className="h-4 w-4 mr-2" />
                             View
@@ -504,19 +999,18 @@ const MyProjects: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="results" className="space-y-6">
-          {/* Results View - Read Only */}
+          {/* Results View - Filtered by Staff Created Projects */}
           <Card>
             <CardHeader>
               <CardTitle>
-                Project Results (
-                {projectResultsResponse?.["data-list"]?.length || 0})
+                Project Results ({staffProjectResults.length})
               </CardTitle>
               <CardDescription>
-                View project results and outcomes (Read-only)
+                View project results from your created projects (Read-only)
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {(projectResultsResponse?.["data-list"]?.length || 0) > 0 ? (
+              {staffProjectResults.length > 0 ? (
                 <div className="overflow-x-auto">
                   <Table>
                     <TableHeader>
@@ -530,8 +1024,13 @@ const MyProjects: React.FC = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {projectResultsResponse?.["data-list"]?.map(
-                        (result: ProjectResult) => (
+                      {staffProjectResults.map((result: ProjectResult) => {
+                        // Find the corresponding project for this result
+                        const relatedProject = safeProjects.find(
+                          (p) => p.id === result["project-id"]
+                        );
+
+                        return (
                           <TableRow key={result.id}>
                             <TableCell className="font-medium">
                               <div className="max-w-[330px]">
@@ -539,15 +1038,33 @@ const MyProjects: React.FC = () => {
                                   {result.name || "No Name"}
                                 </div>
                                 <div className="text-sm text-muted-foreground truncate">
-                                  Project Result
+                                  {relatedProject
+                                    ? `From: ${
+                                        relatedProject["english-title"] ||
+                                        relatedProject["vietnamese-title"] ||
+                                        "Unknown Project"
+                                      }`
+                                    : "Project Result"}
                                 </div>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline">Result</Badge>
+                              <Badge variant="outline">
+                                {relatedProject?.category?.includes(
+                                  "application"
+                                )
+                                  ? "Application"
+                                  : capitalize(
+                                      relatedProject?.category || "Result"
+                                    )}
+                              </Badge>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline">Project Result</Badge>
+                              <Badge variant="outline">
+                                {capitalize(
+                                  relatedProject?.type || "Project Result"
+                                )}
+                              </Badge>
                             </TableCell>
                             <TableCell>
                               <Badge
@@ -565,21 +1082,35 @@ const MyProjects: React.FC = () => {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  window.open(result.url || "#", "_blank")
-                                }
-                                disabled={!result.url}
-                              >
-                                <Eye className="h-4 w-4 mr-2" />
-                                View
-                              </Button>
+                              <div className="flex gap-2">
+                                {/* Only show detailed view for basic projects */}
+                                {relatedProject?.category === "basic" && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleViewResult(result)}
+                                  >
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Details
+                                  </Button>
+                                )}
+                                {result.url && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() =>
+                                      window.open(result.url || "#", "_blank")
+                                    }
+                                  >
+                                    <Globe className="h-4 w-4 mr-2" />
+                                    Open
+                                  </Button>
+                                )}
+                              </div>
                             </TableCell>
                           </TableRow>
-                        )
-                      )}
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
@@ -590,11 +1121,12 @@ const MyProjects: React.FC = () => {
                     No Results Available
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    No completed projects with results are available yet.
+                    No project results are available from your created projects
+                    yet.
                   </p>
                   <p className="text-sm text-gray-500">
-                    Results will appear here once projects are completed and
-                    results are available.
+                    Results will appear here once your projects are completed
+                    and results are published.
                   </p>
                 </div>
               )}

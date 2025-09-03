@@ -124,7 +124,7 @@ const PRESETS = {
       "autosave",
     ],
     toolbar:
-      "undo redo | formatselect | bold italic underline | forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | pagebreak | preview code fullscreen",
+      "undo redo | formatselect | bold italic underline | forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | signature | pagebreak | preview code fullscreen",
     menubar: false,
     styles: `
       body {
@@ -218,7 +218,7 @@ const PRESETS = {
       "autosave",
     ],
     toolbar:
-      "undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | preview code fullscreen | help",
+      "undo redo | formatselect | bold italic underline strikethrough | forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | signature | preview code fullscreen | help",
     menubar: true,
     styles: `
       html, body {
@@ -328,7 +328,7 @@ const PRESETS = {
       "autosave",
     ],
     toolbar:
-      "undo redo | formatselect | bold italic underline | forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | pagebreak | preview code fullscreen",
+      "undo redo | formatselect | bold italic underline | forecolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image | signature | pagebreak | preview code fullscreen",
     menubar: true,
     styles: `
       body {

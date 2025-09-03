@@ -11,6 +11,8 @@ import {
   IndividualEvaluationApiResponse,
   UpdateEvaluationStageRequest,
   UpdateEvaluationStageResponse,
+  UpdateEvaluationRequest,
+  UpdateEvaluationResponse,
 } from "@/types/evaluation";
 import { axiosClient, getAccessToken } from "../api";
 
@@ -321,6 +323,28 @@ export const updateEvaluationStage = async (
     return response.data;
   } catch (error) {
     console.error("Error updating evaluation stage:", error);
+    throw error;
+  }
+};
+
+export const updateEvaluation = async (
+  evaluationData: UpdateEvaluationRequest
+): Promise<UpdateEvaluationResponse> => {
+  try {
+    const accessToken = getAccessToken();
+    const response = await axiosClient.put<UpdateEvaluationResponse>(
+      "/evaluation",
+      evaluationData,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json-patch+json",
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Error updating evaluation:", error);
     throw error;
   }
 };

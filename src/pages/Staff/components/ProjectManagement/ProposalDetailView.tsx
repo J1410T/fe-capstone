@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 // ProposalDetailView component for displaying proposal details
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +28,7 @@ import {
   getEvaluationStagesByEvaluationId,
   getEvaluationById,
   updateEvaluationStage,
+  updateEvaluation,
 } from "@/services/resources/evaluation";
 
 import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
@@ -79,15 +80,22 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
   const [isCouncilModalOpen, setIsCouncilModalOpen] = useState(false);
   const [selectedStageForCouncil, setSelectedStageForCouncil] =
     useState<EvaluationStageApi | null>(null);
+  const [selectedEvaluationForCouncil, setSelectedEvaluationForCouncil] =
+    useState<Evaluation | null>(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [stageCouncils, setStageCouncils] = useState<Record<string, Council>>(
     {}
   );
-  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
-  const [councilToAssign, setCouncilToAssign] = useState<Council | null>(null);
+  const [evaluationCouncils, setEvaluationCouncils] = useState<
+    Record<string, Council>
+  >({});
+  const [isAssigningCouncil, setIsAssigningCouncil] = useState(false);
   const [stageCouncilMembers, setStageCouncilMembers] = useState<
+    Record<string, UserRole[]>
+  >({});
+  const [evaluationCouncilMembers, setEvaluationCouncilMembers] = useState<
     Record<string, UserRole[]>
   >({});
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -145,64 +153,130 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
   };
 
   // Function to load council information for stages
-  const loadStageCouncils = async (stages: EvaluationStageApi[]) => {
-    const councils: Record<string, Council> = {};
-    const members: Record<string, UserRole[]> = {};
+  const loadStageCouncils = useCallback(
+    async (stages: EvaluationStageApi[]) => {
+      const councils: Record<string, Council> = {};
+      const members: Record<string, UserRole[]> = {};
 
-    // Get unique council IDs
-    const councilIds = [
-      ...new Set(
-        stages
-          .filter((stage) => stage["appraisal-council-id"])
-          .map((stage) => stage["appraisal-council-id"])
-      ),
-    ];
+      // Get unique council IDs
+      const councilIds = [
+        ...new Set(
+          stages
+            .filter((stage) => stage["appraisal-council-id"])
+            .map((stage) => stage["appraisal-council-id"])
+        ),
+      ];
 
-    if (councilIds.length === 0) {
-      setStageCouncils(councils);
-      return;
-    }
-
-    try {
-      // Get all councils at once
-      const councilsResponse = await getAppraisalCouncilList({
-        "key-word": "",
-        "page-index": 1,
-        "page-size": 100,
-        status: "created",
-      });
-
-      // Map councils by ID
-      const councilsMap = councilsResponse["data-list"].reduce(
-        (acc, council) => {
-          acc[council.id] = council;
-          return acc;
-        },
-        {} as Record<string, AppraisalCouncil>
-      );
-
-      // Assign councils to stages and load members
-      for (const stage of stages) {
-        if (
-          stage["appraisal-council-id"] &&
-          councilsMap[stage["appraisal-council-id"]]
-        ) {
-          const council = councilsMap[stage["appraisal-council-id"]];
-          councils[stage.id] = convertToCouncil(council);
-
-          // Load members for this council
-          const councilMembers = await loadCouncilMembers(council.id);
-          members[stage.id] = councilMembers;
-        }
+      if (councilIds.length === 0) {
+        setStageCouncils(councils);
+        return;
       }
 
-      setStageCouncils(councils);
-      setStageCouncilMembers(members);
-    } catch (error) {
-      console.error("Error loading councils:", error);
-      setStageCouncils(councils);
-    }
-  };
+      try {
+        // Get all councils at once
+        const councilsResponse = await getAppraisalCouncilList({
+          "key-word": "",
+          "page-index": 1,
+          "page-size": 100,
+          status: "created",
+        });
+
+        // Map councils by ID
+        const councilsMap = councilsResponse["data-list"].reduce(
+          (acc, council) => {
+            acc[council.id] = council;
+            return acc;
+          },
+          {} as Record<string, AppraisalCouncil>
+        );
+
+        // Assign councils to stages and load members
+        for (const stage of stages) {
+          if (
+            stage["appraisal-council-id"] &&
+            councilsMap[stage["appraisal-council-id"]]
+          ) {
+            const council = councilsMap[stage["appraisal-council-id"]];
+            councils[stage.id] = convertToCouncil(council);
+
+            // Load members for this council
+            const councilMembers = await loadCouncilMembers(council.id);
+            members[stage.id] = councilMembers;
+          }
+        }
+
+        setStageCouncils(councils);
+        setStageCouncilMembers(members);
+      } catch (error) {
+        console.error("Error loading councils:", error);
+        setStageCouncils(councils);
+      }
+    },
+    []
+  );
+
+  // Function to load council information for evaluations
+  const loadEvaluationCouncils = useCallback(
+    async (evaluations: Evaluation[]) => {
+      const councils: Record<string, Council> = {};
+      const members: Record<string, UserRole[]> = {};
+
+      // Get unique council IDs
+      const councilIds = [
+        ...new Set(
+          evaluations
+            .filter((evaluation) => evaluation["appraisal-council-id"])
+            .map((evaluation) => evaluation["appraisal-council-id"])
+        ),
+      ];
+
+      if (councilIds.length === 0) {
+        setEvaluationCouncils(councils);
+        return;
+      }
+
+      try {
+        // Get all councils at once
+        const councilsResponse = await getAppraisalCouncilList({
+          "key-word": "",
+          "page-index": 1,
+          "page-size": 100,
+          status: "created",
+        });
+
+        // Map councils by ID
+        const councilsMap = councilsResponse["data-list"].reduce(
+          (acc, council) => {
+            acc[council.id] = council;
+            return acc;
+          },
+          {} as Record<string, AppraisalCouncil>
+        );
+
+        // Assign councils to evaluations and load members
+        for (const evaluation of evaluations) {
+          if (
+            evaluation["appraisal-council-id"] &&
+            councilsMap[evaluation["appraisal-council-id"]]
+          ) {
+            const council = councilsMap[evaluation["appraisal-council-id"]];
+            councils[evaluation.id] = convertToCouncil(council);
+
+            // Load members for this council
+            const councilMembers = await loadCouncilMembers(council.id);
+            members[evaluation.id] = councilMembers;
+          }
+        }
+
+        setEvaluationCouncils(councils);
+        setEvaluationCouncilMembers(members);
+      } catch (error) {
+        console.error("Error loading evaluation councils:", error);
+        setEvaluationCouncils(councils);
+      }
+    },
+    []
+  );
 
   // Load evaluations and stages for this proposal
   useEffect(() => {
@@ -230,6 +304,9 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
               setEvaluations([evaluation]);
               setCurrentEvaluationId(evaluation.id);
 
+              // Load council information for evaluations
+              await loadEvaluationCouncils([evaluation]);
+
               // Load stages for this evaluation
               try {
                 const evaluationData = await getEvaluationById(
@@ -255,7 +332,7 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
 
               return; // Exit early, no need for API call
             } else {
-              console.log("❌ No evaluation found in stored project data");
+              // No evaluation found in stored project data
             }
           } catch (parseError) {
             console.error("Error parsing stored project data:", parseError);
@@ -285,6 +362,9 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
             const evaluation = projectEvaluations[0];
             setEvaluations([evaluation]);
             setCurrentEvaluationId(evaluation.id);
+
+            // Load council information for evaluations
+            await loadEvaluationCouncils([evaluation]);
 
             // Load stages for this evaluation
             try {
@@ -319,14 +399,12 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
       } catch (error: unknown) {
         const errorResponse = error as { response?: { status?: number } };
         if (errorResponse.response?.status === 404) {
-          console.log(
-            "Evaluation endpoint not found (404) - this proposal may not have evaluations yet"
-          );
+          // Evaluation endpoint not found (404) - this proposal may not have evaluations yet
         } else if (errorResponse.response?.status === 401) {
-          console.log("Unauthorized (401) - token may be expired");
+          // Unauthorized (401) - token may be expired
         }
 
-        console.log("❌ API call failed, no evaluation data available");
+        // API call failed, no evaluation data available
         setEvaluations([]);
         setStages([]);
       } finally {
@@ -335,15 +413,19 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
     };
 
     loadEvaluationsAndStages();
-  }, [selectedProposal?.id]);
+  }, [selectedProposal?.id, loadStageCouncils, loadEvaluationCouncils]);
 
   // Handle evaluations data from query hooks
   useEffect(() => {
     if (evaluationsQueryData?.["data-list"]) {
-      setEvaluations(evaluationsQueryData["data-list"]);
+      const evaluationsList = evaluationsQueryData["data-list"];
+      setEvaluations(evaluationsList);
       setIsLoadingEvaluations(false);
+
+      // Load council information for evaluations
+      loadEvaluationCouncils(evaluationsList);
     }
-  }, [evaluationsQueryData]);
+  }, [evaluationsQueryData, loadEvaluationCouncils]);
 
   const handleStageClick = (stageId: string) => {
     if (currentEvaluationId) {
@@ -468,60 +550,50 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
   };
 
   const handleAssignCouncil = async (
-    _stage: EvaluationStageApi,
+    stage: EvaluationStageApi,
     council: Council
   ) => {
-    // Show confirmation dialog first
-    setCouncilToAssign(council);
-    setIsConfirmDialogOpen(true);
-  };
+    if (!stage || !council) {
+      return;
+    }
 
-  const confirmAssignCouncil = async () => {
-    if (!selectedStageForCouncil || !councilToAssign) return;
+    setIsAssigningCouncil(true);
 
     try {
       // Call API PUT /evaluation-stage with appraisal-council-id
       await updateEvaluationStage({
-        id: selectedStageForCouncil.id,
-        name: selectedStageForCouncil.name,
-        "stage-order": selectedStageForCouncil["stage-order"],
-        phrase: selectedStageForCouncil.phrase,
-        type: selectedStageForCouncil.type,
-        status: selectedStageForCouncil.status,
-        "evaluation-id": selectedStageForCouncil["evaluation-id"],
-        "milestone-id": selectedStageForCouncil["milestone-id"],
-        "appraisal-council-id": councilToAssign.id,
+        id: stage.id,
+        name: stage.name,
+        "stage-order": stage["stage-order"],
+        phrase: stage.phrase,
+        type: stage.type,
+        status: stage.status,
+        "evaluation-id": stage["evaluation-id"],
+        "milestone-id": stage["milestone-id"],
+        "appraisal-council-id": council.id,
       });
 
-      console.log(
-        "Successfully assigned council",
-        councilToAssign.id,
-        "to stage",
-        selectedStageForCouncil.id
-      );
-
       // Load members for the newly assigned council
-      const councilMembers = await loadCouncilMembers(councilToAssign.id);
+      const councilMembers = await loadCouncilMembers(council.id);
 
       // Update stage councils and members
       setStageCouncils((prev) => ({
         ...prev,
-        [selectedStageForCouncil.id]: councilToAssign,
+        [stage.id]: council,
       }));
       setStageCouncilMembers((prev) => ({
         ...prev,
-        [selectedStageForCouncil.id]: councilMembers,
+        [stage.id]: councilMembers,
       }));
+
       setSuccessMessage(
-        `Successfully assigned council "${councilToAssign.name}" to stage "${selectedStageForCouncil.name}"`
+        `Successfully assigned council "${council.name}" to stage "${stage.name}"`
       );
       setShowSuccessMessage(true);
 
-      // Close all modals
+      // Close council modal
       setIsCouncilModalOpen(false);
       setSelectedStageForCouncil(null);
-      setIsConfirmDialogOpen(false);
-      setCouncilToAssign(null);
 
       // Auto hide success message after 5 seconds
       setTimeout(() => {
@@ -530,9 +602,91 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
       }, 5000);
     } catch (error) {
       console.error("Error assigning council to stage:", error);
-      // Close confirmation dialog but keep council modal open on error
-      setIsConfirmDialogOpen(false);
-      setCouncilToAssign(null);
+
+      // Show error message to user
+      setErrorMessage(
+        `Failed to assign council "${council.name}" to stage "${stage.name}". Please try again.`
+      );
+      setShowSuccessMessage(true);
+      setSuccessMessage("");
+
+      // Auto hide error message after 5 seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+        setErrorMessage("");
+      }, 5000);
+    } finally {
+      setIsAssigningCouncil(false);
+    }
+  };
+
+  const handleAssignEvaluationCouncil = async (
+    evaluation: Evaluation,
+    council: Council
+  ) => {
+    if (!evaluation || !council) {
+      return;
+    }
+
+    setIsAssigningCouncil(true);
+
+    try {
+      // Call API PUT /evaluation with appraisal-council-id
+      await updateEvaluation({
+        id: evaluation.id,
+        code: evaluation.code,
+        title: evaluation.title,
+        "total-rate": evaluation["total-rate"],
+        comment: evaluation.comment,
+        status: evaluation.status,
+        "project-id": evaluation["project-id"],
+        "appraisal-council-id": council.id,
+      });
+
+      // Load members for the newly assigned council
+      const councilMembers = await loadCouncilMembers(council.id);
+
+      // Update evaluation councils and members
+      setEvaluationCouncils((prev) => ({
+        ...prev,
+        [evaluation.id]: council,
+      }));
+      setEvaluationCouncilMembers((prev) => ({
+        ...prev,
+        [evaluation.id]: councilMembers,
+      }));
+
+      setSuccessMessage(
+        `Successfully assigned council "${council.name}" to evaluation "${evaluation.title}"`
+      );
+      setShowSuccessMessage(true);
+
+      // Close council modal
+      setIsCouncilModalOpen(false);
+      setSelectedEvaluationForCouncil(null);
+
+      // Auto hide success message after 5 seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+        setSuccessMessage("");
+      }, 5000);
+    } catch (error) {
+      console.error("Error assigning council to evaluation:", error);
+
+      // Show error message to user
+      setErrorMessage(
+        `Failed to assign council "${council.name}" to evaluation "${evaluation.title}". Please try again.`
+      );
+      setShowSuccessMessage(true);
+      setSuccessMessage("");
+
+      // Auto hide error message after 5 seconds
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+        setErrorMessage("");
+      }, 5000);
+    } finally {
+      setIsAssigningCouncil(false);
     }
   };
 
@@ -592,12 +746,28 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
         </Button>
       </div>
 
-      {/* Success Message */}
+      {/* Success/Error Message */}
       {showSuccessMessage && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+        <div
+          className={`${
+            errorMessage
+              ? "bg-red-50 border-red-200"
+              : "bg-green-50 border-green-200"
+          } border rounded-lg p-4 mb-6`}
+        >
           <div className="flex items-center">
-            <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-            <p className="text-green-800 font-medium">{successMessage}</p>
+            <CheckCircle
+              className={`h-5 w-5 ${
+                errorMessage ? "text-red-500" : "text-green-500"
+              } mr-3`}
+            />
+            <p
+              className={`${
+                errorMessage ? "text-red-800" : "text-green-800"
+              } font-medium`}
+            >
+              {errorMessage || successMessage}
+            </p>
           </div>
         </div>
       )}
@@ -726,9 +896,153 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
           <div className="p-8">
             {evaluations.map((evaluation) => (
               <div key={evaluation.id} className="space-y-4">
+                {/* Main Evaluation Card */}
+                <div className="p-6 rounded-2xl bg-gradient-to-r from-slate-50 to-green-50 border border-slate-200/50 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-6">
+                      <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                        <FileText className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-slate-900 font-montserrat">
+                          {evaluation.title}
+                        </h3>
+                        <p className="text-slate-600 font-open-sans">
+                          {evaluation.code}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-50 text-blue-700 border-blue-200 px-4 py-2"
+                      >
+                        {evaluation.status}
+                      </Badge>
+                      {!evaluation["appraisal-council-id"] && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEvaluationForCouncil(evaluation);
+                            setSelectedStageForCouncil(null);
+                            setIsCouncilModalOpen(true);
+                          }}
+                          className="hover:bg-blue-50 hover:border-blue-200 h-8 px-3"
+                        >
+                          <Users className="h-3 w-3 mr-1" />
+                          Assign Council
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Council Information for Evaluation */}
+                  {evaluationCouncils[evaluation.id] && (
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-800">
+                          {evaluationCouncils[evaluation.id].name}
+                        </span>
+                        <Badge className="bg-green-100 text-green-800 text-xs">
+                          <UserCheck className="w-3 h-3 mr-1" />
+                          Assigned
+                        </Badge>
+                      </div>
+
+                      {/* Council Members */}
+                      {evaluationCouncilMembers[evaluation.id] &&
+                        evaluationCouncilMembers[evaluation.id].length > 0 && (
+                          <div className="space-y-2">
+                            {/* Chairman */}
+                            {evaluationCouncilMembers[evaluation.id]
+                              .filter(
+                                (member: UserRole) => member.name === "Chairman"
+                              )
+                              .map((chairman: UserRole) => (
+                                <div
+                                  key={chairman.id}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Crown className="h-3 w-3 text-yellow-500" />
+                                  <img
+                                    src={
+                                      chairman["avatar-url"] ||
+                                      "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg"
+                                    }
+                                    alt={chairman["full-name"]}
+                                    className="w-6 h-6 rounded-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.src =
+                                        "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
+                                    }}
+                                  />
+                                  <span className="text-xs font-medium text-yellow-700">
+                                    {chairman["full-name"]}
+                                  </span>
+                                </div>
+                              ))}
+
+                            {/* Other Members */}
+                            {evaluationCouncilMembers[evaluation.id]
+                              .filter(
+                                (member: UserRole) => member.name !== "Chairman"
+                              )
+                              .slice(0, 3) // Show only first 3 members to keep it compact
+                              .map((member: UserRole) => (
+                                <div
+                                  key={member.id}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Users className="h-3 w-3 text-blue-500" />
+                                  <img
+                                    src={
+                                      member["avatar-url"] ||
+                                      "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg"
+                                    }
+                                    alt={member["full-name"]}
+                                    className="w-6 h-6 rounded-full object-cover"
+                                    onError={(e) => {
+                                      e.currentTarget.src =
+                                        "https://www.advancedsciencenews.com/wp-content/uploads/2025/07/physics-Gerd-Altmann-Pixabay.jpg";
+                                    }}
+                                  />
+                                  <span className="text-xs text-blue-700">
+                                    {member["full-name"]}
+                                  </span>
+                                </div>
+                              ))}
+
+                            {/* Show count if there are more members */}
+                            {evaluationCouncilMembers[evaluation.id].filter(
+                              (member: UserRole) => member.name !== "Chairman"
+                            ).length > 3 && (
+                              <div className="text-xs text-blue-600">
+                                +
+                                {evaluationCouncilMembers[evaluation.id].filter(
+                                  (member: UserRole) =>
+                                    member.name !== "Chairman"
+                                ).length - 3}{" "}
+                                more members
+                              </div>
+                            )}
+                          </div>
+                        )}
+                    </div>
+                  )}
+                </div>
+
                 {/* Evaluation Stages */}
                 {stages.length > 0 && (
-                  <div className="space-y-3">
+                  <div className="ml-8 space-y-3">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1 h-6 bg-purple-200 rounded-full"></div>
+                      <h4 className="text-sm font-semibold text-purple-700">
+                        Evaluation Stages ({stages.length})
+                      </h4>
+                    </div>
                     {stages
                       .sort((a, b) => a["stage-order"] - b["stage-order"])
                       .map((stage) => (
@@ -1021,64 +1335,28 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
       />
 
       {/* Council Assignment Modal */}
-      {selectedStageForCouncil && (
+      {(selectedStageForCouncil || selectedEvaluationForCouncil) && (
         <CouncilAssignmentModal
           isOpen={isCouncilModalOpen}
           onClose={() => {
             setIsCouncilModalOpen(false);
             setSelectedStageForCouncil(null);
+            setSelectedEvaluationForCouncil(null);
           }}
           project={selectedProposal}
-          onAssignCouncil={(_project, council) =>
-            handleAssignCouncil(selectedStageForCouncil!, council)
-          }
+          onAssignCouncil={(_project, council) => {
+            if (selectedStageForCouncil) {
+              handleAssignCouncil(selectedStageForCouncil, council);
+            } else if (selectedEvaluationForCouncil) {
+              handleAssignEvaluationCouncil(
+                selectedEvaluationForCouncil,
+                council
+              );
+            }
+          }}
+          isAssigning={isAssigningCouncil}
         />
       )}
-
-      {/* Confirmation Dialog */}
-      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-orange-500" />
-              Confirm Council Assignment
-            </DialogTitle>
-            <DialogDescription className="text-left">
-              Are you sure you want to assign{" "}
-              <span className="font-semibold text-slate-900">
-                {councilToAssign?.name}
-              </span>{" "}
-              to stage{" "}
-              <span className="font-semibold text-slate-900">
-                {selectedStageForCouncil?.name}
-              </span>
-              ?
-              <br />
-              <br />
-              <span className="text-orange-600 font-medium">
-                ⚠️ This action cannot be undone.
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setIsConfirmDialogOpen(false);
-                setCouncilToAssign(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={confirmAssignCouncil}
-              className="bg-orange-600 hover:bg-orange-700 text-white"
-            >
-              Yes, Assign Council
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Edit Proposal Modal */}
       <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
