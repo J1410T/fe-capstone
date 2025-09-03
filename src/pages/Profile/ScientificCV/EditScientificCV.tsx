@@ -392,7 +392,6 @@ const EditScientificCV: React.FC = () => {
           </div>
         ) : (
           <Editor
-            // apiKey={apiKey}
             onInit={(_, editor) => (editorRef.current = editor)}
             initialValue={formContent}
             onEditorChange={handleEditorChange}
@@ -400,29 +399,17 @@ const EditScientificCV: React.FC = () => {
               licenseKey: "gpl",
               height: 800,
               menubar: true,
-              plugins: [
-                "advlist",
-                "autolink",
-                "lists",
-                "link",
-                "image",
-                "charmap",
-                "preview",
-                "anchor",
-                "searchreplace",
-                "visualblocks",
-                "code",
-                "fullscreen",
-                "insertdatetime",
-                "media",
-                "table",
-                "help",
-                "wordcount",
-              ],
+              plugins:
+                "advlist autolink lists link image charmap preview anchor " +
+                "searchreplace visualblocks code fullscreen " +
+                "insertdatetime media table help wordcount",
               toolbar:
-                "undo redo | blocks | bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | table | link image uploadImage signaturePad | preview code fullscreen",
+                "undo redo | blocks | bold italic underline | " +
+                "alignleft aligncenter alignright alignjustify | " +
+                "bullist numlist outdent indent | removeformat | " +
+                "table | link image uploadImage signaturePad | " +
+                "preview code fullscreen",
               content_style: formStyles,
-
               setup: (editor) => {
                 // Use shared ref to track uploaded images for deletion
                 const uploadedImages = uploadedImagesRef.current;
