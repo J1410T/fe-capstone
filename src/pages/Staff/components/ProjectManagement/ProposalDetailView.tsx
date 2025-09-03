@@ -27,14 +27,16 @@ import { getEvaluationsByProjectId } from "@/services/resources/evaluation";
 import {
   getEvaluationStagesByEvaluationId,
   getEvaluationById,
-  updateEvaluationStage,
-  updateEvaluation,
 } from "@/services/resources/evaluation";
 
-import { useGetEvaluationsByProjectId } from "@/hooks/queries/evaluation";
+import {
+  useGetEvaluationsByProjectId,
+  useUpdateEvaluationStage,
+  useUpdateEvaluation,
+} from "@/hooks/queries/evaluation";
 import { useMilestonesByProjectId } from "@/hooks/queries/milestone";
+import { useAppraisalCouncilsList } from "@/hooks/queries/appraisal-council";
 
-import { getAppraisalCouncilList } from "@/services/resources/appraisal-council";
 import { getUserRolesByAppraisalCouncil } from "@/services/resources/auth";
 import { updateProject } from "@/services/resources/project";
 
@@ -117,6 +119,17 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
   const { data: milestonesData, isLoading: isLoadingMilestones } =
     useMilestonesByProjectId(selectedProposal?.id || "");
 
+  // Appraisal Council hooks
+  const { data: councilsList } = useAppraisalCouncilsList({
+    "key-word": "",
+    "page-index": 1,
+    "page-size": 100,
+    status: "created",
+  });
+
+  const updateEvaluationStageMutation = useUpdateEvaluationStage();
+  const updateEvaluationMutation = useUpdateEvaluation();
+
   // Function to convert AppraisalCouncil to Council
   const convertToCouncil = (appraisalCouncil: AppraisalCouncil): Council => ({
     id: appraisalCouncil.id,
@@ -152,7 +165,7 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
     }
   };
 
-  // Function to load council information for stages
+  // Function to load council information for stages using hooks data
   const loadStageCouncils = useCallback(
     async (stages: EvaluationStageApi[]) => {
       const councils: Record<string, Council> = {};
@@ -173,35 +186,31 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
       }
 
       try {
-        // Get all councils at once
-        const councilsResponse = await getAppraisalCouncilList({
-          "key-word": "",
-          "page-index": 1,
-          "page-size": 100,
-          status: "created",
-        });
+        // Use councils data from hook instead of API call
+        if (councilsList?.["data-list"]) {
+          // Map councils by ID
+          const councilsMap = councilsList["data-list"].reduce(
+            (acc, council) => {
+              acc[council.id] = council;
+              return acc;
+            },
+            {} as Record<string, AppraisalCouncil>
+          );
 
-        // Map councils by ID
-        const councilsMap = councilsResponse["data-list"].reduce(
-          (acc, council) => {
-            acc[council.id] = council;
-            return acc;
-          },
-          {} as Record<string, AppraisalCouncil>
-        );
+          // Assign councils to stages and load members
+          for (const stage of stages) {
+            if (
+              stage["appraisal-council-id"] &&
+              councilsMap[stage["appraisal-council-id"]]
+            ) {
+              const council = councilsMap[stage["appraisal-council-id"]];
+              councils[stage.id] = convertToCouncil(council);
 
-        // Assign councils to stages and load members
-        for (const stage of stages) {
-          if (
-            stage["appraisal-council-id"] &&
-            councilsMap[stage["appraisal-council-id"]]
-          ) {
-            const council = councilsMap[stage["appraisal-council-id"]];
-            councils[stage.id] = convertToCouncil(council);
-
-            // Load members for this council
-            const councilMembers = await loadCouncilMembers(council.id);
-            members[stage.id] = councilMembers;
+              // Load members for this council using manual call for now
+              // TODO: This could be optimized to use individual hooks for each council
+              const councilMembers = await loadCouncilMembers(council.id);
+              members[stage.id] = councilMembers;
+            }
           }
         }
 
@@ -212,10 +221,10 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
         setStageCouncils(councils);
       }
     },
-    []
+    [councilsList]
   );
 
-  // Function to load council information for evaluations
+  // Function to load council information for evaluations using hooks data
   const loadEvaluationCouncils = useCallback(
     async (evaluations: Evaluation[]) => {
       const councils: Record<string, Council> = {};
@@ -236,35 +245,31 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
       }
 
       try {
-        // Get all councils at once
-        const councilsResponse = await getAppraisalCouncilList({
-          "key-word": "",
-          "page-index": 1,
-          "page-size": 100,
-          status: "created",
-        });
+        // Use councils data from hook instead of API call
+        if (councilsList?.["data-list"]) {
+          // Map councils by ID
+          const councilsMap = councilsList["data-list"].reduce(
+            (acc, council) => {
+              acc[council.id] = council;
+              return acc;
+            },
+            {} as Record<string, AppraisalCouncil>
+          );
 
-        // Map councils by ID
-        const councilsMap = councilsResponse["data-list"].reduce(
-          (acc, council) => {
-            acc[council.id] = council;
-            return acc;
-          },
-          {} as Record<string, AppraisalCouncil>
-        );
+          // Assign councils to evaluations and load members
+          for (const evaluation of evaluations) {
+            if (
+              evaluation["appraisal-council-id"] &&
+              councilsMap[evaluation["appraisal-council-id"]]
+            ) {
+              const council = councilsMap[evaluation["appraisal-council-id"]];
+              councils[evaluation.id] = convertToCouncil(council);
 
-        // Assign councils to evaluations and load members
-        for (const evaluation of evaluations) {
-          if (
-            evaluation["appraisal-council-id"] &&
-            councilsMap[evaluation["appraisal-council-id"]]
-          ) {
-            const council = councilsMap[evaluation["appraisal-council-id"]];
-            councils[evaluation.id] = convertToCouncil(council);
-
-            // Load members for this council
-            const councilMembers = await loadCouncilMembers(council.id);
-            members[evaluation.id] = councilMembers;
+              // Load members for this council using manual call for now
+              // TODO: This could be optimized to use individual hooks for each council
+              const councilMembers = await loadCouncilMembers(council.id);
+              members[evaluation.id] = councilMembers;
+            }
           }
         }
 
@@ -275,7 +280,7 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
         setEvaluationCouncils(councils);
       }
     },
-    []
+    [councilsList]
   );
 
   // Load evaluations and stages for this proposal
@@ -560,8 +565,8 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
     setIsAssigningCouncil(true);
 
     try {
-      // Call API PUT /evaluation-stage with appraisal-council-id
-      await updateEvaluationStage({
+      // Use mutation hook instead of direct API call
+      await updateEvaluationStageMutation.mutateAsync({
         id: stage.id,
         name: stage.name,
         "stage-order": stage["stage-order"],
@@ -631,8 +636,8 @@ const ProposalDetailView: React.FC<ProposalDetailViewProps> = ({
     setIsAssigningCouncil(true);
 
     try {
-      // Call API PUT /evaluation with appraisal-council-id
-      await updateEvaluation({
+      // Use mutation hook instead of direct API call
+      await updateEvaluationMutation.mutateAsync({
         id: evaluation.id,
         code: evaluation.code,
         title: evaluation.title,

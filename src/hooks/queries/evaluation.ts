@@ -9,6 +9,7 @@ import {
   getProposalsByCouncilId,
   updateEvaluationStage,
   updateIndividualEvaluation,
+  updateEvaluation,
 } from "@/services/resources/evaluation";
 import {
   CreateFirstEvaluationResponse,
@@ -17,6 +18,8 @@ import {
   IndividualEvaluationApi,
   UpdateEvaluationStageRequest,
   UpdateEvaluationStageResponse,
+  UpdateEvaluationRequest,
+  UpdateEvaluationResponse,
 } from "@/types/evaluation";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -147,6 +150,23 @@ export const useUpdateEvaluationStage = () => {
     },
     onError: (error) => {
       console.error("Failed to update evaluation stage:", error);
+    },
+  });
+};
+
+export const useUpdateEvaluation = () => {
+  return useMutation<
+    UpdateEvaluationResponse,
+    Error,
+    UpdateEvaluationRequest
+  >({
+    mutationFn: (request: UpdateEvaluationRequest) =>
+      updateEvaluation(request),
+    onSuccess: (data) => {
+      console.log("Evaluation updated successfully:", data.message);
+    },
+    onError: (error) => {
+      console.error("Failed to update evaluation:", error);
     },
   });
 };
