@@ -1,5 +1,8 @@
 import React from "react";
-import { useSignalRConnection, useSignalRNotifications } from "@/contexts/SignalRContext";
+import {
+  useSignalRConnection,
+  useSignalRNotifications,
+} from "@/contexts/SignalRContext";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -13,11 +16,14 @@ export const SignalRStatus: React.FC = () => {
 
   // Listen for real-time notifications
   useSignalRNotifications((message) => {
-    console.log("🔔 Real-time notification received:", message);
-    
-    // Automatically refresh notification queries when receiving real-time updates
-    queryClient.invalidateQueries({ queryKey: ["notifications"] });
-    queryClient.refetchQueries({ queryKey: ["notifications"] });
+    console.log("🔔 SignalRStatus received real-time notification:", message);
+
+    // Add a small delay to ensure backend processing is complete
+    setTimeout(() => {
+      // Automatically refresh notification queries when receiving real-time updates
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      queryClient.refetchQueries({ queryKey: ["notifications"] });
+    }, 150);
   });
 
   return (

@@ -1,13 +1,24 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import { signalRService } from "@/services/signalr";
-import { SignalRConnectionState, SignalRNotificationMessage } from "@/types/notification";
+import {
+  SignalRConnectionState,
+  SignalRNotificationMessage,
+} from "@/types/notification";
 
 interface SignalRContextType {
   connectionState: SignalRConnectionState;
   isConnected: boolean;
   startConnection: () => Promise<void>;
   stopConnection: () => Promise<void>;
-  onNotification: (callback: (message: SignalRNotificationMessage) => void) => () => void;
+  onNotification: (
+    callback: (message: SignalRNotificationMessage) => void
+  ) => () => void;
 }
 
 const SignalRContext = createContext<SignalRContextType | undefined>(undefined);
@@ -16,10 +27,13 @@ interface SignalRProviderProps {
   children: ReactNode;
 }
 
-export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) => {
-  const [connectionState, setConnectionState] = useState<SignalRConnectionState>({
-    isConnected: false,
-  });
+export const SignalRProvider: React.FC<SignalRProviderProps> = ({
+  children,
+}) => {
+  const [connectionState, setConnectionState] =
+    useState<SignalRConnectionState>({
+      isConnected: false,
+    });
 
   useEffect(() => {
     // Subscribe to connection state changes
@@ -66,7 +80,9 @@ export const SignalRProvider: React.FC<SignalRProviderProps> = ({ children }) =>
     }
   };
 
-  const onNotification = (callback: (message: SignalRNotificationMessage) => void) => {
+  const onNotification = (
+    callback: (message: SignalRNotificationMessage) => void
+  ) => {
     return signalRService.onNotification(callback);
   };
 
@@ -106,7 +122,15 @@ export const useSignalRNotifications = (
   const { onNotification } = useSignalR();
 
   useEffect(() => {
-    const unsubscribe = onNotification(callback);
-    return unsubscribe;
+    console.log("🔗 Setting up SignalR notification listener");
+    const unsubscribe = onNotification((message) => {
+      console.log("📨 SignalR notification received in hook:", message);
+      callback(message);
+    });
+
+    return () => {
+      console.log("🔌 Cleaning up SignalR notification listener");
+      unsubscribe();
+    };
   }, [callback, onNotification]);
 };

@@ -2,10 +2,22 @@
 
 export interface NotificationRequest {
   title: string;
-  type: "project";
+  type:
+    | "project"
+    | "appraisalcouncil"
+    | "transaction"
+    | "individualevaluation"
+    | "evaluationstage"
+    | "evaluation"
+    | "userrole"
+    | "document"
+    | "membertask"
+    | "task"
+    | "systemconfiguration";
   status: "pending" | "created";
   "objec-notification-id": string;
-  "list-account-id": string[];
+  "list-account-id"?: string[];
+  "is-global-send"?: boolean;
 }
 
 export interface NotificationResponse {
