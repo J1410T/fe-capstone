@@ -18,16 +18,17 @@ import { signalRService } from "@/services/signalr";
  * Hook to create a notification
  */
 export function useCreateNotification() {
-  const queryClient = useQueryClient();
-
   return useMutation({
-    mutationFn: (request: NotificationRequest) => createNotification(request),
-    onSuccess: () => {
-      // Invalidate notification queries to refresh data after creation
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    mutationFn: (request: NotificationRequest) => {
+      console.log("🔨 Creating notification:", request);
+      return createNotification(request);
+    },
+    onSuccess: (response) => {
+      console.log("✅ Notification created successfully:", response);
+      // Don't invalidate queries here - let SignalR handle real-time updates
     },
     onError: (error) => {
-      console.error("Failed to create notification:", error);
+      console.error("❌ Failed to create notification:", error);
     },
   });
 }
@@ -57,10 +58,18 @@ export function useNotificationList(
 
   // Set up SignalR listener for real-time updates
   useEffect(() => {
-    const unsubscribe = signalRService.onNotification(() => {
-      // Invalidate and refetch notification queries when receiving real-time updates
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.refetchQueries({ queryKey: ["notifications"] });
+    const unsubscribe = signalRService.onNotification((message) => {
+      console.log(
+        "🔔 Notification list hook received real-time notification:",
+        message
+      );
+
+      // Add a small delay to ensure the backend has processed the notification
+      setTimeout(() => {
+        // Invalidate and refetch notification queries when receiving real-time updates
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        queryClient.refetchQueries({ queryKey: ["notifications"] });
+      }, 100);
     });
 
     // Start SignalR connection if not already connected
@@ -87,8 +96,9 @@ export function useNotificationList(
 
       return getNotificationList(request);
     },
-    staleTime: 30000, // Cache for 30 seconds for real-time updates
+    staleTime: 5000, // Reduce cache time for more frequent updates
     refetchIntervalInBackground: true, // Continue refetching in background
+    refetchInterval: 30000, // Auto-refetch every 30 seconds as fallback
   });
 }
 
@@ -197,21 +207,32 @@ export function useSendNotification() {
 
   return useMutation({
     mutationFn: async (request: NotificationRequest) => {
+      console.log("📤 Sending notification:", request);
+
       const notificationResponse = await createNotificationMutation.mutateAsync(
         request
       );
+
+      console.log("✅ Notification sent successfully:", notificationResponse);
 
       return {
         notificationId: notificationResponse.id,
         success: true,
       };
     },
-    onSuccess: () => {
-      // Invalidate notification queries to refresh data after sending
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    onSuccess: (data) => {
+      console.log("🎯 Notification creation completed:", data);
+
+      // Don't immediately invalidate queries here - let SignalR handle the real-time update
+      // The real-time notification will trigger the query invalidation
+
+      // Only invalidate as a fallback after a delay
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      }, 1000);
     },
     onError: (error) => {
-      console.error("Failed to send notification:", error);
+      console.error("❌ Failed to send notification:", error);
     },
   });
 }
