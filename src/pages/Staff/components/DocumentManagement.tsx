@@ -112,7 +112,7 @@ const DocumentManagement: React.FC = () => {
     {
       "page-index": 1,
       "page-size": 100,
-      statuses: ["approved", "inprogress"],
+      statuses: ["approved"],
       genres: ["proposal"],
       "sort-by": "createdate",
       desc: true,
