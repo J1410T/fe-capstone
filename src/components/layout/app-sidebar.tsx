@@ -38,6 +38,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthResponse } from "@/hooks/queries";
+import { useNotificationList } from "@/hooks/queries/notification";
+import { Badge } from "../ui";
 
 // Navigation data structure
 const data = {
@@ -54,6 +56,7 @@ const data = {
           title: "Notifications",
           url: "/staff/notifications",
           icon: BellDot,
+          showBadge: true,
         },
         {
           title: "Document Forms",
@@ -145,6 +148,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, logout } = useAuth();
   const { data: authData } = useAuthResponse();
 
+  const { data: notificationData } = useNotificationList(1, 10, false);
+  const notificationsUnread = notificationData?.["data-list"] || [];
+
   // Get current user role
   const currentRole = authData?.["selected-role"] || user?.role;
 
@@ -209,9 +215,19 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   {filteredItems.map((item) => (
                     <SidebarMenuItem key={item.title}>
                       <SidebarMenuButton asChild>
-                        <Link to={item.url}>
+                        <Link to={item.url} className="flex items-center gap-2">
                           <item.icon className="h-4 w-4" />
-                          {item.title}
+                          <div className="flex items-center justify-between gap-2">
+                            <span>{item.title}</span>
+                            {item.showBadge &&
+                              notificationsUnread.length > 0 && (
+                                <Badge className="h-5 w-5 flex items-center justify-center text-xs bg-red-500 text-white border border-white rounded-full shadow-sm">
+                                  {notificationsUnread.length > 9
+                                    ? "9+"
+                                    : notificationsUnread.length}
+                                </Badge>
+                              )}
+                          </div>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
