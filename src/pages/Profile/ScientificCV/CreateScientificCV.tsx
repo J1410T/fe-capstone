@@ -22,7 +22,6 @@ import "tinymce/plugins/fullscreen";
 import "tinymce/plugins/insertdatetime";
 import "tinymce/plugins/media";
 import "tinymce/plugins/table";
-import "tinymce/plugins/help";
 import "tinymce/plugins/wordcount";
 import {
   useCreateDocument,
@@ -388,7 +387,7 @@ const CreateScientificCV: React.FC = () => {
               plugins:
                 "advlist autolink lists link image charmap preview anchor " +
                 "searchreplace visualblocks code fullscreen " +
-                "insertdatetime media table help wordcount",
+                "insertdatetime media table wordcount",
               toolbar:
                 "undo redo | blocks | bold italic underline | " +
                 "alignleft aligncenter alignright alignjustify | " +
