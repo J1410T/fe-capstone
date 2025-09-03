@@ -37,6 +37,9 @@ import { isValid, parseISO } from "date-fns";
 
 // Import types from API
 import type { ProjectTask } from "@/types/task";
+import { useSendNotification } from "@/hooks/queries/notification";
+import { NotificationRequest } from "@/types/notification";
+import { useResearcherUserRoleByProjectId } from "@/hooks/queries";
 
 // TaskTable-compatible Task interface
 interface TaskTableTask {
@@ -276,6 +279,12 @@ const UserTaskManagement: React.FC = () => {
   // Task management mutations
   const deleteTaskMutation = useDeleteTask();
   const updateTaskStatusKanbanMutation = useUpdateTaskStatusKanban();
+  const sendNotification = useSendNotification();
+
+  const { data: researcherData } =
+    useResearcherUserRoleByProjectId(selectedProjectId);
+  const ResearcherDataIds =
+    researcherData?.["data-list"]?.map((member) => member["account-id"]) ?? [];
 
   // Log any API errors
   React.useEffect(() => {
@@ -685,7 +694,11 @@ const UserTaskManagement: React.FC = () => {
   };
 
   // Task delete handler
-  const handleDeleteTask = (taskId: string) => {
+  const handleDeleteTask = async (taskId: string) => {
+    // Find the task to get its name for notification
+    const taskToDelete = transformedTasks.find((task) => task.id === taskId);
+    const taskName = taskToDelete?.title || "Unknown Task";
+
     // Close modal if the deleted task was selected
     if (selectedTask?.id === taskId) {
       setSelectedTask(null);
@@ -693,12 +706,31 @@ const UserTaskManagement: React.FC = () => {
       setIsDetailModalOpen(false); // Also close detail modal
     }
 
-    deleteTaskMutation.mutate(taskId, {
-      onSuccess: () => {
-        // Refresh data after successful deletion
-        refreshData();
-      },
-    });
+    try {
+      await deleteTaskMutation.mutateAsync(taskId);
+
+      // Send notification for task deletion
+      if (ResearcherDataIds.length > 0) {
+        const selectedProject = projects.find(
+          (project) => project.id === selectedProjectId
+        );
+        const notificationRequest: NotificationRequest = {
+          title: `Deleted task: ${taskName} </br> Project: ${
+            selectedProject?.["english-title"] || "Unknown Project"
+          }`,
+          type: "project",
+          status: "created",
+          "objec-notification-id": selectedProjectId || "",
+          "list-account-id": ResearcherDataIds,
+        };
+        await sendNotification.mutateAsync(notificationRequest);
+      }
+
+      // Refresh data after successful deletion
+      refreshData();
+    } catch (error) {
+      console.error("Failed to delete task:", error);
+    }
   };
 
   // Calculate task statistics with safe date checking
