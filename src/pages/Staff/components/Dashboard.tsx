@@ -36,8 +36,6 @@ import {
   BookOpen,
   Building2,
   PieChart as PieChartIcon,
-  CheckCircle2,
-  XCircle,
   Award,
   Calendar,
   Filter,
@@ -54,7 +52,6 @@ import { Calendar as CalendarComp } from "@/components/ui/calendar";
 import {
   useDashboardSystemStats,
   useDashboardTransactions,
-  useDashboardMilestonesProgress,
   useDashboardCouncils,
   useDashboardProjectStatus,
   useDashboardUserRoles,
@@ -83,7 +80,6 @@ const StaffDashboard: React.FC = () => {
   // API queries with date range parameters
   const systemStatsQuery = useDashboardSystemStats(dateRange);
   const transactionsQuery = useDashboardTransactions(dateRange);
-  const milestonesQuery = useDashboardMilestonesProgress();
   const councilsQuery = useDashboardCouncils();
   const projectStatusQuery = useDashboardProjectStatus(dateRange);
   const userRolesQuery = useDashboardUserRoles();
@@ -97,31 +93,10 @@ const StaffDashboard: React.FC = () => {
   // Process API data
   const systemStats = systemStatsQuery.data?.data;
   const transactions = transactionsQuery.data?.data;
-  const milestones = milestonesQuery.data?.data;
   const councils = councilsQuery.data?.data;
   const projectStatus = projectStatusQuery.data?.data;
   const userRoles = userRolesQuery.data?.data;
   const majorDistribution = majorDistributionQuery.data?.data;
-
-  // Calculate evaluation stats (using mock data for now since no API provided)
-  const evaluationStats = useMemo(
-    () => ({
-      totalEvaluations: systemStats?.["total-evaluations"] || 0,
-      completedEvaluations: Math.floor(
-        (systemStats?.["total-evaluations"] || 0) * 0.9
-      ),
-      passedEvaluations: Math.floor(
-        (systemStats?.["total-evaluations"] || 0) * 0.8
-      ),
-      failedEvaluations: Math.floor(
-        (systemStats?.["total-evaluations"] || 0) * 0.1
-      ),
-      pendingEvaluations: Math.floor(
-        (systemStats?.["total-evaluations"] || 0) * 0.1
-      ),
-    }),
-    [systemStats]
-  );
 
   // Project status pie chart data
   const projectStatusPieData = useMemo(() => {
@@ -840,202 +815,67 @@ const StaffDashboard: React.FC = () => {
           </Card>
         </div>
 
-        {/* Detailed Stats Row - Evaluations & Milestones */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Evaluation Overview */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Award className="w-5 h-5 text-orange-600" />
-                <span>Evaluation Overview</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {systemStatsQuery.isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <Loading />
+        {/* User Roles Distribution - Full Width */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <UserCheck className="w-5 h-5 text-purple-600" />
+              <span>User Roles Distribution</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {userRolesQuery.isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <Loading />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                  <span className="text-sm font-medium">
+                    Principal Investigators
+                  </span>
+                  <Badge className="bg-purple-100 text-purple-800">
+                    {processedUserRoles.principalInvestigators || 0}
+                  </Badge>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-gradient-to-r from-orange-50 to-amber-50 rounded-lg border border-orange-200">
-                    <p className="text-2xl font-bold text-orange-600">
-                      {evaluationStats.totalEvaluations}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Total Evaluations
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 mx-auto mb-1" />
-                      <p className="text-lg font-bold text-green-600">
-                        {evaluationStats.passedEvaluations}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Passed</p>
-                    </div>
-                    <div className="text-center p-3 bg-red-50 rounded-lg">
-                      <XCircle className="w-5 h-5 text-red-600 mx-auto mb-1" />
-                      <p className="text-lg font-bold text-red-600">
-                        {evaluationStats.failedEvaluations}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Failed</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Pass Rate</span>
-                      <span className="font-medium">
-                        {evaluationStats.completedEvaluations > 0
-                          ? Math.round(
-                              (evaluationStats.passedEvaluations /
-                                evaluationStats.completedEvaluations) *
-                                100
-                            )
-                          : 0}
-                        %
-                      </span>
-                    </div>
-                    <Progress
-                      value={
-                        evaluationStats.completedEvaluations > 0
-                          ? (evaluationStats.passedEvaluations /
-                              evaluationStats.completedEvaluations) *
-                            100
-                          : 0
-                      }
-                      className="h-2"
-                    />
-                  </div>
+                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
+                  <span className="text-sm font-medium">Researchers</span>
+                  <Badge className="bg-blue-100 text-blue-800">
+                    {processedUserRoles.researchers || 0}
+                  </Badge>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Milestone Progress */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Target className="w-5 h-5 text-blue-600" />
-                <span>Milestone Progress</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {milestonesQuery.isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <Loading />
+                <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
+                  <span className="text-sm font-medium">Staffs</span>
+                  <Badge className="bg-green-100 text-green-800">
+                    {processedUserRoles.staffs || 0}
+                  </Badge>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="text-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                    <p className="text-2xl font-bold text-blue-600">
-                      {milestones?.["completion-rate"] || "0%"}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      Completion Rate
-                    </p>
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="text-center p-2 bg-green-50 rounded-lg">
-                      <p className="text-sm font-bold text-green-600">
-                        {milestones?.["completed-milestones"] || 0}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Done</p>
-                    </div>
-                    <div className="text-center p-2 bg-yellow-50 rounded-lg">
-                      <p className="text-sm font-bold text-yellow-600">
-                        {milestones?.["in-progress-milestones"] || 0}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Progress</p>
-                    </div>
-                    <div className="text-center p-2 bg-red-50 rounded-lg">
-                      <p className="text-sm font-bold text-red-600">
-                        {milestones?.["cancelled-milestones"] || 0}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Cancelled</p>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Progress
-                      value={parseFloat(
-                        milestones?.["completion-rate"]?.replace("%", "") || "0"
-                      )}
-                      className="h-3"
-                    />
-                    <p className="text-xs text-center text-muted-foreground">
-                      {milestones?.["completed-milestones"] || 0}/
-                      {milestones?.["total-milestones"] || 0} milestones
-                      completed
-                    </p>
-                  </div>
+                <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
+                  <span className="text-sm font-medium">Host Institutions</span>
+                  <Badge className="bg-orange-100 text-orange-800">
+                    {processedUserRoles.hostInstitutions || 0}
+                  </Badge>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* User Roles Distribution */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <UserCheck className="w-5 h-5 text-purple-600" />
-                <span>User Roles Distribution</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {userRolesQuery.isLoading ? (
-                <div className="flex items-center justify-center h-64">
-                  <Loading />
+                <div className="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
+                  <span className="text-sm font-medium">Council Members</span>
+                  <Badge className="bg-teal-100 text-teal-800">
+                    {processedUserRoles.councilMembers || 0}
+                  </Badge>
                 </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center p-3 bg-purple-50 rounded-lg">
+                {processedUserRoles.admins && (
+                  <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                     <span className="text-sm font-medium">
-                      Principal Investigators
+                      Admins & Leaders
                     </span>
-                    <Badge className="bg-purple-100 text-purple-800">
-                      {processedUserRoles.principalInvestigators || 0}
+                    <Badge className="bg-gray-100 text-gray-800">
+                      {processedUserRoles.admins}
                     </Badge>
                   </div>
-                  <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg">
-                    <span className="text-sm font-medium">Researchers</span>
-                    <Badge className="bg-blue-100 text-blue-800">
-                      {processedUserRoles.researchers || 0}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg">
-                    <span className="text-sm font-medium">Staffs</span>
-                    <Badge className="bg-green-100 text-green-800">
-                      {processedUserRoles.staffs || 0}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-orange-50 rounded-lg">
-                    <span className="text-sm font-medium">
-                      Host Institutions
-                    </span>
-                    <Badge className="bg-orange-100 text-orange-800">
-                      {processedUserRoles.hostInstitutions || 0}
-                    </Badge>
-                  </div>
-                  <div className="flex justify-between items-center p-3 bg-teal-50 rounded-lg">
-                    <span className="text-sm font-medium">Council Members</span>
-                    <Badge className="bg-teal-100 text-teal-800">
-                      {processedUserRoles.councilMembers || 0}
-                    </Badge>
-                  </div>
-                  {processedUserRoles.admins && (
-                    <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
-                      <span className="text-sm font-medium">
-                        Admins & Leaders
-                      </span>
-                      <Badge className="bg-gray-100 text-gray-800">
-                        {processedUserRoles.admins}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
