@@ -225,7 +225,7 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
                     Approval Status
                   </p>
                   <p className="text-2xl font-bold text-green-900">
-                    {individualEvaluation["is-approved"]
+                    {individualEvaluation["reviewer-result"]
                       ? "Approved"
                       : "Pending"}
                   </p>
@@ -293,30 +293,77 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
                   </div>
                 </div>
               )
-            ) : individualEvaluation.comment ? (
-              <TinyMCEViewer
-                content={individualEvaluation.comment}
-                height={600}
-              />
             ) : (
-              <div className="text-center py-12">
-                <div className="flex flex-col items-center gap-4">
-                  <div className="p-4 bg-gray-100 rounded-full">
-                    <FileText className="h-8 w-8 text-gray-400" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-medium text-gray-900 mb-1">
-                      No evaluation content
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      This evaluation doesn't have any content yet
-                    </p>
-                  </div>
-                </div>
-              </div>
+              // Check documents first, then fallback to comment
+              (() => {
+                const hasDocuments =
+                  individualEvaluation.documents &&
+                  individualEvaluation.documents.length > 0;
+                const firstDocument = hasDocuments
+                  ? individualEvaluation.documents?.[0]
+                  : null;
+
+                if (hasDocuments && firstDocument?.["content-html"]) {
+                  return (
+                    <div className="prose max-w-none">
+                      <TinyMCEViewer
+                        content={firstDocument["content-html"]}
+                        height={600}
+                      />
+                    </div>
+                  );
+                } else if (individualEvaluation.comment) {
+                  return (
+                    <TinyMCEViewer
+                      content={individualEvaluation.comment}
+                      height={600}
+                    />
+                  );
+                } else {
+                  return (
+                    <div className="text-center py-12">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="p-4 bg-gray-100 rounded-full">
+                          <FileText className="h-8 w-8 text-gray-400" />
+                        </div>
+                        <div>
+                          <p className="text-lg font-medium text-gray-900 mb-1">
+                            No evaluation content
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            This evaluation doesn't have any content yet
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                }
+              })()
             )}
           </CardContent>
         </Card>
+
+        {/* Short Comment Section */}
+        {individualEvaluation.comment && !individualEvaluation["is-ai-report"] && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Short Comment
+              </CardTitle>
+              <CardDescription>
+                Brief evaluation summary or notes
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                  {individualEvaluation.comment}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Additional Information */}
         <Card>
@@ -328,31 +375,6 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">
-                  Basic Information
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Evaluation ID:</span>
-                    <span className="font-mono text-gray-900">
-                      {individualEvaluation.id}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Stage ID:</span>
-                    <span className="font-mono text-gray-900">
-                      {individualEvaluation["evaluation-stage-id"]}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Reviewer ID:</span>
-                    <span className="font-mono text-gray-900">
-                      {individualEvaluation["reviewer-id"] || "N/A"}
-                    </span>
-                  </div>
-                </div>
-              </div>
               <div>
                 <h4 className="font-semibold text-gray-900 mb-2">
                   Status Information
@@ -376,9 +398,53 @@ const IndividualEvaluationDetailViewPage: React.FC = () => {
                       {individualEvaluation["is-ai-report"] ? "Yes" : "No"}
                     </span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Reviewer Result:</span>
+                    <span
+                      className={`font-medium ${
+                        individualEvaluation["reviewer-result"]
+                          ? "text-green-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {individualEvaluation["reviewer-result"]
+                        ? "Approved"
+                        : "Not Approved"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Reviewer Information */}
+            {(individualEvaluation["reviewer-name"] ||
+              individualEvaluation["reviewer-email"]) && (
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h4 className="font-semibold text-gray-900 mb-3">
+                  Reviewer Information
+                </h4>
+                <div className="flex items-center gap-3">
+                  {individualEvaluation["reviewer-avatar"] && (
+                    <img
+                      src={individualEvaluation["reviewer-avatar"]}
+                      alt="Reviewer"
+                      className="w-10 h-10 rounded-full"
+                    />
+                  )}
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {individualEvaluation["reviewer-name"] ||
+                        "Unknown Reviewer"}
+                    </p>
+                    {individualEvaluation["reviewer-email"] && (
+                      <p className="text-xs text-gray-500">
+                        {individualEvaluation["reviewer-email"]}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
