@@ -29,15 +29,30 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { validateEmail, validateRequired } from "@/utils";
-import { useMyAccountInfo } from "@/hooks/queries";
+import { useMyAccountInfo, useStaffList } from "@/hooks/queries";
 import { ScientificCV } from "@/components/profile/ScientificCV";
 import { Loading } from "@/components";
 import { getAuthResponse } from "@/utils/cookie-manager";
+import { useSendNotification } from "@/hooks/queries/notification";
+import { NotificationRequest } from "@/types/notification";
+import { toast } from "sonner";
 
 const Profile: React.FC = () => {
   const { data: accountInfo } = useMyAccountInfo();
   const authResponse = getAuthResponse<{ "selected-role": string }>();
+  const roleList = getAuthResponse<{ roles: string[] }>();
+  const userRoleList = roleList?.roles || [];
   const userRole = authResponse?.["selected-role"] || "";
+
+  const sendNotification = useSendNotification();
+  const { data: allUserRoleStaff } = useStaffList();
+
+  const staffAccountIdList =
+    allUserRoleStaff?.["data-list"]?.map((item) => item["account-id"]) ?? [];
+
+  const hasPrincipalInvestigator = userRoleList
+    .map((r) => r.trim().toLowerCase())
+    .includes("principal investigator".toLowerCase());
 
   // Initialize state with empty values that will be populated when accountInfo loads
   const [user, setUser] = useState({
@@ -211,6 +226,20 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleRequestPI = async () => {
+    const notificationRequest: NotificationRequest = {
+      title: `Request to be Principal Investigator </br> Fullname: ${user.name} </br> Email: ${user.email}`,
+      type: "userrole",
+      status: "created",
+      "objec-notification-id": user.id || "",
+      "list-account-id": staffAccountIdList,
+    };
+
+    await sendNotification.mutateAsync(notificationRequest);
+
+    toast.success("Send Request to be Principal Investigator successfully!");
+  };
+
   // Show loading state while data is being fetched
   if (!accountInfo) {
     return (
@@ -334,34 +363,29 @@ const Profile: React.FC = () => {
                 </div> */}
 
                 {/* PI Request */}
-                {userRole == "Researcher" && (
-                  <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-gray-600 font-medium">
-                        PI Request
-                      </span>
-                      <Button
-                        size="sm"
-                        onClick={() => {
-                          // TODO: Call API để gửi request làm PI
-                          // setUser({ ...user, roleRequestStatus: "pending" });
-                        }}
-                      >
-                        Request PI
-                      </Button>
+                {userRole == "Researcher" &&
+                  hasPrincipalInvestigator == false && (
+                    <div className="p-4 bg-gray-50 rounded-lg border border-gray-100 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 font-medium">
+                          PI Request
+                        </span>
+                        <Button size="sm" onClick={handleRequestPI}>
+                          Request PI
+                        </Button>
+                      </div>
+                      {/* Instruction */}
+                      <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <span className="mt-0.5">
+                          <Lightbulb className="w-4 h-4 text-yellow-500" />
+                        </span>
+                        <p className="text-sm text-yellow-800">
+                          If you want to enroll in any project, you must request
+                          PI first. Only PI members can enroll in projects.
+                        </p>
+                      </div>
                     </div>
-                    {/* Instruction */}
-                    <div className="flex items-start gap-2 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                      <span className="mt-0.5">
-                        <Lightbulb className="w-4 h-4 text-yellow-500" />
-                      </span>
-                      <p className="text-sm text-yellow-800">
-                        If you want to enroll in any project, you must request
-                        PI first. Only PI members can enroll in projects.
-                      </p>
-                    </div>
-                  </div>
-                )}
+                  )}
 
                 {/* Info when approved */}
                 {/* {user.roleRequestStatus === "approved" && (
