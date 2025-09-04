@@ -396,66 +396,6 @@ const EvaluationStageViewPage: React.FC<EvaluationStageViewPageProps> = ({
             )}
           </CardContent>
         </Card>
-
-        {/* Stage Metadata */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Stage Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">
-                  Basic Information
-                </h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Stage ID:</span>
-                    <span className="font-mono text-gray-900">
-                      {evaluationStage.id}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Evaluation ID:</span>
-                    <span className="font-mono text-gray-900">
-                      {evaluationStage["evaluation-id"]}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Stage Name:</span>
-                    <span className="text-gray-900">
-                      {evaluationStage.name}
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div>
-                <h4 className="font-semibold text-gray-900 mb-2">Statistics</h4>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Total Evaluations:</span>
-                    <span className="text-gray-900">
-                      {(evaluationStage["individual-evaluations"] || []).length}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Completed:</span>
-                    <span className="text-gray-900">
-                      {completedEvaluations}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Approved:</span>
-                    <span className="text-gray-900">{approvedEvaluations}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
